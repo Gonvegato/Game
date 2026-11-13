@@ -117,6 +117,21 @@ const MASTERY = {
   feast:  { name: 'Invitado de honor',      desc: 'La Saciedad llega hasta 10 y no se pierde.' },
   orc:    { name: 'Caudillo',               desc: 'La Furia nunca baja de 50.' },
 };
+// Fusiones: dos piezas concretas de deidades distintas, en la misma acción, se funden en una habilidad nueva
+// con nombre y regla propios. Las dos piezas siguen actuando (con un nivel más) y queda libre una ranura.
+const FUSIONS = [
+  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',   b: 'stone_basic',   name: 'Bala de obsidiana', desc: 'Los Cristales arden: queman a quien tengan cerca y, al apagarse, estallan en fuego.' },
+  { id: 'toxgeode',  slot: 'basic',   a: 'stone_basic',    b: 'venom_basic',   name: 'Geoda tóxica',      desc: 'Los Cristales supuran veneno a su alrededor y no se apagan mientras envenenen a alguien.' },
+  { id: 'boil',      slot: 'basic',   a: 'venom_basic',    b: 'orc_basic',     name: 'Sangre hirviente',  desc: 'Cada bala aplica más Veneno cuanta más Furia tengas, el Veneno que hace daño te da Furia, y con la Furia llena actúa el doble de rápido.' },
+  { id: 'rot',       slot: 'charge',  a: 'dragon_charge',  b: 'venom_charge',  name: 'Aliento podrido',   desc: 'Antes de estallar, el cargado iguala las Ascuas y el Veneno de cada enemigo a la suma de los dos.' },
+  { id: 'table',     slot: 'charge',  a: 'stone_charge',   b: 'feast_charge',  name: 'Mesa puesta',       desc: 'Los Cristales ejecutan solos a cualquier enemigo débil que tengan cerca, sin esperar a tu cargado, y le sacan un Bocado.' },
+  { id: 'warfeast',  slot: 'charge',  a: 'feast_charge',   b: 'orc_charge',    name: 'Festín de guerra',  desc: 'El grito ejecuta a los enemigos débiles que alcanza. Cada ejecución te devuelve 25 de Furia, y con dos o más puedes volver a cargar al instante.' },
+  { id: 'dive',      slot: 'dodge',   a: 'dragon_dodge',   b: 'orc_dodge',     name: 'Picado',            desc: 'El salto se lanza sobre el enemigo que tengas delante. El impacto crece con la Furia, aturde y deja Ascuas a todos.' },
+  { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',    b: 'orc_dodge',     name: 'Avalancha',         desc: 'Embestir a un enemigo lo lanza por los aires. Si choca con una columna, un Cristal, la pared u otro enemigo, estalla: 300% de daño y aturde.' },
+  { id: 'roast',     slot: 'passive', a: 'dragon_passive', b: 'feast_passive', name: 'Asado',             desc: 'Quien muere con Ascuas suelta un Bocado asado. Comerlo carga 5 balas de fuego que explotan y clavan Ascuas.' },
+  { id: 'bait',      slot: 'passive', a: 'venom_passive',  b: 'feast_passive', name: 'Cebo',              desc: 'Los Bocados que no te comes se pudren a los 3 s. El enemigo que pise uno revienta una nube: 8 de Veneno y aturdido.' },
+];
+const FUSION = Object.fromEntries(FUSIONS.map(f => [f.id, f]));
 // Planos de reforja: cambian cómo funciona el rifle, no solo lo que aplica.
 const PLANS = [
   { id: 'burst',   form: true, name: 'Ráfaga',         desc: 'Cada disparo son 3 balas rápidas al 45% de daño, y cada una aplica tus efectos. El gesto dura un poco más.' },
@@ -296,7 +311,7 @@ function newGame() {
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0,
-      fury: 0, furyT: 0, sated: 0, satedT: 0,
+      fury: 0, furyT: 0, sated: 0, satedT: 0, fireAmmo: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: Object.fromEntries(SLOT_KEYS.map(k => [k, { items: [], fused: null }])), techs: new Set(), plans: new Set(), nextGod: null, buildV: 0, drop: null,
@@ -337,7 +352,7 @@ function spawn(typeKey) {
   const hp = Math.round(ty.hp * (1 + 0.12 * (S.wave - 1)));
   const e = { type: ty, champ: !!ty.champ, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
-    ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, season: 0, carved: 0, stun: 0, autoCd: 0,
+    ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, season: 0, carved: 0, stun: 0, autoCd: 0, fling: 0, fvx: 0, fvy: 0,
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
@@ -366,6 +381,9 @@ const godOf = id => PIECE[id].god;
 // Nivel efectivo de una pieza (0 si no la llevas). Dentro de una aleación cuenta un nivel más.
 const lv = id => { const a = S.build[PIECE[id].slot], it = a.items.find(x => x.id === id); return it ? it.lvl + (a.fused && a.fused.includes(id) ? 1 : 0) : 0; };
 const has = id => S.techs.has(id);
+// ¿Está forjada esa fusión?
+const fz = id => { const F = FUSION[id], f = S.build[F.slot].fused; return !!f && f.includes(F.a) && f.includes(F.b); };
+const fusionOf = slot => { const f = S.build[slot].fused; return f ? FUSIONS.find(x => x.slot === slot && f.includes(x.a) && f.includes(x.b)) : null; };
 const godCount = god => SLOT_KEYS.filter(k => S.build[k].items.some(x => godOf(x.id) === god)).length;
 const mastery = god => godCount(god) >= 3;
 const slotColor = slot => { const a = S.build[slot]; return a.items.length ? GODS[godOf(a.items[0].id)].color : C.energy; };
@@ -431,6 +449,7 @@ function kill(e) {
   let bites = (has('f_banquet') ? 1 : 0) + e.carved;
   if (fb && e.season > 0) bites = Math.max(bites, (e.season >= 5 ? 1 + fb : 1) + e.carved);    // Sazonar
   for (let i = 0; i < bites; i++) dropBite(e.x + rnd(-10, 10), e.y + rnd(-10, 10));
+  if (fz('roast') && e.ember > 0) dropBite(e.x, e.y, true);                                    // fusión Asado
   if (has('m_quartz')) addCrystal(e.x, e.y);                                                   // Cuarzo vivo
   const vp = lv('venom_passive');
   if (vp && e.venom > 0) for (const o of others(e, 130, 1 + vp)) {                             // Plaga
@@ -505,9 +524,10 @@ function addCrystal(x, y) {
   const max = mastery('stone') ? 12 : 6;
   while (S.crystals.length > max) S.crystals.shift();
 }
-function dropBite(x, y) { S.bites.push({ x: clamp(x, 10, T.room.w - 10), y: clamp(y, 10, T.room.h - 10), life: 14 }); if (S.bites.length > 30) S.bites.shift(); }
-function eat() {
+function dropBite(x, y, hot) { S.bites.push({ x: clamp(x, 10, T.room.w - 10), y: clamp(y, 10, T.room.h - 10), life: 14, age: 0, hot: !!hot, rot: false }); if (S.bites.length > 30) S.bites.shift(); }
+function eat(hot) {
   const p = S.p;
+  if (hot) p.fireAmmo = Math.min(15, p.fireAmmo + 5);
   p.sated = Math.min(satedMax(), p.sated + 1); p.satedT = 6; p.hp = Math.min(p.maxHp, p.hp + 2);
   blip(990, 0.06, 'triangle', 0.035, 300);
   if (has('f_dessert')) { p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); p.chargeCd = 0; }   // Postre
@@ -520,11 +540,13 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   if (db) addEmber(e, db);
   if (vb) addVenom(e, vb);
   if (fb && active(e)) e.season = Math.min(5, e.season + 1);
+  if (fz('boil')) addVenom(e, Math.floor(p.fury / 20));                    // fusión Sangre hirviente
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }
 }
 // Una bala tuya: además del impacto, la repiten los Cristales (Veta) y el estómago lleno (Glotón)
 function shot(e, dmg, ux, uy, big, col) {
   onHit(e, dmg, ux, uy, big, col, 'player');
+  if (S.p.fireAmmo > 0) { S.p.fireAmmo -= 1; explode(e.x, e.y, 30, dmg * 0.5, { ember: 2, col: GODS.dragon.color, soft: true, skip: e }); }   // fusión Asado: balas de fuego
   const sp = lv('stone_passive'), fp = lv('feast_passive');
   if (sp && S.crystals.length) {
     const near = S.crystals.map(c => [Math.hypot(c.x - e.x, c.y - e.y), c]).filter(x => x[0] < 170).sort((a, b) => a[0] - b[0]).slice(0, mastery('stone') ? 2 : 1);
@@ -615,30 +637,36 @@ function startDodge(a, free) {
   p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set();
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
+  if (p.fly && fz('dive')) {                                                // fusión Picado: el salto busca al enemigo de delante
+    let tg = null, bd = 190;
+    for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd && Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), a)) < 0.9) { bd = d; tg = e; } }
+    if (tg) { p.dvx = (tg.x - p.x) / (bd || 1); p.dvy = (tg.y - p.y) / (bd || 1); p.dodgeT = clamp(bd / (p.speed * T.dodge.mult), 0.12, 0.5); p.inv = Math.max(p.inv, p.dodgeT + 0.06); }
+  }
   if (lv('stone_dodge')) addCrystal(p.x, p.y);                              // Geoda
   const fd = lv('feast_dodge');
   if (fd && S.bites.length) {                                               // Sobremesa
-    const n = Math.min(8, S.bites.length); S.bites = [];
-    for (let i = 0; i < n; i++) { eat(); S.timers.push({ t: 0.05 + i * 0.07, fn: () => explode(S.p.x, S.p.y, 45, S.p.dmg * 0.8 * fd, { col: GODS.feast.color }) }); }
+    const eaten = S.bites.filter(b => !b.rot).slice(0, 8), n = eaten.length; S.bites = S.bites.filter(b => !eaten.includes(b));
+    for (let i = 0; i < n; i++) { eat(eaten[i].hot); S.timers.push({ t: 0.05 + i * 0.07, fn: () => explode(S.p.x, S.p.y, 45, S.p.dmg * 0.8 * fd, { col: GODS.feast.color }) }); }
   }
 }
 function endDodge() {
   const p = S.p, vd = lv('venom_dodge'), dd = lv('dragon_dodge');
   if (!p.dodgeFrom) return;
   if (vd) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 5, acc: 0.4, venom: vd, col: GODS.venom.color });   // Rastro
-  if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color });                                               // Vuelo
+  if (p.fly && dd) { const f = p.fury; if (fz('dive')) explode(p.x, p.y, 52 + f * 0.4, p.dmg * (1.5 * dd + 3 * f / 100), { col: GODS.dragon.color, stun: 0.8, ember: Math.round(f / 10) }); else explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color }); }                                               // Vuelo
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: p.dodgeFrom.x, y: p.dodgeFrom.y, life: 3, cd: 0.15 });                      // Rifle gemelo
   p.dodgeFrom = null; p.fly = false;
 }
 // Lo que pasa al atravesar a un enemigo con el esquive
 function dashThrough(e) {
   const od = lv('orc_dodge'), p = S.p;
-  if (od) { hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); } gainFury(15); }   // Embestida
+  if (od) { hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (fz('avalanche')) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } } gainFury(15); }   // Embestida, y fusión Avalancha
 }
 
 // Lo que hace el cargado a cada enemigo que alcanza, sea con el rayo, el cono, el mortero o un Cristal
 function chargePayoff(e) {
   const dc = lv('dragon_charge'), vc = lv('venom_charge'), fc = lv('feast_charge'), p = S.p;
+  if (fz('rot')) { const t = e.ember + e.venom; if (t > 0) { if (t > e.ember) addEmber(e, t - e.ember); e.venom = Math.min(30, t); } }   // fusión Aliento podrido
   if (dc) {                                                                 // Aliento
     addEmber(e, 1 + dc);
     const st = e.ember;
@@ -662,6 +690,7 @@ function fireCharged(am) {
   const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio);
   const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), col = slotColor('charge');
   const sc = lv('stone_charge'), oc = lv('orc_charge');
+  let refund = false;
   if (S.plans.has('mortar')) {           // proyectil en arco con área
     const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
     const tx = clamp(tg ? tg.x : p.x + ux * 170, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 170, 0, T.room.h);
@@ -699,13 +728,21 @@ function fireCharged(am) {
   }
   if (oc) {                              // Grito de guerra: gasta la Furia
     const f = p.fury; p.fury = mastery('orc') ? 50 : 0;
-    explode(p.x, p.y, 45 + f * 0.7, p.dmg * (0.5 + 2 * oc * f / 100), { push: 220, stun: 0.4 + f / 100, col: GODS.orc.color });
+    const R = 45 + f * 0.7;
+    explode(p.x, p.y, R, p.dmg * (0.5 + 2 * oc * f / 100), { push: 220, stun: 0.4 + f / 100, col: GODS.orc.color });
+    if (fz('warfeast')) {                                                   // fusión Festín de guerra
+      let n = 0; const thr = 0.15 + 0.1 * lv('feast_charge');
+      for (const e of S.enemies.slice()) if (active(e) && dist(p, e) < R * 1.3 + e.r && e.hp / e.maxHp < (e.champ ? 0.5 : 1) * thr) { e.carved = 2; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color); n++; }
+      if (n) { gainFury(25 * n); S.fx.push({ k: 'num', x: p.x, y: p.y - 18, t: 0, life: 0.9, txt: '¡Festín! ×' + n, col: GODS.feast.color, big: true }); }
+      refund = n >= 2;
+    }
   }
   let cd = ch.cd;
   p.cd = Math.max(p.cd, 0.25);
   if (S.plans.has('recoil')) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
   else { p.x -= ux * 6; p.y -= uy * 6; }
   p.chargeCdMax = p.chargeCd = cd;
+  if (refund) p.chargeCd = 0;
   S.shake = Math.max(S.shake, 4 + 4 * ratio);
   blip(300, 0.3, 'sawtooth', 0.06, -220);
 }
@@ -847,18 +884,43 @@ function update(dt) {
   S.turrets = S.turrets.filter(tu => tu.life > 0);
 
   // Cristales y Bocados
-  for (const c of S.crystals) c.life -= dt;
+  const obs = fz('obsidian'), tox = fz('toxgeode'), tab = fz('table'), thr = 0.15 + 0.1 * lv('feast_charge');
+  for (const c of S.crystals) {
+    c.life -= dt; c.acc = (c.acc || 0) + dt;
+    if (c.acc < 0.5 || !(obs || tox || tab)) continue;
+    c.acc = 0;
+    let fed = false;
+    for (const e of S.enemies.slice()) {
+      if (!active(e)) continue;
+      const d = dist(c, e) - e.r;
+      if (obs && d < 42) addEmber(e, 1);                                   // fusión Bala de obsidiana
+      if (tox && d < 42) { addVenom(e, 2); fed = true; }                   // fusión Geoda tóxica
+      if (tab && d < 60 && active(e) && e.hp / e.maxHp < (e.champ ? 0.5 : 1) * thr) {   // fusión Mesa puesta
+        S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: e.x, y2: e.y, t: 0, life: 0.15, col: GODS.feast.color, w: 1.5 });
+        e.carved = 1; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);
+      }
+    }
+    if (tox && fed) c.life += 0.5;
+  }
+  if (obs) for (const c of S.crystals) if (c.life <= 0) explode(c.x, c.y, 38, p.dmg, { col: GODS.dragon.color, ember: 2 });
   S.crystals = S.crystals.filter(c => c.life > 0);
+  const bait = fz('bait');
   for (const b of S.bites) {
+    b.age += dt;
+    if (bait && b.age > 3) b.rot = true;                                   // fusión Cebo
+    if (b.rot) {
+      for (const e of S.enemies) if (active(e) && dist(b, e) < e.r + 8) { b.life = 0; explode(b.x, b.y, 42, 0, { venom: 8, stun: 0.6, col: GODS.venom.color, soft: true }); break; }
+      continue;
+    }
     b.life -= dt;
     const d = dist(p, b);
     if (d < 70 && d > 0.1) { b.x += (p.x - b.x) / d * 170 * dt; b.y += (p.y - b.y) / d * 170 * dt; }
-    if (d < 12) { b.life = 0; eat(); }
+    if (d < 12) { b.life = 0; eat(b.hot); }
   }
   S.bites = S.bites.filter(b => b.life > 0);
 
   // Enemigos
-  const venStep = mastery('venom') ? 0.25 : 0.5, embMul = mastery('dragon') ? 1.5 : 1;
+  const boil = fz('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = mastery('dragon') ? 1.5 : 1;
   for (const e of S.enemies) {
     if (e.hp <= 0) continue;
     if (e.spawn > 0) { e.spawn -= dt; continue; }
@@ -866,6 +928,15 @@ function update(dt) {
     e.x += e.kx * dt; e.y += e.ky * dt;
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
     e.autoCd = Math.max(0, e.autoCd - dt);
+    if (e.fling > 0) {                   // fusión Avalancha: enemigo lanzado
+      e.fling -= dt; e.x += e.fvx * dt; e.y += e.fvy * dt;
+      let bump = e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3;
+      for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r + 1) bump = true;
+      for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 7) { bump = true; c.life = 0; }
+      for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r) bump = true;
+      if (bump) { e.fling = 0; explode(e.x, e.y, 50, p.dmg * 3, { stun: 0.6, col: GODS.stone.color }); gainFury(10); }
+      continue;
+    }
     if (e.ember > 0) {
       e.emberT -= dt; e.emberAcc += dt;
       if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul, GODS.dragon.color); }
@@ -874,7 +945,7 @@ function update(dt) {
     }
     if (e.venom > 0) {
       e.venAcc += dt;
-      if (e.venAcc >= venStep) { e.venAcc -= venStep; dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); }
+      if (e.venAcc >= venStep) { e.venAcc -= venStep; dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); }
       if (e.hp <= 0) continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
@@ -977,22 +1048,29 @@ function pieceCard(pc) {
     return o;
   }
   const lvl = 1 + rar, add = () => a.items.push({ id: pc.id, lvl });
-  const mate = a.fused ? null : a.items[0];
-  if (mate) {                                     // ya hay una pieza suelta en esa acción: se alean
-    o.tag = 'Aleación · ' + SLOTS[pc.slot]; o.name = pc.name + ' ' + ROMAN[lvl + 1];
-    o.desc = `${pc.desc(lvl + 1)} Se alea con tu ${PIECE[mate.id].name}: las dos suben un nivel, ocupan una sola ranura y actúan a la vez.`;
-    o.note = prog;
-    o.apply = () => { add(); a.fused = [mate.id, pc.id]; };
-  } else if (a.items.length - (a.fused ? 1 : 0) >= 2) {   // las dos ranuras ocupadas: sustituye a la suelta
-    const out = a.items.slice().reverse().find(x => !(a.fused && a.fused.includes(x.id)));
-    o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl); o.note = 'Sustituye a ' + PIECE[out.id].name;
+  const free = a.items.filter(x => !(a.fused && a.fused.includes(x.id)));          // piezas sueltas en esa acción
+  const rec = !a.fused && FUSIONS.find(f => f.slot === pc.slot && ((f.a === pc.id && free.some(x => x.id === f.b)) || (f.b === pc.id && free.some(x => x.id === f.a))));
+  o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
+  if (a.items.length - (a.fused ? 1 : 0) >= 2) {   // las dos ranuras ocupadas: sustituye a la suelta más reciente
+    const out = free[free.length - 1];
+    o.note = 'Sustituye a ' + PIECE[out.id].name;
     o.apply = () => { a.items.splice(a.items.indexOf(out), 1); add(); };
   } else {
-    o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
-    o.note = [a.fused ? 'Va a la segunda ranura' : '', prog].filter(Boolean).join(' · ');
+    o.note = [rec ? 'Receta: con tu ' + PIECE[rec.a === pc.id ? rec.b : rec.a].name + ' podrás forjar «' + rec.name + '»' : free.length ? 'Va a la segunda ranura' : '', prog].filter(Boolean).join(' · ');
     o.apply = add;
   }
   return o;
+}
+// Fusiones que ya puedes forjar: llevas las dos piezas sueltas en la misma acción
+function fusionOptions() {
+  const out = [];
+  for (const f of FUSIONS) {
+    const a = S.build[f.slot];
+    if (a.fused || !a.items.some(x => x.id === f.a) || !a.items.some(x => x.id === f.b)) continue;
+    out.push({ tag: 'Fusión · ' + SLOTS[f.slot], rar: 3, name: f.name, color: C.ink, desc: `Fundes ${PIECE[f.a].name} y ${PIECE[f.b].name} en una habilidad nueva. ${f.desc}`, note: 'Las dos piezas siguen actuando, suben un nivel y dejan libre una ranura', apply: () => { a.fused = [f.a, f.b]; S.fx.push({ k: 'num', x: S.p.x, y: S.p.y - 20, t: 0, life: 2.2, txt: '«' + f.name + '»', col: C.ink, big: true }); } });
+  }
+  if (out.length) out.push({ tag: 'Yunque', name: 'Dejarlas como están', color: C.dim, desc: 'No fundes nada ahora. Podrás hacerlo al acabar otra sala.', note: '', apply: () => {} });
+  return out;
 }
 const techOk = t => !S.techs.has(t.id) && godCount(t.god) >= 1 && (t.req || []).every(id => lv(id) > 0);
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier pieza de esta deidad');
@@ -1038,6 +1116,7 @@ function openPick() {
   if (god) pickQueue.push(() => { const o = pieceOptions(god); return o.length ? { eyebrow: 'Sala ' + n + ' · ' + GODS[god].title, title: 'Desmontas: ' + GODS[god].weapon, opts: o } : statScreen(); });
   if (n % 3 === 1) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
   else if (n % 2 === 0) pickQueue.push(statScreen);
+  pickQueue.push(() => { const o = fusionOptions(); return o.length ? { eyebrow: 'Yunque', title: 'Puedes forjar una fusión', opts: o } : null; });
   pickQueue.push(doorScreen);
   advancePick();
 }
@@ -1059,7 +1138,8 @@ function buildHtml(full) {
     if (!a.items.length) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Dos ranuras libres</span></li>`); continue; }
     if (a.fused) {
       const fi = a.fused.map(id => a.items.find(x => x.id === id));
-      row(SLOTS[k], C.ink, 'Aleación: ' + fi.map(nm).join(' + '), full ? fi.map(it => PIECE[it.id].desc(lv(it.id))).join(' ') : '');
+      const F = fusionOf(k);
+      row(SLOTS[k], C.ink, '«' + (F ? F.name : 'Fusión') + '»', full ? (F ? F.desc + ' ' : '') + fi.map(it => PIECE[it.id].name + ': ' + PIECE[it.id].desc(lv(it.id))).join(' ') : fi.map(nm).join(' + '));
     }
     for (const it of a.items) if (!a.fused || !a.fused.includes(it.id)) row(SLOTS[k], GODS[godOf(it.id)].color, nm(it), full ? PIECE[it.id].desc(lv(it.id)) : '');
   }
@@ -1071,7 +1151,7 @@ function buildHtml(full) {
 }
 // Recetario: todo lo que se le puede robar a cada deidad
 function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que ya llevas. Cada acción tiene dos ranuras; dos piezas en la misma acción se alean en una y actúan a la vez. Las piezas se enganchan a balas, explosiones, esquives y bajas, así que unas cambian a otras.</p><div class="book">`;
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que ya llevas. Cada acción tiene dos ranuras. Ciertas parejas de piezas se funden en una habilidad nueva. Las piezas se enganchan a balas, explosiones, esquives y bajas, así que unas cambian a otras.</p><div class="book">`;
   for (const g of Object.keys(GODS)) {
     const n = godCount(g), G = GODS[g];
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
@@ -1079,6 +1159,8 @@ function bookHtml() {
       TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
       `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Lleva piezas suyas en 3 acciones distintas. ${MASTERY[g].desc}</span></li></ul></section>`;
   }
+  h += `<section><h2>Fusiones</h2><p class="fine">Lleva las dos piezas en la misma acción y fúndelas en el yunque al acabar una sala.</p><ul class="build full">` +
+    FUSIONS.map(f => `<li class="${fz(f.id) ? 'own' : ''}"><em>${SLOTS[f.slot]}</em><b>${f.name}</b><span>${PIECE[f.a].name} + ${PIECE[f.b].name}. ${f.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
 }
@@ -1146,13 +1228,13 @@ function renderHud() {
   const p = S.p;
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
   const left = S.enemies.length + S.queue.length;
-  const key = [Math.ceil(p.hp), p.maxHp, S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, S.buildV, Math.round(p.fury / 4), p.sated].join('|');
+  const key = [Math.ceil(p.hp), p.maxHp, S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, S.buildV, Math.round(p.fury / 4), p.sated, p.fireAmmo].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp;
   $('wave').textContent = S.wave ? 'Sala ' + S.wave + ' · quedan ' + left : '';
   $('build').innerHTML = buildHtml(false);
-  $('res').textContent = [godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', p.sated ? 'Saciedad ' + p.sated : ''].filter(Boolean).join(' · ');
+  $('res').textContent = [godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', p.sated ? 'Saciedad ' + p.sated : '', p.fireAmmo ? 'Balas de fuego ' + p.fireAmmo : ''].filter(Boolean).join(' · ');
   $('stats').textContent = S.wave ? (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
   $('dev').textContent = dev;
   $('hint').textContent = HINTS[lastDev] || HINTS.none;
@@ -1235,7 +1317,7 @@ function render() {
   }
   for (const b of S.bites) {
     const bob = Math.sin(S.t * 6 + b.x) * 1.2;
-    ctx.fillStyle = GODS.feast.color; ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y + bob, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = b.rot ? GODS.venom.color : b.hot ? GODS.dragon.color : GODS.feast.color; ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y + (b.rot ? 0 : bob), b.rot ? 4.4 : 3.6, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = C.wall; ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1;
   }
   if (S.drop) {
@@ -1385,5 +1467,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, T, PIECES, PLANS, TECHS, GODS };
+window.__kiteo = { get state() { return S; }, T, PIECES, PLANS, TECHS, GODS, FUSIONS };
 })();
