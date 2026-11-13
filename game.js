@@ -45,26 +45,34 @@ const FAM = {
 };
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
+// Cada arma tiene un bucle propio: el disparo APILA algo en el enemigo y el cargado o el esquive lo REMATAN.
+const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 const PIECES = [
-  { id: 'f_basic',  fam: 'fire',  slot: 'basic',   name: 'Bala de brasa',    desc: l => `Cada disparo aplica ${l} de Quemadura: daño continuo que se acumula hasta 6.` },
-  { id: 'f_charge', fam: 'fire',  slot: 'charge',  name: 'Lanza de fuego',   desc: l => `El disparo cargado deja 3 s una línea de fuego que quema (${l} por pulso) a quien la pisa.` },
-  { id: 'f_dodge',  fam: 'fire',  slot: 'dodge',   name: 'Salto de fragua',  desc: l => `Al esquivar, explosión donde estabas: ${150 * l}% de daño y Quemadura.` },
-  { id: 'f_pass',   fam: 'fire',  slot: 'passive', name: 'Combustión',       desc: l => `Los enemigos que mueren quemándose explotan (${100 * l}% de daño) y queman a los de al lado.` },
-  { id: 'r_basic',  fam: 'bolt',  slot: 'basic',   name: 'Arco voltaico',    desc: l => `Cada disparo salta a ${1 + l} enemigos cercanos con el 70% del daño.` },
-  { id: 'r_charge', fam: 'bolt',  slot: 'charge',  name: 'Condensador',      desc: l => `El cargado carga un 40% más rápido y se recupera en menos de la mitad${l > 1 ? `, con +${30 * (l - 1)}% de daño` : ''}.` },
-  { id: 'r_dodge',  fam: 'bolt',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Esquivar daña (${120 * l}%) a quien atravieses y te deja disparar al instante.` },
-  { id: 'r_pass',   fam: 'bolt',  slot: 'passive', name: 'Sobrecarga',       desc: l => `Cada ${Math.max(2, 5 - l)} disparos, uno hace 250% de daño y salta a 3 enemigos más.` },
-  { id: 'e_basic',  fam: 'frost', slot: 'basic',   name: 'Bala de escarcha', desc: l => `Cada disparo aplica ${l} de Frío: ralentiza, y a 5 acumulaciones congela.` },
-  { id: 'e_charge', fam: 'frost', slot: 'charge',  name: 'Glaciar',          desc: l => `El disparo cargado congela ${(1.2 + 0.5 * l).toFixed(1)} s a todos los que atraviesa.` },
-  { id: 'e_dodge',  fam: 'frost', slot: 'dodge',   name: 'Nova helada',      desc: l => `Al esquivar, empujas a los cercanos y les aplicas ${2 + l} de Frío.` },
-  { id: 'e_pass',   fam: 'frost', slot: 'passive', name: 'Quebrar',          desc: l => `+${100 * l}% de daño a congelados y +${30 * l}% a enemigos con Frío.` },
+  { id: 'f_basic',  fam: 'fire',  slot: 'basic',   name: 'Bala de brasa',    desc: l => `Cada bala clava ${pl(l, 'Quemadura')}. Se apilan hasta 8 y todas hacen daño continuo: cuanto más rápido disparas, más arde.` },
+  { id: 'f_charge', fam: 'fire',  slot: 'charge',  name: 'Detonación',       desc: l => `El cargado hace estallar toda la Quemadura de quien atraviesa: ${50 + 15 * (l - 1)}% de daño por cada una, en área.` },
+  { id: 'f_dodge',  fam: 'fire',  slot: 'dodge',   name: 'Reguero',          desc: l => `El esquive deja un rastro de fuego (${l} por pulso). Si atraviesas a un enemigo que arde, contagias todas sus Quemaduras a los de alrededor.` },
+  { id: 'f_pass',   fam: 'fire',  slot: 'passive', name: 'Combustión',       desc: l => `Quien muere ardiendo explota: ${20 * l}% de daño por cada Quemadura, y pasa la mitad de las suyas a los que alcanza.` },
+  { id: 'r_basic',  fam: 'bolt',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada bala clava ${pl(l, 'Aguja')} (hasta 6 por enemigo). Solas no hacen nada: esperan una descarga.` },
+  { id: 'r_charge', fam: 'bolt',  slot: 'charge',  name: 'Sobretensión',     desc: l => `El cargado descarga las Agujas de quien atraviesa: cada una hace ${70 + 20 * (l - 1)}% de daño y suelta un rayo a otro enemigo.` },
+  { id: 'r_dodge',  fam: 'bolt',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Atravesar a un enemigo con el esquive descarga sus Agujas (${80 + 20 * (l - 1)}% cada una) y te deja disparar al instante. Si no tiene, le clavas 2.` },
+  { id: 'r_pass',   fam: 'bolt',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a quien alcanzan.` },
+  { id: 'e_basic',  fam: 'frost', slot: 'basic',   name: 'Bala de escarcha', desc: l => `Cada bala aplica ${l} de Frío: ralentiza, y al llegar a 5 congela.` },
+  { id: 'e_charge', fam: 'frost', slot: 'charge',  name: 'Quebrar',          desc: l => `El cargado rompe a los congelados: ${300 + 100 * (l - 1)}% de daño y esquirlas que enfrían a los de alrededor. Al resto le aplica 2 de Frío.` },
+  { id: 'e_dodge',  fam: 'frost', slot: 'dodge',   name: 'Embestida gélida', desc: l => `Atravesar a un congelado con el esquive lo rompe (${200 + 100 * (l - 1)}% de daño y esquirlas). A los demás les aplica ${2 + l} de Frío.` },
+  { id: 'e_pass',   fam: 'frost', slot: 'passive', name: 'Cero absoluto',    desc: l => `Los congelados duran ${(0.5 * l).toFixed(1)} s más y van enfriando a los que tienen cerca.` },
 ];
+// Maestría: llevar piezas de la misma arma en 3 acciones distintas.
+const MASTERY = {
+  fire:  { name: 'Infierno',          desc: 'La Quemadura se apila hasta 20 y hace un 50% más de daño.' },
+  bolt:  { name: 'Tormenta perfecta', desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga: reacción en cadena.' },
+  frost: { name: 'Era glacial',       desc: 'Las esquirlas congelan directamente y los congelados reciben el doble de daño.' },
+};
 // Fusiones: nacen al juntar dos piezas de armas distintas en la misma acción.
 // La pieza fundida hace los dos efectos (con un nivel más cada uno), ocupa una ranura y activa la sinergia de la pareja.
 const PAIRS = {
-  'fire+frost': { id: 'thermal', name: 'Choque térmico', adjF: 'térmica',         adjM: 'térmico',        color: '#f3b6ff', desc: 'Un enemigo congelado y quemado a la vez revienta: 300% de daño en área.' },
-  'bolt+fire':  { id: 'plasma',  name: 'Plasma',         adjF: 'de plasma',       adjM: 'de plasma',      color: '#ffb347', desc: 'Los saltos de rayo queman, y cada pulso de Quemadura salta a un enemigo cercano y lo prende.' },
-  'bolt+frost': { id: 'super',   name: 'Superconductor', adjF: 'superconductora', adjM: 'superconductor', color: '#b8ffd9', desc: 'Los saltos de rayo enfrían y hacen el doble a enemigos con Frío. Congelar a un enemigo suelta un rayo que salta a 2 más.' },
+  'fire+frost': { id: 'thermal', name: 'Choque térmico', adjF: 'térmica',         adjM: 'térmico',        color: '#f3b6ff', desc: 'Congelar o romper a un enemigo que arde lo revienta: 80% de daño por cada Quemadura, en área.' },
+  'bolt+fire':  { id: 'plasma',  name: 'Plasma',         adjF: 'de plasma',       adjM: 'de plasma',      color: '#ffb347', desc: 'Los rayos aplican Quemadura, y cada pulso de Quemadura salta a un enemigo cercano y lo prende.' },
+  'bolt+frost': { id: 'super',   name: 'Superconductor', adjF: 'superconductora', adjM: 'superconductor', color: '#b8ffd9', desc: 'Los rayos aplican Frío y hacen el doble a enemigos con Frío. Congelar a un enemigo suelta 2 rayos.' },
 };
 const FUSE_NOUN = { basic: ['Bala', 'F'], charge: ['Lanza', 'F'], dodge: ['Salto', 'M'], passive: ['Núcleo', 'M'] };
 // Planos de reforja: cambian cómo funciona el rifle, no solo lo que aplica.
@@ -118,8 +126,8 @@ const keys = new Set(), tapped = new Set();   // tapped: pulsaciones más cortas
 const down = c => keys.has(c) || tapped.has(c);
 const touch = { joyId: null, ox: 0, oy: 0, x: 0, y: 0, atk: false, dodge: false, chg: false };
 let lastDev = 'none', padName = '', padBlocked = false;
-const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, navL: false, navR: false };
-const prev = { atk: false, dodge: false, start: false, clear: false, nav: 0 };
+const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false };
+const prev = { atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
 
 addEventListener('keydown', e => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -184,6 +192,7 @@ function pollInput() {
   I.dodgeP = dodge && !prev.dodge;
   I.startP = start && !prev.start;
   I.clearP = clear && !prev.clear;
+  I.chgP = chg && !prev.chg; prev.chg = chg;
   I.navL = nav === -1 && prev.nav !== -1;
   I.navR = nav === 1 && prev.nav !== 1;
   prev.atk = atk; prev.dodge = dodge; prev.start = start; prev.clear = clear; prev.nav = nav;
@@ -239,11 +248,11 @@ function newGame() {
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, dodgeHit: new Set(), chargeCdMax: T.charge.cd,
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true,
-      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dvx: 0, dvy: 0, inv: 0, readyT: 0, spoil: false, crit: false,
+      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dvx: 0, dvy: 0, inv: 0, readyT: 0, spoil: false, crit: false,
       charging: false, charge: 0, chargeCd: 0, chargeDir: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, waveClear: 0,
-    build: Object.fromEntries(SLOT_KEYS.map(k => [k, { parts: {}, fused: null }])), plans: new Set(), buildV: 0, drop: null, zones: [], timers: [],
+    build: Object.fromEntries(SLOT_KEYS.map(k => [k, { parts: {}, fused: null }])), plans: new Set(), nextFam: null, buildV: 0, drop: null, zones: [], timers: [],
   };
 }
 
@@ -274,10 +283,10 @@ function spawn(typeKey) {
     if (Math.hypot(x - p.x, y - p.y) > 230) break;
   }
   const hp = Math.round(ty.hp * (1 + 0.12 * (S.wave - 1)));
-  const famKeys = Object.keys(FAM), fam = ty.champ ? famKeys[Math.floor(Math.random() * famKeys.length)] : null;
+  const famKeys = Object.keys(FAM), fam = ty.champ ? (S.nextFam || famKeys[Math.floor(Math.random() * famKeys.length)]) : null;
   S.enemies.push({ type: ty, champ: !!ty.champ, fam, color: fam ? FAM[fam].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
-    burn: 0, burnT: 0, burnAcc: 0, chill: 0, chillT: 0, frozen: 0, freezeImm: 0, thermCd: 0,
+    burn: 0, burnT: 0, burnAcc: 0, needles: 0, needleT: 0, auraAcc: 0, chill: 0, chillT: 0, frozen: 0, freezeImm: 0, thermCd: 0,
     lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false });
 }
 
@@ -290,6 +299,8 @@ const pairOf = a => (a.fused ? PAIRS[a.fused.slice().sort().join('+')] : null);
 const lv = id => { const pc = PIECE[id], a = S.build[pc.slot], l = a.parts[pc.fam] || 0; return l && a.fused && a.fused.includes(pc.fam) ? l + 1 : l; };
 // ¿Está activa la sinergia de una pareja? (basta una pieza fundida de esa pareja)
 const syn = id => SLOT_KEYS.some(k => { const pr = pairOf(S.build[k]); return !!pr && pr.id === id; });
+const famCount = fam => SLOT_KEYS.filter(k => S.build[k].parts[fam]).length;
+const mastery = fam => famCount(fam) >= 3;
 const slotColor = slot => { const a = S.build[slot], pr = pairOf(a); if (pr) return pr.color; const f = Object.keys(a.parts)[0]; return f ? FAM[f].color : C.energy; };
 const rangeOf = () => S.p.range * (S.plans.has('shotgun') ? 0.5 : 1);
 const periodOf = () => 1 / (S.p.as * (S.plans.has('heavy') ? 0.6 : 1));
@@ -303,6 +314,12 @@ function nearestInRange() {
   }
   return bestE;
 }
+// Otros enemigos vivos cerca de uno dado, del más cercano al más lejano
+function others(e, r, max) {
+  const out = [];
+  for (const o of S.enemies) { if (o === e || !active(o)) continue; const d = dist(e, o); if (d <= r) out.push([d, o]); }
+  return out.sort((a, b) => a[0] - b[0]).slice(0, max).map(x => x[1]);
+}
 
 function kill(e) {
   S.kills += 1;
@@ -310,14 +327,13 @@ function kill(e) {
   if (S.lock === e) S.lock = null;
   blip(160, 0.12, 'sawtooth', 0.04, -90);
   if (e.champ) { S.drop = { fam: e.fam, x: e.x, y: e.y }; blip(880, 0.25, 'triangle', 0.05, 400); }
-  const l = lv('f_pass');
-  if (l && e.burn > 0) explode(e.x, e.y, 44, S.p.dmg * l, { burn: 1, col: FAM.fire.color });
+  const l = lv('f_pass'), st = e.burn;
+  if (l && st > 0) explode(e.x, e.y, 46, S.p.dmg * 0.2 * l * st, { burn: Math.ceil(st / 2), col: FAM.fire.color });
 }
 
 function hit(e, dmg, ux, uy, big, col) {
   if (!active(e)) return;
-  const q = lv('e_pass');
-  if (q) { if (e.frozen > 0) dmg *= 1 + q; else if (e.chill > 0) dmg *= 1 + 0.3 * q; }
+  if (e.frozen > 0 && mastery('frost')) dmg *= 2;
   e.hp -= dmg; e.flash = 0.1;
   const kb = big ? 150 : 60; e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
@@ -343,51 +359,104 @@ function explode(x, y, r, dmg, o) {
     if (d > r + e.r) continue;
     if (dmg > 0) hit(e, dmg, dx / d, dy / d, true, o.col);
     if (!active(e)) continue;
-    if (o.push) { e.kx += dx / d * o.push; e.ky += dy / d * o.push; }
-    if (o.freeze) freeze(e, o.freeze);
     if (o.burn) applyBurn(e, o.burn);
-    if (o.chill) applyChill(e, o.chill);
+    if (o.payoff) chargePayoff(e);
   }
 }
-function applyBurn(e, n) { if (!active(e)) return; e.burn = Math.min(6, e.burn + n); e.burnT = 3; if (e.frozen > 0) thermal(e); }
-function applyChill(e, n) { if (!active(e) || e.frozen > 0 || e.freezeImm > 0) return; e.chill += n; e.chillT = 4; if (e.chill >= 5) freeze(e, 1.3); }
+
+// ── Estados: Quemadura (se apila), Agujas (esperan descarga), Frío (congela a 5)
+function applyBurn(e, n) { if (!active(e)) return; e.burn = Math.min(mastery('fire') ? 20 : 8, e.burn + n); e.burnT = 4; if (e.frozen > 0) thermal(e); }
+function addNeedles(e, n) { if (!active(e)) return; e.needles = Math.min(6, e.needles + n); e.needleT = 6; }
+function applyChill(e, n) { if (!active(e) || e.frozen > 0 || e.freezeImm > 0) return; e.chill += n; e.chillT = 4; if (e.chill >= 5) freeze(e, 1.5); }
 function freeze(e, t) {
-  if (!active(e)) return;
-  const was = e.frozen > 0;
-  e.frozen = Math.max(e.frozen, t); e.chill = 0; e.freezeImm = t + 2;
+  if (!active(e) || e.frozen > 0) return;
+  t += 0.5 * lv('e_pass');
+  e.frozen = t; e.chill = 0; e.freezeImm = t + 2; e.auraAcc = 0;
   e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0;
   blip(1400, 0.08, 'sine', 0.03, -600);
-  if (!was && syn('super')) chain(e, 2, S.p.dmg, new Set([e]));
-  if (e.burn > 0) thermal(e);
+  if (syn('super')) for (const o of others(e, 110, 2)) bolt(e, o, S.p.dmg, null);
+  thermal(e);
 }
+// Choque térmico: fuego + hielo en el mismo enemigo
 function thermal(e) {
-  if (!syn('thermal') || e.thermCd > 0 || !active(e)) return;
-  e.thermCd = 1.5; e.frozen = 0;
-  explode(e.x, e.y, 50, S.p.dmg * 3, { col: PAIRS['fire+frost'].color });
+  if (!syn('thermal') || e.burn <= 0 || e.thermCd > 0 || !active(e)) return;
+  const st = e.burn; e.thermCd = 1; e.burn = 0;
+  explode(e.x, e.y, 52, S.p.dmg * 0.8 * st, { col: PAIRS['fire+frost'].color });
 }
-function chain(from, jumps, dmg, done) {
-  const sup = syn('super'), pla = syn('plasma');
-  for (let i = 0; i < jumps; i++) {
-    let nx = null, nd = 95;
-    for (const e of S.enemies) { if (!active(e) || done.has(e)) continue; const dd = dist(from, e); if (dd < nd) { nd = dd; nx = e; } }
-    if (!nx) break;
-    const cx = nx.x - from.x, cy = nx.y - from.y, cd = Math.hypot(cx, cy) || 1;
-    S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: nx.x, y2: nx.y, t: 0, life: 0.14, col: FAM.bolt.color });
-    hit(nx, dmg * (sup && (nx.chill > 0 || nx.frozen > 0) ? 2 : 1), cx / cd, cy / cd, false, FAM.bolt.color);
-    done.add(nx);
-    if (sup) applyChill(nx, 1);
-    if (pla) applyBurn(nx, 1);
-    from = nx;
+// Un rayo de un enemigo a otro. `cas` existe cuando viene de una descarga de Agujas.
+function bolt(from, to, dmg, cas) {
+  if (!active(to)) return;
+  const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1, sup = syn('super');
+  S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: FAM.bolt.color, w: 1.4 });
+  hit(to, dmg * (sup && (to.chill > 0 || to.frozen > 0) ? 2 : 1), dx / d, dy / d, false, FAM.bolt.color);
+  if (sup) applyChill(to, 1);
+  if (syn('plasma')) applyBurn(to, 1);
+  if (!cas) return;
+  if (to.needles > 0 && !cas.seen.has(to) && mastery('bolt')) discharge(to, cas.mult, cas);   // Tormenta perfecta
+  const c = lv('r_pass');
+  if (c) addNeedles(to, c);
+}
+// Descargar las Agujas de un enemigo: daño por aguja y un rayo por aguja hacia otros
+function discharge(e, mult, cas) {
+  const n = e.needles;
+  if (!n || !active(e)) return;
+  cas = cas || { seen: new Set(), mult };
+  cas.seen.add(e); e.needles = 0;
+  const x = e.x, y = e.y, src = { x, y }, tg = others(e, 125, 6);
+  S.fx.push({ k: 'ring', x, y, r: 16 + n * 3, t: 0, life: 0.22, col: FAM.bolt.color });
+  blip(1000 + n * 120, 0.1, 'square', 0.04, -500);
+  hit(e, S.p.dmg * mult * n, 0, 0, true, FAM.bolt.color);
+  for (let i = 0; i < n && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
+}
+// Reventar la Quemadura acumulada
+function detonate(e, per) {
+  const st = e.burn;
+  if (!st || !active(e)) return;
+  e.burn = 0;
+  explode(e.x, e.y, 42, S.p.dmg * per * st, { burn: 1, col: FAM.fire.color });
+}
+// Romper a un congelado: mucho daño y esquirlas alrededor
+function shatter(e, mult) {
+  if (e.frozen <= 0 || !active(e)) return false;
+  const x = e.x, y = e.y, src = { x, y }, tg = others(e, 85, 6), era = mastery('frost');
+  thermal(e);
+  S.fx.push({ k: 'ring', x, y, r: 30, t: 0, life: 0.25, col: FAM.frost.color });
+  blip(2200, 0.12, 'triangle', 0.05, -1500);
+  hit(e, S.p.dmg * mult, 0, 0, true, FAM.frost.color);
+  e.frozen = 0;
+  for (const o of tg) {
+    if (!active(o)) continue;
+    const dx = o.x - x, dy = o.y - y, d = Math.hypot(dx, dy) || 1;
+    S.fx.push({ k: 'tracer', x1: x, y1: y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: FAM.frost.color });
+    hit(o, S.p.dmg * 0.6, dx / d, dy / d, false, FAM.frost.color);
+    if (era && o.freezeImm <= 0) freeze(o, 1.5); else applyChill(o, 2);
+  }
+  return true;
+}
+// Lo que hace el cargado a cada enemigo que alcanza, según tus piezas de cargado
+function chargePayoff(e) {
+  const fc = lv('f_charge'), rc = lv('r_charge'), ec = lv('e_charge');
+  if (fc) detonate(e, 0.5 + 0.15 * (fc - 1));
+  if (rc) discharge(e, 0.7 + 0.2 * (rc - 1), null);
+  if (ec && active(e)) { if (e.frozen > 0) shatter(e, 3 + (ec - 1)); else applyChill(e, 2); }
+}
+// Lo que pasa al atravesar a un enemigo con el esquive, según tus piezas de esquive
+function dashThrough(e) {
+  const fd = lv('f_dodge'), rd = lv('r_dodge'), ed = lv('e_dodge');
+  if (rd) { if (e.needles > 0) discharge(e, 0.8 + 0.2 * (rd - 1), null); else addNeedles(e, 2); }
+  if (ed && active(e)) { if (e.frozen > 0) shatter(e, 2 + (ed - 1)); else applyChill(e, 2 + ed); }
+  if (fd && active(e) && e.burn > 0) {
+    S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 75, t: 0, life: 0.25, col: FAM.fire.color });
+    for (const o of others(e, 75, 8)) applyBurn(o, e.burn);
   }
 }
-// Un impacto de bala: daño, efectos de las piezas de disparo y saltos
-function onHit(e, dmg, ux, uy, big, col, extraJumps) {
+// Un impacto de bala: daño y lo que apilan tus piezas de disparo
+function onHit(e, dmg, ux, uy, big, col) {
   hit(e, dmg, ux, uy, big, col);
-  const fb = lv('f_basic'), eb = lv('e_basic'), rb = lv('r_basic');
+  const fb = lv('f_basic'), rb = lv('r_basic'), eb = lv('e_basic');
   if (fb) applyBurn(e, fb);
+  if (rb) addNeedles(e, rb);
   if (eb) applyChill(e, eb);
-  const jumps = (rb ? 1 + rb : 0) + (extraJumps || 0);
-  if (jumps) chain(e, jumps, dmg * 0.7, new Set([e]));
 }
 
 function fireBasic(target) {
@@ -395,15 +464,14 @@ function fireBasic(target) {
   if (!target || !active(target)) target = nearestInRange();
   if (!target) { p.cd = 0.12; p.crit = false; return; }
   p.shotN += 1;
-  const ov = lv('r_pass'), over = ov > 0 && p.shotN % Math.max(2, 5 - ov) === 0;
-  let mult = over ? 2.5 : 1;
-  if (p.crit) { mult *= 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
-  const big = over || p.crit, extra = over ? 3 : 0, col = over ? FAM.bolt.color : slotColor('basic');
+  let mult = 1;
+  if (p.crit) { mult = 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
+  const big = p.crit, col = slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
   const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: p.x + Math.cos(p.face) * 14, y1: p.y + Math.sin(p.face) * 14, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
-  const bullet = (t, m, ex) => { const [ux, uy] = aim(t); tracer(t.x, t.y); onHit(t, p.dmg * m, ux, uy, big, col, ex); };
-  blip(over ? 800 : 1250, over ? 0.12 : 0.07, 'square', 0.035, -700);
+  const bullet = (t, m) => { const [ux, uy] = aim(t); tracer(t.x, t.y); onHit(t, p.dmg * m, ux, uy, big, col); };
+  blip(1250, 0.07, 'square', 0.035, -700);
 
   if (S.plans.has('heavy')) {            // atraviesa en línea
     const [ux, uy] = aim(target), len = rng + 40;
@@ -412,7 +480,7 @@ function fireBasic(target) {
       if (!active(e)) continue;
       const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy;
       if (al < 0 || al > len + e.r || Math.abs(ex * uy - ey * ux) > 5 + e.r) continue;
-      onHit(e, p.dmg * mult * 2.3, ux, uy, true, col, e === target ? extra : 0);
+      onHit(e, p.dmg * mult * 2.3, ux, uy, true, col);
     }
     S.shake = Math.max(S.shake, 3.5);
   } else if (S.plans.has('shotgun')) {   // abanico de perdigones
@@ -425,46 +493,44 @@ function fireBasic(target) {
         if (al >= 0 && al - e.r < ba && Math.abs(ex * uy - ey * ux) <= e.r + 3) { ba = Math.max(0, al - e.r); bestE = e; }
       }
       S.fx.push({ k: 'tracer', x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * ba, y2: p.y + uy * ba, t: 0, life: 0.1, col });
-      if (bestE) onHit(bestE, p.dmg * mult * 0.6, ux, uy, false, col, off === 0 ? extra : 0);
+      if (bestE) onHit(bestE, p.dmg * mult * 0.6, ux, uy, false, col);
     }
     S.shake = Math.max(S.shake, 3);
   } else if (S.plans.has('burst')) {     // tres balas seguidas
-    bullet(target, mult * 0.45, extra);
+    bullet(target, mult * 0.45);
     for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => {
       const t2 = active(target) ? target : nearestInRange();
-      if (t2) { blip(1250, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.45, 0); }
+      if (t2) { blip(1250, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.45); }
     } });
-  } else bullet(target, mult, extra);
+  } else bullet(target, mult);
 }
 
 function startDodge(a, free) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.dodgeT = T.dodge.time; p.inv = Math.max(p.inv, T.dodge.time + 0.06);
+  p.dodgeFrom = { x: p.x, y: p.y };
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
   p.dodgeHit = new Set();
-  const fd = lv('f_dodge'), ed = lv('e_dodge');
-  if (fd) explode(p.x, p.y, 45 + 8 * (fd - 1), p.dmg * 1.5 * fd, { burn: 1, col: FAM.fire.color });
-  if (ed) explode(p.x, p.y, 60 + 10 * (ed - 1), 0, { chill: 2 + ed, push: 140, col: FAM.frost.color });
   if (lv('r_dodge')) p.cd = 0;
+}
+function endDodge() {
+  const p = S.p, fd = lv('f_dodge');
+  if (fd && p.dodgeFrom) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 3, acc: 0.4, stacks: fd });
+  p.dodgeFrom = null;
 }
 
 function fireCharged(am) {
   const p = S.p, ch = T.charge;
-  const rc = lv('r_charge'), fc = lv('f_charge'), ec = lv('e_charge');
   const ratio = clamp(p.charge / ch.full, 0, 1);
-  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio) * (rc ? 1 + 0.3 * (rc - 1) : 1);
+  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio);
   const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), len = ch.range, col = slotColor('charge');
   if (S.plans.has('mortar')) {
     const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
     const tx = clamp(tg ? tg.x : p.x + ux * 170, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 170, 0, T.room.h);
     S.fx.push({ k: 'lob', x1: p.x, y1: p.y, x2: tx, y2: ty, t: 0, life: 0.3, col });
-    S.timers.push({ t: 0.3, fn: () => {
-      explode(tx, ty, 58, dmg * 0.8, { col, freeze: ec ? 1.2 + 0.5 * ec : 0 });
-      if (fc) S.zones.push({ x: tx, y: ty, r: 58, life: 3, acc: 0.4, stacks: fc });
-      S.shake = Math.max(S.shake, 7);
-    } });
+    S.timers.push({ t: 0.3, fn: () => { explode(tx, ty, 58, dmg * 0.8, { col, payoff: true }); S.shake = Math.max(S.shake, 7); } });
   } else {
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
@@ -472,12 +538,11 @@ function fireCharged(am) {
       if (along < 0 || along > len) continue;
       if (Math.abs(ex * uy - ey * ux) > ch.width + e.r) continue;
       hit(e, dmg, ux, uy, true, col);
-      if (ec) freeze(e, 1.2 + 0.5 * ec);
+      chargePayoff(e);
     }
-    if (fc) S.zones.push({ x1: p.x, y1: p.y, x2: p.x + ux * len, y2: p.y + uy * len, life: 3, acc: 0.4, stacks: fc });
     S.fx.push({ k: 'beam', x1: p.x + ux * 14, y1: p.y + uy * 14, x2: p.x + ux * len, y2: p.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * ratio, col });
   }
-  let cd = ch.cd * (rc ? 0.4 : 1);
+  let cd = ch.cd;
   p.cd = Math.max(p.cd, 0.25);
   if (S.plans.has('recoil')) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
   else { p.x -= ux * 6; p.y -= uy * 6; }
@@ -553,7 +618,7 @@ function update(dt) {
   // Disparo cargado
   if (I.chg && !p.charging && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
   if (p.charging) {
-    const before = p.charge; p.charge += dt * (lv('r_charge') ? 1 / 0.6 : 1);
+    const before = p.charge; p.charge += dt;
     if (before < T.charge.full && p.charge >= T.charge.full) blip(1500, 0.06, 'sine', 0.04);
     if (am > 0.35) p.chargeDir = Math.atan2(I.ay, I.ax);
     else if (target) p.chargeDir = Math.atan2(target.y - p.y, target.x - p.x);
@@ -587,8 +652,8 @@ function update(dt) {
     p.dodgeT -= dt;
     p.x += p.dvx * p.speed * T.dodge.mult * dt; p.y += p.dvy * p.speed * T.dodge.mult * dt;
     if (Math.random() < 0.7) S.fx.push({ k: 'ghost', x: p.x, y: p.y, t: 0, life: 0.18 });
-    const rd = lv('r_dodge');
-    if (rd) for (const e of S.enemies) if (active(e) && !p.dodgeHit.has(e) && dist(p, e) < p.r + e.r + 8) { p.dodgeHit.add(e); hit(e, p.dmg * 1.2 * rd, p.dvx, p.dvy, true, FAM.bolt.color); }
+    for (const e of S.enemies.slice()) if (active(e) && !p.dodgeHit.has(e) && dist(p, e) < p.r + e.r + 9) { p.dodgeHit.add(e); dashThrough(e); }
+    if (p.dodgeT <= 0) endDodge();
   } else {
     p.x += I.mx * p.speed * mult * dt; p.y += I.my * p.speed * mult * dt;
     if (Math.hypot(I.mx, I.my) > 0.2 && p.windup <= 0 && !p.charging) p.face = Math.atan2(I.my, I.mx);
@@ -608,7 +673,7 @@ function update(dt) {
       e.burnT -= dt; e.burnAcc += dt;
       if (e.burnAcc >= 0.5) {
         e.burnAcc -= 0.5;
-        const td = e.burn * p.dmg * 0.18; dot(e, td);
+        const td = e.burn * p.dmg * 0.12 * (mastery('fire') ? 1.5 : 1); dot(e, td);
         if (syn('plasma')) {   // el fuego salta
           let nx = null, nd = 75;
           for (const o of S.enemies) { if (o === e || !active(o)) continue; const dd = dist(e, o); if (dd < nd) { nd = dd; nx = o; } }
@@ -619,7 +684,12 @@ function update(dt) {
       if (e.hp <= 0) continue;
     }
     if (e.chill > 0) { e.chillT -= dt; if (e.chillT <= 0) e.chill = 0; }
-    if (e.frozen > 0) { e.frozen -= dt; continue; }
+    if (e.needles > 0) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
+    if (e.frozen > 0) {
+      e.frozen -= dt;
+      if (lv('e_pass')) { e.auraAcc += dt; if (e.auraAcc >= 0.5) { e.auraAcc = 0; for (const o of others(e, 60, 8)) applyChill(o, 1); } }
+      continue;
+    }
     const sp = e.speed * (1 - 0.14 * Math.min(4, e.chill));
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
     if (e.lungeWind <= 0 && e.lungeT <= 0) e.dir = Math.atan2(dy, dx);
@@ -691,15 +761,16 @@ function update(dt) {
 }
 
 // ───────────────────────── Elección entre salas ─────────────────────────
-let pickHead = { eyebrow: '', title: '' }, pickQueue = [];
+let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause';
 const fusedName = (slot, f, g) => { const pr = PAIRS[[f, g].sort().join('+')], n = FUSE_NOUN[slot]; return n[0] + ' ' + (n[1] === 'F' ? pr.adjF : pr.adjM); };
 
 function pieceOptions(fam) {
-  const out = [];
+  const out = [], have = famCount(fam), M = MASTERY[fam];
   for (const pc of PIECES.filter(x => x.fam === fam).sort(() => Math.random() - 0.5)) {
     const a = S.build[pc.slot], cur = a.parts[fam] || 0, held = Object.keys(a.parts);
     const inFuse = !!a.fused && a.fused.includes(fam);
     const o = { tag: SLOTS[pc.slot], name: pc.name, color: FAM[fam].color, note: '' };
+    const prog = have + 1 >= 3 ? (have >= 3 ? '' : 'Completa la maestría ' + M.name) : M.name + ': ' + (have + 1) + '/3';
     if (cur) {                                   // ya la llevas: sube de nivel
       if (cur >= 3) continue;
       const nl = cur + 1 + (inFuse ? 1 : 0);
@@ -709,11 +780,11 @@ function pieceOptions(fam) {
     } else if (held.length === 1 && !a.fused) {  // hay otra pieza suelta en esa acción: se funden
       const g = held[0], pr = PAIRS[[fam, g].sort().join('+')], other = pieceOf(pc.slot, g);
       o.tag = 'Fusión · ' + SLOTS[pc.slot]; o.name = fusedName(pc.slot, fam, g); o.color = pr.color;
-      o.desc = `Fundes ${pc.name} con tu ${other.name}. Hacen efecto las dos con un nivel más y ocupan una sola ranura. ${pc.name}: ${pc.desc(2)}`;
-      o.note = syn(pr.id) ? pr.name + ' ya está activo' : 'Activa ' + pr.name + ': ' + pr.desc;
+      o.desc = `${pc.desc(2)} Se funde con tu ${other.name}: las dos suben un nivel y ocupan una sola ranura.`;
+      o.note = (syn(pr.id) ? pr.name + ' ya activo' : 'Activa ' + pr.name + ': ' + pr.desc) + (prog ? ' · ' + prog : '');
       o.apply = () => { a.parts[fam] = 1; a.fused = [g, fam]; };
     } else {
-      o.desc = pc.desc(1); o.note = held.length ? 'Va a la segunda ranura' : 'Ranura libre';
+      o.desc = pc.desc(1); o.note = prog;
       o.apply = () => { a.parts[fam] = 1; };
     }
     out.push(o);
@@ -721,20 +792,28 @@ function pieceOptions(fam) {
   return out.slice(0, 3);
 }
 function planOptions() {
-  const hasForm = PLANS.some(pl => pl.form && S.plans.has(pl.id));
-  return PLANS.filter(pl => !S.plans.has(pl.id) && !(pl.form && hasForm)).sort(() => Math.random() - 0.5).slice(0, 3)
-    .map(pl => ({ tag: 'Plano', name: pl.name, desc: pl.desc, note: pl.form ? 'Cambia el disparo básico' : '', color: C.ink, apply: () => { S.plans.add(pl.id); } }));
+  const hasForm = PLANS.some(x => x.form && S.plans.has(x.id));
+  return PLANS.filter(x => !S.plans.has(x.id) && !(x.form && hasForm)).sort(() => Math.random() - 0.5).slice(0, 3)
+    .map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: x.form ? 'Cambia el disparo básico' : '', color: C.ink, apply: () => { S.plans.add(x.id); } }));
 }
 function statOptions() {
   return UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3)
     .map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) }));
 }
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el rifle', opts: statOptions() });
+// Puertas: eliges qué arma llevará el campeón de la siguiente sala
+function doorScreen() {
+  const fams = Object.keys(FAM).sort(() => Math.random() - 0.5).slice(0, 2);
+  return { eyebrow: 'Siguiente sala', title: '¿A por qué arma vas?', opts: fams.map(f => {
+    const n = famCount(f);
+    return { tag: FAM[f].short, name: FAM[f].name, desc: 'El campeón de la siguiente sala llevará esta arma.', note: `Llevas piezas suyas en ${n} de 4 acciones · ${MASTERY[f].name}: ${Math.min(n, 3)}/3`, color: FAM[f].color, apply: () => { S.nextFam = f; } };
+  }) };
+}
 function advancePick() {
   while (pickQueue.length) {
     const scr = pickQueue.shift()();
     if (!scr || !scr.opts.length) continue;
-    pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = Math.min(1, scr.opts.length - 1);
+    pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0;
     setMode('pick'); return;
   }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -746,12 +825,15 @@ function openPick() {
   if (fam) pickQueue.push(() => { const o = pieceOptions(fam); return o.length ? { eyebrow: 'Sala ' + n + ' superada', title: 'Desmontas: ' + FAM[fam].name, opts: o } : statScreen(); });
   if (n % 3 === 2) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
   else if (n % 2 === 0) pickQueue.push(statScreen);
+  pickQueue.push(doorScreen);
   advancePick();
 }
 function choosePick(i) {
   if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
+  const before = Object.keys(FAM).filter(mastery);
   pickOpts[i].apply(); S.buildV += 1;
   blip(660, 0.12, 'triangle', 0.05, 500);
+  for (const f of Object.keys(FAM)) if (mastery(f) && !before.includes(f)) { S.fx.push({ k: 'num', x: S.p.x, y: S.p.y - 20, t: 0, life: 2.2, txt: '¡' + MASTERY[f].name + '!', col: FAM[f].color, big: true }); blip(520, 0.5, 'triangle', 0.06, 900); }
   advancePick();
 }
 function buildHtml(full) {
@@ -765,9 +847,26 @@ function buildHtml(full) {
       full ? a.fused.map(f => pcOf(f).desc(lv(pcOf(f).id))).join(' ') + ' ' + pr.name + ': ' + pr.desc : a.fused.map(nm).join(' + '));
     for (const f of fams) if (!pr || !a.fused.includes(f)) row(SLOTS[k], FAM[f].color, nm(f), full ? pcOf(f).desc(lv(pcOf(f).id)) : '');
   }
-  for (const id of S.plans) { const pl = PLANS.find(x => x.id === id); row('Plano', C.ink, pl.name, full ? pl.desc : ''); }
+  for (const f of Object.keys(FAM)) if (mastery(f)) row('Maestría', FAM[f].color, MASTERY[f].name, full ? MASTERY[f].desc : '');
+  for (const id of S.plans) { const x = PLANS.find(y => y.id === id); row('Plano', C.ink, x.name, full ? x.desc : ''); }
   return rows.join('');
 }
+// Recetario: todo lo que existe y lo que pide, para poder planear la build
+function bookHtml() {
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que sabes forjar</h1><p class="fine">En blanco, lo que ya llevas. El disparo apila, y el cargado o el esquive rematan.</p><div class="book">`;
+  for (const f of Object.keys(FAM)) {
+    const n = famCount(f);
+    h += `<section><h2 style="color:${FAM[f].color}">${FAM[f].name}</h2><ul class="build full">` +
+      PIECES.filter(x => x.fam === f).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
+      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${FAM[f].color}">Maestría</em><b>${MASTERY[f].name} · ${Math.min(n, 3)}/3</b><span>Lleva piezas de esta arma en 3 acciones distintas. ${MASTERY[f].desc}</span></li></ul></section>`;
+  }
+  h += `<section><h2>Fusiones</h2><ul class="build full">` + Object.entries(PAIRS).map(([key, pr]) => { const [a, b] = key.split('+'), on = syn(pr.id);
+    return `<li class="${on ? 'own' : ''}"><em style="color:${pr.color}">${on ? 'Activa' : 'Receta'}</em><b>${pr.name}</b><span>Funde una pieza de ${FAM[a].short} con una de ${FAM[b].short} en la misma acción. ${pr.desc}</span></li>`; }).join('') + `</ul></section>`;
+  h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
+  return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
+}
+function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
+function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 // ───────────────────────── Interfaz (DOM) ─────────────────────────
 const ov = $('overlay'), ovBody = $('ovBody');
@@ -786,7 +885,7 @@ function renderOverlay() {
   if (m === 'title') {
     h = `<p class="eyebrow">Prototipo de combate</p><h1>Sala de Kiteo</h1>
       <p class="lead">Eres un herrero con un rifle de energía. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos. Si mantienes pulsado, disparas igual pero andando despacio.</p>
-      <p class="lead">En cada sala hay un campeón que lleva un arma. Mátalo y, al limpiar la sala, la desmontas e injertas una de sus piezas en una acción del rifle: disparo, cargado, esquive o pasiva. Cada acción tiene dos ranuras, y si juntas dos piezas de armas distintas en la misma acción se funden en una más fuerte. En las salas 2, 5 y 8 encuentras un plano que cambia cómo dispara el rifle.</p>
+      <p class="lead">Cada sala tiene un campeón con un arma. Al limpiarla la desmontas e injertas una pieza en el rifle. La idea es siempre la misma: el disparo apila algo en el enemigo (Quemadura, Agujas o Frío) y el cargado o el esquive lo rematan. Tú eliges qué arma persigues en la siguiente sala, y el recetario te enseña todo lo que se puede forjar.</p>
       <dl class="keys">
         <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
         <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
@@ -795,7 +894,9 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">Empezar</button>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
   } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · sala ${S.wave}</p><h1>Tu rifle</h1><ul class="build full">${buildHtml(true)}</ul><button id="ovBtn" class="primary">Seguir</button>`;
+    h = `<p class="eyebrow">Pausa · sala ${S.wave}</p><h1>Tu rifle</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div>`;
+  } else if (m === 'book') {
+    h = bookHtml();
   } else if (m === 'dead') {
     h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
       <p class="lead">Llegaste a la sala ${S.wave} con ${S.kills} bajas. Tu mejor marca es la sala ${best}.</p>
@@ -803,9 +904,12 @@ function renderOverlay() {
   } else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
-      `</div><p class="fine">Izquierda y derecha para elegir, disparar para confirmar. O toca una.</p>`;
+      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button><p class="fine">Izquierda y derecha para elegir, disparar para confirmar. El botón de cargar abre el recetario.</p></div>`;
   }
   ovBody.innerHTML = h;
+  ovBody.classList.toggle('wide', m === 'book');
+  const bk = $('bookBtn');
+  if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
   const b = $('ovBtn');
   if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
@@ -813,6 +917,7 @@ function renderOverlay() {
 function primaryAction(force) {
   if (S.mode === 'title') startRun();
   else if (S.mode === 'pause') setMode('play');
+  else if (S.mode === 'book') closeBook();
   else if (S.mode === 'dead' && (force || modeT > 0.8)) startRun();
 }
 
@@ -925,6 +1030,8 @@ function render() {
       ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 3.5, 0, Math.PI * 2); ctx.stroke();
     }
     if (e.burn > 0) { ctx.strokeStyle = FAM.fire.color; ctx.lineWidth = 0.8 + 0.35 * e.burn; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+    if (e.burn > 1) { ctx.fillStyle = FAM.fire.color; ctx.font = '600 7px "Pixelify Sans", ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText(String(e.burn), e.x - e.r - 5, e.y + 3); }
+    if (e.needles > 0) { ctx.fillStyle = FAM.bolt.color; for (let i = 0; i < e.needles; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; ctx.fillRect(e.x + Math.cos(a) * (e.r + 4) - 1, e.y + Math.sin(a) * (e.r + 4) - 1, 2.2, 2.2); } }
     if (e.chill > 0) { ctx.strokeStyle = FAM.frost.color; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * e.chill / 5); ctx.stroke(); }
     if (e.hp < e.maxHp) {
       const w = e.r * 2 + 4; ctx.fillStyle = C.wall; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w, 2.5);
@@ -1000,7 +1107,9 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
   resize(); pollInput(); modeT += dt;
   const m = S.mode;
-  if (m === 'play') { if (I.startP) setMode('pause'); else update(dt); }
+  if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
+  else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
+  else if (m === 'play') { if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
     if (I.navL && pickSel > 0) { pickSel--; moved = true; }
