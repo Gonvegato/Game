@@ -64,7 +64,7 @@ h1{margin:0;font:600 clamp(24px,5vw,34px)/1.1 var(--display);text-wrap:balance;f
 .keys dt{font:600 13px/1.4 var(--display);color:var(--energy)}
 .keys dd{margin:0;color:var(--dim);line-height:1.4;min-width:0}
 .primary{align-self:flex-start;background:var(--ember);color:var(--wall);border:0;padding:11px 22px;font:600 16px/1 var(--display);border-radius:2px}
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .card{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--wall);border:2px solid var(--line);padding:14px 12px;border-radius:2px;min-width:0}
 .card strong{font:600 15px/1.2 var(--display)}
 .card span{color:var(--dim);font-size:13px;line-height:1.35}
@@ -88,6 +88,8 @@ h1{margin:0;font:600 clamp(24px,5vw,34px)/1.1 var(--display);text-wrap:balance;f
 .book li:not(.own) b{color:var(--dim)}
 .forge{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
 .forge section{display:flex;flex-direction:column;gap:8px;min-width:0}
+.forge h3{margin:6px 0 0;font:600 13px/1.2 var(--display);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.fi.sub{margin-left:18px}
 .forge h2{margin:0;font:600 16px/1.2 var(--display);color:var(--ember)}
 .fi{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;background:var(--wall);border:2px solid var(--line);padding:10px 12px;border-radius:2px;color:var(--ink);font:inherit;cursor:pointer}
 .fi b{font:600 15px/1.2 var(--display)}
