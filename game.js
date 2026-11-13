@@ -125,11 +125,15 @@ const PAIRS = {
 const FUSE_NOUN = { basic: ['Bala', 'F'], charge: ['Lanza', 'F'], dodge: ['Salto', 'M'], passive: ['Núcleo', 'M'] };
 // Planos de reforja: cambian cómo funciona el rifle, no solo lo que aplica.
 const PLANS = [
-  { id: 'burst',   form: true, name: 'Ráfaga',        desc: 'Cada disparo son 3 balas rápidas al 45% de daño, y cada una aplica tus efectos. El gesto dura un poco más.' },
-  { id: 'shotgun', form: true, name: 'Recortado',     desc: 'Alcance a la mitad. Disparas un abanico de 5 perdigones al 60% de daño: de cerca pueden entrar todos en el mismo enemigo.' },
-  { id: 'heavy',   form: true, name: 'Cañón pesado',  desc: 'Disparas un 40% más lento, pero cada disparo hace +130% de daño y atraviesa a todos los enemigos en línea.' },
+  { id: 'burst',   form: true, name: 'Ráfaga',         desc: 'Cada disparo son 3 balas rápidas al 45% de daño, y cada una aplica tus efectos. El gesto dura un poco más.' },
+  { id: 'shotgun', form: true, name: 'Recortado',      desc: 'Alcance a la mitad. Disparas un abanico de 5 perdigones al 60% de daño: de cerca pueden entrar todos en el mismo enemigo.' },
+  { id: 'sniper',  form: true, name: 'Francotirador',  desc: 'Alcance +60% y disparo un 40% más lento. La bala atraviesa en línea y hace más daño cuanto más lejos esté el enemigo: hasta el triple. A quemarropa hace la mitad.' },
+  { id: 'bayonet', form: true, name: 'Bayoneta',       desc: 'Dejas de disparar: cada ataque es una estocada que te lanza a través del objetivo. 180% de daño, eres invulnerable durante la estocada y cuenta como atravesarlo con el esquive.' },
+  { id: 'gatling', form: true, name: 'Ametralladora',  desc: 'Mantén pulsado: cada bala acelera la siguiente hasta el triple de cadencia, al 60% de daño. Mientras disparas casi no te mueves, y al soltar se pierde el ritmo.' },
+  { id: 'grenade', form: true, name: 'Lanzagranadas',  desc: 'Las balas son granadas: vuelan en arco, pasan por encima de las columnas y explotan en área. 70% de daño y tus efectos de disparo a todos los que alcance.' },
+  { id: 'echo',    name: 'Rifle gemelo',  desc: 'Al esquivar dejas una copia del rifle donde estabas: dispara sola 3 s a tu cadencia, al 50% de daño y con tus efectos.' },
   { id: 'tempo',   name: 'Compás',        desc: 'Si pulsas justo cuando el anillo se llena, el disparo hace el doble de daño. Mantener pulsado o machacar el botón no cuenta.' },
-  { id: 'mortar',  name: 'Mortero',       desc: 'El cargado deja de ser un rayo: lanza un proyectil que explota en área sobre tu objetivo.' },
+  { id: 'mortar',  name: 'Mortero',       desc: 'El cargado deja de ser un rayo: lanza un proyectil que pasa por encima de las columnas y explota en área sobre tu objetivo.' },
   { id: 'recoil',  name: 'Retroceso',     desc: 'El cargado te lanza hacia atrás como un esquive (activa tus piezas de esquive) y se recupera un 35% antes.' },
   { id: 'double',  name: 'Doble esquive', desc: 'Llevas dos cargas de esquive.' },
 ];
@@ -296,11 +300,11 @@ function newGame() {
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, dodgeHit: new Set(), chargeCdMax: T.charge.cd,
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true,
-      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dvx: 0, dvy: 0, inv: 0, readyT: 0, spoil: false, crit: false,
+      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dvx: 0, dvy: 0, inv: 0, readyT: 0, spoil: false, crit: false, spin: 0, isLunge: false,
       charging: false, charge: 0, chargeCd: 0, chargeDir: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, waveClear: 0,
-    build: Object.fromEntries(SLOT_KEYS.map(k => [k, { items: [], fused: null }])), techs: new Set(), plans: new Set(), nextFam: null, buildV: 0, drop: null, zones: [], timers: [],
+    build: Object.fromEntries(SLOT_KEYS.map(k => [k, { items: [], fused: null }])), techs: new Set(), plans: new Set(), nextFam: null, buildV: 0, drop: null, zones: [], timers: [], pillars: [], turrets: [],
   };
 }
 
@@ -320,6 +324,13 @@ function nextWave() {
   list.splice(Math.ceil(list.length / 2), 0, 'champ');   // un campeón por sala: lleva el arma
   S.drop = null;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.45 }));
+  // Columnas nuevas en cada sala: cortan la línea de tiro y el paso
+  S.pillars = []; S.turrets = []; S.zones = [];
+  for (let i = 0, tries = 0; i < 7 && tries < 300; tries++) {
+    const c = { x: rnd(70, T.room.w - 70), y: rnd(70, T.room.h - 70), r: rnd(14, 24) };
+    if (dist(c, S.p) < 90 || S.pillars.some(o => dist(o, c) < o.r + c.r + 60)) continue;
+    S.pillars.push(c); i++;
+  }
   S.waveT = 0;
 }
 
@@ -335,7 +346,8 @@ function spawn(typeKey) {
   S.enemies.push({ type: ty, champ: !!ty.champ, fam, color: fam ? FAM[fam].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
     burn: 0, burnT: 0, burnAcc: 0, needles: 0, needleT: 0, auraAcc: 0, autoCd: 0, igCd: 0, chill: 0, chillT: 0, frozen: 0, freezeImm: 0, thermCd: 0,
-    lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false });
+    side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false });
+  collide(S.enemies[S.enemies.length - 1], ty.r);
 }
 
 // ───────────────────────── Combate ─────────────────────────
@@ -354,15 +366,38 @@ const mastery = fam => famCount(fam) >= 3;
 const slotColor = slot => { const a = S.build[slot], pr = pairOf(a); if (pr) return pr.color; return a.items.length ? FAM[famOf(a.items[0].id)].color : C.energy; };
 const burnCap = () => (mastery('fire') ? 20 : 8);
 const needleCap = () => (has('r_coil') ? 9 : 6);
-const rangeOf = () => S.p.range * (S.plans.has('shotgun') ? 0.5 : 1);
-const periodOf = () => 1 / (S.p.as * (S.plans.has('heavy') ? 0.6 : 1));
+const rangeOf = () => { const P = S.plans; return S.p.range * (P.has('shotgun') || P.has('bayonet') ? 0.5 : P.has('sniper') ? 1.6 : 1); };
+const periodOf = () => 1 / (S.p.as * (S.plans.has('sniper') ? 0.6 : 1) * (S.plans.has('gatling') ? 1 + 2 * S.p.spin : 1));
+
+// Columnas: hasta dónde llega un rayo antes de chocar, si hay línea de tiro, y empujar fuera a quien se mete
+function rayClip(x, y, ux, uy, len) {
+  let best = len;
+  for (const c of S.pillars) {
+    const cx = c.x - x, cy = c.y - y, al = cx * ux + cy * uy;
+    if (al <= 0) continue;
+    const perp2 = cx * cx + cy * cy - al * al, r2 = c.r * c.r;
+    if (perp2 >= r2) continue;
+    const t = al - Math.sqrt(r2 - perp2);
+    if (t < best) best = Math.max(0, t);
+  }
+  return best;
+}
+function blocked(a, b) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; return rayClip(a.x, a.y, dx / d, dy / d, d) < d - 0.01; }
+function collide(o, r) {
+  let c0 = null;
+  for (const c of S.pillars) {
+    const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 0.01, min = c.r + r;
+    if (d < min) { o.x = c.x + dx / d * min; o.y = c.y + dy / d * min; c0 = c; }
+  }
+  return c0;
+}
 
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
     if (!active(e)) continue;
     const d = dist(p, e) - e.r;
-    if (d <= rng && d < bd) { bd = d; bestE = e; }
+    if (d <= rng && d < bd && (S.plans.has('grenade') || !blocked(p, e))) { bd = d; bestE = e; }
   }
   return bestE;
 }
@@ -568,13 +603,14 @@ function onHit(e, dmg, ux, uy, big, col) {
 }
 
 function fireBasic(target) {
-  const p = S.p, rng = rangeOf();
+  const p = S.p, rng = rangeOf(), P = S.plans;
   if (!target || !active(target)) target = nearestInRange();
   if (!target) { p.cd = 0.12; p.crit = false; return; }
   p.shotN += 1;
   const ov = lv('r_pass2'), over = ov > 0 && p.shotN % Math.max(2, 5 - ov) === 0;
   let mult = over ? 2.5 : 1;
   if (p.crit) { mult *= 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
+  if (P.has('gatling')) mult *= 0.6;
   const big = p.crit || over, col = over ? FAM.bolt.color : slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
@@ -582,20 +618,21 @@ function fireBasic(target) {
   const bullet = (t, m) => { const [ux, uy] = aim(t); tracer(t.x, t.y); onHit(t, p.dmg * m, ux, uy, big, col); };
   blip(1250, 0.07, 'square', 0.035, -700);
 
-  if (S.plans.has('heavy')) {            // atraviesa en línea
-    const [ux, uy] = aim(target), len = rng + 40;
+  if (P.has('sniper')) {                 // atraviesa en línea; más daño cuanto más lejos
+    const [ux, uy] = aim(target), len = rayClip(p.x, p.y, ux, uy, rng + 40);
     tracer(p.x + ux * len, p.y + uy * len, 3);
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
       const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy;
       if (al < 0 || al > len + e.r || Math.abs(ex * uy - ey * ux) > 5 + e.r) continue;
-      onHit(e, p.dmg * mult * 2.3, ux, uy, true, col);
+      const far = clamp(al / rng, 0, 1);
+      onHit(e, p.dmg * mult * (0.5 + 2.5 * far), ux, uy, far > 0.6, col);
     }
     S.shake = Math.max(S.shake, 3.5);
-  } else if (S.plans.has('shotgun')) {   // abanico de perdigones
-    const [ux0, uy0] = aim(target), base = Math.atan2(uy0, ux0), len = rng + 20;
+  } else if (P.has('shotgun')) {         // abanico de perdigones
+    const [ux0, uy0] = aim(target), base = Math.atan2(uy0, ux0);
     for (const off of [-0.34, -0.17, 0, 0.17, 0.34]) {
-      const a = base + off, ux = Math.cos(a), uy = Math.sin(a); let bestE = null, ba = len;
+      const a = base + off, ux = Math.cos(a), uy = Math.sin(a); let bestE = null, ba = rayClip(p.x, p.y, ux, uy, rng + 20);
       for (const e of S.enemies) {
         if (!active(e)) continue;
         const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy;
@@ -605,7 +642,23 @@ function fireBasic(target) {
       if (bestE) onHit(bestE, p.dmg * mult * 0.6, ux, uy, false, col);
     }
     S.shake = Math.max(S.shake, 3);
-  } else if (S.plans.has('burst')) {     // tres balas seguidas
+  } else if (P.has('bayonet')) {         // estocada: te lanzas a través del objetivo
+    const [ux, uy] = aim(target), d = dist(p, target);
+    onHit(target, p.dmg * mult * 1.8, ux, uy, true, col);
+    lunge(Math.atan2(uy, ux), d + target.r + 22);
+  } else if (P.has('grenade')) {         // granada en arco con explosión en área
+    const tx = target.x, ty = target.y; aim(target);
+    S.fx.push({ k: 'lob', x1: p.x, y1: p.y, x2: tx, y2: ty, t: 0, life: 0.32, col });
+    S.timers.push({ t: 0.32, fn: () => {
+      S.fx.push({ k: 'ring', x: tx, y: ty, r: 36, t: 0, life: 0.22, col });
+      blip(140, 0.12, 'sawtooth', 0.04, -60);
+      for (const e of S.enemies.slice()) {
+        if (!active(e)) continue;
+        const dx = e.x - tx, dy = e.y - ty, dd = Math.hypot(dx, dy) || 1;
+        if (dd <= 36 + e.r) onHit(e, p.dmg * mult * 0.7, dx / dd, dy / dd, big, col);
+      }
+    } });
+  } else if (P.has('burst')) {           // tres balas seguidas
     bullet(target, mult * 0.45);
     for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => {
       const t2 = active(target) ? target : nearestInRange();
@@ -614,12 +667,19 @@ function fireBasic(target) {
   } else bullet(target, mult);
   if (over) for (const o of others(target, 110, 3)) bolt(target, o, p.dmg * 1.5, null);   // Chispazo
 }
+// Estocada de la Bayoneta: un esquive corto que atraviesa al objetivo
+function lunge(a, d) {
+  const p = S.p;
+  p.dvx = Math.cos(a); p.dvy = Math.sin(a);
+  p.dodgeT = d / (p.speed * T.dodge.mult); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
+  p.dodgeFrom = { x: p.x, y: p.y }; p.dodgeHit = new Set(); p.isLunge = true;
+}
 
 function startDodge(a, free) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.dodgeT = T.dodge.time; p.inv = Math.max(p.inv, T.dodge.time + 0.06);
-  p.dodgeFrom = { x: p.x, y: p.y };
+  p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
   p.dodgeHit = new Set();
@@ -632,6 +692,7 @@ function startDodge(a, free) {
 function endDodge() {
   const p = S.p, fd = lv('f_dodge'), th = fu('dodge', 'thermal');   // dúo Salto térmico: rastro de vapor
   if ((fd || th) && p.dodgeFrom) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 3, acc: 0.4, stacks: Math.max(1, fd), chill: th ? 1 : 0, shatter: th, steam: th });
+  if (S.plans.has('echo') && !p.isLunge && p.dodgeFrom) S.turrets.push({ x: p.dodgeFrom.x, y: p.dodgeFrom.y, life: 3, cd: 0.15 });   // Rifle gemelo
   p.dodgeFrom = null;
 }
 
@@ -640,7 +701,7 @@ function fireCharged(am) {
   const ratio = clamp(p.charge / ch.full, 0, 1);
   const rc2 = lv('r_charge2'), fc2 = lv('f_charge2');
   const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio) * (rc2 ? 1 + 0.3 * (rc2 - 1) : 1);
-  const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), len = ch.range, col = slotColor('charge');
+  const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), len = rayClip(p.x, p.y, Math.cos(p.chargeDir), Math.sin(p.chargeDir), ch.range), col = slotColor('charge');
   if (S.plans.has('mortar')) {
     const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
     const tx = clamp(tg ? tg.x : p.x + ux * 170, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 170, 0, T.room.h);
@@ -728,7 +789,7 @@ function update(dt) {
     if (bestE) { S.lock = bestE; blip(900, 0.04, 'triangle', 0.03); }
   }
   if (am < 0.3) aimLatch = false;
-  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf()) ? S.lock : nearestInRange();
+  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && (S.plans.has('grenade') || !blocked(p, S.lock))) ? S.lock : nearestInRange();
   S.target = target;
 
   // Disparo cargado
@@ -751,6 +812,7 @@ function update(dt) {
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (S.plans.has('burst') ? 1.25 : 1);
     p.windupTarget = target; p.cd = period; p.buffer = 0;
+    if (S.plans.has('gatling') && I.atk) p.spin = Math.min(1, p.spin + 0.1);
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -763,7 +825,8 @@ function update(dt) {
   let mult = 1;
   if (p.charging) mult = T.charge.slow;
   else if (p.windup > 0) mult = P.windupSlow;
-  else if (I.atk && target) mult = P.holdSlow;
+  else if (I.atk && target) mult = S.plans.has('gatling') ? 0.15 : P.holdSlow;
+  if (!I.atk) p.spin = Math.max(0, p.spin - dt * 1.6);
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
     p.x += p.dvx * p.speed * T.dodge.mult * dt; p.y += p.dvy * p.speed * T.dodge.mult * dt;
@@ -776,6 +839,21 @@ function update(dt) {
   }
   p.slow = mult;
   p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4);
+  collide(p, p.r);
+
+  // Rifles gemelos
+  for (const tu of S.turrets) {
+    tu.life -= dt; tu.cd -= dt;
+    if (tu.cd > 0) continue;
+    let bestE = null, bd = rangeOf();
+    for (const e of S.enemies) { if (!active(e)) continue; const d = dist(tu, e) - e.r; if (d < bd && !blocked(tu, e)) { bd = d; bestE = e; } }
+    if (!bestE) { tu.cd = 0.1; continue; }
+    const dx = bestE.x - tu.x, dy = bestE.y - tu.y, d = Math.hypot(dx, dy) || 1, col = slotColor('basic');
+    S.fx.push({ k: 'tracer', x1: tu.x, y1: tu.y, x2: bestE.x, y2: bestE.y, t: 0, life: 0.09, col });
+    onHit(bestE, p.dmg * 0.5, dx / d, dy / d, false, col);
+    tu.cd = periodOf();
+  }
+  S.turrets = S.turrets.filter(tu => tu.life > 0);
 
   // Enemigos
   for (const e of S.enemies) {
@@ -857,13 +935,22 @@ function update(dt) {
     const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, min = a.r + b.r + 1;
     if (d < min) { const push = (min - d) / 2, ux = dx / d, uy = dy / d; a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; }
   }
-  for (const e of S.enemies) { e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2); }
+  for (const e of S.enemies) {
+    e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2);
+    const c = collide(e, e.r);
+    if (c && active(e) && e.frozen <= 0) {   // rodear la columna en vez de quedarse pegado
+      const nx = e.x - c.x, ny = e.y - c.y, nl = Math.hypot(nx, ny) || 1, tx = -ny / nl, ty = nx / nl;
+      const dot = tx * (p.x - e.x) + ty * (p.y - e.y), sg = Math.abs(dot) > 8 ? Math.sign(dot) : e.side;
+      e.x += tx * sg * e.speed * dt * 0.8; e.y += ty * sg * e.speed * dt * 0.8;
+    }
+  }
   S.enemies = S.enemies.filter(e => e.hp > 0);
 
   // Proyectiles enemigos
   for (const s of S.shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (s.x < 0 || s.y < 0 || s.x > T.room.w || s.y > T.room.h) s.life = 0;
+    for (const c of S.pillars) if (Math.hypot(s.x - c.x, s.y - c.y) < c.r + s.r) s.life = 0;
     if (s.life > 0 && Math.hypot(s.x - p.x, s.y - p.y) < s.r + p.r) { if (p.inv <= 0) { hurtPlayer(s.dmg); s.life = 0; } }
   }
   S.shots = S.shots.filter(s => s.life > 0);
@@ -953,7 +1040,7 @@ function openPick() {
   pickQueue = [];
   const n = S.wave, fam = S.drop ? S.drop.fam : null;
   if (fam) pickQueue.push(() => { const o = pieceOptions(fam); return o.length ? { eyebrow: 'Sala ' + n + ' superada', title: 'Desmontas: ' + FAM[fam].name, opts: o } : statScreen(); });
-  if (n % 3 === 2) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
+  if (n % 3 === 1) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
   else if (n % 2 === 0) pickQueue.push(statScreen);
   pickQueue.push(doorScreen);
   advancePick();
@@ -1126,7 +1213,8 @@ function render() {
   if (p.charging) {
     const ratio = clamp(p.charge / T.charge.full, 0, 1), ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = p.charge >= T.charge.min ? 0.18 + 0.3 * ratio : 0.08; ctx.lineWidth = 2 + ratio * T.charge.width * 2;
-    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ux * T.charge.range, p.y + uy * T.charge.range); ctx.stroke(); ctx.globalAlpha = 1;
+    const cl = rayClip(p.x, p.y, ux, uy, T.charge.range);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ux * cl, p.y + uy * cl); ctx.stroke(); ctx.globalAlpha = 1;
   }
 
   // Fuego en el suelo y arma caída
@@ -1141,6 +1229,18 @@ function render() {
     const d = S.drop, r = 6 + Math.sin(S.t * 6);
     ctx.fillStyle = FAM[d.fam].color; ctx.beginPath(); ctx.moveTo(d.x, d.y - r * 1.4); ctx.lineTo(d.x + r, d.y); ctx.lineTo(d.x, d.y + r * 1.4); ctx.lineTo(d.x - r, d.y); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  // Columnas y rifles gemelos
+  for (const c of S.pillars) {
+    ctx.fillStyle = '#0b0d13'; ctx.beginPath(); ctx.arc(c.x + 2, c.y + 4, c.r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2b3245'; ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = C.edge; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#394259'; ctx.beginPath(); ctx.arc(c.x - c.r * 0.12, c.y - c.r * 0.18, c.r * 0.62, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const tu of S.turrets) {
+    ctx.strokeStyle = slotColor('basic'); ctx.globalAlpha = Math.min(1, tu.life); ctx.lineWidth = 1.5;
+    ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8); ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
   }
 
   // Enemigos
