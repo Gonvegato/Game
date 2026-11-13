@@ -307,7 +307,7 @@ function newGame() {
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0,
-      fury: 0, furyT: 0, sated: 0, satedT: 0, fireAmmo: 0, revive: 0,
+      fury: 0, furyT: 0, sated: 0, satedT: 0, fireAmmo: 0, revive: 0, drawing: false, draw: 0, drawPow: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: Object.fromEntries(SLOT_KEYS.map(k => [k, { items: [], fused: null }])), techs: new Set(), plans: new Set(), nextGod: null, buildV: 0, drop: null,
@@ -383,7 +383,7 @@ const WEAPONS = {
     { name: 'Gatillos de pelo', desc: '+15% de cadencia', cost: { feast: 3 } },
     { name: 'Fundas rápidas',   desc: 'El esquive se recupera otro 20% antes', cost: { venom: 3 } },
     { name: 'Tambor ampliado',  desc: 'El abanico dispara 13 balas en vez de 9', cost: { dragon: 3, stone: 2 } } ] },
-  bow: { name: 'Arco', desc: 'Más daño y alcance, pero dispara más lento. La flecha atraviesa a todos los enemigos en línea. El cargado es un aluvión de flechas sobre una zona.', cost: { dragon: 4, venom: 4 }, ups: [
+  bow: { name: 'Arco', desc: 'Mantén pulsado para tensar y suelta para disparar: cuanto más aguantas, más daño y alcance; soltar pronto es un disparo flojo. Más lento que el rifle, pero la flecha atraviesa a todos los enemigos en línea. El cargado es un aluvión de flechas sobre una zona.', cost: { dragon: 4, venom: 4 }, ups: [
     { name: 'Cuerda de tendón',  desc: '+20% de daño', cost: { orc: 3 } },
     { name: 'Puntas de cristal', desc: 'La flecha hace un 50% más a partir del segundo enemigo que atraviesa', cost: { stone: 3 } },
     { name: 'Carcaj hondo',      desc: 'El aluvión tiene una oleada más', cost: { feast: 3, dragon: 2 } } ] },
@@ -716,7 +716,7 @@ function shot(e, dmg, ux, uy, big, col) {
 function fireBasic(target) {
   const p = S.p, rng = rangeOf(), P = S.plans;
   if (!target || !active(target)) target = nearestInRange();
-  if (!target) { p.cd = 0.12; p.crit = false; return; }
+  if (!target && S.weapon !== 'bow') { p.cd = 0.12; p.crit = false; return; }   // el arco puede soltar la flecha sin objetivo
   p.shotN += 1;
   let mult = 1;
   if (p.crit) { mult = 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
@@ -729,10 +729,12 @@ function fireBasic(target) {
   blip(1250, 0.07, 'square', 0.035, -700);
 
   if (S.weapon === 'bow') {              // Arco: flecha que atraviesa en línea
-    const [ux, uy] = aim(target), len = rayClip(p.x, p.y, ux, uy, rng + 30), m = mult * 1.7 * (wup(0) ? 1.2 : 1);
-    tracer(p.x + ux * len, p.y + uy * len, 2);
+    const dr = p.drawPow, [ux, uy] = target ? aim(target) : [Math.cos(p.face), Math.sin(p.face)];
+    const len = rayClip(p.x, p.y, ux, uy, rng * (0.6 + 0.4 * dr) + 30), m = mult * (0.6 + 1.6 * dr) * (wup(0) ? 1.2 : 1);   // tensado: de 60% a 220%
+    tracer(p.x + ux * len, p.y + uy * len, 1 + 2 * dr);
     const line = S.enemies.filter(e => { if (!active(e)) return false; const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy; return al >= 0 && al <= len + e.r && Math.abs(ex * uy - ey * ux) <= 5 + e.r; }).sort((a, b) => dist(p, a) - dist(p, b));
-    line.forEach((e, i) => shot(e, p.dmg * m * (i > 0 && wup(1) ? 1.5 : 1), ux, uy, false, col));
+    line.forEach((e, i) => shot(e, p.dmg * m * (i > 0 && wup(1) ? 1.5 : 1), ux, uy, dr >= 1, col));
+    if (dr >= 1) S.shake = Math.max(S.shake, 3);
   } else if (S.weapon === 'pistols') {   // Pistolas: dos balas por pulsación
     bullet(target, mult * 0.55);
     S.timers.push({ t: 0.08, fn: () => { const t2 = active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.55); } } });
@@ -798,6 +800,7 @@ function startDodge(a, free) {
   p.fly = lv('dragon_dodge') > 0;                                           // Vuelo: salto largo por encima de las columnas
   p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (S.weapon === 'pistols' ? 1.3 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
   p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set();
+  p.drawing = false;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
   if (p.fly && fz('dive')) {                                                // fusión Picado: el salto busca al enemigo de delante
@@ -1005,7 +1008,7 @@ function update(dt) {
   S.target = target;
 
   // Disparo cargado
-  if (I.chg && !p.charging && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
+  if (I.chg && !p.charging && !p.drawing && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
   if (p.charging) {
     const before = p.charge; p.charge += dt * (tr('o4') ? 1.25 : 1);
     if (before < T.charge.full && p.charge >= T.charge.full) blip(1500, 0.06, 'sine', 0.04);
@@ -1017,8 +1020,17 @@ function update(dt) {
 
   // Disparo básico: cada disparo es un gesto corto que te frena
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
-  const want = p.buffer > 0 || I.atk;
-  if (want && target && !p.charging && p.dodgeT <= 0 && p.windup <= 0 && p.cd <= 0) {
+  const want = p.buffer > 0 || I.atk, bow = S.weapon === 'bow';
+  if (bow) {   // Arco: mantener para tensar, soltar para disparar
+    if (I.atk && !p.drawing && p.cd <= 0 && !p.charging && p.dodgeT <= 0) { p.drawing = true; p.draw = 0; }
+    if (p.drawing) {
+      const before = p.draw; p.draw = Math.min(1, p.draw + dt / (periodOf() * 0.85));
+      if (before < 1 && p.draw >= 1) blip(1700, 0.05, 'sine', 0.04);
+      if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x);
+      if (!I.atk) { p.drawing = false; p.drawPow = p.draw; p.cd = periodOf() * 0.3; fireBasic(target); }
+    }
+  }
+  if (!bow && want && target && !p.charging && p.dodgeT <= 0 && p.windup <= 0 && p.cd <= 0) {
     const period = periodOf();
     p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
@@ -1037,6 +1049,7 @@ function update(dt) {
   const free = has('o_berserk') && furyFull();                             // Berserker: sin frenazo
   let mult = 1;
   if (p.charging) mult = T.charge.slow;
+  else if (p.drawing) mult = free ? 1 : 0.4;
   else if (p.windup > 0) mult = free ? 1 : P.windupSlow;
   else if (I.atk && target) mult = free ? 1 : S.plans.has('gatling') ? 0.15 : P.holdSlow;
   if (!I.atk) p.spin = Math.max(0, p.spin - dt * 1.6);
@@ -1052,7 +1065,7 @@ function update(dt) {
     if (p.dodgeT <= 0) { collide(p, p.r); endDodge(); }
   } else {
     p.x += I.mx * p.speed * mult * dt; p.y += I.my * p.speed * mult * dt;
-    if (Math.hypot(I.mx, I.my) > 0.2 && p.windup <= 0 && !p.charging) p.face = Math.atan2(I.my, I.mx);
+    if (Math.hypot(I.mx, I.my) > 0.2 && p.windup <= 0 && !p.charging && !(p.drawing && target)) p.face = Math.atan2(I.my, I.mx);
     p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4);
     collide(p, p.r);
   }
@@ -1624,7 +1637,7 @@ function render() {
   if (p.fury > 0) { ctx.strokeStyle = GODS.orc.color; ctx.globalAlpha = 0.25 + 0.5 * p.fury / 100; ctx.lineWidth = 1 + 2.5 * p.fury / 100; ctx.beginPath(); ctx.arc(p.x, py, pr + 2, 0, Math.PI * 2 * p.fury / 100); ctx.stroke(); ctx.globalAlpha = 1; }
   const blink = p.inv > 0 && p.dodgeT <= 0 && Math.floor(S.t * 30) % 2 === 0;
   if (!blink) {
-    const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging;
+    const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#3d4458'; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(p.x - fx * 3, py - fy * 3); ctx.lineTo(p.x + fx * 17, py + fy * 17); ctx.stroke();
     ctx.strokeStyle = glow ? '#ffffff' : slotColor('basic'); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(p.x + fx * 5, py + fy * 5); ctx.lineTo(p.x + fx * 17, py + fy * 17); ctx.stroke();
@@ -1634,7 +1647,8 @@ function render() {
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
-  if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
+  if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * p.draw); ctx.stroke(); }
+  else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
   else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * clamp(1 - p.cd / period, 0, 1)); ctx.stroke(); ctx.globalAlpha = 1; }
   else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
   const dm = dodgeMax();
