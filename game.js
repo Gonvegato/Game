@@ -21,120 +21,201 @@ const T = {
   charge: { min: 0.3, full: 0.85, cd: 2.2, range: 380, dmgMult: 4.5, width: 7, slow: 0.08 },
 };
 
+// ───────────────────────── Enemigos ─────────────────────────
 const TYPES = {
-  stalker: { name: 'Acechador', r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#e5506a' },
-  runner:  { name: 'Corredor',  r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#ff7a59' },
-  brute:   { name: 'Bruto',     r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#b8394f' },
-  mage:    { name: 'Mago',      r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff' },
-  champ:   { name: 'Campeón',   r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  stalker: { name: 'Acechador',   r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#e5506a', cost: 1 },
+  runner:  { name: 'Corredor',    r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#ff7a59', cost: 1 },
+  brute:   { name: 'Bruto',       r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#b8394f', cost: 3 },
+  mage:    { name: 'Mago',        r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff', cost: 2 },
+  bomber:  { name: 'Bombardero',  r: 7,  hp: 28,  speed: 46,  dmg: 16, ai: 'bomb',            shape: 'square',  color: '#ffa64d', cost: 2 },
+  leaper:  { name: 'Saltador',    r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#7fd36b', cost: 2 },
+  sniper:  { name: 'Tirador',     r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
+  shaman:  { name: 'Chamán',      r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
+  champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
+  guardian:  { name: 'El Guardián',            r: 22, hp: 700,  speed: 40, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
+  matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1000, speed: 58, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
+  colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 1500, speed: 30, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
+  nameless:  { name: 'El Sin Nombre',          r: 22, hp: 2200, speed: 50, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
 };
+const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
+const WORLDS = [
+  { name: 'Las Criptas',           floor: '#1a1e29', tile: '#1f2431', pool: ['stalker', 'runner', 'mage', 'brute'],                                         boss: 'guardian' },
+  { name: 'El Nido',               floor: '#1b2420', tile: '#202b25', pool: ['stalker', 'runner', 'leaper', 'bomber', 'brute'],                             boss: 'matriarch' },
+  { name: 'Las Minas de Cristal',  floor: '#1a2030', tile: '#212a40', pool: ['runner', 'mage', 'sniper', 'shaman', 'brute', 'leaper'],                      boss: 'colossus' },
+  { name: 'El Umbral',             floor: '#241a22', tile: '#2c2029', pool: ['stalker', 'runner', 'mage', 'brute', 'bomber', 'leaper', 'sniper', 'shaman'], boss: 'nameless' },
+];
+const TOTAL = WORLDS.length * (RPW + 1);
 
+// Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Mecanismo ligero', desc: '+22% velocidad de ataque',            apply: p => { p.as *= 1.22; } },
-  { name: 'Núcleo denso',     desc: '+30% daño',                           apply: p => { p.dmg *= 1.3; } },
-  { name: 'Cañón largo',      desc: '+15% alcance',                        apply: p => { p.range *= 1.15; } },
-  { name: 'Botas de forja',   desc: '+8% velocidad de movimiento',         apply: p => { p.speed *= 1.08; } },
-  { name: 'Peto reforzado',   desc: '+25 vida máxima y recuperas 40',      apply: p => { p.maxHp += 25; p.hp = Math.min(p.maxHp, p.hp + 40); } },
+  { name: 'Mecanismo ligero', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
+  { name: 'Núcleo denso',     desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
+  { name: 'Cañón largo',      desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
+  { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
 ];
 
-TYPES.boss = { name: 'El Guardián', r: 22, hp: 700, speed: 40, dmg: 30, shape: 'circle', color: '#8a3a55', boss: true };
-
 // ───────────────────────── Deidades ─────────────────────────
-// El herrero no tiene dios. Cada sala la guarda el elegido de una deidad, con un arma bendecida:
-// lo matas, la desmontas y te quedas con la técnica. Las deidades miran y opinan.
+// El herrero no tiene dios. En las salas de deidad espera su elegido con un arma bendecida:
+// lo matas, la desmontas y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
 const GODS = {
-  dragon: { title: 'La Que Duerme Sobre Oro', theme: 'Dragones', weapon: 'Colmillo de la Durmiente', color: '#ff6a3c', key: 'Ascuas: se clavan en el enemigo y queman todas a la vez.', lines: {
-    enter:  ['entreabre un ojo. Su elegido guarda esta sala.', 'huele a intruso entre sus monedas.'],
-    champ:  ['cuenta su oro para calmarse. Le falta una pieza.', 'resopla humo. Ha perdido un elegido.'],
-    take:   ['te apunta en su lista de deudores.', 'no olvida quién le roba.'],
-    master: ['ruge: nadie le había robado tanto.'] } },
-  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Pico de Veta Madre', color: '#6fe3d0', key: 'Cristales: se quedan clavados en la sala y otras piezas los usan.', lines: {
-    enter:  ['tarda un siglo en mirarte. Ya te está mirando.', 'cruje. Su elegido despierta.'],
-    champ:  ['no dice nada. En algún lugar se agrieta una montaña.', 'guarda silencio. Es un mal silencio.'],
-    take:   ['toma nota. Tiene tiempo.', 'observa cómo tallas lo que era suyo.'],
-    master: ['pronuncia tu nombre, muy despacio.'] } },
-  venom: { title: 'La Boticaria Sin Rostro', theme: 'Veneno', weapon: 'Aguijón de la Boticaria', color: '#9be04a', key: 'Veneno: no caduca y se acumula.', lines: {
-    enter:  ['anota tu peso y tu altura.', 'prepara un frasco con tu nombre.'],
-    champ:  ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
-    take:   ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'],
-    master: ['te propone, encantada, un experimento.'] } },
-  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Trinchante del Anfitrión', color: '#ffc94d', key: 'Bocados: los sueltan los enemigos y al comerlos disparas más rápido.', lines: {
-    enter:  ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
-    champ:  ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
-    take:   ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'],
-    master: ['brinda por ti, y ya van tres copas.'] } },
-  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Hacha del Primer Puño', color: '#c58bff', key: 'Furia: sube al golpear y al recibir, y lo potencia todo.', lines: {
-    enter:  ['escupe al suelo. Su elegido quiere tu cabeza.', 'hace sonar los tambores.'],
-    champ:  ['se ríe a carcajadas. Buen golpe.', 'golpea la mesa: ¡otro!'],
-    take:   ['dice que robar a un muerto es de listos.', 'gruñe algo parecido a un elogio.'],
-    master: ['te reta a duelo. Lo dice en serio.'] } },
+  dragon: { title: 'La Que Duerme Sobre Oro', theme: 'Dragones', weapon: 'Colmillo de la Durmiente', mat: 'Escama', color: '#ff6a3c',
+    key: 'Ascuas: se clavan en el enemigo y queman todas a la vez. Y oro: cuanto más llevas, más fuerte eres.', lines: {
+    enter: ['entreabre un ojo. Su elegido guarda esta sala.', 'huele a intruso entre sus monedas.'],
+    champ: ['cuenta su oro para calmarse. Le falta una pieza.', 'resopla humo. Ha perdido un elegido.'],
+    take:  ['te apunta en su lista de deudores.', 'no olvida quién le roba.'], master: ['ruge: nadie le había robado tanto.'] } },
+  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Pico de Veta Madre', mat: 'Mena', color: '#6fe3d0',
+    key: 'Cristales: se quedan clavados en la sala y repiten lo que tú haces.', lines: {
+    enter: ['tarda un siglo en mirarte. Ya te está mirando.', 'cruje. Su elegido despierta.'],
+    champ: ['no dice nada. En algún lugar se agrieta una montaña.', 'guarda silencio. Es un mal silencio.'],
+    take:  ['toma nota. Tiene tiempo.', 'observa cómo tallas lo que era suyo.'], master: ['pronuncia tu nombre, muy despacio.'] } },
+  venom: { title: 'La Boticaria Sin Rostro', theme: 'Veneno', weapon: 'Aguijón de la Boticaria', mat: 'Glándula', color: '#9be04a',
+    key: 'Veneno: no caduca, se acumula y se contagia.', lines: {
+    enter: ['anota tu peso y tu altura.', 'prepara un frasco con tu nombre.'],
+    champ: ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
+    take:  ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'], master: ['te propone, encantada, un experimento.'] } },
+  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Trinchante del Anfitrión', mat: 'Especia', color: '#ff8fb3',
+    key: 'Reserva: la vida que robas por encima de tu máximo se guarda como escudo, y luego se gasta.', lines: {
+    enter: ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
+    champ: ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
+    take:  ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'], master: ['brinda por ti, y ya van tres copas.'] } },
+  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Hacha del Primer Puño', mat: 'Hueso', color: '#d9a066',
+    key: 'Furia: sube al golpear y al recibir, y lo potencia todo.', lines: {
+    enter: ['escupe al suelo. Su elegido quiere tu cabeza.', 'hace sonar los tambores.'],
+    champ: ['se ríe a carcajadas. Buen golpe.', 'golpea la mesa: ¡otro!'],
+    take:  ['dice que robar a un muerto es de listos.', 'gruñe algo parecido a un elogio.'], master: ['te reta a duelo. Lo dice en serio.'] } },
+  time: { title: 'El Relojero de la Última Hora', theme: 'Tiempo', weapon: 'Manecilla del Relojero', mat: 'Arena', color: '#7fa8ff',
+    key: 'Ecos: lo que haces vuelve a ocurrir un poco después. Y pausas: los enemigos lentos sufren más.', lines: {
+    enter: ['da cuerda a su elegido. Tic.', 'ya ha visto cómo acaba esta sala. No te lo dirá.'],
+    champ: ['adelanta su reloj un minuto, molesto.', 'anota la hora de la muerte. Llega tarde.'],
+    take:  ['murmura que eso ya lo habías robado antes.', 'te presta un segundo. Lo querrá de vuelta.'], master: ['detiene su reloj para mirarte bien.'] } },
+  shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Guadaña de la Contadora', mat: 'Ceniza', color: '#9d8cff',
+    key: 'Sombras: los enemigos que matas se levantan y pelean por ti.', lines: {
+    enter: ['empieza a contar. Tú eres el siguiente número.', 'envía a su elegido con un hueco reservado para ti.'],
+    champ: ['pierde la cuenta por primera vez en mil años.', 'suma uno. No era el que esperaba.'],
+    take:  ['ve cómo sus muertos te siguen a ti.', 'te observa: los muertos no deberían obedecerte.'], master: ['deja de contar y se pone en pie.'] } },
+  storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Lanza de la Voz', mat: 'Chispa', color: '#ffe14d',
+    key: 'Agujas: se clavan sin hacer nada, y cuando las descargas saltan rayos.', lines: {
+    enter: ['truena a lo lejos. Su elegido ya está aquí.', 'carga el aire. Se te eriza el pelo.'],
+    champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
+    take:  ['te avisa: los rayos no tienen dueño.', 'ríe. Le gusta el ruido que haces.'], master: ['grita tu nombre, y se oye en los cuatro mundos.'] } },
 };
+const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
 const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
-// Las piezas no llevan su efecto encerrado: se enganchan a cosas que pasan (una bala, una explosión, un esquive,
-// una baja) y por eso unas modifican a otras aunque vengan de deidades distintas.
+
+// Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a balas, explosiones, esquives y bajas.
 const PIECES = [
+  // Dragones
   { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada bala clava ${pl(l, 'Ascua')}. Se apilan hasta 8 y queman todas a la vez.` },
-  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `El cargado clava ${1 + l} Ascuas y hace estallar todas las que tenga cada enemigo (${35 + 10 * (l - 1)}% por Ascua, en área). Con el rifle, además, se abre en cono.` },
+  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `El cargado clava ${1 + l} Ascuas y hace estallar todas las que tenga cada enemigo (${35 + 10 * (l - 1)}% por Ascua, en área). Con el rifle se abre en cono.` },
   { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `El esquive es un salto largo que pasa por encima de las columnas, y al aterrizar hay una explosión de ${150 * l}% de daño.` },
-  { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Pira',             desc: l => `Quien muere con Ascuas explota (${20 * l}% por Ascua) y reparte la mitad de las suyas.` },
+  { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Quien muere con Ascuas suelta ${pl(l, 'moneda')}. Todo tu daño sube un ${l}% por cada 10 de oro que lleves, hasta +${30 + 10 * l}%.` },
+  // Minerales
   { id: 'stone_basic',    god: 'stone',  slot: 'basic',   name: 'Esquirla',         desc: l => `${Math.max(1, 4 - l) > 1 ? 'Cada ' + Math.max(1, 4 - l) + ' balas dejan' : 'Cada bala deja'} un Cristal clavado junto al enemigo. Los Cristales duran 9 s.` },
   { id: 'stone_charge',   god: 'stone',  slot: 'charge',  name: 'Prisma',           desc: l => `Al disparar el cargado, cada Cristal dispara también un rayo al enemigo más cercano: ${40 * l}% del daño y todos los efectos de tu cargado.` },
   { id: 'stone_dodge',    god: 'stone',  slot: 'dodge',   name: 'Geoda',            desc: l => `El esquive deja un Cristal donde estabas, y atravesar un Cristal lo revienta: ${120 * l}% de daño en área.` },
   { id: 'stone_passive',  god: 'stone',  slot: 'passive', name: 'Veta',             desc: l => `Cada bala que disparas la repite el Cristal más cercano al objetivo, al ${30 * l}% de daño y con tus efectos de disparo.` },
+  // Veneno
   { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Dardo',            desc: l => `Cada bala aplica ${l} de Veneno. No caduca y se acumula hasta 30.` },
   { id: 'venom_charge',   god: 'venom',  slot: 'charge',  name: 'Purga',            desc: l => `El cargado convierte el Veneno en daño inmediato: ${15 * l}% por cada punto. El enemigo se queda con la mitad y deja un charco tóxico.` },
   { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `El esquive deja 5 s un rastro tóxico que aplica ${l} de Veneno por pulso.` },
   { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un envenenado, todo su Veneno salta a los ${1 + l} enemigos más cercanos.` },
-  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Sazonar',          desc: l => `Las balas sazonan. Quien muere sazonado suelta un Bocado (${1 + l} si llevaba 5 impactos). Cada Bocado que comes: +10% de cadencia 6 s, hasta 5, y 2 de vida.` },
-  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Trinchar',         desc: l => `El cargado ejecuta a los enemigos por debajo del ${15 + 10 * l}% de vida y les saca 2 Bocados.` },
-  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Sobremesa',        desc: l => `Al esquivar te comes todos los Bocados de la sala, y cada uno estalla a tu alrededor: ${80 * l}% de daño.` },
-  { id: 'feast_passive',  god: 'feast',  slot: 'passive', name: 'Glotón',           desc: l => `Con 3 o más de Saciedad, cada bala va seguida de otra al ${30 + 20 * l}% de daño.` },
+  // Manjares
+  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Bocado',           desc: l => `Cada bala te cura ${(0.5 * l).toFixed(1)}. La vida que sobra se guarda como Reserva, un escudo de hasta 30.` },
+  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Banquete',         desc: l => `El cargado gasta toda tu Reserva: hace un ${4 * l}% más de daño por cada punto, y cada enemigo que mata te cura 4.` },
+  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Brindis',          desc: l => `Atravesar a un enemigo con el esquive le hace ${60 * l}% de daño y te cura ${3 * l}.` },
+  { id: 'feast_passive',  god: 'feast',  slot: 'passive', name: 'Glotón',           desc: l => `Todo tu daño sube un ${l}% por cada punto de Reserva.` },
+  // Orcos
   { id: 'orc_basic',      god: 'orc',    slot: 'basic',   name: 'Tambor de guerra', desc: l => `Golpear y recibir golpes te da Furia. Todo tu daño sube hasta +${40 * l}% con la Furia llena.` },
   { id: 'orc_charge',     god: 'orc',    slot: 'charge',  name: 'Grito de guerra',  desc: l => `El cargado gasta toda tu Furia en un grito a tu alrededor: empuja, aturde y hace hasta ${50 + 200 * l}% de daño. Cuanta más Furia, más grande.` },
   { id: 'orc_dodge',      god: 'orc',    slot: 'dodge',   name: 'Embestida',        desc: l => `Atravesar a un enemigo con el esquive le hace ${100 * l}% de daño, lo aturde y te da 15 de Furia.` },
   { id: 'orc_passive',    god: 'orc',    slot: 'passive', name: 'Sed de sangre',    desc: l => `Con la Furia llena disparas un ${30 * l}% más rápido y cada baja te devuelve el esquive.` },
+  // Tiempo
+  { id: 'time_basic',     god: 'time',   slot: 'basic',   name: 'Segundero',        desc: l => `Cada bala deja un eco: 1,5 s después vuelve a impactar sola, al ${50 + 15 * (l - 1)}% de daño y con todos sus efectos.` },
+  { id: 'time_charge',    god: 'time',   slot: 'charge',  name: 'Rebobinar',        desc: l => `2 s después de disparar el cargado, se repite solo desde donde lo lanzaste, al ${60 + 15 * (l - 1)}% de daño.` },
+  { id: 'time_dodge',     god: 'time',   slot: 'dodge',   name: 'Hora muerta',      desc: l => `El esquive deja ${2 + l} s una burbuja donde los enemigos y sus proyectiles van al 30% de velocidad.` },
+  { id: 'time_passive',   god: 'time',   slot: 'passive', name: 'Reloj de arena',   desc: l => `Los enemigos ralentizados o aturdidos reciben un ${30 * l}% más de daño de todo.` },
+  // Sombras
+  { id: 'shade_basic',    god: 'shade',  slot: 'basic',   name: 'Marca de tumba',   desc: l => `Las balas marcan. Un enemigo marcado que muere se levanta como Sombra y pelea por ti 9 s. Hasta ${2 + l} Sombras a la vez.` },
+  { id: 'shade_charge',   god: 'shade',  slot: 'charge',  name: 'Orden',            desc: l => `El cargado ordena a todas tus Sombras lanzarse contra el objetivo y estallar: ${150 * l}% de daño en área cada una.` },
+  { id: 'shade_dodge',    god: 'shade',  slot: 'dodge',   name: 'Relevo',           desc: l => `Al esquivar dejas una Sombra donde estabas durante ${3 + l} s.` },
+  { id: 'shade_passive',  god: 'shade',  slot: 'passive', name: 'Séquito',          desc: l => `Todo tu daño sube un ${8 * l}% por cada Sombra viva, y las Sombras aplican tus efectos de disparo al golpear.` },
+  // Tormenta
+  { id: 'storm_basic',    god: 'storm',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada bala clava ${pl(l, 'Aguja')} (hasta 6 por enemigo). Solas no hacen nada: esperan una descarga.` },
+  { id: 'storm_charge',   god: 'storm',  slot: 'charge',  name: 'Sobretensión',     desc: l => `El cargado descarga las Agujas de quien alcanza: cada una hace ${70 + 20 * (l - 1)}% de daño y suelta un rayo a otro enemigo.` },
+  { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Atravesar a un enemigo con el esquive descarga sus Agujas (${80 + 20 * (l - 1)}% cada una). Si no tiene, le clavas 2.` },
+  { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a quien alcanzan.` },
 ];
-// Técnicas: no ocupan ranura. Casi todas se enganchan a TODAS tus explosiones, balas o bajas, vengan de donde vengan.
-// rar: 1 rara, 2 épica, 3 legendaria. req: hacen falta todas esas piezas.
+// Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
+// te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Uno por cada pareja de deidades.
+const DUOS = [
+  // Disparo
+  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Bala de obsidiana',  desc: 'Los Cristales arden: queman a quien tengan cerca y, al apagarse, estallan en fuego.' },
+  { id: 'eternal',   slot: 'basic',   a: 'dragon_basic',  b: 'time_basic',   name: 'Brasa eterna',       desc: 'Las Ascuas no se apagan nunca, y el eco de cada bala clava el doble.' },
+  { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Cada Cristal es una lápida: cuando se apaga, de él se levanta una Sombra.' },
+  { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Cada bala aplica más Veneno cuanta más Furia tengas, el Veneno que hace daño te da Furia, y con la Furia llena actúa el doble de rápido.' },
+  { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Al descargar a un enemigo, cada rayo inyecta a quien alcanza todo el Veneno que tuviera el primero. Las Agujas no caducan en envenenados.' },
+  { id: 'warhunger', slot: 'basic',   a: 'feast_basic',   b: 'orc_basic',    name: 'Hambre de guerra',   desc: 'Curarte te da Furia, y con la Furia llena cada bala te cura el triple.' },
+  { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Cada Sombra que se levanta deja un eco: 1,5 s después se levanta otra en el mismo sitio.' },
+  // Cargado
+  { id: 'rot',       slot: 'charge',  a: 'dragon_charge', b: 'venom_charge', name: 'Aliento podrido',    desc: 'Antes de estallar, el cargado iguala las Ascuas y el Veneno de cada enemigo a la suma de los dos.' },
+  { id: 'roar',      slot: 'charge',  a: 'dragon_charge', b: 'orc_charge',   name: 'Rugido',             desc: 'El cono de fuego crece con la Furia hasta el doble de tamaño, y el grito solo gasta la mitad.' },
+  { id: 'rod',       slot: 'charge',  a: 'stone_charge',  b: 'storm_charge', name: 'Pararrayos',         desc: 'Si hay un Cristal cerca de quien descargas, los rayos pasan por él y salen el doble.' },
+  { id: 'table',     slot: 'charge',  a: 'stone_charge',  b: 'feast_charge', name: 'Mesa puesta',        desc: 'Los Cristales devoran: ejecutan solos a los enemigos débiles que tengan cerca, y cada uno te da 4 de Reserva.' },
+  { id: 'cortege',   slot: 'charge',  a: 'venom_charge',  b: 'shade_charge', name: 'Cortejo fúnebre',    desc: 'Cada Sombra que estalla deja un charco tóxico y aplica 6 de Veneno.' },
+  { id: 'supper',    slot: 'charge',  a: 'feast_charge',  b: 'shade_charge', name: 'Última cena',        desc: 'Cada Sombra que estalla te da 5 de Reserva, y tus Sombras ejecutan a los enemigos débiles que golpean.' },
+  { id: 'echocry',   slot: 'charge',  a: 'orc_charge',    b: 'time_charge',  name: 'Grito con eco',      desc: 'El grito se repite solo 2 s después con la misma fuerza y sin gastar Furia.' },
+  // Esquive
+  { id: 'comet',     slot: 'dodge',   a: 'dragon_dodge',  b: 'storm_dodge',  name: 'Cometa',             desc: 'El impacto del aterrizaje descarga las Agujas de todos los que alcanza y les clava 2.' },
+  { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',   b: 'orc_dodge',    name: 'Avalancha',          desc: 'Embestir a un enemigo lo lanza por los aires. Si choca con una columna, un Cristal, la pared u otro enemigo, estalla: 300% de daño y aturde.' },
+  { id: 'stalagm',   slot: 'dodge',   a: 'stone_dodge',   b: 'venom_dodge',  name: 'Estela de cristal',  desc: 'El rastro tóxico cristaliza: deja tres Cristales a lo largo, y todos tus Cristales envenenan a quien tengan cerca.' },
+  { id: 'miasma',    slot: 'dodge',   a: 'venom_dodge',   b: 'time_dodge',   name: 'Miasma',             desc: 'Dentro de la burbuja, el Veneno hace daño el triple de rápido.' },
+  { id: 'toast',     slot: 'dodge',   a: 'feast_dodge',   b: 'storm_dodge',  name: 'Brindis eléctrico',  desc: 'Al atravesar a un enemigo te curas 2 por cada Aguja que le descargues.' },
+  { id: 'horde',     slot: 'dodge',   a: 'orc_dodge',     b: 'shade_dodge',  name: 'Carga de la horda',  desc: 'Cuando embistes a un enemigo, todas tus Sombras embisten contigo: cada una le hace 100% de daño.' },
+  { id: 'stasis',    slot: 'dodge',   a: 'time_dodge',    b: 'storm_dodge',  name: 'Relámpago en pausa', desc: 'Los enemigos dentro de la burbuja reciben una Aguja por segundo, y cuando la burbuja se cierra se descargan todos a la vez.' },
+  // Pasiva
+  { id: 'hoardfeast', slot: 'passive', a: 'dragon_passive', b: 'feast_passive', name: 'Banquete del dragón', desc: 'Para Glotón, cada 10 de oro cuenta como un punto de Reserva. Y cada moneda que recoges te cura 1.' },
+  { id: 'ashlegion', slot: 'passive', a: 'dragon_passive', b: 'shade_passive', name: 'Ejército de ceniza', desc: 'Tus Sombras arden: clavan 2 Ascuas al golpear y estallan al desvanecerse.' },
+  { id: 'clockquartz', slot: 'passive', a: 'stone_passive', b: 'time_passive', name: 'Cuarzo de reloj',   desc: 'Los Cristales ralentizan un 40% a los enemigos cercanos, y no se apagan mientras ralenticen a alguien.' },
+  { id: 'indigest',  slot: 'passive', a: 'venom_passive', b: 'feast_passive', name: 'Indigestión',        desc: 'El daño que hace tu Veneno te cura un 10%.' },
+  { id: 'longlunch', slot: 'passive', a: 'feast_passive', b: 'time_passive',  name: 'Sobremesa larga',    desc: 'La Reserva no se pierde con el tiempo, y ralentiza a los enemigos cercanos un 2% por punto, hasta un 60%.' },
+  { id: 'warthunder', slot: 'passive', a: 'orc_passive',  b: 'storm_passive', name: 'Trueno de guerra',   desc: 'Con la Furia llena, cada bala tuya suelta además un rayo a otro enemigo.' },
+  { id: 'chargedshade', slot: 'passive', a: 'shade_passive', b: 'storm_passive', name: 'Sombras cargadas', desc: 'Tus Sombras clavan una Aguja al golpear y, al desvanecerse, descargan a los enemigos de alrededor.' },
+];
+// Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
-  { id: 'd_blood',   god: 'dragon', rar: 1, name: 'Sangre de dragón',   desc: 'Todas tus explosiones clavan 2 Ascuas y son un 30% más grandes.' },
-  { id: 'd_forge',   god: 'dragon', rar: 3, name: 'Corazón de horno',   desc: 'Las Ascuas no tienen tope, y cada 10 que acumula un enemigo estallan solas: 400% de daño en área.', req: ['dragon_basic'] },
-  { id: 'm_reson',   god: 'stone',  rar: 1, name: 'Resonancia',         desc: 'Cada explosión tuya hace estallar también el Cristal más cercano, sin romperlo.' },
-  { id: 'm_quartz',  god: 'stone',  rar: 2, name: 'Cuarzo vivo',        desc: 'Donde muere un enemigo nace un Cristal, y los Cristales duran el doble.' },
-  { id: 'v_vapors',  god: 'venom',  rar: 1, name: 'Vapores',            desc: 'Todas tus explosiones aplican 3 de Veneno.' },
-  { id: 'v_syn',     god: 'venom',  rar: 2, name: 'Organismo débil',    desc: 'Los envenenados reciben un 3% más de daño de todo por cada punto de Veneno, hasta +90%.' },
-  { id: 'f_dessert', god: 'feast',  rar: 1, name: 'Postre',             desc: 'Cada Bocado te devuelve una carga de esquive y recarga el disparo cargado.' },
-  { id: 'f_banquet', god: 'feast',  rar: 2, name: 'Banquete',           desc: 'Todos los enemigos sueltan un Bocado al morir, estén sazonados o no.' },
-  { id: 'o_drums',   god: 'orc',    rar: 1, name: 'Tambores lejanos',   desc: 'Cada explosión tuya te da 8 de Furia y cada baja, 10.' },
-  { id: 'o_berserk', god: 'orc',    rar: 3, name: 'Berserker',          desc: 'Con la Furia llena no te frenas al disparar.', req: ['orc_basic'] },
+  { id: 'd_blood',   god: 'dragon', rar: 1, name: 'Sangre de dragón',  desc: 'Todas tus explosiones clavan 2 Ascuas y son un 30% más grandes.' },
+  { id: 'd_pyre',    god: 'dragon', rar: 2, name: 'Pira',              desc: 'Quien muere con Ascuas explota: 30% de daño por Ascua, y reparte la mitad de las suyas.', req: ['dragon_basic'] },
+  { id: 'm_reson',   god: 'stone',  rar: 1, name: 'Resonancia',        desc: 'Cada explosión tuya hace estallar también el Cristal más cercano, sin romperlo.' },
+  { id: 'm_quartz',  god: 'stone',  rar: 2, name: 'Cuarzo vivo',       desc: 'Donde muere un enemigo nace un Cristal, y los Cristales duran el doble.' },
+  { id: 'v_vapors',  god: 'venom',  rar: 1, name: 'Vapores',           desc: 'Todas tus explosiones aplican 3 de Veneno.' },
+  { id: 'v_syn',     god: 'venom',  rar: 2, name: 'Organismo débil',   desc: 'Los envenenados reciben un 3% más de daño de todo por cada punto de Veneno, hasta +90%.' },
+  { id: 'f_cellar',  god: 'feast',  rar: 1, name: 'Bodega',            desc: 'Tu Reserva máxima se duplica.' },
+  { id: 'f_carve',   god: 'feast',  rar: 2, name: 'Trinchar',          desc: 'Cualquier golpe tuyo ejecuta a los enemigos por debajo del 12% de vida. No funciona con jefes.' },
+  { id: 'o_drums',   god: 'orc',    rar: 1, name: 'Tambores lejanos',  desc: 'Cada explosión tuya te da 8 de Furia y cada baja, 10.' },
+  { id: 'o_berserk', god: 'orc',    rar: 3, name: 'Berserker',         desc: 'Con la Furia llena no te frenas al disparar.', req: ['orc_basic'] },
+  { id: 't_overtime', god: 'time',  rar: 1, name: 'Prórroga',          desc: 'Todos tus ecos llegan en la mitad de tiempo.' },
+  { id: 't_paradox', god: 'time',   rar: 3, name: 'Paradoja',          desc: 'El eco de cada bala deja a su vez otro eco.', req: ['time_basic'] },
+  { id: 's_guard',   god: 'shade',  rar: 1, name: 'Guardia de honor',  desc: 'Tus Sombras destruyen los proyectiles enemigos que tocan.' },
+  { id: 's_legion',  god: 'shade',  rar: 2, name: 'Legión',            desc: 'Caben 3 Sombras más y duran el doble.' },
+  { id: 'r_over',    god: 'storm',  rar: 2, name: 'Sobrecarga',        desc: 'Cuando un enemigo llega al tope de Agujas, se descarga solo: 100% de daño por cada una y un rayo por aguja.', req: ['storm_basic'] },
+  { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
-// Maestría: llevar piezas de la misma deidad en 3 acciones distintas.
+// Maestría: llevar a la misma deidad en 3 acciones (los dúos cuentan para las dos).
 const MASTERY = {
-  dragon: { name: 'Heredera del fuego',     desc: 'Las Ascuas se apilan hasta 20 y queman un 50% más.' },
-  stone:  { name: 'Corazón de la montaña',  desc: 'Caben el doble de Cristales y Veta los usa de dos en dos.' },
-  venom:  { name: 'Paciente cero',          desc: 'El Veneno hace daño el doble de rápido.' },
-  feast:  { name: 'Invitado de honor',      desc: 'La Saciedad llega hasta 10 y no se pierde.' },
-  orc:    { name: 'Caudillo',               desc: 'La Furia nunca baja de 50.' },
+  dragon: { name: 'Heredera del fuego',    desc: 'Las Ascuas se apilan hasta 20 y queman un 50% más.' },
+  stone:  { name: 'Corazón de la montaña', desc: 'Caben el doble de Cristales y Veta los usa de dos en dos.' },
+  venom:  { name: 'Paciente cero',         desc: 'El Veneno hace daño el doble de rápido.' },
+  feast:  { name: 'Invitado de honor',     desc: 'Toda la vida que recuperas aumenta un 50%.' },
+  orc:    { name: 'Caudillo',              desc: 'La Furia nunca baja de 50.' },
+  time:   { name: 'Dueño de la hora',      desc: 'Tus ecos hacen el 100% del daño original.' },
+  shade:  { name: 'Reina de los muertos',  desc: 'Tus Sombras hacen un 50% más de daño y duran un 50% más.' },
+  storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
-// Fusiones: dos piezas concretas de deidades distintas, en la misma acción, se funden en una habilidad nueva
-// con nombre y regla propios. Las dos piezas siguen actuando (con un nivel más) y queda libre una ranura.
-const FUSIONS = [
-  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',   b: 'stone_basic',   name: 'Bala de obsidiana', desc: 'Los Cristales arden: queman a quien tengan cerca y, al apagarse, estallan en fuego.' },
-  { id: 'toxgeode',  slot: 'basic',   a: 'stone_basic',    b: 'venom_basic',   name: 'Geoda tóxica',      desc: 'Los Cristales supuran veneno a su alrededor y no se apagan mientras envenenen a alguien.' },
-  { id: 'boil',      slot: 'basic',   a: 'venom_basic',    b: 'orc_basic',     name: 'Sangre hirviente',  desc: 'Cada bala aplica más Veneno cuanta más Furia tengas, el Veneno que hace daño te da Furia, y con la Furia llena actúa el doble de rápido.' },
-  { id: 'rot',       slot: 'charge',  a: 'dragon_charge',  b: 'venom_charge',  name: 'Aliento podrido',   desc: 'Antes de estallar, el cargado iguala las Ascuas y el Veneno de cada enemigo a la suma de los dos.' },
-  { id: 'table',     slot: 'charge',  a: 'stone_charge',   b: 'feast_charge',  name: 'Mesa puesta',       desc: 'Los Cristales ejecutan solos a cualquier enemigo débil que tengan cerca, sin esperar a tu cargado, y le sacan un Bocado.' },
-  { id: 'warfeast',  slot: 'charge',  a: 'feast_charge',   b: 'orc_charge',    name: 'Festín de guerra',  desc: 'El grito ejecuta a los enemigos débiles que alcanza. Cada ejecución te devuelve 25 de Furia, y con dos o más puedes volver a cargar al instante.' },
-  { id: 'dive',      slot: 'dodge',   a: 'dragon_dodge',   b: 'orc_dodge',     name: 'Picado',            desc: 'El salto se lanza sobre el enemigo que tengas delante. El impacto crece con la Furia, aturde y deja Ascuas a todos.' },
-  { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',    b: 'orc_dodge',     name: 'Avalancha',         desc: 'Embestir a un enemigo lo lanza por los aires. Si choca con una columna, un Cristal, la pared u otro enemigo, estalla: 300% de daño y aturde.' },
-  { id: 'roast',     slot: 'passive', a: 'dragon_passive', b: 'feast_passive', name: 'Asado',             desc: 'Quien muere con Ascuas suelta un Bocado asado. Comerlo carga 5 balas de fuego que explotan y clavan Ascuas.' },
-  { id: 'bait',      slot: 'passive', a: 'venom_passive',  b: 'feast_passive', name: 'Cebo',              desc: 'Los Bocados que no te comes se pudren a los 3 s. El enemigo que pise uno revienta una nube: 8 de Veneno y aturdido.' },
-];
-const FUSION = Object.fromEntries(FUSIONS.map(f => [f.id, f]));
-// Planos de reforja: cambian cómo funciona el rifle, no solo lo que aplica.
+// Planos: mejoras del arma que salen durante la partida (jefes y tienda).
 const PLANS = [
   { id: 'echo',    name: 'Arma gemela',   desc: 'Al esquivar dejas una copia del arma donde estabas: dispara sola 3 s a tu cadencia, al 50% de daño y con tus efectos.' },
   { id: 'tempo',   name: 'Compás',        desc: 'Si pulsas justo cuando el anillo se llena, el disparo hace el doble de daño. Mantener pulsado o machacar el botón no cuenta.' },
@@ -143,6 +224,57 @@ const PLANS = [
   { id: 'double',  name: 'Doble esquive', desc: 'Llevas una carga más de esquive.' },
 ];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
+
+// ───────────────────────── Lo permanente: armas y árbol ─────────────────────────
+// stat/mult: mejoras genéricas (range, as, dmg, ccd). Las demás tienen efecto propio por índice.
+const WEAPONS = {
+  rifle: { name: 'Rifle', desc: 'Un disparo por pulsación, con su frenazo. El cargado es un rayo que atraviesa.', cost: null, ups: [
+    { name: 'Cañón estriado',  desc: '+15% de alcance', cost: { iron: 1, stone: 3 }, stat: 'range', mult: 1.15 },
+    { name: 'Culata de hueso', desc: 'El frenazo de cada disparo dura un 25% menos', cost: { iron: 1, orc: 3 } },
+    { name: 'Cámara doble',    desc: 'El cargado se recupera un 30% antes', cost: { iron: 2, dragon: 3 }, stat: 'ccd', mult: 0.7 } ] },
+  pistols: { name: 'Pistolas dobles', desc: 'Dos balas por pulsación, más cadencia, y un esquive más largo que se recupera antes. Menos daño por bala y menos alcance. El cargado vacía los cargadores en abanico.', cost: { iron: 2, stone: 3, orc: 3 }, ups: [
+    { name: 'Gatillos de pelo', desc: '+15% de cadencia', cost: { iron: 1, feast: 3 }, stat: 'as', mult: 1.15 },
+    { name: 'Fundas rápidas',   desc: 'El esquive se recupera otro 20% antes', cost: { iron: 1, venom: 3 } },
+    { name: 'Tambor ampliado',  desc: 'El abanico dispara 13 balas en vez de 9', cost: { iron: 2, storm: 3 } } ] },
+  bow: { name: 'Arco', desc: 'Mantén pulsado para tensar y suelta para disparar: cuanto más aguantas, más daño y alcance. Más lento, pero la flecha atraviesa a todos en línea. El cargado es un aluvión de flechas sobre una zona.', cost: { iron: 2, dragon: 3, venom: 3 }, ups: [
+    { name: 'Cuerda de tendón',  desc: '+20% de daño', cost: { iron: 1, orc: 3 }, stat: 'dmg', mult: 1.2 },
+    { name: 'Puntas de cristal', desc: 'La flecha hace un 50% más a partir del segundo enemigo que atraviesa', cost: { iron: 1, stone: 3 } },
+    { name: 'Carcaj hondo',      desc: 'El aluvión tiene una oleada más', cost: { iron: 2, time: 3 } } ] },
+  shotgun: { name: 'Escopeta', desc: 'Alcance corto y un abanico de cinco perdigones: de cerca pueden entrar todos en el mismo enemigo. El cargado es una andanada de quince.', cost: { iron: 3, orc: 3, feast: 3 }, ups: [
+    { name: 'Cañones largos', desc: '+20% de alcance', cost: { iron: 1, stone: 3 }, stat: 'range', mult: 1.2 },
+    { name: 'Pólvora negra',  desc: '+15% de daño', cost: { iron: 2, dragon: 3 }, stat: 'dmg', mult: 1.15 } ] },
+  gatling: { name: 'Ametralladora', desc: 'Mantén pulsado: cada bala acelera la siguiente hasta el triple de cadencia, con menos daño por bala. Mientras disparas casi no te mueves. El cargado es un rayo que atraviesa.', cost: { iron: 3, stone: 3, storm: 3 }, ups: [
+    { name: 'Cinta larga',   desc: '+12% de cadencia', cost: { iron: 1, time: 3 }, stat: 'as', mult: 1.12 },
+    { name: 'Balas pesadas', desc: '+15% de daño', cost: { iron: 2, orc: 3 }, stat: 'dmg', mult: 1.15 } ] },
+  lance: { name: 'Lanza', desc: 'No disparas: cada ataque es una estocada que te lanza a través del enemigo, invulnerable, y cuenta como atravesarlo con el esquive. El cargado es una carga larga que atraviesa a todos.', cost: { iron: 3, shade: 3, dragon: 3 }, ups: [
+    { name: 'Punta templada', desc: '+20% de daño', cost: { iron: 1, stone: 3 }, stat: 'dmg', mult: 1.2 },
+    { name: 'Asta ligera',    desc: '+12% de cadencia', cost: { iron: 2, feast: 3 }, stat: 'as', mult: 1.12 } ] },
+};
+const TREE = [
+  { name: 'Cuerpo', nodes: [
+    { id: 'c1', name: 'Aguante',          desc: '+20 de vida', cost: 15 },
+    { id: 'c2', name: 'Segundo aliento',  desc: 'Una vez por partida, al morir te levantas con un 30% de vida', cost: 40 },
+    { id: 'c3', name: 'Piel curtida',     desc: 'Recibes un 15% menos de daño', cost: 70 },
+    { id: 'c4', name: 'Reflejos',         desc: 'Una carga más de esquive', cost: 120 } ] },
+  { name: 'Oficio', nodes: [
+    { id: 'o1', name: 'Pulso firme',      desc: '+8% de cadencia', cost: 15 },
+    { id: 'o2', name: 'Ojo de herrero',   desc: '+10% de alcance', cost: 40 },
+    { id: 'o3', name: 'Golpe certero',    desc: '+12% de daño', cost: 70 },
+    { id: 'o4', name: 'Maestro armero',   desc: 'El disparo cargado carga un 25% más rápido', cost: 120 } ] },
+  { name: 'Memoria', nodes: [
+    { id: 'm1', name: 'Buen ojo',         desc: 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres', cost: 20 },
+    { id: 'm2', name: 'Regateo',          desc: 'Una vez por sala puedes volver a sortear las técnicas', cost: 50 },
+    { id: 'm3', name: 'Recuerdo vivo',    desc: 'Empiezas cada partida eligiendo una técnica entre tres', cost: 90 },
+    { id: 'm4', name: 'Otra puerta',      desc: 'Al acabar una sala puedes elegir entre cuatro puertas en vez de tres', cost: 120 } ] },
+];
+// Salas que no son de deidad: lo que dan al limpiarlas.
+const ROOMS = {
+  souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para tu árbol de habilidades. Solo se consiguen aquí.' },
+  iron:  { name: 'Veta de Hierro Místico', tag: 'Hierro',  color: '#c9d2e0', desc: 'Hierro Místico: hace falta para forjar cualquier arma y sus mejoras.' },
+  heart: { name: 'Fuente de vida',         tag: 'Vida',    color: '#ff6f86', desc: '+20 de vida máxima y te cura 20.' },
+  gold:  { name: 'Cámara del tesoro',      tag: 'Oro',     color: '#ffd24a', desc: 'Oro para gastar en la tienda que hay antes del jefe.' },
+  anvil: { name: 'Yunque abandonado',      tag: 'Yunque',  color: '#62e6ff', desc: 'Un ajuste del arma para esta partida: cadencia, daño, alcance o velocidad.' },
+};
 
 const C = {
   wall: '#0e1017', floor: '#1a1e29', tile: '#1f2431', edge: '#3a4258',
@@ -294,34 +426,72 @@ function bindHold(el, key) {
 }
 bindHold($('btnAtk'), 'atk'); bindHold($('btnDodge'), 'dodge'); bindHold($('btnChg'), 'chg');
 
-// ───────────────────────── Estado ─────────────────────────
-let S = null, best = 0, aimLatch = false, modeT = 0, pickSel = 1, pickOpts = [];
-try { best = +localStorage.getItem('kiteo.best') || 0; } catch (e) {}
+// ───────────────────────── Lo que queda entre vidas ─────────────────────────
+// Almas (solo en salas de almas) para tu árbol. Hierro Místico y materiales de cada deidad para forjar.
+// Se guarda en el navegador, igual que la partida en curso.
+const zeroMats = () => Object.fromEntries(GOD_KEYS.map(g => [g, 0]));
+let M = { souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, weapon: 'rifle', owned: ['rifle'], wup: {}, tree: {}, run: null };
+try { const raw = localStorage.getItem('kiteo.save3'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { mats: Object.assign(M.mats, o.mats || {}) }); if (!WEAPONS[M.weapon]) M.weapon = 'rifle'; } } catch (e) {}
+function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
+const tr = id => !!M.tree[id];
+const wup = i => !!M.wup[S.weapon + ':' + i];
+const matName = g => (g === 'iron' ? 'Hierro Místico' : GODS[g].mat);
+const matHave = g => (g === 'iron' ? M.iron : M.mats[g]);
+const costTxt = c => Object.entries(c).map(([g, n]) => n + ' ' + matName(g)).join(' + ');
+const canPay = c => Object.entries(c).every(([g, n]) => matHave(g) >= n);
+const pay = c => { for (const [g, n] of Object.entries(c)) { if (g === 'iron') M.iron -= n; else M.mats[g] -= n; } };
+// "mundo 2, sala 3" a partir del número de encuentro
+const where = n => { if (n > TOTAL) return 'el final'; const W = Math.ceil(n / (RPW + 1)), r = n - (W - 1) * (RPW + 1); return WORLDS[W - 1].name + (r > RPW ? ', ante ' + TYPES[WORLDS[W - 1].boss].name : ', sala ' + r); };
+const lootTxt = () => { const m = GOD_KEYS.filter(g => S.matsRun[g]).map(g => S.matsRun[g] + ' ' + GODS[g].mat); if (S.ironRun) m.unshift(S.ironRun + ' de Hierro Místico'); return `<b>${S.soulsRun}</b> almas` + (m.length ? ', ' + m.join(', ') : ''); };
+function endRun(win) {
+  M.souls += S.soulsRun; M.iron += S.ironRun; for (const g of GOD_KEYS) M.mats[g] += S.matsRun[g];
+  M.runs += 1; M.best = Math.max(M.best, win ? TOTAL + 1 : S.wave); if (win) M.wins += 1;
+  M.run = null; save();
+}
+function winRun() { endRun(true); setMode('win'); }
+// Guardado de la partida en curso: al entrar en cada sala
+function saveRun() {
+  const p = S.p;
+  M.run = { wave: S.wave - 1, next: S.next, weapon: S.weapon, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
+    p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve } };
+  save();
+}
+function resumeRun() {
+  const r = M.run; newGame();
+  S.weapon = r.weapon; S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
+  S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
+  S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
+}
 
+// ───────────────────────── Estado de la partida ─────────────────────────
+let S = null, aimLatch = false, modeT = 0, pickSel = 1, pickOpts = [];
 function newGame() {
   const P = T.player;
   S = {
-    mode: 'title', wave: 0, bossRoom: false, weapon: 'rifle', soulsRun: 0, matsRun: { dragon: 0, stone: 0, venom: 0, feast: 0, orc: 0 }, rerolls: 0, kills: 0, t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
+    mode: 'title', wave: 0, world: 1, room: 0, roomType: 'god', god: null, bossRoom: false, next: { type: 'god', god: null },
+    weapon: 'rifle', soulsRun: 0, ironRun: 0, matsRun: zeroMats(), rerolls: 0, kills: 0, shop: null, banquet: 0,
+    t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
-      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0,
-      charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0,
-      fury: 0, furyT: 0, sated: 0, satedT: 0, fireAmmo: 0, revive: 0, drawing: false, draw: 0, drawPow: 0,
+      dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
+      charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
+      fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
-    build: Object.fromEntries(SLOT_KEYS.map(k => [k, { items: [], fused: null }])), techs: new Set(), plans: new Set(), nextGod: null, buildV: 0, drop: null,
-    zones: [], timers: [], pillars: [], turrets: [], crystals: [], bites: [],
+    build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
+    zones: [], timers: [], pillars: [], turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun() {
-  newGame();
+  newGame(); M.run = null;
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.weapon = M.weapon;
   if (tr('c1')) p.maxHp += 20;
   if (tr('o3')) p.dmg *= 1.12;
   p.hp = p.maxHp; p.revive = tr('c2') ? 1 : 0; p.dodgeN = dodgeMax();
+  S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
   if (tr('m3')) {   // Recuerdo vivo: empiezas eligiendo una técnica
     const opts = PIECES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
     pickQueue = [() => ({ eyebrow: 'Recuerdo vivo', title: 'Recuerdas una técnica de otra vida', opts })];
@@ -330,25 +500,39 @@ function startRun() {
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
 }
 
+// Entrar en la siguiente sala (o en el jefe del mundo)
 function nextWave() {
   S.wave += 1;
-  const n = S.wave, list = [];
-  const add = (type, k) => { for (let i = 0; i < k; i++) list.push(type); };
-  if (n === 1) add('stalker', 4);
-  else if (n === 2) { add('stalker', 5); add('runner', 2); }
-  else if (n === 3) { add('stalker', 4); add('runner', 3); add('mage', 1); }
-  else { add('stalker', 3 + Math.floor(n / 2)); add('runner', n - 1); add('mage', Math.floor(n / 2)); add('brute', Math.floor(n / 3)); }
-  list.sort(() => Math.random() - 0.5);
-  list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de una deidad
-  if (n > ROOMS) { list.length = 0; list.push('boss'); S.bossRoom = true; }   // tras la última sala, el Guardián
-  S.drop = null; S.waveT = 0;
+  const n = S.wave, W = Math.ceil(n / (RPW + 1)), r = n - (W - 1) * (RPW + 1), world = WORLDS[W - 1];
+  S.world = W; S.room = r; S.bossRoom = r > RPW;
+  S.roomType = S.bossRoom ? 'boss' : S.next.type; S.god = S.bossRoom ? null : S.next.god;
+  C.floor = world.floor; C.tile = world.tile;
+  const list = [];
+  if (S.bossRoom) list.push(world.boss);
+  else {
+    let budget = n === 1 ? 4 : 4.5 + n * 1.1 + (S.roomType === 'god' ? 0 : 2.5);
+    const pool = n === 1 ? ['stalker'] : world.pool;
+    while (budget > 0.5 && list.length < 16) {
+      const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5);
+      if (!cand.length) break;
+      const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost;
+    }
+    list.sort(() => Math.random() - 0.5);
+    if (S.roomType === 'god') list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de la deidad
+  }
+  S.drop = null; S.waveT = 0; S.waveClear = 0;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.45 }));
-  S.pillars = []; S.turrets = []; S.zones = []; S.crystals = []; S.bites = [];
-  for (let i = 0, tries = 0; i < 7 && tries < 300; tries++) {
+  S.pillars = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
+  S.p.x = T.room.w / 2; S.p.y = T.room.h * (S.bossRoom ? 0.75 : 0.5);
+  for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
+  for (let i = 0, tries = 0; i < (S.bossRoom ? 5 : 7) && tries < 300; tries++) {
     const c = { x: rnd(70, T.room.w - 70), y: rnd(70, T.room.h - 70), r: rnd(14, 24) };
-    if (dist(c, S.p) < 90 || S.pillars.some(o => dist(o, c) < o.r + c.r + 60)) continue;
+    if (dist(c, S.p) < 90 || Math.hypot(c.x - T.room.w / 2, c.y - 90) < 80 || S.pillars.some(o => dist(o, c) < o.r + c.r + 60)) continue;
     S.pillars.push(c); i++;
   }
+  if (r === 1) note(S.p.x, S.p.y - 30, world.name, C.ink, true);
+  if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[world.boss].name, C.blood, true);
+  saveRun();
 }
 
 function spawn(typeKey) {
@@ -358,74 +542,192 @@ function spawn(typeKey) {
     x = rnd(30, T.room.w - 30); y = rnd(30, T.room.h - 30);
     if (Math.hypot(x - p.x, y - p.y) > 230) break;
   }
-  const keys = Object.keys(GODS), god = ty.champ ? (S.nextGod || keys[Math.floor(Math.random() * keys.length)]) : null;
-  const hp = Math.round(ty.hp * (1 + 0.12 * (S.wave - 1)));
-  const e = { type: ty, champ: !!ty.champ, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
+  const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
+  const hp = Math.round(ty.hp * (1 + 0.1 * (S.wave - 1)));
+  const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
-    ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, season: 0, carved: 0, stun: 0, autoCd: 0, fling: 0, fvx: 0, fvy: 0,
+    ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, needles: 0, needleT: 0, mark: 0, stun: 0, slowT: 0, slowF: 1, autoCd: 0, fieldAcc: 0, fling: 0, fvx: 0, fvy: 0,
+    aiCd: rnd(1.2, 2.6), aimT: 0, leapT: 0, sx: 0, sy: 0, lx: 0, ly: 0,
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
-  if (ty.boss) Object.assign(e, { boss: true, x: T.room.w / 2, y: 90, act: 'rest', at: 1.2, think: 1.2, sumCd: 2, ph2: false, hitOnce: false });
+  if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 90, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
 }
 
-// ───────────────────────── Progreso permanente ─────────────────────────
-// Lo que queda entre vidas. Tú creces con almas (árbol de habilidades) y tu arma se forja con materiales.
-// Lo que robas a los dioses dura solo una partida. Se guarda en el navegador.
-const ROOMS = 6;
-const MATS = { dragon: 'Escama', stone: 'Mena', venom: 'Glándula', feast: 'Especia', orc: 'Hueso' };
-const WEAPONS = {
-  rifle: { name: 'Rifle', desc: 'Un disparo por pulsación, con su frenazo. El cargado es un rayo que atraviesa.', cost: null, ups: [
-    { name: 'Cañón estriado',  desc: '+15% de alcance', cost: { stone: 3 } },
-    { name: 'Culata de hueso', desc: 'El frenazo de cada disparo dura un 25% menos', cost: { orc: 3 } },
-    { name: 'Cámara doble',    desc: 'El cargado se recupera un 30% antes', cost: { dragon: 3, venom: 2 } } ] },
-  pistols: { name: 'Pistolas dobles', desc: 'Dos balas por pulsación, más cadencia, y un esquive más largo que se recupera antes. Menos daño por bala y menos alcance. El cargado vacía los cargadores en abanico.', cost: { stone: 4, orc: 4 }, ups: [
-    { name: 'Gatillos de pelo', desc: '+15% de cadencia', cost: { feast: 3 } },
-    { name: 'Fundas rápidas',   desc: 'El esquive se recupera otro 20% antes', cost: { venom: 3 } },
-    { name: 'Tambor ampliado',  desc: 'El abanico dispara 13 balas en vez de 9', cost: { dragon: 3, stone: 2 } } ] },
-  bow: { name: 'Arco', desc: 'Mantén pulsado para tensar y suelta para disparar: cuanto más aguantas, más daño y alcance; soltar pronto es un disparo flojo. Más lento que el rifle, pero la flecha atraviesa a todos los enemigos en línea. El cargado es un aluvión de flechas sobre una zona.', cost: { dragon: 4, venom: 4 }, ups: [
-    { name: 'Cuerda de tendón',  desc: '+20% de daño', cost: { orc: 3 } },
-    { name: 'Puntas de cristal', desc: 'La flecha hace un 50% más a partir del segundo enemigo que atraviesa', cost: { stone: 3 } },
-    { name: 'Carcaj hondo',      desc: 'El aluvión tiene una oleada más', cost: { feast: 3, dragon: 2 } } ] },
-};
-// Árbol de habilidades: cada rama se sube en orden. Más desbloqueos que porcentajes.
-const TREE = [
-  { name: 'Cuerpo', nodes: [
-    { id: 'c1', name: 'Aguante',          desc: '+20 de vida', cost: 15 },
-    { id: 'c2', name: 'Segundo aliento',  desc: 'Una vez por partida, al morir te levantas con un 30% de vida', cost: 40 },
-    { id: 'c3', name: 'Piel curtida',     desc: 'Recibes un 15% menos de daño', cost: 70 },
-    { id: 'c4', name: 'Reflejos',         desc: 'Una carga más de esquive', cost: 120 } ] },
-  { name: 'Oficio', nodes: [
-    { id: 'o1', name: 'Pulso firme',      desc: '+8% de cadencia', cost: 15 },
-    { id: 'o2', name: 'Ojo de herrero',   desc: '+10% de alcance', cost: 40 },
-    { id: 'o3', name: 'Golpe certero',    desc: '+12% de daño', cost: 70 },
-    { id: 'o4', name: 'Maestro armero',   desc: 'El disparo cargado carga un 25% más rápido', cost: 120 } ] },
-  { name: 'Memoria', nodes: [
-    { id: 'm1', name: 'Buen ojo',         desc: 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres', cost: 20 },
-    { id: 'm2', name: 'Regateo',          desc: 'Una vez por sala puedes volver a sortear las técnicas', cost: 50 },
-    { id: 'm3', name: 'Recuerdo vivo',    desc: 'Empiezas cada partida eligiendo una técnica entre tres', cost: 90 },
-    { id: 'm4', name: 'Todas las puertas', desc: 'Al acabar una sala puedes elegir entre las cinco deidades', cost: 120 } ] },
-];
-let M = { souls: 0, mats: { dragon: 0, stone: 0, venom: 0, feast: 0, orc: 0 }, runs: 0, best: 0, wins: 0, weapon: 'rifle', owned: ['rifle'], wup: {}, tree: {} };
-try { const raw = localStorage.getItem('kiteo.save2'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { mats: Object.assign(M.mats, o.mats || {}) }); if (!WEAPONS[M.weapon]) M.weapon = 'rifle'; } } catch (e) {}
-function save() { try { localStorage.setItem('kiteo.save2', JSON.stringify(M)); } catch (e) {} }
-const tr = id => !!M.tree[id];
-const wup = i => !!M.wup[S.weapon + ':' + i];
-const costTxt = c => Object.entries(c).map(([g, n]) => n + ' ' + MATS[g]).join(' + ');
-const canPay = c => Object.entries(c).every(([g, n]) => M.mats[g] >= n);
-const pay = c => { for (const [g, n] of Object.entries(c)) M.mats[g] -= n; };
-const lootTxt = () => { const m = Object.keys(MATS).filter(g => S.matsRun[g]).map(g => S.matsRun[g] + ' ' + MATS[g]); return `<b>${S.soulsRun}</b> almas` + (m.length ? ' y ' + m.join(', ') : ''); };
-function endRun(win) {
-  M.souls += S.soulsRun; for (const g of Object.keys(MATS)) M.mats[g] += S.matsRun[g];
-  M.runs += 1; M.best = Math.max(M.best, win ? ROOMS + 1 : S.wave); if (win) M.wins += 1;
-  save();
+// ───────────────────────── Mensajes del sistema ─────────────────────────
+const sysEl = $('sys'); let sysQ = [], sysT = 0, sysLast = 0;
+function sayRaw(text, color) { sysQ.push({ text, color }); if (sysQ.length > 3) sysQ.shift(); }
+function say(god, kind) { const g = GODS[god], arr = g.lines[kind]; if (arr) sayRaw(`[La deidad «${g.title}» ${arr[Math.floor(Math.random() * arr.length)]}]`, g.color); }
+function sysTick() {
+  const now = performance.now(), dt = Math.min(0.1, (now - sysLast) / 1000); sysLast = now;
+  sysT -= dt;
+  if (sysT > 0) return;
+  if (sysQ.length) { const m = sysQ.shift(); sysEl.textContent = m.text; sysEl.style.borderColor = m.color; sysEl.hidden = false; sysT = 3.2; }
+  else sysEl.hidden = true;
 }
-function winRun() { endRun(true); setMode('win'); }
 
-let forgeSel = -1;
-function openForge() { S.mode = 'forge'; modeT = 0; forgeSel = -1; renderOverlay(); ov.scrollTop = 0; }
+// ───────────────────────── Al limpiar una sala ─────────────────────────
+let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
+const rollRar = () => { const r = Math.random(); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
+const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el arma', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
+const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tu arma', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || x.only === S.weapon)).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
+const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
+
+function roomCleared() {
+  const p = S.p, n = S.wave, W = S.world;
+  if (S.bossRoom) { bossDown(); return; }
+  p.hp = Math.min(p.maxHp, p.hp + 10);
+  const gold = 8 + 2 * n; addGold(gold);
+  pickQueue = []; S.rerolls = tr('m2') ? 1 : 0;
+  const here = WORLDS[W - 1].name + ' · sala ' + S.room + ' de ' + RPW;
+  let got = '';
+  if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
+  else if (S.roomType === 'souls') { const k = 12 + 4 * W; S.soulsRun += k; got = '+' + k + ' almas'; }
+  else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
+  else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
+  else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
+  else if (S.roomType === 'anvil') pickQueue.push(statScreen);
+  S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
+  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', ROOMS[S.roomType].color); blip(700, 0.2, 'triangle', 0.05, 500); }
+  if (S.room < RPW) pickQueue.push(doorScreen);
+  else afterPicks = openShop;                       // tras la última sala del mundo: tienda y jefe
+  advancePick();
+}
+function bossDown() {
+  const p = S.p;
+  if (S.world >= WORLDS.length) { winRun(); return; }
+  p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.4)); addGold(40);
+  S.cleared = WORLDS[S.world - 1].name + ' superado · recuperas vida · +40 de oro';
+  sayRaw('[Has vencido a ' + TYPES[WORLDS[S.world - 1].boss].name + ']', C.ink);
+  pickQueue = [planScreen(S.cleared), doorScreen]; S.rerolls = 0;
+  advancePick();
+}
+// Puertas: cada una enseña qué da la sala siguiente
+function doorScreen() {
+  const n = 3 + (tr('m4') ? 1 : 0), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
+  const bag = ['souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
+  const res = () => { const k = bag.find(x => !kinds.some(d => d.type === x)); return { type: k || 'gold' }; };
+  kinds.push({ type: 'god', god: gods.pop() });
+  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.45 ? { type: 'god', god: gods.pop() } : res());
+  kinds.sort(() => Math.random() - 0.5);
+  return { eyebrow: S.cleared || 'Siguiente sala', title: '¿Qué puerta cruzas?', opts: kinds.map(d => {
+    if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
+      return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, apply: () => { S.next = d; } }; }
+    const R = ROOMS[d.type];
+    return { tag: R.tag, name: R.name, desc: R.desc, note: 'Sin elegido: más enemigos corrientes', color: R.color, apply: () => { S.next = d; } };
+  }) };
+}
+function advancePick() {
+  while (pickQueue.length) {
+    const scr = pickQueue.shift()();
+    if (!scr || !scr.opts.length) continue;
+    pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
+    setMode('pick'); return;
+  }
+  if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
+  S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
+}
+function rerollPick() {   // Regateo
+  if (S.mode !== 'pick' || !pickReroll || S.rerolls <= 0) return;
+  S.rerolls -= 1; pickOpts = pickReroll(); pickSel = pickOpts.length > 2 ? 1 : 0; modeT = 0;
+  blip(500, 0.1, 'triangle', 0.05, 300); renderOverlay();
+}
+function choosePick(i) {
+  if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
+  const before = GOD_KEYS.filter(mastery), o = pickOpts[i];
+  o.apply();
+  blip(660, 0.12, 'triangle', 0.05, 500);
+  if (o.god) say(o.god, 'take');
+  for (const g of GOD_KEYS) if (mastery(g) && !before.includes(g)) { say(g, 'master'); note(S.p.x, S.p.y - 20, '¡' + MASTERY[g].name + '!', GODS[g].color, true); blip(520, 0.5, 'triangle', 0.06, 900); }
+  advancePick();
+}
+
+// ───────────────────────── Técnicas que te ofrecen ─────────────────────────
+// Una por acción. Si ya llevas ahí la técnica de otra deidad y existe dúo entre las dos, te ofrecen el dúo en su lugar.
+function pieceCard(pc) {
+  const cur = S.build[pc.slot], god = pc.god, rar = rollRar();
+  const have = godCount(god), M2 = MASTERY[god], isNew = !godsIn(pc.slot).includes(god);
+  const prog = !isNew || have >= 3 ? '' : have + 1 >= 3 ? 'Completa la maestría ' + M2.name : M2.name + ': ' + (have + 1) + '/3';
+  const o = { tag: SLOTS[pc.slot], rar, name: pc.name, color: GODS[god].color, note: prog, god };
+  const up = (name, descFn) => {   // subir de nivel lo que ya llevas en esa acción
+    if (cur.lvl >= 5) return null;
+    const nl = Math.min(5, cur.lvl + 1 + rar);
+    o.name = name + ' ' + ROMAN[nl]; o.desc = descFn(nl); o.note = nl - cur.lvl > 1 ? 'Sube ' + (nl - cur.lvl) + ' niveles' : 'Sube un nivel';
+    o.apply = () => { cur.lvl = nl; };
+    return o;
+  };
+  if (cur && cur.id === pc.id) return up(pc.name, pc.desc);
+  const D = cur && DUO[cur.id];
+  if (D && (D.a === pc.id || D.b === pc.id)) {
+    o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color;
+    return up(D.name, l => PIECE[D.a].desc(l) + ' ' + PIECE[D.b].desc(l) + ' ' + D.desc);
+  }
+  const lvl = 1 + rar, duo = cur && !D ? duoFor(cur.id, pc.id) : null;
+  if (duo) {   // la técnica que llevas se funde con esta
+    const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
+    o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
+    o.desc = `${duo.desc} Además hace lo de ${old.name} y lo de ${pc.name}: ${pc.desc(nl)}`;
+    o.note = `Tu ${old.name} se convierte en esto` + (prog ? ' · ' + prog : '');
+    o.apply = () => { S.build[pc.slot] = { id: duo.id, lvl: nl }; };
+    return o;
+  }
+  o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
+  if (cur) o.note = 'Sustituye a ' + curName(cur) + (prog ? ' · ' + prog : '');
+  o.apply = () => { S.build[pc.slot] = { id: pc.id, lvl }; };
+  return o;
+}
+const techOk = t => !S.techs.has(t.id) && godCount(t.god) >= 1 && (t.req || []).every(id => lv(id) > 0);
+const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
+function pieceOptions(god) {
+  const cands = [];
+  for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
+  for (const t of TECHS.filter(x => x.god === god && techOk(x)))
+    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
+  // sorteo ponderado: lo raro sale menos, y un dúo disponible sale más
+  return cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).slice(0, tr('m1') ? 4 : 3).map(x => x[1]);
+}
+
+// ───────────────────────── Tienda (antes de cada jefe) ─────────────────────────
+function openShop() {
+  if (!S.shop || S.shop.wave !== S.wave) {
+    const k = 1 + 0.25 * (S.world - 1), pr = n => Math.round(n * k / 5) * 5;
+    const god = GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+    const plan = PLANS.filter(x => !S.plans.has(x.id) && (!x.only || x.only === S.weapon)).sort(() => Math.random() - 0.5)[0];
+    S.shop = { wave: S.wave, items: [
+      { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
+      { id: 'tech',  name: 'Arma de contrabando',    desc: `El ${GODS[god].weapon}, de ${GODS[god].title}: lo desmontas y eliges una técnica`, price: pr(90), god },
+      { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
+      { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste del arma: cadencia, daño, alcance o velocidad', price: pr(60) },
+      { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
+    ].concat(plan ? [{ id: 'plan', name: 'Plano: ' + plan.name, desc: plan.desc, price: pr(110), plan: plan.id }] : []) };
+  }
+  listSel = -1; setMode('shop'); ov.scrollTop = 0;
+}
+function shopHtml() {
+  const p = S.p, boss = TYPES[WORLDS[S.world - 1].boss].name;
+  return `<p class="eyebrow">Tienda · ${WORLDS[S.world - 1].name}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la mazmorra: gástalo.</p><div class="forge"><section>` +
+    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
+    `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">Cruzar la puerta de ${boss}</button>`;
+}
+function shopAct(act) {
+  const [k, i] = act.split(':'), p = S.p;
+  if (k === 'boss') { S.mode = 'play'; modeT = 0; nextWave(); renderOverlay(); return; }
+  const it = S.shop.items[+i];
+  if (it.sold || p.gold < it.price) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
+  if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
+  p.gold -= it.price; it.sold = true; blip(660, 0.1, 'triangle', 0.05, 400);
+  if (it.id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.35));
+  else if (it.id === 'heart') { p.maxHp += 15; p.hp += 15; }
+  else if (it.id === 'plan') { S.plans.add(it.plan); p.dodgeN = dodgeMax(); }
+  else if (it.id === 'tech') { S.rerolls = 0; pickQueue = [pieceScreen(it.god, 'Tienda · ' + GODS[it.god].title)]; afterPicks = openShop; advancePick(); return; }
+  else if (it.id === 'anvil') { pickQueue = [statScreen]; afterPicks = openShop; advancePick(); return; }
+  renderOverlay();
+}
+
+// ───────────────────────── La forja (entre vidas) ─────────────────────────
+function openForge() { S.mode = 'forge'; modeT = 0; listSel = -1; renderOverlay(); ov.scrollTop = 0; }
 function forgeHtml() {
-  const mats = Object.keys(MATS).map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${MATS[g]}</span>`).join(' · ');
+  const mats = [`<span>${M.iron} Hierro Místico</span>`].concat(GOD_KEYS.map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`)).join(' · ');
   let arms = '';
   for (const [id, w] of Object.entries(WEAPONS)) {
     const own = M.owned.includes(id), eq = M.weapon === id;
@@ -435,117 +737,103 @@ function forgeHtml() {
   }
   const tree = TREE.map(br => `<h3>${br.name}</h3>` + br.nodes.map((n, i) => { const got = tr(n.id), open = i === 0 || tr(br.nodes[i - 1].id);
     return `<button class="fi${got ? ' on' : open && M.souls >= n.cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name}</b><span>${n.desc}</span><i>${got ? 'Aprendida' : open ? n.cost + ' almas' : 'Bloqueada'}</i></button>`; }).join('')).join('');
-  const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${M.best > ROOMS ? 'el Guardián' : 'la sala ' + M.best}${M.wins ? ', y lo has vencido ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
+  const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${where(M.best)}${M.wins ? '. Has cruzado el Umbral ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
+  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${where(M.run.wave + 1)}</button><button class="fi" data-act="go"><b>Empezar de nuevo</b><span>Abandona la partida en curso</span><i></i></button></div>` : `<button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
   return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
-    <p class="fine">${past} Las almas las dan los enemigos y sirven para tu árbol. Los materiales los suelta el elegido de cada deidad y sirven para forjar. Lo que robes a los dioses dentro no sale de la mazmorra.</p>
-    <div class="forge"><section><h2>Tu arma</h2>${arms}</section><section><h2>Tu árbol</h2>${tree}</section></div>
-    <button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
+    <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. El Hierro Místico sale de sus vetas y hace falta para todo lo que forjes; los demás materiales los sueltan los elegidos de cada deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
+    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
   if (k === 'go') { startRun(); return; }
+  if (k === 'resume') { resumeRun(); return; }
   if (k === 'w') { const w = WEAPONS[id]; if (M.owned.includes(id)) M.weapon = id; else if (canPay(w.cost)) { pay(w.cost); M.owned.push(id); M.weapon = id; } else ok = false; }
   else if (k === 'wu') { const u = WEAPONS[id].ups[+n], key = id + ':' + n; if (!M.wup[key] && canPay(u.cost)) { pay(u.cost); M.wup[key] = true; } else ok = false; }
   else if (k === 't') { for (const br of TREE) br.nodes.forEach((nd, i) => { if (nd.id !== id) return; const open = i === 0 || tr(br.nodes[i - 1].id); if (!tr(id) && open && M.souls >= nd.cost) { M.souls -= nd.cost; M.tree[id] = true; } else ok = false; }); }
   blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
   save(); renderOverlay();
 }
-function bindForge() {
-  const els = [...ovBody.querySelectorAll('.fi')];
-  els.forEach(el => el.addEventListener('click', () => { audioInit(); forgeSel = els.indexOf(el); forgeAct(el.dataset.act); }));
-  if (forgeSel < 0 || forgeSel >= els.length) forgeSel = els.length - 1;
-  els.forEach((el, i) => el.classList.toggle('sel', i === forgeSel));
+// Listas navegables con mando (forja y tienda)
+let listSel = -1;
+function bindList() {
+  const els = [...ovBody.querySelectorAll('.fi')], fn = S.mode === 'shop' ? shopAct : forgeAct;
+  els.forEach(el => el.addEventListener('click', () => { audioInit(); listSel = els.indexOf(el); fn(el.dataset.act); }));
+  if (listSel < 0 || listSel >= els.length) listSel = S.mode === 'shop' ? 0 : els.findIndex(el => el.classList.contains('primary'));
+  if (listSel < 0) listSel = 0;
+  els.forEach((el, i) => el.classList.toggle('sel', i === listSel));
 }
-function forgeInput() {
+function listInput() {
   const els = [...ovBody.querySelectorAll('.fi')];
   let moved = false;
-  if (I.navL && forgeSel > 0) { forgeSel--; moved = true; }
-  if (I.navR && forgeSel < els.length - 1) { forgeSel++; moved = true; }
-  if (moved) { els.forEach((el, i) => el.classList.toggle('sel', i === forgeSel)); els[forgeSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
-  if (I.atkP && modeT > 0.3 && els[forgeSel]) els[forgeSel].click();
+  if (I.navL && listSel > 0) { listSel--; moved = true; }
+  if (I.navR && listSel < els.length - 1) { listSel++; moved = true; }
+  if (moved) { els.forEach((el, i) => el.classList.toggle('sel', i === listSel)); els[listSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
+  if (I.atkP && modeT > 0.3 && els[listSel]) els[listSel].click();
 }
 
-// ───────────────────────── El Guardián ─────────────────────────
-// Jefe del mundo. Tres ataques con aviso; si embiste contra una columna se queda aturdido y recibe el doble.
-function bossAI(e, dt, d, ux, uy) {
-  const p = S.p, ph2 = e.hp < e.maxHp * 0.5;
-  if (ph2 && !e.ph2) { e.ph2 = true; S.shake = 9; S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 14, t: 0, life: 1.6, txt: 'El Guardián se enfurece', col: C.blood, big: true }); blip(70, 0.6, 'sawtooth', 0.08, -20); }
-  e.at -= dt;
-  if (e.act === 'slam') {
-    if (e.at <= 0) { S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 78, t: 0, life: 0.3, col: C.blood }); S.shake = Math.max(S.shake, 7); blip(80, 0.25, 'sawtooth', 0.07, -30); if (d < 78 + p.r) hurtPlayer(30); e.act = 'rest'; e.at = 0.7; }
-  } else if (e.act === 'chargeWind') {
-    if (e.at <= 0) { e.act = 'charge'; e.at = 0.55; e.hitOnce = false; }
-  } else if (e.act === 'charge') {
-    e.x += e.lvx * dt; e.y += e.lvy * dt;
-    if (!e.hitOnce && dist(e, p) < e.r + p.r + 3) { e.hitOnce = true; hurtPlayer(35); }
-    for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r) { e.act = 'dazed'; e.at = 1.8; S.shake = 9; S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 14, t: 0, life: 1.2, txt: '¡Aturdido!', col: C.ink, big: true }); blip(200, 0.3, 'square', 0.06, -150); break; }
-    if (e.act === 'charge' && e.at <= 0) { e.act = 'rest'; e.at = 0.6; }
-  } else if (e.act === 'dazed') {
-    if (e.at <= 0) { e.act = 'rest'; e.at = 0.3; }
-  } else if (e.act === 'cast') {
-    if (e.at <= 0) {
-      const ring = off => { const n = ph2 ? 14 : 10; for (let i = 0; i < n; i++) { const a = off + i * Math.PI * 2 / n; S.shots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, r: 4, dmg: 12, life: 4 }); } blip(600, 0.12, 'triangle', 0.04, -300); };
-      const off = Math.random() * 6.28; ring(off);
-      if (ph2) S.timers.push({ t: 0.4, fn: () => { if (active(e)) ring(off + 0.22); } });
-      e.act = 'rest'; e.at = 0.5;
-    }
-  } else if (e.act === 'rest') {
-    if (e.at <= 0) e.act = 'idle';
-  } else {
-    e.x += ux * e.speed * dt; e.y += uy * e.speed * dt;
-    e.think -= dt;
-    if (e.think > 0) return;
-    e.think = ph2 ? 1.0 : 1.6;
-    if (d < 95) { e.act = 'slam'; e.at = 0.75; }
-    else if (Math.random() < 0.5) { e.act = 'chargeWind'; e.at = 0.7; e.lvx = ux * 430; e.lvy = uy * 430; }
-    else { e.act = 'cast'; e.at = 0.6; }
-    if (ph2 && --e.sumCd <= 0) { e.sumCd = 4; for (let i = 0; i < 3; i++) spawn('runner'); }
+// ───────────────────────── Lo que llevas y el recetario ─────────────────────────
+function buildHtml(full) {
+  const rows = [];
+  const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>` : ''}</li>`);
+  for (const k of SLOT_KEYS) {
+    const cur = S.build[k];
+    if (!cur) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Ranura libre</span></li>`); continue; }
+    const D = DUO[cur.id];
+    if (D) row(SLOTS[k], RAR[3].color, D.name + ' ' + ROMAN[cur.lvl], full ? D.desc + ' ' + PIECE[D.a].desc(cur.lvl) + ' ' + PIECE[D.b].desc(cur.lvl) : '');
+    else row(SLOTS[k], GODS[PIECE[cur.id].god].color, PIECE[cur.id].name + ' ' + ROMAN[cur.lvl], full ? PIECE[cur.id].desc(cur.lvl) : '');
   }
+  for (const g of GOD_KEYS) if (mastery(g)) row('Maestría', GODS[g].color, MASTERY[g].name, full ? MASTERY[g].desc : '');
+  const techs = TECHS.filter(t => S.techs.has(t.id)), plans = PLANS.filter(x => S.plans.has(x.id));
+  if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
+  else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
+  return rows.join('');
 }
+function bookHtml() {
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que ya llevas. Cabe una técnica por acción. Si llevas la de una deidad y otra te ofrece la suya para esa misma acción, te ofrece el dúo de las dos.</p><div class="book">`;
+  for (const g of GOD_KEYS) {
+    const n = godCount(g), G = GODS[g];
+    h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
+      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
+      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
+      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Lleva técnicas suyas en 3 acciones. ${MASTERY[g].desc}</span></li></ul></section>`;
+  }
+  for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
+    DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}</span></li>`).join('') + `</ul></section>`;
+  h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
+  return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
+}
+function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
+function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
-// ───────────────────────── Mensajes de las deidades ─────────────────────────
-const sysEl = $('sys'); let sysQ = [], sysT = 0, sysLast = 0;
-function say(god, kind) {
-  const g = GODS[god], arr = g.lines[kind];
-  if (!arr) return;
-  sysQ.push({ text: `[La deidad «${g.title}» ${arr[Math.floor(Math.random() * arr.length)]}]`, color: g.color });
-  if (sysQ.length > 3) sysQ.shift();
-}
-function sysTick() {
-  const now = performance.now(), dt = Math.min(0.1, (now - sysLast) / 1000); sysLast = now;
-  sysT -= dt;
-  if (sysT > 0) return;
-  if (sysQ.length) { const m = sysQ.shift(); sysEl.textContent = m.text; sysEl.style.borderColor = m.color; sysEl.hidden = false; sysT = 3.4; }
-  else sysEl.hidden = true;
-}
-
-// ───────────────────────── Combate ─────────────────────────
+// ───────────────────────── Combate: consultas ─────────────────────────
 const active = e => e.spawn <= 0 && e.hp > 0;
 const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));
-const godOf = id => PIECE[id].god;
-// Nivel efectivo de una pieza (0 si no la llevas). Dentro de una aleación cuenta un nivel más.
-const lv = id => { const a = S.build[PIECE[id].slot], it = a.items.find(x => x.id === id); return it ? it.lvl + (a.fused && a.fused.includes(id) ? 1 : 0) : 0; };
+const DUO = Object.fromEntries(DUOS.map(d => [d.id, d]));
+const duoFor = (a, b) => DUOS.find(d => (d.a === a && d.b === b) || (d.a === b && d.b === a));
+// Nivel de una técnica (0 si no la llevas). Si llevas un dúo que la contiene, cuenta con el nivel del dúo.
+const lv = id => { const cur = S.build[PIECE[id].slot]; if (!cur) return 0; if (cur.id === id) return cur.lvl; const D = DUO[cur.id]; return D && (D.a === id || D.b === id) ? cur.lvl : 0; };
+const duoOn = id => { const cur = S.build[DUO[id].slot]; return !!cur && cur.id === id; };
 const has = id => S.techs.has(id);
-// ¿Está forjada esa fusión?
-const fz = id => { const F = FUSION[id], f = S.build[F.slot].fused; return !!f && f.includes(F.a) && f.includes(F.b); };
-const fusionOf = slot => { const f = S.build[slot].fused; return f ? FUSIONS.find(x => x.slot === slot && f.includes(x.a) && f.includes(x.b)) : null; };
-const godCount = god => SLOT_KEYS.filter(k => S.build[k].items.some(x => godOf(x.id) === god)).length;
-const mastery = god => godCount(god) >= 3;
-const slotColor = slot => { const a = S.build[slot]; return a.items.length ? GODS[godOf(a.items[0].id)].color : C.energy; };
+const godsIn = slot => { const cur = S.build[slot]; if (!cur) return []; const D = DUO[cur.id]; return D ? [PIECE[D.a].god, PIECE[D.b].god] : [PIECE[cur.id].god]; };
+const godCount = g => SLOT_KEYS.filter(k => godsIn(k).includes(g)).length;
+const mastery = g => godCount(g) >= 3;
+const slotColor = slot => { const cur = S.build[slot]; return !cur ? C.energy : DUO[cur.id] ? RAR[3].color : GODS[PIECE[cur.id].god].color; };
+const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
+const wstat = k => WEAPONS[S.weapon].ups.reduce((m, u, i) => m * (u.stat === k && M.wup[S.weapon + ':' + i] ? u.mult : 1), 1);
 const dodgeMax = () => 1 + (S.plans.has('double') ? 1 : 0) + (tr('c4') ? 1 : 0);
 const dodgeCdOf = () => T.dodge.cd * (S.weapon === 'pistols' ? 0.65 * (wup(1) ? 0.8 : 1) : 1);
-const satedMax = () => (mastery('feast') ? 10 : 5);
 const furyFull = () => S.p.fury >= 100;
-const rangeOf = () => {
-  const P = S.plans, W = S.weapon;
-  return S.p.range * (W === 'pistols' ? 0.8 : W === 'bow' ? 1.4 : wup(0) ? 1.15 : 1) * (tr('o2') ? 1.1 : 1) * (P.has('shotgun') || P.has('bayonet') ? 0.5 : P.has('sniper') ? 1.6 : 1);
-};
+const resMax = () => 30 * (has('f_cellar') ? 2 : 1);
+const shadeCap = () => 2 + lv('shade_basic') + (has('s_legion') ? 3 : 0);
+const echoDelay = t => t * (has('t_overtime') ? 0.5 : 1);
+const isSlow = e => e.slowT > 0 || e.stun > 0;
+const WRANGE = { pistols: 0.8, bow: 1.4, shotgun: 0.5, lance: 0.5 }, WRATE = { pistols: 1.25, bow: 0.65 };
+const rangeOf = () => S.p.range * (WRANGE[S.weapon] || 1) * wstat('range') * (tr('o2') ? 1.1 : 1);
 const periodOf = () => {
-  const p = S.p, bl = lv('orc_passive'), W = S.weapon;
-  const arm = W === 'pistols' ? 1.25 * (wup(0) ? 1.15 : 1) : W === 'bow' ? 0.65 : 1;
-  return 1 / (p.as * arm * (tr('o1') ? 1.08 : 1) * (S.plans.has('sniper') ? 0.6 : 1) * (S.plans.has('gatling') ? 1 + 2 * p.spin : 1) * (1 + 0.1 * p.sated) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
+  const p = S.p, bl = lv('orc_passive');
+  return 1 / (p.as * (WRATE[S.weapon] || 1) * wstat('as') * (tr('o1') ? 1.08 : 1) * (S.weapon === 'gatling' ? 1 + 2 * p.spin : 1) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
 // Columnas: hasta dónde llega un rayo antes de chocar, si hay línea de tiro, y empujar fuera a quien se mete
@@ -575,7 +863,7 @@ function nearestInRange() {
   for (const e of S.enemies) {
     if (!active(e)) continue;
     const d = dist(p, e) - e.r;
-    if (d <= rng && d < bd && (S.plans.has('grenade') || !blocked(p, e))) { bd = d; bestE = e; }
+    if (d <= rng && d < bd && !blocked(p, e)) { bd = d; bestE = e; }
   }
   return bestE;
 }
@@ -585,40 +873,58 @@ function others(e, r, max) {
   for (const o of S.enemies) { if (o === e || !active(o)) continue; const d = dist(e, o); if (d <= r) out.push([d, o]); }
   return out.sort((a, b) => a[0] - b[0]).slice(0, max).map(x => x[1]);
 }
+const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: big ? 1.2 : 0.7, txt, col, big });
 
+// ───────────────────────── Recursos del jugador ─────────────────────────
 function gainFury(n) { const p = S.p; if (!godCount('orc')) return; p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
+function heal(n) {
+  const p = S.p;
+  if (n <= 0) return;
+  n *= mastery('feast') ? 1.5 : 1;
+  p.hp += n;
+  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
+  if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
+}
+function addGold(n) { const p = S.p; p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
 
+// ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
   const p = S.p;
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
   blip(160, 0.12, 'sawtooth', 0.04, -90);
-  S.soulsRun += e.boss ? 30 : e.champ ? 5 : 1;
-  if (e.boss) for (const g of Object.keys(MATS)) S.matsRun[g] += 2;
-  if (e.champ) { S.matsRun[e.god] += S.wave >= 4 ? 2 : 1; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
+  if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
+  if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
+  if (S.t < S.banquet) heal(4);                                                                 // Banquete
+  const tl = lv('dragon_passive');
+  if (tl && e.ember > 0) { addGold(tl); note(e.x, e.y - e.r - 10, '+' + tl + ' oro', RAR[3].color); }   // Tesoro
   if (has('o_drums')) gainFury(10);
   if (lv('orc_passive') && furyFull()) p.dodgeN = dodgeMax();                                  // Sed de sangre
-  const fb = lv('feast_basic');
-  let bites = (has('f_banquet') ? 1 : 0) + e.carved;
-  if (fb && e.season > 0) bites = Math.max(bites, (e.season >= 5 ? 1 + fb : 1) + e.carved);    // Sazonar
-  for (let i = 0; i < bites; i++) dropBite(e.x + rnd(-10, 10), e.y + rnd(-10, 10));
-  if (fz('roast') && e.ember > 0) dropBite(e.x, e.y, true);                                    // fusión Asado
   if (has('m_quartz')) addCrystal(e.x, e.y);                                                   // Cuarzo vivo
   const vp = lv('venom_passive');
   if (vp && e.venom > 0) for (const o of others(e, 130, 1 + vp)) {                             // Plaga
     S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.venom.color });
     addVenom(o, e.venom);
   }
-  const dp = lv('dragon_passive'), st = e.ember;
-  if (dp && st > 0) explode(e.x, e.y, 46, p.dmg * 0.2 * dp * st, { ember: Math.ceil(st / 2), col: GODS.dragon.color });   // Pira
+  if (lv('shade_basic') && e.mark > 0 && !e.boss) {                                            // Marca de tumba
+    const x = e.x, y = e.y; raiseShade(x, y);
+    if (duoOn('clockmark')) S.timers.push({ t: echoDelay(1.5), fn: () => raiseShade(x, y) });      // dúo Marca del reloj
+  }
+  const st = e.ember;
+  if (has('d_pyre') && st > 0) explode(e.x, e.y, 46, p.dmg * 0.3 * st, { ember: Math.ceil(st / 2), col: GODS.dragon.color });   // Pira
 }
 
 function hit(e, dmg, ux, uy, big, col) {
   if (!active(e)) return;
-  const p = S.p, ob = lv('orc_basic');
-  if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                              // Tambor de guerra
-  if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);              // Organismo débil
+  const p = S.p, ob = lv('orc_basic'), tl = lv('dragon_passive'), gl = lv('feast_passive'), sl = lv('shade_passive'), ti = lv('time_passive');
+  if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                                                  // Tambor de guerra
+  if (tl) dmg *= 1 + Math.min((30 + 10 * tl) / 100, 0.01 * tl * Math.floor(p.gold / 10));     // Tesoro
+  if (gl) dmg *= 1 + 0.01 * gl * (p.reserve + (duoOn('hoardfeast') ? p.gold / 10 : 0));          // Glotón
+  if (sl) dmg *= 1 + 0.08 * sl * S.shades.length;                                              // Séquito
+  if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
+  if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.boss && e.act === 'dazed') dmg *= 2;
   e.hp -= dmg; e.flash = 0.1;
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
@@ -627,15 +933,19 @@ function hit(e, dmg, ux, uy, big, col) {
   S.shake = Math.max(S.shake, big ? 5 : 1.6);
   if (S.t - S.lastStop > 0.16) { S.hitstop = big ? 0.05 : 0.02; S.lastStop = S.t; }   // micropausa de impacto, sin encadenarse
   gainFury(2);
+  if (e.hp > 0 && has('f_carve') && !e.boss && e.hp / e.maxHp < 0.12) { e.hp = 0; note(e.x, e.y - e.r - 12, '¡Trinchado!', GODS.feast.color); }   // Trinchar
   if (e.hp <= 0) kill(e); else blip(520, 0.035, 'square', 0.025);
 }
 // Daño continuo: sin pausa ni empujón
 function dot(e, dmg, col) {
   if (!active(e)) return;
+  const ti = lv('time_passive');
+  if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
   e.hp -= dmg;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
+  return dmg;
 }
 // Toda explosión pasa por aquí, así que las técnicas que dicen "todas tus explosiones" afectan a cualquiera
 function explode(x, y, r, dmg, o) {
@@ -650,11 +960,12 @@ function explode(x, y, r, dmg, o) {
     if (d > r + e.r) continue;
     if (dmg > 0 && e !== o.skip) hit(e, dmg, dx / d, dy / d, !o.soft, o.col);
     if (!active(e)) continue;
-    if (o.push) { e.kx += dx / d * o.push; e.ky += dy / d * o.push; }
+    if (o.push && !e.boss) { e.kx += dx / d * o.push; e.ky += dy / d * o.push; }
     if (o.stun) stun(e, o.stun);
     const em = (o.ember || 0) + (blood ? 2 : 0), ve = (o.venom || 0) + (vap ? 3 : 0);
     if (em) addEmber(e, em);
     if (ve) addVenom(e, ve);
+    if (o.zap) { discharge(e, 0.8, null); addNeedles(e, 2); }
     if (o.payoff) chargePayoff(e);
   }
   if (has('o_drums')) gainFury(8);
@@ -665,62 +976,115 @@ function explode(x, y, r, dmg, o) {
   }
 }
 
-// ── Lo que se acumula: Ascuas y Veneno en el enemigo, Cristales y Bocados en la sala
-function addEmber(e, n) {
-  if (!active(e) || n <= 0) return;
-  const forge = has('d_forge');
-  e.ember = forge ? e.ember + n : Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4;
-  if (forge && e.ember >= 10 && e.autoCd <= 0) { e.autoCd = 0.3; e.ember -= 10; explode(e.x, e.y, 42, S.p.dmg * 4, { col: GODS.dragon.color }); }   // Corazón de horno
-}
+// ───────────────────────── Lo que se acumula ─────────────────────────
+function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n); }
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
+function slow(e, t, f) { if (e.boss) f = 1 - (1 - f) * 0.4; e.slowT = Math.max(e.slowT, t); e.slowF = Math.min(e.slowF, f); }
 function addCrystal(x, y) {
-  S.crystals.push({ x: clamp(x, 12, T.room.w - 12), y: clamp(y, 12, T.room.h - 12), life: has('m_quartz') ? 18 : 9 });
+  S.crystals.push({ x: clamp(x, 12, T.room.w - 12), y: clamp(y, 12, T.room.h - 12), life: has('m_quartz') ? 18 : 9, acc: 0 });
   const max = mastery('stone') ? 12 : 6;
   while (S.crystals.length > max) S.crystals.shift();
 }
-function dropBite(x, y, hot) { S.bites.push({ x: clamp(x, 10, T.room.w - 10), y: clamp(y, 10, T.room.h - 10), life: 14, age: 0, hot: !!hot, rot: false }); if (S.bites.length > 30) S.bites.shift(); }
-function eat(hot) {
-  const p = S.p;
-  if (hot) p.fireAmmo = Math.min(15, p.fireAmmo + 5);
-  p.sated = Math.min(satedMax(), p.sated + 1); p.satedT = 6; p.hp = Math.min(p.maxHp, p.hp + 2);
-  blip(990, 0.06, 'triangle', 0.035, 300);
-  if (has('f_dessert')) { p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); p.chargeCd = 0; }   // Postre
+// Agujas y rayos (Tormenta)
+function addNeedles(e, n) {
+  if (!active(e) || n <= 0) return;
+  e.needles = Math.min(6, e.needles + n); e.needleT = 6;
+  if (e.needles >= 6 && has('r_over') && e.autoCd <= 0) { e.autoCd = 0.4; discharge(e, 1, null); }   // Sobrecarga
+}
+function bolt(from, to, dmg, cas) {
+  if (!to || !active(to)) return;
+  const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1;
+  S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: GODS.storm.color, w: 1.4 });
+  hit(to, dmg, dx / d, dy / d, false, GODS.storm.color);
+  if (!cas || !active(to)) return;
+  if (cas.venom) addVenom(to, cas.venom);                                                      // dúo Aguja envenenada
+  if (to.needles > 0 && !cas.seen.has(to) && mastery('storm')) discharge(to, cas.mult, cas);   // Tormenta perfecta
+  const c = lv('storm_passive');
+  if (c) addNeedles(to, c);                                                                    // Conductor
+}
+// Descargar las Agujas de un enemigo: daño por aguja y un rayo por aguja hacia otros. Devuelve cuántas tenía.
+function discharge(e, mult, cas) {
+  const n = e.needles;
+  if (!n || !active(e)) return 0;
+  cas = cas || { seen: new Set(), mult, venom: 0 };
+  cas.seen.add(e); e.needles = 0;
+  if (duoOn('syringe')) cas.venom = Math.max(cas.venom, e.venom);
+  const x = e.x, y = e.y, src = { x, y }, tg = others(e, 125, 6);
+  let nb = n;
+  if (duoOn('rod')) { const c = S.crystals.find(k => Math.hypot(k.x - x, k.y - y) < 150); if (c) { nb *= 2; S.fx.push({ k: 'beam', x1: x, y1: y, x2: c.x, y2: c.y, t: 0, life: 0.18, w: 2, col: GODS.storm.color }); src.x = c.x; src.y = c.y; } }   // dúo Pararrayos
+  S.fx.push({ k: 'ring', x, y, r: 16 + n * 3, t: 0, life: 0.22, col: GODS.storm.color });
+  blip(1000 + n * 120, 0.1, 'square', 0.04, -500);
+  hit(e, S.p.dmg * mult * n, 0, 0, true, GODS.storm.color);
+  for (let i = 0; i < Math.min(14, nb) && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
+  if (has('r_judge')) explode(x, y, 60, S.p.dmg * 3, { col: '#ffffff' });   // Juicio
+  return n;
+}
+// Sombras
+function raiseShade(x, y, life, temp) {
+  const base = (has('s_legion') ? 18 : 9) * (mastery('shade') ? 1.5 : 1);
+  if (!temp) { const own = S.shades.filter(s => !s.temp); if (own.length >= shadeCap()) { const old = own[0]; S.shades.splice(S.shades.indexOf(old), 1); } }
+  S.shades.push({ x: clamp(x, 8, T.room.w - 8), y: clamp(y, 8, T.room.h - 8), life: life || base, cd: 0.3, temp: !!temp });
+  S.fx.push({ k: 'ring', x, y, r: 16, t: 0, life: 0.3, col: GODS.shade.color });
+}
+function shadeEnd(s) {
+  if (duoOn('ashlegion')) explode(s.x, s.y, 40, S.p.dmg, { col: GODS.dragon.color, soft: true });                 // dúo Ejército de ceniza
+  if (duoOn('chargedshade')) for (const o of others(s, 70, 4)) discharge(o, 0.8, null);                           // dúo Sombras cargadas
+}
+function shadeStrike(s, e) {
+  const p = S.p, dmg = p.dmg * 0.4 * (mastery('shade') ? 1.5 : 1), dx = e.x - s.x, dy = e.y - s.y, d = Math.hypot(dx, dy) || 1;
+  if (lv('shade_passive')) onHit(e, dmg, dx / d, dy / d, false, GODS.shade.color, 'shade'); else hit(e, dmg, dx / d, dy / d, false, GODS.shade.color);
+  if (duoOn('ashlegion')) addEmber(e, 2);
+  if (duoOn('chargedshade')) addNeedles(e, 1);
+  if (duoOn('supper') && active(e) && !e.boss && e.hp / e.maxHp < 0.2) hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);   // dúo Última cena
 }
 
-// Un impacto de bala, venga de ti, de un Cristal o de un rifle gemelo: daño y lo que apilan tus piezas de disparo
+// ───────────────────────── Balas ─────────────────────────
+// Un impacto de bala, venga de ti, de un eco, de un Cristal, de una Sombra o de un arma gemela
 function onHit(e, dmg, ux, uy, big, col, src) {
   hit(e, dmg, ux, uy, big, col);
-  const db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), p = S.p;
-  if (db) addEmber(e, db);
-  if (vb) addVenom(e, vb);
-  if (fb && active(e)) e.season = Math.min(5, e.season + 1);
-  if (fz('boil')) addVenom(e, Math.floor(p.fury / 20));                    // fusión Sangre hirviente
-  if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }
+  const p = S.p, db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), rb = lv('storm_basic');
+  if (db) addEmber(e, db * (src === 'echo' && duoOn('eternal') ? 2 : 1));                         // Colmillo al rojo (y dúo Brasa eterna)
+  if (vb) addVenom(e, vb);                                                                     // Dardo
+  if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
+  if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1));                            // Bocado
+  if (rb) addNeedles(e, rb);                                                                   // Aguja estática
+  if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
+  if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
 }
-// Una bala tuya: además del impacto, la repiten los Cristales (Veta) y el estómago lleno (Glotón)
+// Una bala tuya: además del impacto, deja eco (Segundero), la repiten los Cristales (Veta) y puede soltar un rayo
 function shot(e, dmg, ux, uy, big, col) {
+  const p = S.p, ox = p.x, oy = p.y;
   onHit(e, dmg, ux, uy, big, col, 'player');
-  if (S.p.fireAmmo > 0) { S.p.fireAmmo -= 1; explode(e.x, e.y, 30, dmg * 0.5, { ember: 2, col: GODS.dragon.color, soft: true, skip: e }); }   // fusión Asado: balas de fuego
-  const sp = lv('stone_passive'), fp = lv('feast_passive');
-  if (sp && S.crystals.length) {
+  const tb = lv('time_basic'), sp = lv('stone_passive');
+  if (tb) {
+    const m = mastery('time') ? 1 : 0.5 + 0.15 * (tb - 1);
+    const echo = (d, gen) => S.timers.push({ t: echoDelay(1.5), fn: () => {
+      if (!active(e)) return;
+      S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: e.x, y2: e.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 });
+      onHit(e, d, ux, uy, false, GODS.time.color, 'echo');
+      if (has('t_paradox') && gen < 2) echo(d * 0.6, gen + 1);                                 // Paradoja
+    } });
+    echo(dmg * m, 1);
+  }
+  if (sp && S.crystals.length) {                                                               // Veta
     const near = S.crystals.map(c => [Math.hypot(c.x - e.x, c.y - e.y), c]).filter(x => x[0] < 170).sort((a, b) => a[0] - b[0]).slice(0, mastery('stone') ? 2 : 1);
     for (const [d, c] of near) {
       S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col: GODS.stone.color });
       onHit(e, dmg * 0.3 * sp, (e.x - c.x) / (d || 1), (e.y - c.y) / (d || 1), false, GODS.stone.color, 'crystal');
     }
   }
-  if (fp && S.p.sated >= 3) S.timers.push({ t: 0.06, fn: () => { if (active(e)) { S.fx.push({ k: 'tracer', x1: S.p.x, y1: S.p.y, x2: e.x, y2: e.y, t: 0, life: 0.08, col: GODS.feast.color }); onHit(e, dmg * (0.3 + 0.2 * fp), ux, uy, false, GODS.feast.color, 'echo'); } } });
+  if (duoOn('warthunder') && furyFull()) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);          // dúo Trueno de guerra
 }
 
 function fireBasic(target) {
-  const p = S.p, rng = rangeOf(), P = S.plans;
+  const p = S.p, rng = rangeOf(), W = S.weapon;
   if (!target || !active(target)) target = nearestInRange();
-  if (!target && S.weapon !== 'bow') { p.cd = 0.12; p.crit = false; return; }   // el arco puede soltar la flecha sin objetivo
+  if (!target && W !== 'bow') { p.cd = 0.12; p.crit = false; return; }   // el arco puede soltar la flecha sin objetivo
   p.shotN += 1;
-  let mult = 1;
-  if (p.crit) { mult = 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
-  if (P.has('gatling')) mult *= 0.6;
+  let mult = wstat('dmg');
+  if (p.crit) { mult *= 2; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  if (W === 'gatling') mult *= 0.6;
   const big = p.crit, col = slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
@@ -728,28 +1092,17 @@ function fireBasic(target) {
   const bullet = (t, m) => { const [ux, uy] = aim(t); tracer(t.x, t.y); shot(t, p.dmg * m, ux, uy, big, col); };
   blip(1250, 0.07, 'square', 0.035, -700);
 
-  if (S.weapon === 'bow') {              // Arco: flecha que atraviesa en línea
+  if (W === 'bow') {                     // Arco: flecha tensada que atraviesa en línea
     const dr = p.drawPow, [ux, uy] = target ? aim(target) : [Math.cos(p.face), Math.sin(p.face)];
-    const len = rayClip(p.x, p.y, ux, uy, rng * (0.6 + 0.4 * dr) + 30), m = mult * (0.6 + 1.6 * dr) * (wup(0) ? 1.2 : 1);   // tensado: de 60% a 220%
+    const len = rayClip(p.x, p.y, ux, uy, rng * (0.6 + 0.4 * dr) + 30), m = mult * (0.6 + 1.6 * dr);   // de 60% a 220%
     tracer(p.x + ux * len, p.y + uy * len, 1 + 2 * dr);
     const line = S.enemies.filter(e => { if (!active(e)) return false; const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy; return al >= 0 && al <= len + e.r && Math.abs(ex * uy - ey * ux) <= 5 + e.r; }).sort((a, b) => dist(p, a) - dist(p, b));
     line.forEach((e, i) => shot(e, p.dmg * m * (i > 0 && wup(1) ? 1.5 : 1), ux, uy, dr >= 1, col));
     if (dr >= 1) S.shake = Math.max(S.shake, 3);
-  } else if (S.weapon === 'pistols') {   // Pistolas: dos balas por pulsación
+  } else if (W === 'pistols') {          // Pistolas: dos balas por pulsación
     bullet(target, mult * 0.55);
     S.timers.push({ t: 0.08, fn: () => { const t2 = active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.55); } } });
-  } else if (P.has('sniper')) {          // atraviesa en línea; más daño cuanto más lejos
-    const [ux, uy] = aim(target), len = rayClip(p.x, p.y, ux, uy, rng + 40);
-    tracer(p.x + ux * len, p.y + uy * len, 3);
-    for (const e of S.enemies.slice()) {
-      if (!active(e)) continue;
-      const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy;
-      if (al < 0 || al > len + e.r || Math.abs(ex * uy - ey * ux) > 5 + e.r) continue;
-      const far = clamp(al / rng, 0, 1);
-      shot(e, p.dmg * mult * (0.5 + 2.5 * far), ux, uy, far > 0.6, col);
-    }
-    S.shake = Math.max(S.shake, 3.5);
-  } else if (P.has('shotgun')) {         // abanico de perdigones
+  } else if (W === 'shotgun') {          // Escopeta: abanico de perdigones
     const [ux0, uy0] = aim(target), base = Math.atan2(uy0, ux0);
     for (const off of [-0.34, -0.17, 0, 0.17, 0.34]) {
       const a = base + off, ux = Math.cos(a), uy = Math.sin(a); let bestE = null, ba = rayClip(p.x, p.y, ux, uy, rng + 20);
@@ -762,31 +1115,13 @@ function fireBasic(target) {
       if (bestE) shot(bestE, p.dmg * mult * 0.6, ux, uy, false, col);
     }
     S.shake = Math.max(S.shake, 3);
-  } else if (P.has('bayonet')) {         // estocada: te lanzas a través del objetivo
+  } else if (W === 'lance') {            // Lanza: estocada que te lanza a través del objetivo
     const [ux, uy] = aim(target), d = dist(p, target);
     shot(target, p.dmg * mult * 1.8, ux, uy, true, col);
     lunge(Math.atan2(uy, ux), d + target.r + 22);
-  } else if (P.has('grenade')) {         // granada en arco con explosión en área
-    const tx = target.x, ty = target.y; aim(target);
-    S.fx.push({ k: 'lob', x1: p.x, y1: p.y, x2: tx, y2: ty, t: 0, life: 0.32, col });
-    S.timers.push({ t: 0.32, fn: () => {
-      S.fx.push({ k: 'ring', x: tx, y: ty, r: 36, t: 0, life: 0.22, col });
-      blip(140, 0.12, 'sawtooth', 0.04, -60);
-      for (const e of S.enemies.slice()) {
-        if (!active(e)) continue;
-        const dx = e.x - tx, dy = e.y - ty, dd = Math.hypot(dx, dy) || 1;
-        if (dd <= 36 + e.r) shot(e, p.dmg * mult * 0.7, dx / dd, dy / dd, big, col);
-      }
-    } });
-  } else if (P.has('burst')) {           // tres balas seguidas
-    bullet(target, mult * 0.45);
-    for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => {
-      const t2 = active(target) ? target : nearestInRange();
-      if (t2) { blip(1250, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.45); }
-    } });
-  } else bullet(target, mult);
+  } else bullet(target, mult);           // Rifle y ametralladora
 }
-// Estocada de la Bayoneta: un esquive corto que atraviesa al objetivo
+// Estocada: un esquive corto que atraviesa
 function lunge(a, d) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
@@ -794,45 +1129,49 @@ function lunge(a, d) {
   p.dodgeFrom = { x: p.x, y: p.y }; p.dodgeHit = new Set(); p.isLunge = true; p.fly = false;
 }
 
+// ───────────────────────── Esquive ─────────────────────────
 function startDodge(a, free) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.fly = lv('dragon_dodge') > 0;                                           // Vuelo: salto largo por encima de las columnas
   p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (S.weapon === 'pistols' ? 1.3 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
-  p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set();
-  p.drawing = false;
+  p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
-  if (p.fly && fz('dive')) {                                                // fusión Picado: el salto busca al enemigo de delante
-    let tg = null, bd = 190;
-    for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd && Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), a)) < 0.9) { bd = d; tg = e; } }
-    if (tg) { p.dvx = (tg.x - p.x) / (bd || 1); p.dvy = (tg.y - p.y) / (bd || 1); p.dodgeT = clamp(bd / (p.speed * T.dodge.mult), 0.12, 0.5); p.inv = Math.max(p.inv, p.dodgeT + 0.06); }
-  }
   if (lv('stone_dodge')) addCrystal(p.x, p.y);                              // Geoda
-  const fd = lv('feast_dodge');
-  if (fd && S.bites.length) {                                               // Sobremesa
-    const eaten = S.bites.filter(b => !b.rot).slice(0, 8), n = eaten.length; S.bites = S.bites.filter(b => !eaten.includes(b));
-    for (let i = 0; i < n; i++) { eat(eaten[i].hot); S.timers.push({ t: 0.05 + i * 0.07, fn: () => explode(S.p.x, S.p.y, 45, S.p.dmg * 0.8 * fd, { col: GODS.feast.color }) }); }
-  }
+  const td = lv('time_dodge'), sd = lv('shade_dodge');
+  if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
+  if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
 }
 function endDodge() {
-  const p = S.p, vd = lv('venom_dodge'), dd = lv('dragon_dodge');
-  if (!p.dodgeFrom) return;
-  if (vd) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 5, acc: 0.4, venom: vd, col: GODS.venom.color });   // Rastro
-  if (p.fly && dd) { const f = p.fury; if (fz('dive')) explode(p.x, p.y, 52 + f * 0.4, p.dmg * (1.5 * dd + 3 * f / 100), { col: GODS.dragon.color, stun: 0.8, ember: Math.round(f / 10) }); else explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color }); }                                               // Vuelo
-  if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: p.dodgeFrom.x, y: p.dodgeFrom.y, life: 3, cd: 0.15 });                      // Rifle gemelo
-  p.dodgeFrom = null; p.fly = false;
+  const p = S.p, vd = lv('venom_dodge'), dd = lv('dragon_dodge'), from = p.dodgeFrom;
+  if (!from) return;
+  if (vd) {                                                                 // Rastro
+    S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 5, acc: 0.4, venom: vd, col: GODS.venom.color });
+    if (duoOn('stalagm')) for (const k of [0.2, 0.5, 0.8]) addCrystal(from.x + (p.x - from.x) * k, from.y + (p.y - from.y) * k);   // dúo Estela de cristal
+  }
+  if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
+  if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
+  p.dodgeFrom = null; p.fly = false; p.lanceDmg = 0;
 }
 // Lo que pasa al atravesar a un enemigo con el esquive
 function dashThrough(e) {
-  const od = lv('orc_dodge'), p = S.p;
-  if (od) { hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (fz('avalanche') && !e.boss) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } } gainFury(15); }   // Embestida, y fusión Avalancha
+  const p = S.p, od = lv('orc_dodge'), fd = lv('feast_dodge'), rd = lv('storm_dodge');
+  if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
+  if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
+  if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
+  if (od && active(e)) {                                                    // Embestida
+    hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
+    if (duoOn('horde')) for (const s of S.shades) { S.fx.push({ k: 'tracer', x1: s.x, y1: s.y, x2: e.x, y2: e.y, t: 0, life: 0.15, col: GODS.shade.color, w: 1.5 }); s.x = e.x + rnd(-10, 10); s.y = e.y + rnd(-10, 10); hit(e, p.dmg, p.dvx, p.dvy, false, GODS.shade.color); }   // dúo Carga de la horda
+    if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (duoOn('avalanche') && !e.boss) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } }   // dúo Avalancha
+  }
 }
 
-// Lo que hace el cargado a cada enemigo que alcanza, sea con el rayo, el cono, el mortero o un Cristal
+// ───────────────────────── Disparo cargado ─────────────────────────
+// Lo que hace el cargado a cada enemigo que alcanza, sea con el rayo, el cono, el abanico, el aluvión o un Cristal
 function chargePayoff(e) {
-  const dc = lv('dragon_charge'), vc = lv('venom_charge'), fc = lv('feast_charge'), p = S.p;
-  if (fz('rot')) { const t = e.ember + e.venom; if (t > 0) { if (t > e.ember) addEmber(e, t - e.ember); e.venom = Math.min(30, t); } }   // fusión Aliento podrido
+  const dc = lv('dragon_charge'), vc = lv('venom_charge'), rc = lv('storm_charge'), p = S.p;
+  if (duoOn('rot')) { const t = e.ember + e.venom; if (t > 0) { if (t > e.ember) addEmber(e, t - e.ember); e.venom = Math.min(30, t); } }   // dúo Aliento podrido
   if (dc) {                                                                 // Aliento
     addEmber(e, 1 + dc);
     const st = e.ember;
@@ -843,69 +1182,60 @@ function chargePayoff(e) {
     S.zones.push({ x: e.x, y: e.y, r: 30, life: 5, acc: 0.4, venom: 1, col: GODS.venom.color });
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
-  if (fc && active(e) && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * (0.15 + 0.1 * fc)) {   // Trinchar
-    e.carved = 2;
-    S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 12, t: 0, life: 0.8, txt: '¡Trinchado!', col: GODS.feast.color, big: true });
-    hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);
-  }
+  if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
 }
-
-function fireCharged(am) {
-  const p = S.p, ch = T.charge;
-  const ratio = clamp(p.charge / ch.full, 0, 1);
-  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio);
-  const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), col = slotColor('charge');
-  const sc = lv('stone_charge'), oc = lv('orc_charge');
-  let refund = false;
-  if (S.plans.has('mortar')) {           // proyectil en arco con área
-    const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
-    const tx = clamp(tg ? tg.x : p.x + ux * 170, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 170, 0, T.room.h);
-    S.fx.push({ k: 'lob', x1: p.x, y1: p.y, x2: tx, y2: ty, t: 0, life: 0.3, col });
-    S.timers.push({ t: 0.3, fn: () => { explode(tx, ty, 58, dmg * 0.8, { col, payoff: true }); S.shake = Math.max(S.shake, 7); } });
-  } else if (S.weapon === 'pistols') {   // Pistolas: vaciar los cargadores en abanico
-    const n = wup(2) ? 13 : 9, seen = new Set();
+// snap: desde dónde y con qué fuerza se lanzó. echo: repetición de Rebobinar (no gasta nada ni tiene recarga).
+function castCharged(snap, mult, echo) {
+  const p = S.p, ch = T.charge, o = { x: snap.x, y: snap.y }, W = S.weapon;
+  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * snap.ratio) * mult * snap.bonus;
+  const ux = Math.cos(snap.dir), uy = Math.sin(snap.dir), col = slotColor('charge');
+  const strike = (e, d, dx, dy) => { hit(e, d, dx, dy, true, col); chargePayoff(e); };
+  if (S.plans.has('mortar') && W === 'rifle') {   // proyectil en arco con área
+    S.fx.push({ k: 'lob', x1: o.x, y1: o.y, x2: snap.tx, y2: snap.ty, t: 0, life: 0.3, col });
+    S.timers.push({ t: 0.3, fn: () => { explode(snap.tx, snap.ty, 58, dmg * 0.8, { col, payoff: true }); S.shake = Math.max(S.shake, 7); } });
+  } else if (W === 'pistols' || W === 'shotgun') {   // abanico
+    const n = W === 'shotgun' ? 15 : wup(2) ? 13 : 9, half = W === 'shotgun' ? 0.6 : 0.85, reach = W === 'shotgun' ? 130 : 165, seen = new Set();
     for (let i = 0; i < n; i++) {
-      const a = p.chargeDir - 0.85 + 1.7 * i / (n - 1), rx = Math.cos(a), ry = Math.sin(a); let bestE = null, ba = rayClip(p.x, p.y, rx, ry, 165);
+      const a = snap.dir - half + 2 * half * i / (n - 1), rx = Math.cos(a), ry = Math.sin(a); let bestE = null, ba = rayClip(o.x, o.y, rx, ry, reach);
       for (const e of S.enemies) {
         if (!active(e)) continue;
-        const ex = e.x - p.x, ey = e.y - p.y, al = ex * rx + ey * ry;
+        const ex = e.x - o.x, ey = e.y - o.y, al = ex * rx + ey * ry;
         if (al >= 0 && al - e.r < ba && Math.abs(ex * ry - ey * rx) <= e.r + 4) { ba = Math.max(0, al - e.r); bestE = e; }
       }
-      S.fx.push({ k: 'tracer', x1: p.x + rx * 10, y1: p.y + ry * 10, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.12, col });
-      if (bestE) { shot(bestE, dmg * 0.22, rx, ry, false, col); seen.add(bestE); }
+      S.fx.push({ k: 'tracer', x1: o.x + rx * 10, y1: o.y + ry * 10, x2: o.x + rx * ba, y2: o.y + ry * ba, t: 0, life: 0.12, col });
+      if (bestE) { if (echo) hit(bestE, dmg * 0.22, rx, ry, false, col); else shot(bestE, dmg * 0.22, rx, ry, false, col); seen.add(bestE); }
     }
     for (const e of seen) if (active(e)) chargePayoff(e);
-  } else if (S.weapon === 'bow') {       // Arco: aluvión de flechas sobre una zona
-    const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
-    const tx = clamp(tg ? tg.x : p.x + ux * 190, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 190, 0, T.room.h), R = 62, waves = wup(2) ? 4 : 3;
+  } else if (W === 'bow') {              // aluvión de flechas sobre una zona
+    const tx = snap.tx, ty = snap.ty, R = 62, waves = wup(2) ? 4 : 3;
     for (let w = 0; w < waves; w++) S.timers.push({ t: 0.15 + w * 0.22, fn: () => {
       S.fx.push({ k: 'ring', x: tx, y: ty, r: R, t: 0, life: 0.2, col });
       for (let i = 0; i < 7; i++) { const a = Math.random() * 6.28, r = Math.random() * R, x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r; S.fx.push({ k: 'tracer', x1: x + 12, y1: y - 38, x2: x, y2: y, t: 0, life: 0.14, col }); }
       blip(900, 0.06, 'triangle', 0.03, -400);
       for (const e of S.enemies.slice()) { if (!active(e) || Math.hypot(e.x - tx, e.y - ty) > R + e.r) continue; hit(e, dmg * 0.45, 0, 0, w === 0, col); if (w === 0) chargePayoff(e); }
     } });
-  } else if (lv('dragon_charge')) {      // Aliento: cono
-    const R = 175, half = 0.5;
-    S.fx.push({ k: 'cone', x: p.x, y: p.y, a: p.chargeDir, r: R, half, t: 0, life: 0.3, col: GODS.dragon.color });
+  } else if (W === 'lance') {            // carga larga que atraviesa (el eco no se mueve)
+    if (!echo) { lunge(snap.dir, 240); p.lanceDmg = dmg * 0.6; }
+  } else if (lv('dragon_charge')) {      // Aliento: cono (crece con la Furia en el dúo Rugido)
+    const k = duoOn('roar') ? 1 + snap.fury / 100 : 1, R = 175 * k, half = Math.min(1.2, 0.5 * k);
+    S.fx.push({ k: 'cone', x: o.x, y: o.y, a: snap.dir, r: R, half, t: 0, life: 0.3, col: GODS.dragon.color });
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
-      const d = dist(p, e);
-      if (d > R + e.r || Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), p.chargeDir)) > half || blocked(p, e)) continue;
-      hit(e, dmg, (e.x - p.x) / (d || 1), (e.y - p.y) / (d || 1), true, col);
-      chargePayoff(e);
+      const d = dist(o, e);
+      if (d > R + e.r || Math.abs(angDiff(Math.atan2(e.y - o.y, e.x - o.x), snap.dir)) > half || blocked(o, e)) continue;
+      strike(e, dmg, (e.x - o.x) / (d || 1), (e.y - o.y) / (d || 1));
     }
   } else {                               // rayo que atraviesa
-    const len = rayClip(p.x, p.y, ux, uy, ch.range);
+    const len = rayClip(o.x, o.y, ux, uy, ch.range);
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
-      const ex = e.x - p.x, ey = e.y - p.y, along = ex * ux + ey * uy;
-      if (along < 0 || along > len) continue;
-      if (Math.abs(ex * uy - ey * ux) > ch.width + e.r) continue;
-      hit(e, dmg, ux, uy, true, col);
-      chargePayoff(e);
+      const ex = e.x - o.x, ey = e.y - o.y, along = ex * ux + ey * uy;
+      if (along < 0 || along > len || Math.abs(ex * uy - ey * ux) > ch.width + e.r) continue;
+      strike(e, dmg, ux, uy);
     }
-    S.fx.push({ k: 'beam', x1: p.x + ux * 14, y1: p.y + uy * 14, x2: p.x + ux * len, y2: p.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * ratio, col });
+    S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  const sc = lv('stone_charge'), oc = lv('orc_charge'), hc = lv('shade_charge');
   if (sc) for (const c of S.crystals) {  // Prisma: cada Cristal dispara su propio rayo, con los efectos del cargado
     let tg = null, td = 210;
     for (const e of S.enemies) { if (!active(e)) continue; const d = dist(c, e); if (d < td && !blocked(c, e)) { td = d; tg = e; } }
@@ -914,23 +1244,41 @@ function fireCharged(am) {
     hit(tg, dmg * 0.4 * sc, (tg.x - c.x) / (td || 1), (tg.y - c.y) / (td || 1), true, GODS.stone.color);
     chargePayoff(tg);
   }
-  if (oc) {                              // Grito de guerra: gasta la Furia
-    const f = p.fury; p.fury = mastery('orc') ? 50 : 0;
-    const R = 45 + f * 0.7;
-    explode(p.x, p.y, R, p.dmg * (0.5 + 2 * oc * f / 100), { push: 220, stun: 0.4 + f / 100, col: GODS.orc.color });
-    if (fz('warfeast')) {                                                   // fusión Festín de guerra
-      let n = 0; const thr = 0.15 + 0.1 * lv('feast_charge');
-      for (const e of S.enemies.slice()) if (active(e) && dist(p, e) < R * 1.3 + e.r && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * thr) { e.carved = 2; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color); n++; }
-      if (n) { gainFury(25 * n); S.fx.push({ k: 'num', x: p.x, y: p.y - 18, t: 0, life: 0.9, txt: '¡Festín! ×' + n, col: GODS.feast.color, big: true }); }
-      refund = n >= 2;
-    }
+  if (oc) {                              // Grito de guerra: gasta la Furia (el eco no gasta; el dúo Rugido gasta la mitad)
+    const f = snap.fury;
+    if (!echo) p.fury = Math.max(mastery('orc') ? 50 : 0, duoOn('roar') ? p.fury / 2 : 0);
+    explode(o.x, o.y, 45 + f * 0.7, p.dmg * (0.5 + 2 * oc * f / 100) * (echo && duoOn('echocry') ? 1 : mult), { push: 220, stun: 0.4 + f / 100, col: GODS.orc.color });
   }
-  let cd = ch.cd * (S.weapon === 'pistols' ? 0.7 : S.weapon === 'rifle' && wup(2) ? 0.7 : 1);
+  if (hc && S.shades.length) {           // Orden: las Sombras se lanzan y estallan
+    for (const s of S.shades) {
+      const x = snap.tx + rnd(-14, 14), y = snap.ty + rnd(-14, 14);
+      S.fx.push({ k: 'tracer', x1: s.x, y1: s.y, x2: x, y2: y, t: 0, life: 0.2, col: GODS.shade.color, w: 2 });
+      explode(x, y, 45, p.dmg * 1.5 * hc * mult, { col: GODS.shade.color, venom: duoOn('cortege') ? 6 : 0 });
+      if (duoOn('cortege')) S.zones.push({ x, y, r: 34, life: 5, acc: 0.4, venom: 1, col: GODS.venom.color });   // dúo Cortejo fúnebre
+      if (duoOn('supper')) addReserve(5);                                                                       // dúo Última cena
+    }
+    S.shades = [];
+  }
+}
+function fireCharged(am) {
+  const p = S.p, ch = T.charge;
+  const ratio = clamp(p.charge / ch.full, 0, 1), ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir);
+  const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null, reach = S.weapon === 'bow' ? 190 : 170;
+  const fl = lv('feast_charge'), tc = lv('time_charge');
+  const snap = { x: p.x, y: p.y, dir: p.chargeDir, ratio, fury: p.fury, bonus: 1,
+    tx: clamp(tg ? tg.x : p.x + ux * reach, 0, T.room.w), ty: clamp(tg ? tg.y : p.y + uy * reach, 0, T.room.h) };
+  if (fl) { snap.bonus = 1 + 0.04 * fl * p.reserve; p.reserve = 0; S.banquet = S.t + 0.6; }   // Banquete
+  castCharged(snap, 1, false);
+  if (tc) {                              // Rebobinar: se repite desde el mismo sitio
+    const m = mastery('time') ? 1 : 0.6 + 0.15 * (tc - 1), d = echoDelay(2);
+    S.fx.push({ k: 'clock', x: snap.x, y: snap.y, t: 0, life: d });
+    S.timers.push({ t: d, fn: () => castCharged(Object.assign({}, snap, { bonus: 1 }), m, true) });
+  }
+  let cd = ch.cd * (S.weapon === 'pistols' ? 0.7 : 1) * wstat('ccd');
   p.cd = Math.max(p.cd, 0.25);
-  if (S.plans.has('recoil')) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
-  else { p.x -= ux * 6; p.y -= uy * 6; }
+  if (S.plans.has('recoil') && S.weapon !== 'lance') { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
+  else if (S.weapon !== 'lance') { p.x -= ux * 6; p.y -= uy * 6; }
   p.chargeCdMax = p.chargeCd = cd;
-  if (refund) p.chargeCd = 0;
   S.shake = Math.max(S.shake, 4 + 4 * ratio);
   blip(300, 0.3, 'sawtooth', 0.06, -220);
 }
@@ -938,16 +1286,85 @@ function fireCharged(am) {
 function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
-  p.hp -= dmg * (tr('c3') ? 0.85 : 1); p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);
+  dmg *= (tr('c3') ? 0.85 : 1) * (1 + 0.2 * (S.world - 1));
+  if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
+  p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);
   gainFury(15);
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento
     p.revive -= 1; p.hp = Math.round(p.maxHp * 0.3); p.inv = 1.5;
-    S.fx.push({ k: 'num', x: p.x, y: p.y - 18, t: 0, life: 1.6, txt: 'Segundo aliento', col: C.ember, big: true }); blip(440, 0.5, 'triangle', 0.07, 600);
-  } else if (p.hp <= 0) {
-    p.hp = 0;
-    endRun(false);
-    setMode('dead');
+    note(p.x, p.y - 18, 'Segundo aliento', C.ember, true); blip(440, 0.5, 'triangle', 0.07, 600);
+  } else if (p.hp <= 0) { p.hp = 0; endRun(false); setMode('dead'); }
+}
+
+// ───────────────────────── Jefes ─────────────────────────
+// Cada jefe tiene un kit de ataques con aviso. Si embiste contra una columna se queda aturdido y recibe el doble.
+function bossAI(e, dt, d, ux, uy) {
+  const p = S.p, B = e.type, frac = e.hp / e.maxHp, ph = B.phases > 2 && frac < 0.33 ? 3 : frac < 0.55 ? 2 : 1;
+  if (ph > e.ph) {
+    e.ph = ph; S.shake = 9; note(e.x, e.y - e.r - 14, B.name + ' se enfurece', C.blood, true); blip(70, 0.6, 'sawtooth', 0.08, -20);
+    for (let i = 0; i < 2 + ph; i++) spawn(B.sum === 'brute' && i > 0 ? 'runner' : B.sum);
+  }
+  const rest = t => { e.act = 'rest'; e.at = t / (ph > 1 ? 1.3 : 1); };
+  const ring = (off, n, sp) => { for (let i = 0; i < n; i++) { const a = off + i * Math.PI * 2 / n; S.shots.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4, dmg: 12, life: 4.5 }); } blip(600, 0.12, 'triangle', 0.04, -300); };
+  e.at -= dt;
+  if (e.act === 'slam') {
+    if (e.at <= 0) { S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 78, t: 0, life: 0.3, col: C.blood }); S.shake = Math.max(S.shake, 7); blip(80, 0.25, 'sawtooth', 0.07, -30); if (d < 78 + p.r) hurtPlayer(B.dmg); rest(0.7); }
+  } else if (e.act === 'chargeWind') {
+    if (e.at <= 0) { e.act = 'charge'; e.at = 0.55; e.hitOnce = false; }
+  } else if (e.act === 'charge') {
+    e.x += e.lvx * dt; e.y += e.lvy * dt;
+    if (!e.hitOnce && dist(e, p) < e.r + p.r + 3) { e.hitOnce = true; hurtPlayer(B.dmg + 5); }
+    for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r) { e.act = 'dazed'; e.at = 1.8; S.shake = 9; note(e.x, e.y - e.r - 14, '¡Aturdido!', C.ink, true); blip(200, 0.3, 'square', 0.06, -150); break; }
+    if (e.act === 'charge' && e.at <= 0) rest(0.6);
+  } else if (e.act === 'dazed') {
+    if (e.at <= 0) rest(0.3);
+  } else if (e.act === 'cast') {
+    if (e.at <= 0) { if (e.castFn) e.castFn(); e.castFn = null; rest(0.5); }
+  } else if (e.act === 'leap') {
+    const k = 1 - Math.max(0, e.at) / 0.9; e.x = e.sx + (e.lx - e.sx) * k; e.y = e.sy + (e.ly - e.sy) * k;
+    if (e.at <= 0) { S.shake = Math.max(S.shake, 7); rest(0.6); }
+  } else if (e.act === 'rest') {
+    if (e.at <= 0) e.act = 'idle';
+  } else {
+    const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
+    e.x += ux * sp * dt; e.y += uy * sp * dt;
+    e.think -= dt;
+    if (e.think > 0) return;
+    e.think = ph > 2 ? 0.8 : ph > 1 ? 1.1 : 1.6;
+    const kit = B.kit.filter(a => a !== e.last && (a !== 'slam' || d < 95) && (a !== 'charge' || d > 80) && (a !== 'summon' || S.enemies.length < 8));
+    const a = d < 80 && B.kit.includes('slam') && e.last !== 'slam' ? 'slam' : kit[Math.floor(Math.random() * kit.length)] || 'ring';
+    e.last = a;
+    const aim = Math.atan2(p.y - e.y, p.x - e.x);
+    if (a === 'slam') { e.act = 'slam'; e.at = 0.75; }
+    else if (a === 'charge') { e.act = 'chargeWind'; e.at = 0.7; e.lvx = ux * 430; e.lvy = uy * 430; }
+    else if (a === 'ring') { e.act = 'cast'; e.at = 0.6; e.castFn = () => { const off = Math.random() * 6.28, n = 8 + ph * 3; ring(off, n, 110); if (ph > 1) S.timers.push({ t: 0.4, fn: () => { if (active(e)) ring(off + Math.PI / n, n, 110); } }); }; }
+    else if (a === 'fan') { e.act = 'cast'; e.at = 0.5; e.castFn = () => { const vol = () => { const b = Math.atan2(p.y - e.y, p.x - e.x); for (let i = -2; i <= 2; i++) S.shots.push({ x: e.x, y: e.y, vx: Math.cos(b + i * 0.17) * 150, vy: Math.sin(b + i * 0.17) * 150, r: 4, dmg: 12, life: 4 }); blip(700, 0.08, 'triangle', 0.035, -300); }; vol(); for (let i = 1; i < ph + 1; i++) S.timers.push({ t: 0.28 * i, fn: () => { if (active(e)) vol(); } }); }; }
+    else if (a === 'leap') { e.act = 'leap'; e.at = 0.9; e.sx = e.x; e.sy = e.y; e.lx = p.x; e.ly = p.y; S.hazards.push({ x: p.x, y: p.y, r: 62, t: 0.9, t0: 0.9, dmg: B.dmg, col: e.color }); }
+    else if (a === 'lasers') { const n = ph > 1 ? 5 : 3; for (let i = 0; i < n; i++) S.lasers.push({ x: e.x, y: e.y, a: aim + (i - (n - 1) / 2) * 0.3, t: 0.9, t0: 0.9, dmg: 24, w: 5, src: e }); e.act = 'cast'; e.at = 0.95; }
+    else if (a === 'pools') { for (let i = 0; i < 3 + ph; i++) { const ang = Math.random() * 6.28, r = i ? rnd(30, 110) : 0; S.hazards.push({ x: clamp(p.x + Math.cos(ang) * r, 20, T.room.w - 20), y: clamp(p.y + Math.sin(ang) * r, 20, T.room.h - 20), r: 36, t: 0.9 + i * 0.12, t0: 0.9 + i * 0.12, dmg: 18, linger: 4, col: GODS.venom.color }); } e.act = 'cast'; e.at = 0.6; }
+    else if (a === 'summon') { for (let i = 0; i < 2 + ph; i++) spawn(B.sum === 'brute' ? 'stalker' : B.sum); rest(0.6); }
+  }
+}
+// Enemigos con comportamiento propio. Los últimos que quedan en la sala no huyen y se acercan.
+function enemyAI(e, dt, d, ux, uy, sp) {
+  const p = S.p, ai = e.type.ai, few = S.enemies.length + S.queue.length <= 2, keep = (near, far) => { const mv = d > (few ? Math.min(far, 140) : far) ? 1 : d < near && !few ? -0.6 : 0; e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt; };
+  e.aiCd -= dt;
+  if (ai === 'bomb') {                   // Bombardero: lanza un proyectil en arco a donde estás
+    keep(110, 190);
+    if (e.aiCd <= 0 && d < 300) { e.aiCd = 3.2; S.hazards.push({ x: p.x, y: p.y, r: 38, t: 1, t0: 1, dmg: e.dmg, col: e.color }); S.fx.push({ k: 'lob', x1: e.x, y1: e.y, x2: p.x, y2: p.y, t: 0, life: 1, col: e.color }); }
+  } else if (ai === 'leap') {            // Saltador: cae sobre ti
+    if (e.leapT > 0) { e.leapT -= dt; const k = 1 - Math.max(0, e.leapT) / 0.7; e.x = e.sx + (e.lx - e.sx) * k; e.y = e.sy + (e.ly - e.sy) * k; if (e.leapT <= 0) e.rec = 0.5; return; }
+    if (e.rec > 0) { e.rec -= dt; return; }
+    if (e.aiCd <= 0 && d > 60 && d < 210) { e.aiCd = 3; e.leapT = 0.7; e.sx = e.x; e.sy = e.y; e.lx = p.x; e.ly = p.y; S.hazards.push({ x: p.x, y: p.y, r: 32, t: 0.7, t0: 0.7, dmg: e.dmg, col: e.color }); return; }
+    e.x += ux * sp * dt; e.y += uy * sp * dt;
+  } else if (ai === 'snipe') {           // Tirador: apunta con una línea y dispara
+    if (e.aimT > 0) { e.aimT -= dt; const L = S.lasers.find(l => l.src === e); if (L && e.aimT > 0.35) { L.a = Math.atan2(p.y - e.y, p.x - e.x); L.x = e.x; L.y = e.y; } return; }
+    keep(140, 250);
+    if (e.aiCd <= 0 && d < 380 && !blocked(e, p)) { e.aiCd = 3.6; e.aimT = 1.1; S.lasers.push({ x: e.x, y: e.y, a: Math.atan2(p.y - e.y, p.x - e.x), t: 1.1, t0: 1.1, dmg: e.dmg, w: 4, src: e }); }
+  } else if (ai === 'heal') {            // Chamán: cura a los suyos
+    keep(120, 200);
+    if (e.aiCd <= 0) { e.aiCd = 2.6; S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 110, t: 0, life: 0.4, col: e.color }); for (const o of others(e, 110, 20)) if (!o.boss) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.12); }
   }
 }
 
@@ -966,7 +1383,7 @@ function update(dt) {
   while (S.queue.length && S.queue[0].at <= S.waveT) spawn(S.queue.shift().type);
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
-    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; if (S.bossRoom) winRun(); else openPick(); return; }
+    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
   }
 
   // Temporizadores y recursos
@@ -978,7 +1395,9 @@ function update(dt) {
   p.furyT -= dt;
   const floor = mastery('orc') ? 50 : 0;
   if (p.furyT <= 0 && p.fury > floor) p.fury = Math.max(floor, p.fury - 8 * dt); else if (p.fury < floor) p.fury = floor;
-  if (p.sated > 0 && !mastery('feast')) { p.satedT -= dt; if (p.satedT <= 0) { p.sated -= 1; p.satedT = 1.5; } }
+  p.resT -= dt;
+  if (p.reserve > resMax()) p.reserve = resMax();
+  if (p.reserve > 0 && p.resT <= 0 && !duoOn('longlunch')) p.reserve = Math.max(0, p.reserve - 2 * dt);
 
   // Esquive (por cargas)
   const dMax = dodgeMax();
@@ -1004,7 +1423,7 @@ function update(dt) {
     if (bestE) { S.lock = bestE; blip(900, 0.04, 'triangle', 0.03); }
   }
   if (am < 0.3) aimLatch = false;
-  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && (S.plans.has('grenade') || !blocked(p, S.lock))) ? S.lock : nearestInRange();
+  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && !blocked(p, S.lock)) ? S.lock : nearestInRange();
   S.target = target;
 
   // Disparo cargado
@@ -1020,8 +1439,8 @@ function update(dt) {
 
   // Disparo básico: cada disparo es un gesto corto que te frena
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
-  const want = p.buffer > 0 || I.atk, bow = S.weapon === 'bow';
-  if (bow) {   // Arco: mantener para tensar, soltar para disparar
+  const want = p.buffer > 0 || I.atk, W = S.weapon;
+  if (W === 'bow') {   // Arco: mantener para tensar, soltar para disparar
     if (I.atk && !p.drawing && p.cd <= 0 && !p.charging && p.dodgeT <= 0) { p.drawing = true; p.draw = 0; }
     if (p.drawing) {
       const before = p.draw; p.draw = Math.min(1, p.draw + dt / (periodOf() * 0.85));
@@ -1029,14 +1448,13 @@ function update(dt) {
       if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x);
       if (!I.atk) { p.drawing = false; p.drawPow = p.draw; p.cd = periodOf() * 0.3; fireBasic(target); }
     }
-  }
-  if (!bow && want && target && !p.charging && p.dodgeT <= 0 && p.windup <= 0 && p.cd <= 0) {
+  } else if (want && target && !p.charging && p.dodgeT <= 0 && p.windup <= 0 && p.cd <= 0) {
     const period = periodOf();
     p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
-    p.windupTotal = p.windup = period * P.windupFrac * (S.plans.has('burst') ? 1.25 : 1) * (S.weapon === 'pistols' ? 0.7 : S.weapon === 'rifle' && wup(1) ? 0.75 : 1);
+    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.7 : W === 'rifle' && wup(1) ? 0.75 : 1);
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (S.plans.has('gatling') && I.atk) p.spin = Math.min(1, p.spin + 0.1);
+    if (W === 'gatling' && I.atk) p.spin = Math.min(1, p.spin + 0.1);
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -1051,7 +1469,7 @@ function update(dt) {
   if (p.charging) mult = T.charge.slow;
   else if (p.drawing) mult = free ? 1 : 0.4;
   else if (p.windup > 0) mult = free ? 1 : P.windupSlow;
-  else if (I.atk && target) mult = free ? 1 : S.plans.has('gatling') ? 0.15 : P.holdSlow;
+  else if (I.atk && target) mult = free ? 1 : W === 'gatling' ? 0.15 : P.holdSlow;
   if (!I.atk) p.spin = Math.max(0, p.spin - dt * 1.6);
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
@@ -1070,7 +1488,7 @@ function update(dt) {
     collide(p, p.r);
   }
 
-  // Rifles gemelos
+  // Armas gemelas
   for (const tu of S.turrets) {
     tu.life -= dt; tu.cd -= dt;
     if (tu.cd > 0) continue;
@@ -1084,52 +1502,75 @@ function update(dt) {
   }
   S.turrets = S.turrets.filter(tu => tu.life > 0);
 
-  // Cristales y Bocados
-  const obs = fz('obsidian'), tox = fz('toxgeode'), tab = fz('table'), thr = 0.15 + 0.1 * lv('feast_charge');
+  // Sombras: buscan al enemigo más cercano y lo golpean
+  for (const s of S.shades) {
+    s.life -= dt; s.cd -= dt;
+    let tg = null, td = 320;
+    for (const e of S.enemies) { if (!active(e)) continue; const d = dist(s, e); if (d < td) { td = d; tg = e; } }
+    if (tg) {
+      if (td > tg.r + 8) { s.x += (tg.x - s.x) / td * 100 * dt; s.y += (tg.y - s.y) / td * 100 * dt; }
+      else if (s.cd <= 0) { s.cd = 0.7; shadeStrike(s, tg); }
+    }
+    if (has('s_guard')) for (const sh of S.shots) if (Math.hypot(sh.x - s.x, sh.y - s.y) < 11) sh.life = 0;   // Guardia de honor
+  }
+  for (const s of S.shades) if (s.life <= 0) shadeEnd(s);
+  S.shades = S.shades.filter(s => s.life > 0);
+
+  // Burbujas de tiempo
+  const miasma = duoOn('miasma'), stasis = duoOn('stasis');
+  for (const f of S.fields) {
+    f.life -= dt;
+    for (const e of S.enemies) {
+      if (!active(e) || dist(f, e) > f.r + e.r) continue;
+      slow(e, 0.15, 0.3);
+      if (miasma && e.venom > 0) e.venAcc += dt * 2;                       // dúo Miasma
+      if (stasis) { e.fieldAcc += dt; if (e.fieldAcc >= 1) { e.fieldAcc = 0; addNeedles(e, 1); } }   // dúo Relámpago en pausa
+    }
+    for (const sh of S.shots) if (Math.hypot(sh.x - f.x, sh.y - f.y) < f.r) { sh.x -= sh.vx * dt * 0.7; sh.y -= sh.vy * dt * 0.7; }
+    if (f.life <= 0 && stasis) for (const e of S.enemies.slice()) if (active(e) && dist(f, e) <= f.r + e.r) discharge(e, 0.8, null);
+  }
+  S.fields = S.fields.filter(f => f.life > 0);
+
+  // Cristales
+  const obs = duoOn('obsidian'), tox = duoOn('stalagm'), tab = duoOn('table'), cq = duoOn('clockquartz');
   for (const c of S.crystals) {
-    c.life -= dt; c.acc = (c.acc || 0) + dt;
-    if (c.acc < 0.5 || !(obs || tox || tab)) continue;
+    c.life -= dt; c.acc += dt;
+    if (c.acc < 0.5 || !(obs || tox || tab || cq)) continue;
     c.acc = 0;
     let fed = false;
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
       const d = dist(c, e) - e.r;
-      if (obs && d < 42) addEmber(e, 1);                                   // fusión Bala de obsidiana
-      if (tox && d < 42) { addVenom(e, 2); fed = true; }                   // fusión Geoda tóxica
-      if (tab && d < 60 && active(e) && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * thr) {   // fusión Mesa puesta
+      if (obs && d < 42) addEmber(e, 1);                                   // dúo Bala de obsidiana
+      if (tox && d < 42) addVenom(e, 2);                                   // dúo Estela de cristal
+      if (cq && d < 50) { slow(e, 0.6, 0.6); fed = true; }                 // dúo Cuarzo de reloj
+      if (tab && d < 60 && !e.boss && e.hp / e.maxHp < (e.champ ? 0.1 : 0.2)) {   // dúo Mesa puesta
         S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: e.x, y2: e.y, t: 0, life: 0.15, col: GODS.feast.color, w: 1.5 });
-        e.carved = 1; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);
+        hit(e, e.hp + 1, 0, 0, true, GODS.feast.color); addReserve(4);
       }
     }
-    if (tox && fed) c.life += 0.5;
+    if (fed) c.life += 0.5;
   }
-  if (obs) for (const c of S.crystals) if (c.life <= 0) explode(c.x, c.y, 38, p.dmg, { col: GODS.dragon.color, ember: 2 });
+  for (const c of S.crystals) if (c.life <= 0) {
+    if (obs) explode(c.x, c.y, 38, p.dmg, { col: GODS.dragon.color, ember: 2 });
+    if (duoOn('tombstone')) raiseShade(c.x, c.y);                             // dúo Lápida
+  }
   S.crystals = S.crystals.filter(c => c.life > 0);
-  const bait = fz('bait');
-  for (const b of S.bites) {
-    b.age += dt;
-    if (bait && b.age > 3) b.rot = true;                                   // fusión Cebo
-    if (b.rot) {
-      for (const e of S.enemies) if (active(e) && dist(b, e) < e.r + 8) { b.life = 0; explode(b.x, b.y, 42, 0, { venom: 8, stun: 0.6, col: GODS.venom.color, soft: true }); break; }
-      continue;
-    }
-    b.life -= dt;
-    const d = dist(p, b);
-    if (d < 70 && d > 0.1) { b.x += (p.x - b.x) / d * 170 * dt; b.y += (p.y - b.y) / d * 170 * dt; }
-    if (d < 12) { b.life = 0; eat(b.hot); }
-  }
-  S.bites = S.bites.filter(b => b.life > 0);
 
   // Enemigos
-  const boil = fz('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = mastery('dragon') ? 1.5 : 1;
+  const boil = duoOn('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = mastery('dragon') ? 1.5 : 1;
+  const lunch = duoOn('longlunch') ? 1 - Math.min(0.6, 0.02 * p.reserve) : 1;
   for (const e of S.enemies) {
     if (e.hp <= 0) continue;
     if (e.spawn > 0) { e.spawn -= dt; continue; }
     e.flash = Math.max(0, e.flash - dt);
     e.x += e.kx * dt; e.y += e.ky * dt;
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
-    e.autoCd = Math.max(0, e.autoCd - dt);
-    if (e.fling > 0) {                   // fusión Avalancha: enemigo lanzado
+    e.autoCd = Math.max(0, e.autoCd - dt); e.mark = Math.max(0, e.mark - dt);
+    if (e.slowT > 0) e.slowT -= dt; else e.slowF = 1;
+    if (lunch < 1 && dist(p, e) < 90) slow(e, 0.15, lunch);                // dúo Sobremesa larga
+    if (e.needles > 0 && !(duoOn('syringe') && e.venom > 0)) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
+    if (e.fling > 0) {                   // dúo Avalancha: enemigo lanzado
       e.fling -= dt; e.x += e.fvx * dt; e.y += e.fvy * dt;
       let bump = e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3;
       for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r + 1) bump = true;
@@ -1139,28 +1580,30 @@ function update(dt) {
       continue;
     }
     if (e.ember > 0) {
-      e.emberT -= dt; e.emberAcc += dt;
+      if (!duoOn('eternal')) e.emberT -= dt;                                  // dúo Brasa eterna: no se apagan
+      e.emberAcc += dt;
       if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul, GODS.dragon.color); }
       if (e.emberT <= 0) e.ember = 0;
       if (e.hp <= 0) continue;
     }
     if (e.venom > 0) {
       e.venAcc += dt;
-      if (e.venAcc >= venStep) { e.venAcc -= venStep; dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); }
+      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
       if (e.hp <= 0) continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
-    const sp = e.speed;
+    const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
     if (e.lungeWind <= 0 && e.lungeT <= 0) e.dir = Math.atan2(dy, dx);
-    if (e.boss) { bossAI(e, dt, d, ux, uy); continue; }
+    if (e.boss) { bossAI(e, dt * (e.slowT > 0 ? e.slowF : 1), d, ux, uy); continue; }
+    if (e.type.ai) { enemyAI(e, dt * (e.slowT > 0 ? e.slowF : 1), d, ux, uy, e.speed); continue; }
     if (e.type.ranged) {
       if (e.cast > 0) {
         e.cast -= dt;
         if (e.cast <= 0) { S.shots.push({ x: e.x, y: e.y, vx: ux * 125, vy: uy * 125, r: 4, dmg: e.dmg, life: 3.5 }); e.cool = 2.4; blip(700, 0.08, 'triangle', 0.025, -300); }
       } else {
         e.cool -= dt;
-        const mv = d > 195 ? 1 : d < 120 ? -1 : 0;
+        const few = S.enemies.length + S.queue.length <= 2, mv = d > (few ? 140 : 195) ? 1 : d < 120 && !few ? -1 : 0;
         e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt;
         if (e.cool <= 0 && d < 270) e.cast = 0.55;
       }
@@ -1208,8 +1651,9 @@ function update(dt) {
   }
   for (const e of S.enemies) {
     e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2);
+    if ((e.boss && e.act === 'leap') || e.leapT > 0) continue;             // en el aire no chocan
     const c = collide(e, e.r);
-    if (c && active(e) && e.stun <= 0) {   // rodear la columna en vez de quedarse pegado
+    if (c && active(e) && e.stun <= 0 && !e.boss) {   // rodear la columna en vez de quedarse pegado
       const nx = e.x - c.x, ny = e.y - c.y, nl = Math.hypot(nx, ny) || 1, tx = -ny / nl, ty = nx / nl;
       const dotp = tx * (p.x - e.x) + ty * (p.y - e.y), sg = Math.abs(dotp) > 8 ? Math.sign(dotp) : e.side;
       e.x += tx * sg * e.speed * dt * 0.8; e.y += ty * sg * e.speed * dt * 0.8;
@@ -1217,7 +1661,7 @@ function update(dt) {
   }
   S.enemies = S.enemies.filter(e => e.hp > 0);
 
-  // Proyectiles enemigos
+  // Proyectiles, avisos en el suelo y líneas de tiro enemigas
   for (const s of S.shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (s.x < 0 || s.y < 0 || s.x > T.room.w || s.y > T.room.h) s.life = 0;
@@ -1225,241 +1669,28 @@ function update(dt) {
     if (s.life > 0 && Math.hypot(s.x - p.x, s.y - p.y) < s.r + p.r) { if (p.inv <= 0) { hurtPlayer(s.dmg); s.life = 0; } }
   }
   S.shots = S.shots.filter(s => s.life > 0);
+  for (const h of S.hazards) {
+    if (!h.done) {
+      h.t -= dt;
+      if (h.t <= 0) { h.done = true; h.life = h.linger || 0; h.acc = 0; S.fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, t: 0, life: 0.25, col: h.col }); blip(100, 0.15, 'sawtooth', 0.05, -40); if (dist(p, h) < h.r + p.r) hurtPlayer(h.dmg); }
+    } else { h.life -= dt; h.acc += dt; if (h.acc >= 0.5) { h.acc = 0; if (dist(p, h) < h.r + p.r) hurtPlayer(h.dmg * 0.35); } }
+  }
+  S.hazards = S.hazards.filter(h => !h.done || h.life > 0);
+  for (const l of S.lasers) {
+    l.t -= dt;
+    if (l.t > 0) continue;
+    const ux = Math.cos(l.a), uy = Math.sin(l.a), len = rayClip(l.x, l.y, ux, uy, 700);
+    S.fx.push({ k: 'beam', x1: l.x, y1: l.y, x2: l.x + ux * len, y2: l.y + uy * len, t: 0, life: 0.18, w: l.w, col: C.blood });
+    blip(1300, 0.1, 'sawtooth', 0.04, -900);
+    const ex = p.x - l.x, ey = p.y - l.y, al = ex * ux + ey * uy;
+    if (al > 0 && al < len && Math.abs(ex * uy - ey * ux) < l.w + p.r) hurtPlayer(l.dmg);
+  }
+  S.lasers = S.lasers.filter(l => l.t > 0 && (!l.src || active(l.src)));
 
   // Efectos
   for (const f of S.fx) { f.t += dt; if (f.k === 'spark') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.k === 'num') f.y -= 22 * dt; }
   S.fx = S.fx.filter(f => f.t < f.life);
   if (S.fx.length > 500) S.fx.splice(0, S.fx.length - 500);
-}
-
-// ───────────────────────── Elección entre salas ─────────────────────────
-let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
-const rollRar = () => { const r = Math.random(); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
-// Carta de una pieza de ranura. La rareza con la que sale decide a qué nivel entra (o cuánto sube).
-function pieceCard(pc) {
-  const a = S.build[pc.slot], it = a.items.find(x => x.id === pc.id), god = pc.god, rar = rollRar();
-  const o = { tag: SLOTS[pc.slot], rar, name: pc.name, color: GODS[god].color, note: '', god };
-  const have = godCount(god), M = MASTERY[god], newAction = !a.items.some(x => godOf(x.id) === god);
-  const prog = !newAction || have >= 3 ? '' : have + 1 >= 3 ? 'Completa la maestría ' + M.name : M.name + ': ' + (have + 1) + '/3';
-  if (it) {                                       // ya la llevas: sube de nivel
-    if (it.lvl >= 5) return null;
-    const nl = Math.min(5, it.lvl + 1 + rar), eff = nl + (a.fused && a.fused.includes(pc.id) ? 1 : 0);
-    o.name += ' ' + ROMAN[eff]; o.desc = pc.desc(eff);
-    o.note = nl - it.lvl > 1 ? 'Sube ' + (nl - it.lvl) + ' niveles' : 'Sube un nivel';
-    o.apply = () => { it.lvl = nl; };
-    return o;
-  }
-  const lvl = 1 + rar, add = () => a.items.push({ id: pc.id, lvl });
-  const free = a.items.filter(x => !(a.fused && a.fused.includes(x.id)));          // piezas sueltas en esa acción
-  const rec = !a.fused && FUSIONS.find(f => f.slot === pc.slot && ((f.a === pc.id && free.some(x => x.id === f.b)) || (f.b === pc.id && free.some(x => x.id === f.a))));
-  o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
-  if (a.items.length - (a.fused ? 1 : 0) >= 2) {   // las dos ranuras ocupadas: sustituye a la suelta más reciente
-    const out = free[free.length - 1];
-    o.note = 'Sustituye a ' + PIECE[out.id].name;
-    o.apply = () => { a.items.splice(a.items.indexOf(out), 1); add(); };
-  } else {
-    o.note = [rec ? 'Receta: con tu ' + PIECE[rec.a === pc.id ? rec.b : rec.a].name + ' podrás forjar «' + rec.name + '»' : free.length ? 'Va a la segunda ranura' : '', prog].filter(Boolean).join(' · ');
-    o.apply = add;
-  }
-  return o;
-}
-// Fusiones que ya puedes forjar: llevas las dos piezas sueltas en la misma acción
-function fusionOptions() {
-  const out = [];
-  for (const f of FUSIONS) {
-    const a = S.build[f.slot];
-    if (a.fused || !a.items.some(x => x.id === f.a) || !a.items.some(x => x.id === f.b)) continue;
-    out.push({ tag: 'Fusión · ' + SLOTS[f.slot], rar: 3, name: f.name, color: C.ink, desc: `Fundes ${PIECE[f.a].name} y ${PIECE[f.b].name} en una habilidad nueva. ${f.desc}`, note: 'Las dos piezas siguen actuando, suben un nivel y dejan libre una ranura', apply: () => { a.fused = [f.a, f.b]; S.fx.push({ k: 'num', x: S.p.x, y: S.p.y - 20, t: 0, life: 2.2, txt: '«' + f.name + '»', col: C.ink, big: true }); } });
-  }
-  if (out.length) out.push({ tag: 'Yunque', name: 'Dejarlas como están', color: C.dim, desc: 'No fundes nada ahora. Podrás hacerlo al acabar otra sala.', note: '', apply: () => {} });
-  return out;
-}
-const techOk = t => !S.techs.has(t.id) && godCount(t.god) >= 1 && (t.req || []).every(id => lv(id) > 0);
-const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier pieza de esta deidad');
-function pieceOptions(god) {
-  const cands = [];
-  for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([1, c]); }
-  for (const t of TECHS.filter(x => x.god === god && techOk(x)))
-    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
-  // sorteo ponderado: lo raro sale menos
-  return cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).slice(0, tr('m1') ? 4 : 3).map(x => x[1]);
-}
-function planOptions() {
-  const hasForm = PLANS.some(x => x.form && S.plans.has(x.id));
-  return PLANS.filter(x => !S.plans.has(x.id) && !(x.form && hasForm) && (!x.only || x.only === S.weapon)).sort(() => Math.random() - 0.5).slice(0, 3)
-    .map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: x.form ? 'Cambia el disparo básico' : '', color: C.ink, apply: () => { S.plans.add(x.id); } }));
-}
-function statOptions() {
-  return UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3)
-    .map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) }));
-}
-const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el rifle', opts: statOptions() });
-// Puertas: eliges a qué deidad le robas en la siguiente sala
-function doorScreen() {
-  const gods = Object.keys(GODS).sort(() => Math.random() - 0.5).slice(0, tr('m4') ? 5 : 3);
-  return { eyebrow: 'Siguiente sala', title: '¿A quién le robas ahora?', opts: gods.map(g => {
-    const n = godCount(g);
-    return { tag: GODS[g].theme, name: GODS[g].title, desc: `Su elegido guarda la siguiente sala con el ${GODS[g].weapon}. ${GODS[g].key}`, note: `Llevas piezas suyas en ${n} de 4 acciones · ${MASTERY[g].name}: ${Math.min(n, 3)}/3`, color: GODS[g].color, apply: () => { S.nextGod = g; } };
-  }) };
-}
-function advancePick() {
-  while (pickQueue.length) {
-    const scr = pickQueue.shift()();
-    if (!scr || !scr.opts.length) continue;
-    pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
-    setMode('pick'); return;
-  }
-  if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
-  S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
-}
-function openPick() {
-  S.p.hp = Math.min(S.p.maxHp, S.p.hp + 15);
-  pickQueue = []; S.rerolls = tr('m2') ? 1 : 0;
-  const n = S.wave, god = S.drop ? S.drop.god : null;
-  if (god) pickQueue.push(() => { const o = pieceOptions(god); return o.length ? { eyebrow: 'Sala ' + n + ' de ' + ROOMS + ' · ' + GODS[god].title, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); });
-  if (n % 3 === 1) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
-  else if (n % 2 === 0) pickQueue.push(statScreen);
-  pickQueue.push(() => { const o = fusionOptions(); return o.length ? { eyebrow: 'Yunque', title: 'Puedes forjar una fusión', opts: o } : null; });
-  if (n < ROOMS) pickQueue.push(doorScreen);
-  advancePick();
-}
-// Regateo: volver a sortear las técnicas, una vez por sala
-function rerollPick() {
-  if (S.mode !== 'pick' || !pickReroll || S.rerolls <= 0) return;
-  S.rerolls -= 1; pickOpts = pickReroll(); pickSel = pickOpts.length > 2 ? 1 : 0; modeT = 0;
-  blip(500, 0.1, 'triangle', 0.05, 300); renderOverlay();
-}
-function choosePick(i) {
-  if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
-  const before = Object.keys(GODS).filter(mastery), o = pickOpts[i];
-  o.apply(); S.buildV += 1;
-  blip(660, 0.12, 'triangle', 0.05, 500);
-  if (o.god) say(o.god, 'take');
-  for (const g of Object.keys(GODS)) if (mastery(g) && !before.includes(g)) { say(g, 'master'); S.fx.push({ k: 'num', x: S.p.x, y: S.p.y - 20, t: 0, life: 2.2, txt: '¡' + MASTERY[g].name + '!', col: GODS[g].color, big: true }); blip(520, 0.5, 'triangle', 0.06, 900); }
-  advancePick();
-}
-function buildHtml(full) {
-  const rows = [];
-  const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>` : ''}</li>`);
-  const nm = it => PIECE[it.id].name + ' ' + ROMAN[lv(it.id)];
-  for (const k of SLOT_KEYS) {
-    const a = S.build[k];
-    if (!a.items.length) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Dos ranuras libres</span></li>`); continue; }
-    if (a.fused) {
-      const fi = a.fused.map(id => a.items.find(x => x.id === id));
-      const F = fusionOf(k);
-      row(SLOTS[k], C.ink, '«' + (F ? F.name : 'Fusión') + '»', full ? (F ? F.desc + ' ' : '') + fi.map(it => PIECE[it.id].name + ': ' + PIECE[it.id].desc(lv(it.id))).join(' ') : fi.map(nm).join(' + '));
-    }
-    for (const it of a.items) if (!a.fused || !a.fused.includes(it.id)) row(SLOTS[k], GODS[godOf(it.id)].color, nm(it), full ? PIECE[it.id].desc(lv(it.id)) : '');
-  }
-  for (const g of Object.keys(GODS)) if (mastery(g)) row('Maestría', GODS[g].color, MASTERY[g].name, full ? MASTERY[g].desc : '');
-  const techs = TECHS.filter(t => S.techs.has(t.id)), plans = PLANS.filter(x => S.plans.has(x.id));
-  if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
-  else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
-  return rows.join('');
-}
-// Recetario: todo lo que se le puede robar a cada deidad
-function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que ya llevas. Cada acción tiene dos ranuras. Ciertas parejas de piezas se funden en una habilidad nueva. Las piezas se enganchan a balas, explosiones, esquives y bajas, así que unas cambian a otras.</p><div class="book">`;
-  for (const g of Object.keys(GODS)) {
-    const n = godCount(g), G = GODS[g];
-    h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
-      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
-      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
-      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Lleva piezas suyas en 3 acciones distintas. ${MASTERY[g].desc}</span></li></ul></section>`;
-  }
-  h += `<section><h2>Fusiones</h2><p class="fine">Lleva las dos piezas en la misma acción y fúndelas en el yunque al acabar una sala.</p><ul class="build full">` +
-    FUSIONS.map(f => `<li class="${fz(f.id) ? 'own' : ''}"><em>${SLOTS[f.slot]}</em><b>${f.name}</b><span>${PIECE[f.a].name} + ${PIECE[f.b].name}. ${f.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
-  return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
-}
-function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
-function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
-
-// ───────────────────────── Interfaz (DOM) ─────────────────────────
-const ov = $('overlay'), ovBody = $('ovBody');
-const HINTS = {
-  pad: 'Stick izq. mover · A o RT disparar · B o RB esquivar · X o LT cargar · Stick der. cambiar objetivo · Start pausa',
-  kb: 'WASD mover · Espacio disparar · Shift esquivar · E cargar · Clic en un enemigo para fijarlo · Esc pausa',
-  touch: 'Toca un enemigo para fijarlo como objetivo',
-  none: 'Pulsa un botón del mando, una tecla o la pantalla',
-};
-
-function renderOverlay() {
-  const m = S.mode;
-  ov.hidden = m === 'play';
-  if (m === 'play') { ovBody.innerHTML = ''; return; }
-  let h = '';
-  if (m === 'title') {
-    h = `<p class="eyebrow">Prototipo de combate</p><h1>Sala de Kiteo</h1>
-      <p class="lead">Eres un herrero con un rifle de energía. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos. Si mantienes pulsado, disparas igual pero andando despacio.</p>
-      <p class="lead">No tienes dios. Cada sala la guarda el elegido de una deidad, con un arma bendecida: lo matas, la desmontas y te quedas con su técnica. Las deidades miran y opinan. Al acabar la sala eliges a quién le robas después, y el recetario enseña todo lo que se les puede quitar. Son seis salas y, al final, el Guardián. Cuando mueres vuelves a la forja con las almas y los materiales que hayas reunido: con las almas creces tú, y con los materiales forjas tu arma.</p>
-      <dl class="keys">
-        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
-        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
-        <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
-      </dl>
-      <button id="ovBtn" class="primary">Empezar</button>
-      <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
-  } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · sala ${S.wave}</p><h1>${WEAPONS[S.weapon].name}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div>`;
-  } else if (m === 'book') {
-    h = bookHtml();
-  } else if (m === 'dead') {
-    h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
-      <p class="lead">${S.bossRoom ? 'Caíste ante el Guardián' : 'Llegaste a la sala ' + S.wave + ' de ' + ROOMS} con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja.</p>
-      <button id="ovBtn" class="primary">A la forja</button>`;
-  } else if (m === 'win') {
-    h = `<p class="eyebrow">Mundo superado</p><h1>Has vencido al Guardián</h1>
-      <p class="lead">${S.kills} bajas. Te llevas ${lootTxt()} a la forja. Lo que robaste a los dioses se queda aquí.</p>
-      <button id="ovBtn" class="primary">A la forja</button>`;
-  } else if (m === 'forge') {
-    h = forgeHtml();
-  } else if (m === 'pick') {
-    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
-      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Izquierda y derecha para elegir, disparar para confirmar. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
-  }
-  ovBody.innerHTML = h;
-  ovBody.classList.toggle('wide', m === 'book' || m === 'forge');
-  if (m === 'forge') bindForge();
-  const rr = $('rrBtn');
-  if (rr) rr.addEventListener('click', () => { audioInit(); rerollPick(); });
-  const bk = $('bookBtn');
-  if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
-  const b = $('ovBtn');
-  if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
-  ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
-}
-function primaryAction(force) {
-  if (S.mode === 'title') openForge();
-  else if (S.mode === 'pause') setMode('play');
-  else if (S.mode === 'book') closeBook();
-  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
-}
-
-$('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
-$('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); });
-
-let hudKey = '';
-function renderHud() {
-  const p = S.p;
-  const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
-  const left = S.enemies.length + S.queue.length;
-  const bo = S.enemies.find(e => e.boss && e.spawn <= 0);
-  const key = [Math.ceil(p.hp), p.maxHp, S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, S.buildV, Math.round(p.fury / 4), p.sated, p.fireAmmo, S.soulsRun, bo ? Math.ceil(bo.hp / 8) : -1].join('|');
-  if (key === hudKey) return; hudKey = key;
-  $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
-  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp;
-  $('wave').textContent = !S.wave ? '' : S.bossRoom ? 'El Guardián' : 'Sala ' + S.wave + ' de ' + ROOMS + ' · quedan ' + left;
-  $('boss').hidden = !bo || S.mode !== 'play';
-  if (bo) $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%';
-  $('build').innerHTML = buildHtml(false);
-  $('res').textContent = [godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', p.sated ? 'Saciedad ' + p.sated : '', p.fireAmmo ? 'Balas de fuego ' + p.fireAmmo : '', S.wave ? 'Almas ' + S.soulsRun : ''].filter(Boolean).join(' · ');
-  $('stats').textContent = S.wave ? (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
-  $('dev').textContent = dev;
-  $('hint').textContent = HINTS[lastDev] || HINTS.none;
-  $('touch').hidden = lastDev !== 'touch';
 }
 
 // ───────────────────────── Dibujo ─────────────────────────
@@ -1509,18 +1740,24 @@ function render() {
   // Previsualización del disparo cargado: cono, o rayo cortado por las columnas
   if (p.charging) {
     const ratio = clamp(p.charge / T.charge.full, 0, 1), ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), ok = p.charge >= T.charge.min;
-    if (S.weapon === 'pistols' && !S.plans.has('mortar')) {
+    const mortar = S.plans.has('mortar') && S.weapon === 'rifle';
+    if (S.weapon === 'pistols' || S.weapon === 'shotgun') {
+      const half = S.weapon === 'shotgun' ? 0.6 : 0.85, reach = S.weapon === 'shotgun' ? 130 : 165;
       ctx.fillStyle = C.energy; ctx.globalAlpha = ok ? 0.08 + 0.14 * ratio : 0.04;
-      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 165, p.chargeDir - 0.85, p.chargeDir + 0.85); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, reach, p.chargeDir - half, p.chargeDir + half); ctx.closePath(); ctx.fill();
     } else if (S.weapon === 'bow') {
       const tg = S.target && active(S.target) && Math.hypot(I.ax, I.ay) <= 0.35 ? S.target : null;
       const tx = clamp(tg ? tg.x : p.x + ux * 190, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 190, 0, T.room.h);
       ctx.fillStyle = C.energy; ctx.globalAlpha = ok ? 0.1 + 0.16 * ratio : 0.05; ctx.beginPath(); ctx.arc(tx, ty, 62, 0, Math.PI * 2); ctx.fill();
-    } else if (lv('dragon_charge') && !S.plans.has('mortar')) {
+    } else if (S.weapon === 'lance') {
+      ctx.strokeStyle = C.energy; ctx.globalAlpha = ok ? 0.2 + 0.3 * ratio : 0.08; ctx.lineWidth = 12;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ux * 240, p.y + uy * 240); ctx.stroke();
+    } else if (lv('dragon_charge') && !mortar) {
+      const kk = duoOn('roar') ? 1 + p.fury / 100 : 1;
       ctx.fillStyle = GODS.dragon.color; ctx.globalAlpha = ok ? 0.1 + 0.18 * ratio : 0.05;
-      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 175, p.chargeDir - 0.5, p.chargeDir + 0.5); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 175 * kk, p.chargeDir - Math.min(1.2, 0.5 * kk), p.chargeDir + Math.min(1.2, 0.5 * kk)); ctx.closePath(); ctx.fill();
     } else {
-      const cl = S.plans.has('mortar') ? 170 : rayClip(p.x, p.y, ux, uy, T.charge.range);
+      const cl = mortar ? 170 : rayClip(p.x, p.y, ux, uy, T.charge.range);
       ctx.strokeStyle = C.energy; ctx.globalAlpha = ok ? 0.18 + 0.3 * ratio : 0.08; ctx.lineWidth = 2 + ratio * T.charge.width * 2;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ux * cl, p.y + uy * cl); ctx.stroke();
     }
@@ -1543,10 +1780,20 @@ function render() {
     ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(c.x, c.y - r * 1.6); ctx.lineTo(c.x + r, c.y); ctx.lineTo(c.x, c.y + r * 1.1); ctx.lineTo(c.x - r, c.y); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.8; ctx.stroke(); ctx.globalAlpha = 1;
   }
-  for (const b of S.bites) {
-    const bob = Math.sin(S.t * 6 + b.x) * 1.2;
-    ctx.fillStyle = b.rot ? GODS.venom.color : b.hot ? GODS.dragon.color : GODS.feast.color; ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y + (b.rot ? 0 : bob), b.rot ? 4.4 : 3.6, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = C.wall; ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1;
+  for (const f of S.fields) {   // burbujas de tiempo
+    ctx.fillStyle = GODS.time.color; ctx.globalAlpha = 0.1 + 0.05 * Math.sin(S.t * 3); ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = GODS.time.color; ctx.globalAlpha = 0.6; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f.life / f.life0); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  for (const h of S.hazards) {   // avisos de golpes que caen
+    ctx.fillStyle = h.col; ctx.strokeStyle = h.col; ctx.lineWidth = 1.5;
+    if (h.done) { ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.fill(); }
+    else { const k = 1 - h.t / h.t0; ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 0.15 + 0.3 * k; ctx.beginPath(); ctx.arc(h.x, h.y, h.r * k, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  for (const l of S.lasers) {   // líneas de tiro enemigas
+    const ux = Math.cos(l.a), uy = Math.sin(l.a), len = rayClip(l.x, l.y, ux, uy, 700), k = 1 - l.t / l.t0;
+    ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.25 + 0.6 * k; ctx.lineWidth = 1 + l.w * k;
+    ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + ux * len, l.y + uy * len); ctx.stroke(); ctx.globalAlpha = 1;
   }
   if (S.drop) {
     const d = S.drop, r = 6 + Math.sin(S.t * 6);
@@ -1564,6 +1811,13 @@ function render() {
   for (const tu of S.turrets) {
     ctx.strokeStyle = slotColor('basic'); ctx.globalAlpha = Math.min(1, tu.life); ctx.lineWidth = 1.5;
     ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8); ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  // Sombras
+  for (const s of S.shades) {
+    ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
+    ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1a1433'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
   }
 
   // Enemigos
@@ -1601,7 +1855,9 @@ function render() {
     ctx.font = `600 7px ${FONT}`; ctx.textAlign = 'center';
     if (e.ember > 0) { ctx.strokeStyle = GODS.dragon.color; ctx.lineWidth = 0.8 + Math.min(3, 0.3 * e.ember); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = GODS.dragon.color; ctx.fillText(String(e.ember), e.x - e.r - 6, e.y + 3); }
     if (e.venom > 0) { ctx.fillStyle = GODS.venom.color; ctx.fillText(String(e.venom), e.x + e.r + 6, e.y + 3); ctx.globalAlpha = 0.25; shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fill(); ctx.globalAlpha = 1; }
-    if (e.season > 0) { ctx.fillStyle = GODS.feast.color; for (let i = 0; i < e.season; i++) ctx.fillRect(e.x - 6 + i * 2.6, e.y + e.r + 3, 1.8, 1.8); }
+    if (e.needles > 0) { ctx.fillStyle = GODS.storm.color; for (let i = 0; i < e.needles; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; ctx.fillRect(e.x + Math.cos(a) * (e.r + 4) - 1, e.y + Math.sin(a) * (e.r + 4) - 1, 2.2, 2.2); } }
+    if (e.mark > 0) { ctx.strokeStyle = GODS.shade.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e.x - 3, e.y + e.r + 4); ctx.lineTo(e.x + 3, e.y + e.r + 4); ctx.moveTo(e.x, e.y + e.r + 2); ctx.lineTo(e.x, e.y + e.r + 8); ctx.stroke(); }
+    if (e.slowT > 0) { ctx.strokeStyle = GODS.time.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 7, 0, Math.PI * 2 * (1 - e.slowF)); ctx.stroke(); }
     if (e.stun > 0) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.setLineDash([1.5, 2.5]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, S.t * 6, S.t * 6 + Math.PI * 1.6); ctx.stroke(); ctx.setLineDash([]); }
     if (e.hp < e.maxHp) {
       const w = e.r * 2 + 4; ctx.fillStyle = C.wall; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w, 2.5);
@@ -1627,6 +1883,7 @@ function render() {
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
     if (f.k === 'ghost') { ctx.fillStyle = C.ember; ctx.globalAlpha = 0.35 * k; ctx.beginPath(); ctx.arc(f.x, f.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+    else if (f.k === 'clock') { ctx.strokeStyle = GODS.time.color; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke(); }
     else if (f.k === 'cone') { ctx.fillStyle = f.col; ctx.globalAlpha = 0.45 * k; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.r * (1 - 0.3 * k), f.a - f.half, f.a + f.half); ctx.closePath(); ctx.fill(); }
     ctx.globalAlpha = 1;
   }
@@ -1653,7 +1910,7 @@ function render() {
   else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
   const dm = dodgeMax();
   if (dm > 1) for (let i = 0; i < dm; i++) { ctx.fillStyle = i < p.dodgeN ? C.ink : C.edge; ctx.fillRect(p.x - dm * 2.5 + i * 5, p.y + p.r + 10, 3, 3); }
-  for (let i = 0; i < p.sated; i++) { ctx.fillStyle = GODS.feast.color; ctx.fillRect(p.x - p.sated * 1.5 + i * 3, p.y - p.r - 11, 2, 2); }
+  if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 11, a0, a0 + Math.PI * 2 * Math.min(1, p.reserve / resMax())); ctx.stroke(); }
   if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * (1 - p.chargeCd / p.chargeCdMax)); ctx.stroke(); ctx.globalAlpha = 1; }
 
   // Efectos sobre todo
@@ -1680,6 +1937,86 @@ function render() {
   }
 }
 
+// ───────────────────────── Interfaz (DOM) ─────────────────────────
+const ov = $('overlay'), ovBody = $('ovBody');
+const HINTS = {
+  pad: 'Stick izq. mover · A o RT disparar · B o RB esquivar · X o LT cargar · Stick der. cambiar objetivo · Start pausa',
+  kb: 'WASD mover · Espacio disparar · Shift esquivar · E cargar · Clic en un enemigo para fijarlo · Esc pausa',
+  touch: 'Toca un enemigo para fijarlo como objetivo',
+  none: 'Pulsa un botón del mando, una tecla o la pantalla',
+};
+function renderOverlay() {
+  const m = S.mode;
+  ov.hidden = m === 'play';
+  if (m === 'play') { ovBody.innerHTML = ''; return; }
+  let h = '';
+  if (m === 'title') {
+    h = `<p class="eyebrow">Prototipo</p><h1>Sala de Kiteo</h1>
+      <p class="lead">Eres un herrero sin dios. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos.</p>
+      <p class="lead">Cuatro mundos, cada uno con cinco salas, una tienda y un jefe. Al acabar una sala eliges puerta: en unas espera el elegido de una deidad, al que robas una técnica; en otras hay almas, Hierro Místico, vida u oro. Al morir vuelves a la forja: con las almas creces tú y con los materiales forjas tu arma.</p>
+      <dl class="keys">
+        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
+        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
+        <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
+      </dl>
+      <button id="ovBtn" class="primary">Empezar</button>
+      <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
+  } else if (m === 'pause') {
+    h = `<p class="eyebrow">Pausa · ${where(S.wave)}</p><h1>${WEAPONS[S.weapon].name}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+  } else if (m === 'book') h = bookHtml();
+  else if (m === 'dead') {
+    h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
+      <p class="lead">Caíste en ${where(S.wave)}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja.</p>
+      <button id="ovBtn" class="primary">A la forja</button>`;
+  } else if (m === 'win') {
+    h = `<p class="eyebrow">Los cuatro mundos superados</p><h1>Has cruzado el Umbral</h1>
+      <p class="lead">${S.kills} bajas. Te llevas ${lootTxt()} a la forja. Lo que robaste a los dioses se queda aquí.</p>
+      <button id="ovBtn" class="primary">A la forja</button>`;
+  } else if (m === 'forge') h = forgeHtml();
+  else if (m === 'shop') h = shopHtml();
+  else if (m === 'pick') {
+    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
+      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Izquierda y derecha para elegir, disparar para confirmar. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
+  }
+  ovBody.innerHTML = h;
+  ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop');
+  if (m === 'forge' || m === 'shop') bindList();
+  const rr = $('rrBtn'); if (rr) rr.addEventListener('click', () => { audioInit(); rerollPick(); });
+  const bk = $('bookBtn'); if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
+  const b = $('ovBtn'); if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
+  ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
+}
+function primaryAction(force) {
+  if (S.mode === 'title') openForge();
+  else if (S.mode === 'pause') setMode('play');
+  else if (S.mode === 'book') closeBook();
+  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
+}
+$('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
+$('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); });
+
+let hudKey = '';
+function renderHud() {
+  const p = S.p;
+  const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
+  const left = S.enemies.length + S.queue.length, bo = S.enemies.find(e => e.boss && e.spawn <= 0), inRun = S.wave > 0;
+  const key = [Math.ceil(p.hp), p.maxHp, Math.round(p.reserve), S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, JSON.stringify(S.build), S.techs.size, S.plans.size,
+    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1].join('|');
+  if (key === hudKey) return; hudKey = key;
+  $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
+  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
+  $('wave').textContent = !inRun ? '' : S.bossRoom ? WORLDS[S.world - 1].name + ' · jefe' : WORLDS[S.world - 1].name + ' · sala ' + S.room + ' de ' + RPW + ' · quedan ' + left;
+  $('stats').textContent = inRun ? (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
+  $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
+  $('build').innerHTML = inRun ? buildHtml(false) : '';
+  $('boss').hidden = !bo || S.mode !== 'play';
+  if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
+  $('dev').textContent = dev;
+  $('hint').textContent = HINTS[lastDev] || HINTS.none;
+  $('touch').hidden = lastDev !== 'touch';
+}
+
 // ───────────────────────── Bucle ─────────────────────────
 let last = 0;
 function frame(now) {
@@ -1697,7 +2034,7 @@ function frame(now) {
     if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
     if (I.dodgeP) rerollPick();
-  } else if (m === 'forge') forgeInput();
+  } else if (m === 'forge' || m === 'shop') listInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   render(); renderHud();
 }
@@ -1705,5 +2042,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, T, PIECES, PLANS, TECHS, GODS, FUSIONS };
+window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, T, PIECES, DUOS, PLANS, TECHS, GODS, WEAPONS, TYPES, WORLDS, RPW };
 })();
