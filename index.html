@@ -63,8 +63,17 @@ h1{margin:0;font:600 clamp(24px,5vw,34px)/1.1 var(--display);text-wrap:balance;f
 .card{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--wall);border:2px solid var(--line);padding:14px 12px;border-radius:2px;min-width:0}
 .card strong{font:600 15px/1.2 var(--display)}
 .card span{color:var(--dim);font-size:13px;line-height:1.35}
+.card em{font:600 11px/1 var(--display);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--fam)}
+.card small{color:var(--dim);font-size:11px;margin-top:auto}
+.build{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:12px}
+.build li{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.build em{font:600 11px/1.3 var(--display);font-style:normal;color:var(--dim);min-width:52px}
+.build b{font-weight:600}
+.build span{color:var(--dim)}
+.build.full{gap:8px;font-size:13px}
+.build.full em{min-width:60px}
+.build.full span{flex-basis:100%;line-height:1.35}
 .card.sel{border-color:var(--energy)}
-.card.sel strong{color:var(--energy)}
 @media (max-width:520px){.cards{grid-template-columns:1fr}#hint{display:none}}
 @media (max-height:420px){#ovBody{padding:14px;gap:9px}.keys{gap:4px}#hint{display:none}}
 </style>
@@ -80,6 +89,7 @@ h1{margin:0;font:600 clamp(24px,5vw,34px)/1.1 var(--display);text-wrap:balance;f
         <div class="hp"><div id="hpFill"></div><div id="hpTxt"></div></div>
         <div id="wave"></div>
         <div id="stats"></div>
+        <ul id="build" class="build"></ul>
       </div>
       <div class="stack end">
         <div class="chips">
