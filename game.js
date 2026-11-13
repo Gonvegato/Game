@@ -63,12 +63,21 @@ const PIECES = [
   { id: 'e_charge', fam: 'frost', slot: 'charge',  name: 'Quebrar',          desc: l => `El cargado rompe a los congelados: ${300 + 100 * (l - 1)}% de daño y esquirlas que enfrían a los de alrededor. Al resto le aplica 2 de Frío.` },
   { id: 'e_dodge',  fam: 'frost', slot: 'dodge',   name: 'Embestida gélida', desc: l => `Atravesar a un congelado con el esquive lo rompe (${200 + 100 * (l - 1)}% de daño y esquirlas). A los demás les aplica ${2 + l} de Frío.` },
   { id: 'e_pass',   fam: 'frost', slot: 'passive', name: 'Cero absoluto',    desc: l => `Los congelados duran ${(0.5 * l).toFixed(1)} s más y van enfriando a los que tienen cerca.` },
+  { id: 'f_charge2', fam: 'fire',  slot: 'charge',  name: 'Lanza de fuego',   desc: l => `El cargado deja 3 s una línea de fuego en el suelo que clava ${pl(l, 'Quemadura')} por pulso a quien la pisa.` },
+  { id: 'f_dodge2',  fam: 'fire',  slot: 'dodge',   name: 'Salto de fragua',  desc: l => `Al esquivar, explosión donde estabas: ${150 * l}% de daño y 1 Quemadura.` },
+  { id: 'f_pass2',   fam: 'fire',  slot: 'passive', name: 'Cauterizar',       desc: l => `Cada enemigo que muere ardiendo te cura ${1 + l} de vida.` },
+  { id: 'r_charge2', fam: 'bolt',  slot: 'charge',  name: 'Condensador',      desc: l => `El cargado carga un 40% más rápido y se recupera en menos de la mitad${l > 1 ? `, con +${30 * (l - 1)}% de daño` : ''}. Más cargados, más remates.` },
+  { id: 'r_dodge2',  fam: 'bolt',  slot: 'dodge',   name: 'Imán',             desc: l => `Al esquivar, clavas ${pl(l, 'Aguja')} a todos los enemigos cercanos.` },
+  { id: 'r_pass2',   fam: 'bolt',  slot: 'passive', name: 'Chispazo',         desc: l => `Cada ${Math.max(2, 5 - l)} disparos, la bala hace 250% de daño y suelta 3 rayos.` },
+  { id: 'e_charge2', fam: 'frost', slot: 'charge',  name: 'Glaciar',          desc: l => `El cargado congela ${(1.2 + 0.5 * l).toFixed(1)} s a todos los que atraviesa.` },
+  { id: 'e_dodge2',  fam: 'frost', slot: 'dodge',   name: 'Nova helada',      desc: l => `Al esquivar, empujas a los enemigos cercanos y les aplicas ${2 + l} de Frío.` },
+  { id: 'e_pass2',   fam: 'frost', slot: 'passive', name: 'Quebradizo',       desc: l => `+${30 * l}% de daño a enemigos con Frío y +${100 * l}% a congelados.` },
 ];
 // Técnicas: no ocupan ranura, tienen rareza y piden llevar ciertas piezas. Aquí viven los remates gordos.
 // rar: 1 rara, 2 épica, 3 legendaria. req: hacen falta todas. any: hace falta una.
 const TECHS = [
   { id: 'f_tinder', fam: 'fire',  rar: 1, name: 'Yesca',             desc: 'La Quemadura hace daño el doble de rápido.' },
-  { id: 'f_pool',   fam: 'fire',  rar: 1, name: 'Fuego vivo',        desc: 'Toda explosión de fuego deja el suelo ardiendo 3 s.', any: ['f_charge', 'f_pass', 'f_basic2'] },
+  { id: 'f_pool',   fam: 'fire',  rar: 1, name: 'Fuego vivo',        desc: 'Toda explosión de fuego deja el suelo ardiendo 3 s.', any: ['f_charge', 'f_pass', 'f_basic2', 'f_dodge2'] },
   { id: 'f_ignite', fam: 'fire',  rar: 2, name: 'Punto de ignición', desc: 'Cuando un enemigo llega al tope de Quemadura, estalla solo (50% de daño por cada una) y se queda con la mitad.', any: ['f_basic', 'f_basic2'] },
   { id: 'f_sun',    fam: 'fire',  rar: 3, name: 'Sol negro',         desc: 'Tus explosiones de fuego son un 60% más grandes y hacen el doble de daño.', req: ['f_charge', 'f_pass'] },
   { id: 'r_rod',    fam: 'bolt',  rar: 1, name: 'Pararrayos',        desc: 'Las descargas llegan casi el doble de lejos y sueltan 2 rayos más.', any: ['r_charge', 'r_dodge'] },
@@ -87,12 +96,31 @@ const MASTERY = {
   bolt:  { name: 'Tormenta perfecta', desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga: reacción en cadena.' },
   frost: { name: 'Era glacial',       desc: 'Las esquirlas congelan directamente y los congelados reciben el doble de daño.' },
 };
-// Fusiones: nacen al juntar dos piezas de armas distintas en la misma acción.
-// La pieza fundida hace los dos efectos (con un nivel más cada uno), ocupa una ranura y activa la sinergia de la pareja.
+// Reacciones: pasan siempre que dos elementos coinciden en el mismo enemigo, sin fundir nada.
+const REACTIONS = [
+  { fams: ['fire', 'frost'], name: 'Choque térmico',     desc: 'Si un enemigo que arde se congela, o prendes a un congelado, revienta: 40% de daño por cada Quemadura, en área.' },
+  { fams: ['fire', 'bolt'],  name: 'Sobrecalentamiento', desc: 'Cada Aguja clavada en un enemigo hace que su Quemadura haga un 15% más de daño.' },
+  { fams: ['bolt', 'frost'], name: 'Conducción',         desc: 'Las Agujas de un enemigo con Frío o congelado cuentan doble al descargarse.' },
+];
+// Fusiones: nacen al juntar dos piezas de armas distintas en la misma acción. La pieza fundida hace los dos efectos
+// (con un nivel más cada uno), ocupa una ranura y añade un dúo: una regla nueva que cruza los dos elementos.
+// Hay un dúo distinto por pareja y por acción.
 const PAIRS = {
-  'fire+frost': { id: 'thermal', name: 'Choque térmico', adjF: 'térmica',         adjM: 'térmico',        color: '#f3b6ff', desc: 'Congelar o romper a un enemigo que arde lo revienta: 80% de daño por cada Quemadura, en área.' },
-  'bolt+fire':  { id: 'plasma',  name: 'Plasma',         adjF: 'de plasma',       adjM: 'de plasma',      color: '#ffb347', desc: 'Los rayos aplican Quemadura, y cada pulso de Quemadura salta a un enemigo cercano y lo prende.' },
-  'bolt+frost': { id: 'super',   name: 'Superconductor', adjF: 'superconductora', adjM: 'superconductor', color: '#b8ffd9', desc: 'Los rayos aplican Frío y hacen el doble a enemigos con Frío. Congelar a un enemigo suelta 2 rayos.' },
+  'bolt+fire': { id: 'plasma', name: 'Plasma', adjF: 'de plasma', adjM: 'de plasma', color: '#ffb347', duo: {
+    basic:   'Al descargar a un enemigo, cada rayo se lleva todas sus Quemaduras y se las clava a quien alcanza.',
+    charge:  'El cargado suelta un rayo por cada Quemadura de cada enemigo que atraviesa, sin gastarlas, y los rayos de descarga prenden 2 Quemaduras.',
+    dodge:   'Atravesar a un enemigo que arde lo descarga como si cada Quemadura fuera una Aguja más.',
+    passive: 'Todo enemigo que muere suelta un rayo por cada Quemadura o Aguja que tuviera.' } },
+  'fire+frost': { id: 'thermal', name: 'Vapor', adjF: 'térmica', adjM: 'térmico', color: '#f3b6ff', duo: {
+    basic:   'El Choque térmico hace el doble de daño, llega más lejos y aplica 3 de Frío a los que alcanza.',
+    charge:  'El cargado deja una nube de vapor 4 s sobre cada enemigo que alcanza: quema y enfría a la vez a todo el que esté dentro.',
+    dodge:   'Tu esquive deja un rastro de vapor que quema y enfría, y los congelados que lo pisan se rompen solos.',
+    passive: 'Los congelados queman a los que tienen cerca, y quien muere ardiendo congela a los de alrededor.' } },
+  'bolt+frost': { id: 'super', name: 'Superconductor', adjF: 'superconductora', adjM: 'superconductor', color: '#b8ffd9', duo: {
+    basic:   'Cada bala que acierta a un enemigo con Frío le clava una Aguja más, y los rayos que tocan a un congelado saltan de nuevo.',
+    charge:  'Las esquirlas clavan 2 Agujas a quien alcanzan, y descargar a un congelado lo rompe.',
+    dodge:   'Atravesar a un enemigo con Agujas lo congela tras la descarga, y atravesar a un congelado clava 3 Agujas a los de alrededor.',
+    passive: 'Cada rayo que alcanza a un congelado alarga su congelación y le clava una Aguja.' } },
 };
 const FUSE_NOUN = { basic: ['Bala', 'F'], charge: ['Lanza', 'F'], dodge: ['Salto', 'M'], passive: ['Núcleo', 'M'] };
 // Planos de reforja: cambian cómo funciona el rifle, no solo lo que aplica.
@@ -319,8 +347,8 @@ const pairOf = a => (a.fused ? PAIRS[a.fused.map(famOf).sort().join('+')] : null
 // Nivel efectivo de una pieza (0 si no la llevas). Dentro de una fusión cuenta un nivel más.
 const lv = id => { const a = S.build[PIECE[id].slot], it = a.items.find(x => x.id === id); return it ? it.lvl + (a.fused && a.fused.includes(id) ? 1 : 0) : 0; };
 const has = id => S.techs.has(id);
-// ¿Está activa la sinergia de una pareja? (basta una pieza fundida de esa pareja)
-const syn = id => SLOT_KEYS.some(k => { const pr = pairOf(S.build[k]); return !!pr && pr.id === id; });
+// ¿Hay en esa acción una fusión de esa pareja? (activa su dúo)
+const fu = (slot, id) => { const pr = pairOf(S.build[slot]); return !!pr && pr.id === id; };
 const famCount = fam => SLOT_KEYS.filter(k => S.build[k].items.some(x => famOf(x.id) === fam)).length;
 const mastery = fam => famCount(fam) >= 3;
 const slotColor = slot => { const a = S.build[slot], pr = pairOf(a); if (pr) return pr.color; return a.items.length ? FAM[famOf(a.items[0].id)].color : C.energy; };
@@ -351,13 +379,18 @@ function kill(e) {
   if (S.lock === e) S.lock = null;
   blip(160, 0.12, 'sawtooth', 0.04, -90);
   if (e.champ) { S.drop = { fam: e.fam, x: e.x, y: e.y }; blip(880, 0.25, 'triangle', 0.05, 400); }
-  const l = lv('f_pass'), st = e.burn;
+  const l = lv('f_pass'), st = e.burn, nd = e.needles, heal = lv('f_pass2');
+  if (heal && st > 0) S.p.hp = Math.min(S.p.maxHp, S.p.hp + 1 + heal);
+  if (fu('passive', 'plasma') && st + nd > 0) { const tg = others(e, 140, 6); for (let i = 0; i < Math.min(10, st + nd) && tg.length; i++) bolt(e, tg[i % tg.length], S.p.dmg * 0.5, null); }
+  if (fu('passive', 'thermal') && st > 0) for (const o of others(e, 55, 8)) if (o.freezeImm <= 0) freeze(o, 1.2);
   if (l && st > 0) explode(e.x, e.y, 46, S.p.dmg * 0.2 * l * st, { burn: Math.ceil(st / 2), col: FAM.fire.color, fire: true });
 }
 
 function hit(e, dmg, ux, uy, big, col) {
   if (!active(e)) return;
   if (e.frozen > 0 && mastery('frost')) dmg *= 2;
+  const q = lv('e_pass2');
+  if (q) { if (e.frozen > 0) dmg *= 1 + q; else if (e.chill > 0) dmg *= 1 + 0.3 * q; }
   e.hp -= dmg; e.flash = 0.1;
   const kb = big ? 150 : 60; e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
@@ -383,6 +416,7 @@ function explode(x, y, r, dmg, o) {
     if (d > r + e.r) continue;
     if (dmg > 0 && e !== o.skip) hit(e, dmg, dx / d, dy / d, !o.soft, o.col);
     if (!active(e)) continue;
+    if (o.push) { e.kx += dx / d * o.push; e.ky += dy / d * o.push; }
     if (o.burn) applyBurn(e, o.burn);
     if (o.chill) applyChill(e, o.chill);
     if (o.payoff) chargePayoff(e);
@@ -395,8 +429,8 @@ function applyBurn(e, n) {
   if (!active(e)) return;
   const cap = burnCap();
   e.burn = Math.min(cap, e.burn + n); e.burnT = 4;
-  if (e.frozen > 0) thermal(e);
-  if (e.burn >= cap && has('f_ignite') && e.igCd <= 0 && active(e)) { e.igCd = 1; detonate(e, 0.5); if (active(e)) e.burn = Math.floor(cap / 2); }   // Punto de ignición
+  if (e.frozen > 0) { thermal(e); return; }
+  if (e.burn >= cap && has('f_ignite') && e.igCd <= 0) { e.igCd = 1; detonate(e, 0.5); if (active(e)) e.burn = Math.floor(cap / 2); }   // Punto de ignición
 }
 function addNeedles(e, n) {
   if (!active(e)) return;
@@ -411,40 +445,52 @@ function freeze(e, t) {
   e.frozen = t; e.chill = 0; e.freezeImm = t + (has('e_perma') ? 0.4 : 2); e.auraAcc = 0;
   e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0;
   blip(1400, 0.08, 'sine', 0.03, -600);
-  if (syn('super')) for (const o of others(e, 110, 2)) bolt(e, o, S.p.dmg, null);
   thermal(e);
 }
-// Choque térmico: fuego + hielo en el mismo enemigo
+// Reacción Choque térmico: fuego y hielo en el mismo enemigo
 function thermal(e) {
-  if (!syn('thermal') || e.burn <= 0 || e.thermCd > 0 || !active(e)) return;
-  const st = e.burn; e.thermCd = 1; e.burn = 0;
-  explode(e.x, e.y, 52, S.p.dmg * 0.8 * st, { col: PAIRS['fire+frost'].color });
+  if (e.burn <= 0 || e.thermCd > 0 || !active(e)) return;
+  const st = e.burn, duo = fu('basic', 'thermal');
+  e.thermCd = 1; e.burn = 0;
+  S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 12, t: 0, life: 0.7, txt: 'Choque térmico', col: PAIRS['fire+frost'].color });
+  explode(e.x, e.y, duo ? 64 : 46, S.p.dmg * (duo ? 0.8 : 0.4) * st, { col: PAIRS['fire+frost'].color, chill: duo ? 3 : 0 });
 }
+// Nube de vapor: quema y enfría a la vez
+function steam(x, y) { S.zones.push({ x, y, r: 50, life: 4, acc: 0.4, stacks: 1, chill: 1, steam: true }); if (S.zones.length > 14) S.zones.shift(); }
 // Un rayo de un enemigo a otro. `cas` existe cuando viene de una descarga de Agujas.
-function bolt(from, to, dmg, cas) {
+function bolt(from, to, dmg, cas, hop) {
   if (!active(to)) return;
-  const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1, sup = syn('super');
+  const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1;
   S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: FAM.bolt.color, w: 1.4 });
-  hit(to, dmg * (sup && (to.chill > 0 || to.frozen > 0) ? 2 : 1), dx / d, dy / d, false, FAM.bolt.color);
-  if (sup) applyChill(to, 1);
-  if (syn('plasma')) applyBurn(to, 1);
-  if (!cas) return;
-  if (to.needles > 0 && !cas.seen.has(to) && mastery('bolt')) discharge(to, cas.mult, cas);   // Tormenta perfecta
-  const c = lv('r_pass');
-  if (c) addNeedles(to, c);
+  hit(to, dmg, dx / d, dy / d, false, FAM.bolt.color);
+  if (!active(to)) return;
+  if (cas) {
+    if (cas.burn) applyBurn(to, cas.burn);                              // dúo Bala de plasma
+    if (fu('charge', 'plasma')) applyBurn(to, 2);                       // dúo Lanza de plasma
+    if (to.needles > 0 && !cas.seen.has(to) && mastery('bolt')) discharge(to, cas.mult, cas);   // Tormenta perfecta
+    const c = lv('r_pass');
+    if (c) addNeedles(to, c);
+  }
+  if (active(to) && to.frozen > 0) {
+    if (fu('passive', 'super')) { to.frozen = Math.min(4, to.frozen + 0.5); addNeedles(to, 1); }   // dúo Núcleo superconductor
+    if (fu('basic', 'super') && (hop || 0) < 3) { const nx = others(to, 120, 1)[0]; if (nx) bolt(to, nx, dmg, cas, (hop || 0) + 1); }   // dúo Bala superconductora
+  }
 }
 // Descargar las Agujas de un enemigo: daño por aguja y un rayo por aguja hacia otros
 function discharge(e, mult, cas) {
-  const n = e.needles;
+  let n = e.needles;
   if (!n || !active(e)) return;
-  cas = cas || { seen: new Set(), mult };
+  cas = cas || { seen: new Set(), mult, burn: 0 };
   cas.seen.add(e); e.needles = 0;
+  if (e.chill > 0 || e.frozen > 0) n *= 2;                              // reacción Conducción
+  if (fu('basic', 'plasma')) cas.burn = Math.max(cas.burn, e.burn);
   const rod = has('r_rod'), x = e.x, y = e.y, src = { x, y }, tg = others(e, rod ? 230 : 125, 6);
-  S.fx.push({ k: 'ring', x, y, r: 16 + n * 3, t: 0, life: 0.22, col: FAM.bolt.color });
-  blip(1000 + n * 120, 0.1, 'square', 0.04, -500);
+  S.fx.push({ k: 'ring', x, y, r: 16 + Math.min(n, 12) * 3, t: 0, life: 0.22, col: FAM.bolt.color });
+  blip(1000 + Math.min(n, 12) * 120, 0.1, 'square', 0.04, -500);
   hit(e, S.p.dmg * mult * n, 0, 0, true, FAM.bolt.color);
-  for (let i = 0; i < n + (rod ? 2 : 0) && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
+  for (let i = 0; i < Math.min(14, n + (rod ? 2 : 0)) && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
   if (has('r_judge')) explode(x, y, 60, S.p.dmg * 3, { col: '#ffffff' });   // Juicio
+  if (active(e) && e.frozen > 0 && fu('charge', 'super')) shatter(e, 3);     // dúo Lanza superconductora
 }
 // Reventar la Quemadura acumulada
 function detonate(e, per) {
@@ -457,6 +503,7 @@ function detonate(e, per) {
 function shatter(e, mult) {
   if (e.frozen <= 0 || !active(e)) return false;
   const shr = has('e_shrap'), x = e.x, y = e.y, src = { x, y }, tg = others(e, shr ? 130 : 85, shr ? 12 : 6), era = mastery('frost');
+  const pins = fu('charge', 'super') ? 2 : 0;
   thermal(e);
   S.fx.push({ k: 'ring', x, y, r: 30, t: 0, life: 0.25, col: FAM.frost.color });
   blip(2200, 0.12, 'triangle', 0.05, -1500);
@@ -467,6 +514,7 @@ function shatter(e, mult) {
     const dx = o.x - x, dy = o.y - y, d = Math.hypot(dx, dy) || 1;
     S.fx.push({ k: 'tracer', x1: x, y1: y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: FAM.frost.color });
     hit(o, S.p.dmg * (shr ? 1.5 : 0.6), dx / d, dy / d, false, FAM.frost.color);
+    if (pins) addNeedles(o, pins);
     if (era && o.freezeImm <= 0) freeze(o, 1.5); else applyChill(o, 2);
   }
   if (has('e_aval')) for (const o of others(src, 110, 8)) if (o.frozen > 0) shatter(o, mult);   // Avalancha
@@ -474,20 +522,36 @@ function shatter(e, mult) {
 }
 // Lo que hace el cargado a cada enemigo que alcanza, según tus piezas de cargado
 function chargePayoff(e) {
-  const fc = lv('f_charge'), rc = lv('r_charge'), ec = lv('e_charge');
+  const fc = lv('f_charge'), rc = lv('r_charge'), ec = lv('e_charge'), ec2 = lv('e_charge2');
+  if (fu('charge', 'plasma') && e.burn > 0) {                           // dúo Lanza de plasma
+    const tg = others(e, 140, 6);
+    for (let i = 0; i < Math.min(10, e.burn) && tg.length; i++) { const o = tg[i % tg.length]; bolt(e, o, S.p.dmg * 0.5, null); applyBurn(o, 1); }
+  }
+  if (fu('charge', 'thermal')) steam(e.x, e.y);                         // dúo Lanza térmica
   if (fc) detonate(e, 0.5 + 0.15 * (fc - 1));
   if (rc) discharge(e, 0.7 + 0.2 * (rc - 1), null);
-  if (ec && active(e)) { if (e.frozen > 0) shatter(e, 3 + (ec - 1)); else applyChill(e, 2); }
+  let broke = false;
+  if (ec && active(e)) { if (e.frozen > 0) broke = shatter(e, 3 + (ec - 1)); else applyChill(e, 2); }
+  if (ec2 && !broke && active(e) && e.frozen <= 0) freeze(e, 1.2 + 0.5 * ec2);
 }
 // Lo que pasa al atravesar a un enemigo con el esquive, según tus piezas de esquive
 function dashThrough(e) {
   const fd = lv('f_dodge'), rd = lv('r_dodge'), ed = lv('e_dodge');
-  if (rd) { if (e.needles > 0) discharge(e, 0.8 + 0.2 * (rd - 1), null); else addNeedles(e, 2); }
+  const wasFrozen = e.frozen > 0, hadNeedles = e.needles > 0, sup = fu('dodge', 'super');
+  if (sup && wasFrozen) for (const o of others(e, 85, 6)) addNeedles(o, 3);          // dúo Salto superconductor
+  if (fu('dodge', 'plasma') && e.burn > 0) { e.needles += e.burn; discharge(e, 0.8 + 0.2 * Math.max(0, rd - 1), null); }   // dúo Salto de plasma
+  else if (rd) { if (e.needles > 0) discharge(e, 0.8 + 0.2 * (rd - 1), null); else addNeedles(e, 2); }
+  if (sup && hadNeedles && !wasFrozen && active(e)) freeze(e, 1.5);
   if (ed && active(e)) { if (e.frozen > 0) shatter(e, 2 + (ed - 1)); else applyChill(e, 2 + ed); }
   if (fd && active(e) && e.burn > 0) {
     S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 75, t: 0, life: 0.25, col: FAM.fire.color });
     for (const o of others(e, 75, 8)) applyBurn(o, e.burn);
   }
+}
+function zoneTouch(z, e) {
+  if (z.shatter && e.frozen > 0) { shatter(e, 2); return; }
+  applyBurn(e, z.stacks);
+  if (z.chill) applyChill(e, z.chill);
 }
 // Un impacto de bala: daño y lo que apilan tus piezas de disparo
 function onHit(e, dmg, ux, uy, big, col) {
@@ -496,6 +560,7 @@ function onHit(e, dmg, ux, uy, big, col) {
   if (fb) applyBurn(e, fb);
   if (rb) addNeedles(e, rb);
   if (eb) applyChill(e, eb);
+  if (fu('basic', 'super') && (e.chill > 0 || e.frozen > 0)) addNeedles(e, 1);   // dúo Bala superconductora
   const f2 = lv('f_basic2'), r2 = lv('r_basic2'), e2 = lv('e_basic2');
   if (f2) explode(e.x, e.y, 28, dmg * 0.5, { burn: f2, col: FAM.fire.color, soft: true, skip: e, fire: true });
   if (r2) for (const o of others(e, 110, 1 + r2)) bolt(e, o, dmg * 0.6, null);
@@ -507,9 +572,10 @@ function fireBasic(target) {
   if (!target || !active(target)) target = nearestInRange();
   if (!target) { p.cd = 0.12; p.crit = false; return; }
   p.shotN += 1;
-  let mult = 1;
-  if (p.crit) { mult = 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
-  const big = p.crit, col = slotColor('basic');
+  const ov = lv('r_pass2'), over = ov > 0 && p.shotN % Math.max(2, 5 - ov) === 0;
+  let mult = over ? 2.5 : 1;
+  if (p.crit) { mult *= 2; S.fx.push({ k: 'num', x: p.x, y: p.y - 14, t: 0, life: 0.6, txt: '¡Compás!', col: C.ember, big: true }); blip(1800, 0.09, 'sine', 0.05); }
+  const big = p.crit || over, col = over ? FAM.bolt.color : slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
   const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: p.x + Math.cos(p.face) * 14, y1: p.y + Math.sin(p.face) * 14, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
@@ -546,6 +612,7 @@ function fireBasic(target) {
       if (t2) { blip(1250, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.45); }
     } });
   } else bullet(target, mult);
+  if (over) for (const o of others(target, 110, 3)) bolt(target, o, p.dmg * 1.5, null);   // Chispazo
 }
 
 function startDodge(a, free) {
@@ -557,23 +624,28 @@ function startDodge(a, free) {
   blip(420, 0.1, 'triangle', 0.04, 500);
   p.dodgeHit = new Set();
   if (lv('r_dodge')) p.cd = 0;
+  const f2 = lv('f_dodge2'), r2 = lv('r_dodge2'), e2 = lv('e_dodge2');
+  if (f2) explode(p.x, p.y, 45 + 8 * (f2 - 1), p.dmg * 1.5 * f2, { burn: 1, col: FAM.fire.color, fire: true });
+  if (e2) explode(p.x, p.y, 60 + 10 * (e2 - 1), 0, { chill: 2 + e2, push: 140, col: FAM.frost.color });
+  if (r2) { S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 80, t: 0, life: 0.25, col: FAM.bolt.color }); for (const o of others(p, 80 + 8, 12)) addNeedles(o, r2); }
 }
 function endDodge() {
-  const p = S.p, fd = lv('f_dodge');
-  if (fd && p.dodgeFrom) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 3, acc: 0.4, stacks: fd });
+  const p = S.p, fd = lv('f_dodge'), th = fu('dodge', 'thermal');   // dúo Salto térmico: rastro de vapor
+  if ((fd || th) && p.dodgeFrom) S.zones.push({ x1: p.dodgeFrom.x, y1: p.dodgeFrom.y, x2: p.x, y2: p.y, life: 3, acc: 0.4, stacks: Math.max(1, fd), chill: th ? 1 : 0, shatter: th, steam: th });
   p.dodgeFrom = null;
 }
 
 function fireCharged(am) {
   const p = S.p, ch = T.charge;
   const ratio = clamp(p.charge / ch.full, 0, 1);
-  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio);
+  const rc2 = lv('r_charge2'), fc2 = lv('f_charge2');
+  const dmg = p.dmg * (1.5 + (ch.dmgMult - 1.5) * ratio) * (rc2 ? 1 + 0.3 * (rc2 - 1) : 1);
   const ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir), len = ch.range, col = slotColor('charge');
   if (S.plans.has('mortar')) {
     const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null;
     const tx = clamp(tg ? tg.x : p.x + ux * 170, 0, T.room.w), ty = clamp(tg ? tg.y : p.y + uy * 170, 0, T.room.h);
     S.fx.push({ k: 'lob', x1: p.x, y1: p.y, x2: tx, y2: ty, t: 0, life: 0.3, col });
-    S.timers.push({ t: 0.3, fn: () => { explode(tx, ty, 58, dmg * 0.8, { col, payoff: true }); S.shake = Math.max(S.shake, 7); } });
+    S.timers.push({ t: 0.3, fn: () => { explode(tx, ty, 58, dmg * 0.8, { col, payoff: true }); if (fc2) S.zones.push({ x: tx, y: ty, r: 58, life: 3, acc: 0.4, stacks: fc2 }); S.shake = Math.max(S.shake, 7); } });
   } else {
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
@@ -583,9 +655,10 @@ function fireCharged(am) {
       hit(e, dmg, ux, uy, true, col);
       chargePayoff(e);
     }
+    if (fc2) S.zones.push({ x1: p.x, y1: p.y, x2: p.x + ux * len, y2: p.y + uy * len, life: 3, acc: 0.4, stacks: fc2 });
     S.fx.push({ k: 'beam', x1: p.x + ux * 14, y1: p.y + uy * 14, x2: p.x + ux * len, y2: p.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * ratio, col });
   }
-  let cd = ch.cd;
+  let cd = ch.cd * (rc2 ? 0.4 : 1);
   p.cd = Math.max(p.cd, 0.25);
   if (S.plans.has('recoil')) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
   else { p.x -= ux * 6; p.y -= uy * 6; }
@@ -661,7 +734,7 @@ function update(dt) {
   // Disparo cargado
   if (I.chg && !p.charging && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
   if (p.charging) {
-    const before = p.charge; p.charge += dt;
+    const before = p.charge; p.charge += dt * (lv('r_charge2') ? 1 / 0.6 : 1);
     if (before < T.charge.full && p.charge >= T.charge.full) blip(1500, 0.06, 'sine', 0.04);
     if (am > 0.35) p.chargeDir = Math.atan2(I.ay, I.ax);
     else if (target) p.chargeDir = Math.atan2(target.y - p.y, target.x - p.x);
@@ -717,12 +790,7 @@ function update(dt) {
       const bi = has('f_tinder') ? 0.25 : 0.5;
       if (e.burnAcc >= bi) {
         e.burnAcc -= bi;
-        const td = e.burn * p.dmg * 0.12 * (mastery('fire') ? 1.5 : 1); dot(e, td);
-        if (syn('plasma')) {   // el fuego salta
-          let nx = null, nd = 75;
-          for (const o of S.enemies) { if (o === e || !active(o)) continue; const dd = dist(e, o); if (dd < nd) { nd = dd; nx = o; } }
-          if (nx) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: nx.x, y2: nx.y, t: 0, life: 0.1, col: PAIRS['bolt+fire'].color }); dot(nx, td); if (nx.burn <= 0) applyBurn(nx, 1); }
-        }
+        dot(e, e.burn * p.dmg * 0.12 * (mastery('fire') ? 1.5 : 1) * (1 + 0.15 * e.needles));   // reacción Sobrecalentamiento
       }
       if (e.burnT <= 0) e.burn = 0;
       if (e.hp <= 0) continue;
@@ -731,7 +799,8 @@ function update(dt) {
     if (e.needles > 0 && !has('r_coil')) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
     if (e.frozen > 0) {
       e.frozen -= dt;
-      if (lv('e_pass')) { e.auraAcc += dt; if (e.auraAcc >= 0.5) { e.auraAcc = 0; for (const o of others(e, 60, 8)) applyChill(o, 1); } }
+      const aura = lv('e_pass'), hot = fu('passive', 'thermal');   // dúo Núcleo térmico: los congelados también queman
+      if (aura || hot) { e.auraAcc += dt; if (e.auraAcc >= 0.5) { e.auraAcc = 0; for (const o of others(e, 60, 8)) { if (aura) applyChill(o, 1); if (hot) applyBurn(o, 1); } } }
       continue;
     }
     const sp = e.speed * (1 - 0.14 * Math.min(4, e.chill));
@@ -772,12 +841,12 @@ function update(dt) {
     z.life -= dt; z.acc += dt;
     if (z.acc < 0.4) continue;
     z.acc = 0;
-    if (z.r) { for (const e of S.enemies) if (active(e) && Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) applyBurn(e, z.stacks); continue; }
+    if (z.r) { for (const e of S.enemies) if (active(e) && Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) zoneTouch(z, e); continue; }
     const zx = z.x2 - z.x1, zy = z.y2 - z.y1, L = Math.hypot(zx, zy) || 1, ux = zx / L, uy = zy / L;
     for (const e of S.enemies) {
       if (!active(e)) continue;
       const ex = e.x - z.x1, ey = e.y - z.y1, al = ex * ux + ey * uy;
-      if (al >= 0 && al <= L && Math.abs(ex * uy - ey * ux) <= 10 + e.r) applyBurn(e, z.stacks);
+      if (al >= 0 && al <= L && Math.abs(ex * uy - ey * ux) <= 10 + e.r) zoneTouch(z, e);
     }
   }
   S.zones = S.zones.filter(z => z.life > 0);
@@ -829,7 +898,7 @@ function pieceCard(pc) {
     const pr = PAIRS[[fam, famOf(mate.id)].sort().join('+')];
     o.tag = 'Fusión · ' + SLOTS[pc.slot]; o.name = pc.name + ' ' + ROMAN[lvl + 1]; o.color = pr.color;
     o.desc = `${pc.desc(lvl + 1)} Se funde con tu ${PIECE[mate.id].name} en una ${fusedName(pc.slot, fam, famOf(mate.id))}: las dos suben un nivel y ocupan una sola ranura.`.replace('en una Salto', 'en un Salto').replace('en una Núcleo', 'en un Núcleo');
-    o.note = (syn(pr.id) ? pr.name + ' ya activo' : 'Activa ' + pr.name + ': ' + pr.desc) + (prog ? ' · ' + prog : '');
+    o.note = 'Dúo: ' + pr.duo[pc.slot] + (prog ? ' · ' + prog : '');
     o.apply = () => { add(); a.fused = [mate.id, pc.id]; };
   } else if (a.items.length - (a.fused ? 1 : 0) >= 2) {   // las dos ranuras ocupadas: sustituye a la suelta
     const out = a.items.slice().reverse().find(x => !(a.fused && a.fused.includes(x.id)));
@@ -906,7 +975,7 @@ function buildHtml(full) {
     if (!a.items.length) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Dos ranuras libres</span></li>`); continue; }
     if (pr) {
       const fi = a.fused.map(id => a.items.find(x => x.id === id));
-      row(SLOTS[k], pr.color, fusedName(k, famOf(a.fused[0]), famOf(a.fused[1])), full ? fi.map(it => PIECE[it.id].desc(lv(it.id))).join(' ') + ' ' + pr.name + ': ' + pr.desc : fi.map(nm).join(' + '));
+      row(SLOTS[k], pr.color, fusedName(k, famOf(a.fused[0]), famOf(a.fused[1])), full ? fi.map(it => PIECE[it.id].desc(lv(it.id))).join(' ') + ' Dúo: ' + pr.duo[k] : fi.map(nm).join(' + '));
     }
     for (const it of a.items) if (!pr || !a.fused.includes(it.id)) row(SLOTS[k], FAM[famOf(it.id)].color, nm(it), full ? PIECE[it.id].desc(lv(it.id)) : '');
   }
@@ -918,7 +987,7 @@ function buildHtml(full) {
 }
 // Recetario: todo lo que existe y lo que pide, para poder planear la build
 function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que sabes forjar</h1><p class="fine">En blanco, lo que ya llevas. El disparo apila, el cargado o el esquive rematan, y las técnicas lo llevan al extremo. Cada acción tiene dos ranuras.</p><div class="book">`;
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que sabes forjar</h1><p class="fine">En blanco, lo que ya llevas. Cada acción tiene dos ranuras. Las reacciones pasan solas cuando dos elementos coinciden en un enemigo; los dúos salen al fundir dos piezas de armas distintas en la misma acción.</p><div class="book">`;
   for (const f of Object.keys(FAM)) {
     const n = famCount(f);
     h += `<section><h2 style="color:${FAM[f].color}">${FAM[f].name}</h2><ul class="build full">` +
@@ -926,8 +995,12 @@ function bookHtml() {
       TECHS.filter(t => t.fam === f).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
       `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${FAM[f].color}">Maestría</em><b>${MASTERY[f].name} · ${Math.min(n, 3)}/3</b><span>Lleva piezas de esta arma en 3 acciones distintas. ${MASTERY[f].desc}</span></li></ul></section>`;
   }
-  h += `<section><h2>Fusiones</h2><ul class="build full">` + Object.entries(PAIRS).map(([key, pr]) => { const [a, b] = key.split('+'), on = syn(pr.id);
-    return `<li class="${on ? 'own' : ''}"><em style="color:${pr.color}">${on ? 'Activa' : 'Receta'}</em><b>${pr.name}</b><span>Funde una pieza de ${FAM[a].short} con una de ${FAM[b].short} en la misma acción. ${pr.desc}</span></li>`; }).join('') + `</ul></section>`;
+  h += `<section><h2>Reacciones</h2><ul class="build full">` + REACTIONS.map(r => `<li class="own"><em>Siempre</em><b>${r.name}</b><span>${FAM[r.fams[0]].short} y ${FAM[r.fams[1]].short}. ${r.desc}</span></li>`).join('') + `</ul></section>`;
+  for (const [key, pr] of Object.entries(PAIRS)) {
+    const [a, b] = key.split('+');
+    h += `<section><h2 style="color:${pr.color}">Dúos de ${FAM[a].short} y ${FAM[b].short}</h2><p class="fine">Funde una pieza de cada arma en la misma acción.</p><ul class="build full">` +
+      SLOT_KEYS.map(k => `<li class="${fu(k, pr.id) ? 'own' : ''}"><em>${SLOTS[k]}</em><b>${fusedName(k, a, b)}</b><span>${pr.duo[k]}</span></li>`).join('') + `</ul></section>`;
+  }
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
 }
@@ -1058,8 +1131,8 @@ function render() {
 
   // Fuego en el suelo y arma caída
   for (const z of S.zones) {
-    if (z.r) { ctx.fillStyle = FAM.fire.color; ctx.globalAlpha = 0.2 * Math.min(1, z.life) + 0.04 * Math.sin(S.t * 14); ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; continue; }
-    ctx.strokeStyle = FAM.fire.color; ctx.lineCap = 'round';
+    if (z.r) { ctx.fillStyle = z.steam ? PAIRS['fire+frost'].color : FAM.fire.color; ctx.globalAlpha = 0.2 * Math.min(1, z.life) + 0.04 * Math.sin(S.t * 14); ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; continue; }
+    ctx.strokeStyle = z.steam ? PAIRS['fire+frost'].color : FAM.fire.color; ctx.lineCap = 'round';
     ctx.globalAlpha = 0.22 * Math.min(1, z.life); ctx.lineWidth = 20; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2); ctx.stroke();
     ctx.globalAlpha = 0.5 * Math.min(1, z.life); ctx.lineWidth = 5 + Math.sin(S.t * 14) * 1.5; ctx.stroke();
     ctx.globalAlpha = 1; ctx.lineCap = 'butt';
