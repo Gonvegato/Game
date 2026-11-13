@@ -37,6 +37,8 @@ const UPGRADES = [
   { name: 'Peto reforzado',   desc: '+25 vida máxima y recuperas 40',      apply: p => { p.maxHp += 25; p.hp = Math.min(p.maxHp, p.hp + 40); } },
 ];
 
+TYPES.boss = { name: 'El Guardián', r: 22, hp: 700, speed: 40, dmg: 30, shape: 'circle', color: '#8a3a55', boss: true };
+
 // ───────────────────────── Deidades ─────────────────────────
 // El herrero no tiene dios. Cada sala la guarda el elegido de una deidad, con un arma bendecida:
 // lo matas, la desmontas y te quedas con la técnica. Las deidades miran y opinan.
@@ -246,7 +248,7 @@ function pollInput() {
 
   const mm = Math.hypot(mx, my);
   if (mm > 1) { mx /= mm; my /= mm; }
-  if (mx < -0.6) nav = -1; else if (mx > 0.6) nav = 1;
+  if (mx < -0.6 || my < -0.6) nav = -1; else if (mx > 0.6 || my > 0.6) nav = 1;
 
   I.mx = mx; I.my = my; I.ax = ax; I.ay = ay; I.atk = atk; I.chg = chg;
   I.atkP = atk && !prev.atk;
@@ -305,7 +307,7 @@ try { best = +localStorage.getItem('kiteo.best') || 0; } catch (e) {}
 function newGame() {
   const P = T.player;
   S = {
-    mode: 'title', wave: 0, kills: 0, t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
+    mode: 'title', wave: 0, bossRoom: false, gained: 0, kills: 0, t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
@@ -319,7 +321,13 @@ function newGame() {
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
-function startRun() { newGame(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay(); }
+function startRun() {
+  newGame();
+  const p = S.p;   // lo que recuerdas de otras vidas
+  p.dmg *= 1 + 0.05 * M.up.dmg; p.as *= 1 + 0.04 * M.up.as; p.range *= 1 + 0.04 * M.up.rng; p.maxHp += 10 * M.up.hp; p.hp = p.maxHp;
+  for (const id of M.loadout) { const pc = PIECE[id]; if (pc && S.build[pc.slot].items.length < 2) S.build[pc.slot].items.push({ id, lvl: 1 }); }
+  S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
+}
 
 function nextWave() {
   S.wave += 1;
@@ -331,6 +339,7 @@ function nextWave() {
   else { add('stalker', 3 + Math.floor(n / 2)); add('runner', n - 1); add('mage', Math.floor(n / 2)); add('brute', Math.floor(n / 3)); }
   list.sort(() => Math.random() - 0.5);
   list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de una deidad
+  if (n > ROOMS) { list.length = 0; list.push('boss'); S.bossRoom = true; }   // tras la última sala, el Guardián
   S.drop = null; S.waveT = 0;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.45 }));
   S.pillars = []; S.turrets = []; S.zones = []; S.crystals = []; S.bites = [];
@@ -354,8 +363,117 @@ function spawn(typeKey) {
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
     ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, season: 0, carved: 0, stun: 0, autoCd: 0, fling: 0, fvx: 0, fvy: 0,
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
+  if (ty.boss) Object.assign(e, { boss: true, x: T.room.w / 2, y: 90, act: 'rest', at: 1.2, think: 1.2, sumCd: 2, ph2: false, hitOnce: false });
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
+}
+
+// ───────────────────────── Progreso permanente ─────────────────────────
+// Lo que el herrero recuerda entre vidas. Se guarda en el navegador.
+const ROOMS = 6;
+const CRAFT = [
+  { id: 'dmg', name: 'Temple',         desc: '+5% de daño',     max: 5 },
+  { id: 'as',  name: 'Pulso',          desc: '+4% de cadencia', max: 5 },
+  { id: 'hp',  name: 'Coraza',         desc: '+10 de vida',     max: 5 },
+  { id: 'rng', name: 'Ojo de herrero', desc: '+4% de alcance',  max: 5 },
+];
+const COST = [10, 20, 35, 55, 80], SLOT_COST = [60, 150];
+let M = { shards: 0, runs: 0, best: 0, wins: 0, up: { dmg: 0, as: 0, hp: 0, rng: 0 }, slots: 1, known: [], loadout: [] };
+try { const raw = localStorage.getItem('kiteo.save'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { up: Object.assign(M.up, o.up || {}) }); } } catch (e) {}
+function save() { try { localStorage.setItem('kiteo.save', JSON.stringify(M)); } catch (e) {} }
+function endRun(win) {
+  const rooms = win ? ROOMS : Math.max(0, S.wave - 1);
+  S.gained = rooms * 5 + (win ? 50 : 0);
+  M.shards += S.gained; M.runs += 1; M.best = Math.max(M.best, win ? ROOMS + 1 : S.wave); if (win) M.wins += 1;
+  save();
+}
+// Vencer al Guardián: estudias una de las piezas que llevas y la recuerdas para siempre
+function winRun() {
+  endRun(true);
+  const carried = SLOT_KEYS.flatMap(k => S.build[k].items.map(x => x.id)).filter(id => !M.known.includes(id));
+  const opts = carried.map(id => { const pc = PIECE[id]; return { tag: SLOTS[pc.slot], name: pc.name, color: GODS[pc.god].color, desc: pc.desc(1), note: 'Podrás empezar las partidas con ella', apply: () => { M.known.push(id); save(); } }; });
+  if (!opts.length) { M.shards += 30; S.gained += 30; save(); opts.push({ tag: 'Fragmentos', name: 'Nada nuevo que aprender', color: C.ink, desc: 'Ya conocías todo lo que llevabas. Te llevas 30 fragmentos más.', note: '', apply: () => {} }); }
+  afterPicks = openForge;
+  pickQueue = [() => ({ eyebrow: 'Has vencido al Guardián · +' + S.gained + ' fragmentos', title: 'Estudias una pieza y la recuerdas para siempre', opts })];
+  advancePick();
+}
+let forgeSel = -1;
+function openForge() { S.mode = 'forge'; modeT = 0; forgeSel = -1; renderOverlay(); ov.scrollTop = 0; }
+function forgeHtml() {
+  const up = CRAFT.map(c => { const l = M.up[c.id], cost = COST[l], can = l < c.max && M.shards >= cost;
+    return `<button class="fi${can ? '' : ' off'}" data-act="up:${c.id}"><b>${c.name} ${l}/${c.max}</b><span>${c.desc} por nivel</span><i>${l >= c.max ? 'Al máximo' : cost + ' fragmentos'}</i></button>`; }).join('');
+  const sc = SLOT_COST[M.slots - 1];
+  const slot = `<button class="fi${sc && M.shards >= sc ? '' : ' off'}" data-act="slot"><b>Ranuras de partida ${M.slots}/3</b><span>Cuántas piezas recordadas llevas al empezar</span><i>${sc ? sc + ' fragmentos' : 'Al máximo'}</i></button>`;
+  const known = M.known.filter(id => PIECE[id]).map(id => { const pc = PIECE[id], on = M.loadout.includes(id);
+    return `<button class="fi${on ? ' on' : ''}" data-act="pc:${id}"><b style="color:${GODS[pc.god].color}">${pc.name}</b><span>${SLOTS[pc.slot]} · ${GODS[pc.god].theme}</span><i>${on ? 'En el rifle' : 'Guardada'}</i></button>`; }).join('');
+  const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${M.best > ROOMS ? 'el Guardián' : 'la sala ' + M.best}${M.wins ? ', y lo has vencido ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
+  return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
+    <p class="lead">Tienes <b>${M.shards}</b> fragmentos. ${past} Cada sala superada da 5 fragmentos y vencer al Guardián, 50.</p>
+    <div class="forge"><section><h2>Oficio</h2>${up}${slot}</section>
+    <section><h2>Rifle de partida · ${M.loadout.length}/${M.slots}</h2>${known || '<p class="fine">Aún no recuerdas ninguna pieza. Vence al Guardián y podrás estudiar una de las que lleves encima.</p>'}</section></div>
+    <button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
+}
+function forgeAct(act) {
+  const [k, id] = act.split(':');
+  let ok = true;
+  if (k === 'go') { startRun(); return; }
+  if (k === 'up') { const l = M.up[id]; if (l < 5 && M.shards >= COST[l]) { M.shards -= COST[l]; M.up[id] = l + 1; } else ok = false; }
+  else if (k === 'slot') { const c = SLOT_COST[M.slots - 1]; if (c && M.shards >= c) { M.shards -= c; M.slots += 1; } else ok = false; }
+  else if (k === 'pc') { const i = M.loadout.indexOf(id); if (i >= 0) M.loadout.splice(i, 1); else if (M.loadout.length < M.slots) M.loadout.push(id); else ok = false; }
+  blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
+  save(); renderOverlay();
+}
+function bindForge() {
+  const els = [...ovBody.querySelectorAll('.fi')];
+  els.forEach(el => el.addEventListener('click', () => { audioInit(); forgeSel = els.indexOf(el); forgeAct(el.dataset.act); }));
+  if (forgeSel < 0 || forgeSel >= els.length) forgeSel = els.length - 1;
+  els.forEach((el, i) => el.classList.toggle('sel', i === forgeSel));
+}
+function forgeInput() {
+  const els = [...ovBody.querySelectorAll('.fi')];
+  let moved = false;
+  if (I.navL && forgeSel > 0) { forgeSel--; moved = true; }
+  if (I.navR && forgeSel < els.length - 1) { forgeSel++; moved = true; }
+  if (moved) { els.forEach((el, i) => el.classList.toggle('sel', i === forgeSel)); els[forgeSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
+  if (I.atkP && modeT > 0.3 && els[forgeSel]) els[forgeSel].click();
+}
+
+// ───────────────────────── El Guardián ─────────────────────────
+// Jefe del mundo. Tres ataques con aviso; si embiste contra una columna se queda aturdido y recibe el doble.
+function bossAI(e, dt, d, ux, uy) {
+  const p = S.p, ph2 = e.hp < e.maxHp * 0.5;
+  if (ph2 && !e.ph2) { e.ph2 = true; S.shake = 9; S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 14, t: 0, life: 1.6, txt: 'El Guardián se enfurece', col: C.blood, big: true }); blip(70, 0.6, 'sawtooth', 0.08, -20); }
+  e.at -= dt;
+  if (e.act === 'slam') {
+    if (e.at <= 0) { S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 78, t: 0, life: 0.3, col: C.blood }); S.shake = Math.max(S.shake, 7); blip(80, 0.25, 'sawtooth', 0.07, -30); if (d < 78 + p.r) hurtPlayer(30); e.act = 'rest'; e.at = 0.7; }
+  } else if (e.act === 'chargeWind') {
+    if (e.at <= 0) { e.act = 'charge'; e.at = 0.55; e.hitOnce = false; }
+  } else if (e.act === 'charge') {
+    e.x += e.lvx * dt; e.y += e.lvy * dt;
+    if (!e.hitOnce && dist(e, p) < e.r + p.r + 3) { e.hitOnce = true; hurtPlayer(35); }
+    for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r) { e.act = 'dazed'; e.at = 1.8; S.shake = 9; S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 14, t: 0, life: 1.2, txt: '¡Aturdido!', col: C.ink, big: true }); blip(200, 0.3, 'square', 0.06, -150); break; }
+    if (e.act === 'charge' && e.at <= 0) { e.act = 'rest'; e.at = 0.6; }
+  } else if (e.act === 'dazed') {
+    if (e.at <= 0) { e.act = 'rest'; e.at = 0.3; }
+  } else if (e.act === 'cast') {
+    if (e.at <= 0) {
+      const ring = off => { const n = ph2 ? 14 : 10; for (let i = 0; i < n; i++) { const a = off + i * Math.PI * 2 / n; S.shots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, r: 4, dmg: 12, life: 4 }); } blip(600, 0.12, 'triangle', 0.04, -300); };
+      const off = Math.random() * 6.28; ring(off);
+      if (ph2) S.timers.push({ t: 0.4, fn: () => { if (active(e)) ring(off + 0.22); } });
+      e.act = 'rest'; e.at = 0.5;
+    }
+  } else if (e.act === 'rest') {
+    if (e.at <= 0) e.act = 'idle';
+  } else {
+    e.x += ux * e.speed * dt; e.y += uy * e.speed * dt;
+    e.think -= dt;
+    if (e.think > 0) return;
+    e.think = ph2 ? 1.0 : 1.6;
+    if (d < 95) { e.act = 'slam'; e.at = 0.75; }
+    else if (Math.random() < 0.5) { e.act = 'chargeWind'; e.at = 0.7; e.lvx = ux * 430; e.lvy = uy * 430; }
+    else { e.act = 'cast'; e.at = 0.6; }
+    if (ph2 && --e.sumCd <= 0) { e.sumCd = 4; for (let i = 0; i < 3; i++) spawn('runner'); }
+  }
 }
 
 // ───────────────────────── Mensajes de las deidades ─────────────────────────
@@ -465,8 +583,9 @@ function hit(e, dmg, ux, uy, big, col) {
   const p = S.p, ob = lv('orc_basic');
   if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                              // Tambor de guerra
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);              // Organismo débil
+  if (e.boss && e.act === 'dazed') dmg *= 2;
   e.hp -= dmg; e.flash = 0.1;
-  const kb = big ? 150 : 60; e.kx += ux * kb; e.ky += uy * kb;
+  const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
   S.shake = Math.max(S.shake, big ? 5 : 1.6);
@@ -518,7 +637,7 @@ function addEmber(e, n) {
   if (forge && e.ember >= 10 && e.autoCd <= 0) { e.autoCd = 0.3; e.ember -= 10; explode(e.x, e.y, 42, S.p.dmg * 4, { col: GODS.dragon.color }); }   // Corazón de horno
 }
 function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n); }
-function stun(e, t) { if (!active(e)) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
+function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
 function addCrystal(x, y) {
   S.crystals.push({ x: clamp(x, 12, T.room.w - 12), y: clamp(y, 12, T.room.h - 12), life: has('m_quartz') ? 18 : 9 });
   const max = mastery('stone') ? 12 : 6;
@@ -660,7 +779,7 @@ function endDodge() {
 // Lo que pasa al atravesar a un enemigo con el esquive
 function dashThrough(e) {
   const od = lv('orc_dodge'), p = S.p;
-  if (od) { hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (fz('avalanche')) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } } gainFury(15); }   // Embestida, y fusión Avalancha
+  if (od) { hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (fz('avalanche') && !e.boss) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } } gainFury(15); }   // Embestida, y fusión Avalancha
 }
 
 // Lo que hace el cargado a cada enemigo que alcanza, sea con el rayo, el cono, el mortero o un Cristal
@@ -677,7 +796,7 @@ function chargePayoff(e) {
     S.zones.push({ x: e.x, y: e.y, r: 30, life: 5, acc: 0.4, venom: 1, col: GODS.venom.color });
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
-  if (fc && active(e) && e.hp / e.maxHp < (e.champ ? 0.5 : 1) * (0.15 + 0.1 * fc)) {   // Trinchar
+  if (fc && active(e) && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * (0.15 + 0.1 * fc)) {   // Trinchar
     e.carved = 2;
     S.fx.push({ k: 'num', x: e.x, y: e.y - e.r - 12, t: 0, life: 0.8, txt: '¡Trinchado!', col: GODS.feast.color, big: true });
     hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);
@@ -732,7 +851,7 @@ function fireCharged(am) {
     explode(p.x, p.y, R, p.dmg * (0.5 + 2 * oc * f / 100), { push: 220, stun: 0.4 + f / 100, col: GODS.orc.color });
     if (fz('warfeast')) {                                                   // fusión Festín de guerra
       let n = 0; const thr = 0.15 + 0.1 * lv('feast_charge');
-      for (const e of S.enemies.slice()) if (active(e) && dist(p, e) < R * 1.3 + e.r && e.hp / e.maxHp < (e.champ ? 0.5 : 1) * thr) { e.carved = 2; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color); n++; }
+      for (const e of S.enemies.slice()) if (active(e) && dist(p, e) < R * 1.3 + e.r && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * thr) { e.carved = 2; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color); n++; }
       if (n) { gainFury(25 * n); S.fx.push({ k: 'num', x: p.x, y: p.y - 18, t: 0, life: 0.9, txt: '¡Festín! ×' + n, col: GODS.feast.color, big: true }); }
       refund = n >= 2;
     }
@@ -755,7 +874,7 @@ function hurtPlayer(dmg) {
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0) {
     p.hp = 0;
-    if (S.wave > best) { best = S.wave; try { localStorage.setItem('kiteo.best', String(best)); } catch (e) {} }
+    endRun(false);
     setMode('dead');
   }
 }
@@ -775,7 +894,7 @@ function update(dt) {
   while (S.queue.length && S.queue[0].at <= S.waveT) spawn(S.queue.shift().type);
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
-    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; openPick(); return; }
+    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; if (S.bossRoom) winRun(); else openPick(); return; }
   }
 
   // Temporizadores y recursos
@@ -895,7 +1014,7 @@ function update(dt) {
       const d = dist(c, e) - e.r;
       if (obs && d < 42) addEmber(e, 1);                                   // fusión Bala de obsidiana
       if (tox && d < 42) { addVenom(e, 2); fed = true; }                   // fusión Geoda tóxica
-      if (tab && d < 60 && active(e) && e.hp / e.maxHp < (e.champ ? 0.5 : 1) * thr) {   // fusión Mesa puesta
+      if (tab && d < 60 && active(e) && e.hp / e.maxHp < (e.boss ? 0 : e.champ ? 0.5 : 1) * thr) {   // fusión Mesa puesta
         S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: e.x, y2: e.y, t: 0, life: 0.15, col: GODS.feast.color, w: 1.5 });
         e.carved = 1; hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);
       }
@@ -952,6 +1071,7 @@ function update(dt) {
     const sp = e.speed;
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
     if (e.lungeWind <= 0 && e.lungeT <= 0) e.dir = Math.atan2(dy, dx);
+    if (e.boss) { bossAI(e, dt, d, ux, uy); continue; }
     if (e.type.ranged) {
       if (e.cast > 0) {
         e.cast -= dt;
@@ -1031,7 +1151,7 @@ function update(dt) {
 }
 
 // ───────────────────────── Elección entre salas ─────────────────────────
-let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause';
+let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null;
 const rollRar = () => { const r = Math.random(); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
 // Carta de una pieza de ranura. La rareza con la que sale decide a qué nivel entra (o cuánto sube).
 function pieceCard(pc) {
@@ -1107,17 +1227,18 @@ function advancePick() {
     pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0;
     setMode('pick'); return;
   }
+  if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
 }
 function openPick() {
   S.p.hp = Math.min(S.p.maxHp, S.p.hp + 15);
   pickQueue = [];
   const n = S.wave, god = S.drop ? S.drop.god : null;
-  if (god) pickQueue.push(() => { const o = pieceOptions(god); return o.length ? { eyebrow: 'Sala ' + n + ' · ' + GODS[god].title, title: 'Desmontas: ' + GODS[god].weapon, opts: o } : statScreen(); });
+  if (god) pickQueue.push(() => { const o = pieceOptions(god); return o.length ? { eyebrow: 'Sala ' + n + ' de ' + ROOMS + ' · ' + GODS[god].title, title: 'Desmontas: ' + GODS[god].weapon, opts: o } : statScreen(); });
   if (n % 3 === 1) pickQueue.push(() => ({ eyebrow: 'Plano de reforja', title: 'Cambia cómo funciona el rifle', opts: planOptions() }));
   else if (n % 2 === 0) pickQueue.push(statScreen);
   pickQueue.push(() => { const o = fusionOptions(); return o.length ? { eyebrow: 'Yunque', title: 'Puedes forjar una fusión', opts: o } : null; });
-  pickQueue.push(doorScreen);
+  if (n < ROOMS) pickQueue.push(doorScreen);
   advancePick();
 }
 function choosePick(i) {
@@ -1184,7 +1305,7 @@ function renderOverlay() {
   if (m === 'title') {
     h = `<p class="eyebrow">Prototipo de combate</p><h1>Sala de Kiteo</h1>
       <p class="lead">Eres un herrero con un rifle de energía. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos. Si mantienes pulsado, disparas igual pero andando despacio.</p>
-      <p class="lead">No tienes dios. Cada sala la guarda el elegido de una deidad, con un arma bendecida: lo matas, la desmontas y te quedas con su técnica. Las deidades miran y opinan. Al acabar la sala eliges a quién le robas después, y el recetario enseña todo lo que se les puede quitar.</p>
+      <p class="lead">No tienes dios. Cada sala la guarda el elegido de una deidad, con un arma bendecida: lo matas, la desmontas y te quedas con su técnica. Las deidades miran y opinan. Al acabar la sala eliges a quién le robas después, y el recetario enseña todo lo que se les puede quitar. Son seis salas y, al final, el Guardián. Cuando mueres vuelves a la forja con fragmentos para mejorar para siempre.</p>
       <dl class="keys">
         <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
         <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
@@ -1198,15 +1319,18 @@ function renderOverlay() {
     h = bookHtml();
   } else if (m === 'dead') {
     h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
-      <p class="lead">Llegaste a la sala ${S.wave} con ${S.kills} bajas. Tu mejor marca es la sala ${best}.</p>
-      <button id="ovBtn" class="primary">Otra vez</button>`;
+      <p class="lead">${S.bossRoom ? 'Caíste ante el Guardián' : 'Llegaste a la sala ' + S.wave + ' de ' + ROOMS} con ${S.kills} bajas. Te llevas <b>${S.gained}</b> fragmentos a la forja.</p>
+      <button id="ovBtn" class="primary">A la forja</button>`;
+  } else if (m === 'forge') {
+    h = forgeHtml();
   } else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button><p class="fine">Izquierda y derecha para elegir, disparar para confirmar. El botón de cargar abre el recetario.</p></div>`;
   }
   ovBody.innerHTML = h;
-  ovBody.classList.toggle('wide', m === 'book');
+  ovBody.classList.toggle('wide', m === 'book' || m === 'forge');
+  if (m === 'forge') bindForge();
   const bk = $('bookBtn');
   if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
   const b = $('ovBtn');
@@ -1214,10 +1338,10 @@ function renderOverlay() {
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
 }
 function primaryAction(force) {
-  if (S.mode === 'title') startRun();
+  if (S.mode === 'title') openForge();
   else if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
-  else if (S.mode === 'dead' && (force || modeT > 0.8)) startRun();
+  else if (S.mode === 'dead' && (force || modeT > 0.8)) openForge();
 }
 
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
@@ -1228,11 +1352,14 @@ function renderHud() {
   const p = S.p;
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
   const left = S.enemies.length + S.queue.length;
-  const key = [Math.ceil(p.hp), p.maxHp, S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, S.buildV, Math.round(p.fury / 4), p.sated, p.fireAmmo].join('|');
+  const bo = S.enemies.find(e => e.boss && e.spawn <= 0);
+  const key = [Math.ceil(p.hp), p.maxHp, S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, S.buildV, Math.round(p.fury / 4), p.sated, p.fireAmmo, bo ? Math.ceil(bo.hp / 8) : -1].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp;
-  $('wave').textContent = S.wave ? 'Sala ' + S.wave + ' · quedan ' + left : '';
+  $('wave').textContent = !S.wave ? '' : S.bossRoom ? 'El Guardián' : 'Sala ' + S.wave + ' de ' + ROOMS + ' · quedan ' + left;
+  $('boss').hidden = !bo || S.mode !== 'play';
+  if (bo) $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%';
   $('build').innerHTML = buildHtml(false);
   $('res').textContent = [godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', p.sated ? 'Saciedad ' + p.sated : '', p.fireAmmo ? 'Balas de fuego ' + p.fireAmmo : ''].filter(Boolean).join(' · ');
   $('stats').textContent = S.wave ? (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
@@ -1354,6 +1481,12 @@ function render() {
       ctx.strokeStyle = e.color; ctx.globalAlpha = 0.25 + 0.4 * (1 - e.lungeWind / 0.5); ctx.lineWidth = e.r * 2;
       ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + Math.cos(a) * 95, e.y + Math.sin(a) * 95); ctx.stroke(); ctx.globalAlpha = 1;
     }
+    if (e.boss) { // avisos del Guardián
+      if (e.act === 'slam') { ctx.fillStyle = C.blood; ctx.globalAlpha = 0.15 + 0.35 * (1 - e.at / 0.75); ctx.beginPath(); ctx.arc(e.x, e.y, 78, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+      if (e.act === 'chargeWind') { const a = Math.atan2(e.lvy, e.lvx); ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.2 + 0.4 * (1 - e.at / 0.7); ctx.lineWidth = e.r * 2; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + Math.cos(a) * 240, e.y + Math.sin(a) * 240); ctx.stroke(); ctx.globalAlpha = 1; }
+      if (e.act === 'cast') { ctx.strokeStyle = C.arcane; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6 + 12 * Math.max(0, e.at / 0.6), 0, Math.PI * 2); ctx.stroke(); }
+      if (e.act === 'dazed') { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, S.t * 5, S.t * 5 + Math.PI * 1.7); ctx.stroke(); ctx.setLineDash([]); }
+    }
     shapePath(e.type.shape, e.x, e.y, e.r, e.dir);
     ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.champ ? e.type.color : e.color; ctx.fill();
     ctx.strokeStyle = C.wall; ctx.lineWidth = 1.2; ctx.stroke();
@@ -1460,7 +1593,8 @@ function frame(now) {
     if (I.navR && pickSel < pickOpts.length - 1) { pickSel++; moved = true; }
     if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
-  } else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
+  } else if (m === 'forge') forgeInput();
+  else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   render(); renderHud();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
