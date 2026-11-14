@@ -4,7 +4,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   hit(e, dmg, ux, uy, big, col);
   const p = S.p, db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), rb = lv('storm_basic');
   if (db) addEmber(e, db * (src === 'echo' && duoOn('eternal') ? 2 : 1));                         // Colmillo al rojo (y dúo Brasa eterna)
-  if (vb) addVenom(e, vb);                                                                     // Dardo
+  if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Dardo
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
   if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática
@@ -44,12 +44,19 @@ function shot(e, dmg, ux, uy, big, col) {
   const p = S.p, ox = p.x, oy = p.y, cc = critChance();
   let crit = false;
   if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
+  if (G('m_salt') && e.wet > 0) dmg *= 1.15;
+  if (G('m_star') && e.lit > 0) dmg *= th('light') ? 1.25 : 1.12;
   if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Culata de catalejo: primer tiro
   if (G('m_ice') && active(e)) {                                                               // Bala de escarcha
     if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
     slow(e, 1.5, 0.7); e.iceT = 1.5; if (res('coldiron')) addFrost(e, 1);                       // resonancia Hierro frío
   }
   onHit(e, dmg, ux, uy, big, col, 'player');
+  if (G('m_seed') && active(e)) addSeed(e, 1);                                                 // Bala de bellota
+  if (G('m_saw') && active(e)) addBleed(e, th('blood') ? 2 : 1);                               // Bala serrada
+  if (G('m_salt') && active(e)) { soak(e, 3); push(e, ux, uy, th('tide') ? 110 : 55); }        // Bala de sal
+  if (G('m_star') && active(e)) light(e, 4);                                                   // Bala de lucero
+  if (G('m_quick') && p.shotN % (th('mirror') ? 2 : 4) === 0 && active(e) && !S._quick) { S._quick = true; S.stat.quickb++; S.fx.push({ k: 'tracer', x1: e.x + ux * 50, y1: e.y + uy * 50, x2: e.x, y2: e.y, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, -ux, -uy, false, GODS.mirror.color); S._quick = false; }   // Bala de azogue
   if (G('m_fire')) S.zones.push({ x: e.x, y: e.y, r: 16, life: ens('trail') ? 6 : 2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // Bala incendiaria
   if (G('m_mark') && active(e)) { e.traceN = (e.traceN || 0) + 1; if (e.traceN >= 3) { e.traceN = 0; e.traced = 5; S.stat.traced++; note(e.x, e.y - e.r - 10, '¡Marcado!', C.energy); } }   // Bala trazadora
   if (G('m_big') && !S._big) { S._big = true; for (const o of others(e, e.r + 22, 4)) { S.stat.splash++; hit(o, dmg * 0.5, ux, uy, false, col); } S._big = false; }   // Bala de calibre
@@ -114,6 +121,10 @@ function fireBasic(target) {
   let kick = false;
   if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
   if (p.venge > 0) { p.venge -= 1; mult *= 2; }                                                             // Culata de rencor
+  if (g.action === 'a_drum') gainFury(th('orc') ? 12 : 8);                                                  // Llave de tambor
+  if (g.action === 'a_glass' && p.trig % (th('time') ? 2 : 3) === 0 && target) { const tg = target, d0 = p.dmg * mult * 0.6, fx0 = Math.cos(p.face), fy0 = Math.sin(p.face), ox = p.x, oy = p.y; S.stat.themed++;
+    S.timers.push({ t: echoDelay(1), fn: () => { if (!active(tg)) return; S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: tg.x, y2: tg.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 }); onHit(tg, d0, fx0, fy0, false, GODS.time.color, 'echo'); } }); }   // Llave de clepsidra
+  if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Llave de nana
   p.idle = 0;                       // Bala de sangre
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
@@ -157,6 +168,7 @@ function fireBasic(target) {
       if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
     }
     if (fb3 && p.shotN % Math.max(3, 9 - fb3 * 2) === 0) addTemper(1);         // Temple
+    if (g.stock === 's_geode' && target && active(target)) for (const c of S.crystals.slice(0, 4)) { const d = Math.hypot(target.x - c.x, target.y - c.y) || 1; if (d > 220) continue; S.stat.themed++; S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.stone.color }); hit(target, p.dmg * mult * (th('stone') ? 0.4 : 0.2), (target.x - c.x) / d, (target.y - c.y) / d, false, GODS.stone.color); }   // Culata de geoda
     if (p.redhot > 0) p.redhot -= 1;
     for (const pt of S.pets) if (target && active(target)) pt.prey = target; }  // el sabueso va a por quien disparas
   if (lastB) p.cd = Math.max(p.cd, 1.2);
@@ -282,9 +294,16 @@ function barrelFire(target, m, big, col, reach) {
     if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     if (p.dodgeT <= 0) lunge(ang, dist(p, target) + target.r + 22);
   } else {                               // arcabuz o pistolete: una bala a un enemigo
+    if (B === 'b_icicle' && target.frozen > 0) m *= 1.3;
     const far = B === 'b_long' && dist(p, target) - target.r > reach * 0.5;
     if (far) S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 9, t: 0, life: 0.15, col: C.ink });
     tracer(target.x, target.y, far ? 1.8 : 0); shot(target, p.dmg * m * (far ? 1.4 : 1), ux, uy, far || big, col);
+    if (active(target)) {                // cañones temáticos: lo suyo, aunque no lleves a esa deidad
+      if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
+      if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }
+      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= 6 && !has('r_over')) discharge(target, 1, null); }
+      if (B === 'b_icicle') { addFrost(target, th('frost') ? 2 : 1); S.stat.themed++; }
+    }
     if (B === 'b_long') {                // Remate: si mata, la bala sigue
       let from = target, hops = 0;
       while (!active(from) && hops < 3) {
@@ -315,7 +334,7 @@ function startDodge(a, free) {
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
   if (G('a_rider') && !free) { const tg = nearestInRange(); if (tg) { S.stat.rider++; barrelFire(tg, gunDmg() * 1.3, true, slotColor('basic'), rangeOf()); } }   // Llave de jinete
-  if (lv('stone_dodge')) addCrystal(p.x, p.y);                              // Geoda
+  if (lv('stone_dodge') || (G('s_geode') && !free)) addCrystal(p.x, p.y);                              // Geoda
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
   if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
@@ -446,6 +465,16 @@ function castCharged(snap, mult, echo) {
       if (echo) hit(e, dmg * 0.09, dx / d, dy / d, false, col); else shot(e, dmg * 0.09, dx / d, dy / d, false, col);
       if (i % 9 === 0) chargePayoff(e);
     } });
+  } else if (CH === 'c_sima') {          // sima: un pozo por sí sola
+    S.stat.themed++; addWell(snap.tx, snap.ty, 80, th('void') ? 4 : 2, dmg * 0.15, dmg * 0.8);
+    for (const e of S.enemies) if (active(e) && Math.hypot(e.x - snap.tx, e.y - snap.ty) < 80 + e.r) chargePayoff(e);
+  } else if (CH === 'c_doom') {          // sentencia: rayo que marca a todos los que atraviesa
+    const len = rayClip(o.x, o.y, ux, uy, ch.range);
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const ex = e.x - o.x, ey = e.y - o.y, along = ex * ux + ey * uy; if (along < 0 || along > len || Math.abs(ex * uy - ey * ux) > ch.width + e.r) continue; S.stat.themed++; addDoom(e); strike(e, dmg * 0.6, ux, uy); }
+    S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 4, col: GODS.end.color });
+  } else if (CH === 'c_anvil') {         // yunque: martillazo que da Temple
+    S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 76, t: 0, life: 0.3, col: GODS.forge.color }); S.shake = Math.max(S.shake, 7);
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 76 + e.r) continue; strike(e, dmg * 0.9, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) stun(e, 0.5); if (!echo) { S.stat.themed++; addTemper(th('forge') ? 2 : 1); } }
   } else if (CH === 'c_meteor') {        // meteoro: cae un segundo después
     const tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'ring', x: tx, y: ty, r: 70, t: 0, life: 1, col });
     if (res('eventide')) addWell(tx, ty, 100, 1, 0, 0);                    // resonancia Horizonte de sucesos S.fx.push({ k: 'lob', x1: tx + 60, y1: ty - 160, x2: tx, y2: ty, t: 0, life: 1, col: '#3a3440' });

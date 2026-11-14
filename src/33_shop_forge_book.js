@@ -171,7 +171,7 @@ function legHint(id) {
 }
 
 // Afinidad de una pieza: con qué deidad casa y qué gana si llevas una técnica suya
-function affHint(id) { const g = affGod(id); return g ? `<span class="aff" style="color:${GODS[g].color}">Afín a ${GODS[g].theme}: con una técnica suya, ${AFFIN[g]}.</span>` : ''; }
+function affHint(id) { const g = affGod(id); if (PART[id].theme) return `<span class="aff" style="color:${GODS[g].color}">Pieza de ${GODS[g].theme}. Además, con una técnica suya, ${AFFIN[g]}.</span>`; return g ? `<span class="aff" style="color:${GODS[g].color}">Afín a ${GODS[g].theme}: con una técnica suya, ${AFFIN[g]}.</span>` : ''; }
 // Ensambles en la forja: parejas de piezas que se potencian
 function ensHtml(g) {
   const on = ensOf(g);

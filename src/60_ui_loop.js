@@ -70,7 +70,7 @@ function renderHud() {
   const ms = S.mission;
   $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left : ms.type === 'assault' ? 'Asalto · campamento ' + S.room + ' de ' + roomsOf(ms) + ' · estandartes ' + (S.postsDown || 0) + ' de ' + (S.postsAll || 3) : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
   $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
-  $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
+  $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') || G('a_drum') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';
   $('boss').hidden = (!bo && !S.keep) || S.mode !== 'play';
   if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
@@ -104,5 +104,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

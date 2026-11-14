@@ -17,10 +17,11 @@ const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
 const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9, b_far: 1.25, b_boom: 0.85 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
-const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8, b_nail: 1.2, b_boom: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65, a_combo: 1 + 0.08 * Math.min(8, S.p.comboN || 0) }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
-const gunDmg = () => (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4, m_big: 1.2 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
+const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ a_drum: 1 }[S.gun.action] && furyFull() ? 1.25 : 1) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8, b_nail: 1.2, b_boom: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65, a_combo: 1 + 0.08 * Math.min(8, S.p.comboN || 0) }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunDmg = () => (G('b_blow') ? 0.85 : 1) * (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4, m_big: 1.2 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
 // Cuántas piezas montadas son afines a una deidad de la que llevas alguna técnica
+const th = god => godCount(god) >= 1;   // ¿llevas alguna técnica de esa deidad? Las piezas temáticas van a más
 const aff = god => (godCount(god) >= 1 ? GSLOT_KEYS.reduce((n, k) => n + (affGod(S.gun[k]) === god ? 1 : 0), 0) : 0);
 const ens = id => ENSEMBLES.some(E => E.id === id && E.parts.every(p => S.gun[PART[p].slot] === p));
 const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
@@ -60,7 +61,7 @@ function others(e, r, max) {
 const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: big ? 1.2 : 0.7, txt, col, big });
 
 // ───────────────────────── Recursos del jugador ─────────────────────────
-function gainFury(n) { const p = S.p; if (!godCount('orc')) return; n *= 1 + 0.15 * aff('orc'); p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+function gainFury(n) { const p = S.p; if (!godCount('orc') && !G('a_drum')) return; n *= 1 + 0.15 * aff('orc'); p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
 function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
 function heal(n) {
   const p = S.p;
@@ -86,6 +87,8 @@ function kill(e) {
   if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
+  if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Culata de lápida
+  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Culata de bota de vino
   if (G('m_gold')) addGold(1);
   if (G('m_blood')) heal(3);                                                                  // Bala de sangre
   if (e.elite && G('m_silver')) addGold(3);
@@ -207,11 +210,11 @@ function explode(x, y, r, dmg, o) {
 }
 
 // ───────────────────────── Lo que se acumula ─────────────────────────
-function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
+function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min((mastery('dragon') ? 20 : 8) + (G('b_wyrm') && th('dragon') ? 4 : 0), e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
 // Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
-const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
 const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge');
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
@@ -253,7 +256,7 @@ function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.fr
 function addBleed(e, n) { if (!active(e) || n <= 0) return; e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
-const doomK = () => 0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end');
+const doomK = () => (0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
 function fulfil(e, bonus) {
   const d = e.doom; if (!d || !active(e)) return;
@@ -279,8 +282,8 @@ function sprout(e) {
   if (duoOn('graveroot')) raiseShade(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Raíz de tumba
   if (duoOn('thornrod') && active(e) && e.needles > 0) discharge(e, 0.8, null);       // dúo Espina de cobre
 }
-function addSeed(e, n) { if (!active(e)) return; e.seed = (e.seed || 0) + n; if (e.seed >= (lv('wood_basic') >= 2 ? 2 : 3)) sprout(e); }
-const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 * lb + S.p.pity : 0) + (has('l_coin') ? 0.08 : 0) + 0.03 * aff('luck') + (duoOn('bones') ? 0.05 * S.shades.length : 0); };
+function addSeed(e, n) { if (!active(e)) return; e.seed = (e.seed || 0) + n; if (e.seed >= (lv('wood_basic') >= 2 || (G('m_seed') && th('wood')) ? 2 : 3)) sprout(e); }
+const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 * lb + S.p.pity : 0) + (has('l_coin') ? 0.08 : 0) + (G('a_dice') ? (th('luck') ? 0.25 : 0.15) : 0) + 0.03 * aff('luck') + (duoOn('bones') ? 0.05 * S.shades.length : 0); };
 const critMult = () => (mastery('luck') ? 4 : 2.5);
 function onCrit(e) {
   const p = S.p;
