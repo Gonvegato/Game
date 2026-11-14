@@ -4,10 +4,10 @@
 loadImg('decor', 'assets/decor.png');
 for (const k of ['castle', 'cave', 'forge', 'rock', 'floors', 'dungeon']) loadImg('pc_' + k, 'assets/pc_' + k + '.png');
 const DPAL = [
-  { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 240, 272, 48, 48] },   // Las Criptas
-  { img: 'pc_rock', top: '#2a1f17', face: [[32, 96], [32, 112], [32, 112]], rimT: [32, 0, 16, 8], rimL: [0, 40, 8, 16], rimR: [88, 40, 8, 16], floor: ['pc_cave', 112, 224, 48, 32] },            // El Nido
-  { img: 'pc_rock', top: '#2a3036', face: [[128, 96], [128, 112], [128, 112]], rimT: [128, 0, 16, 8], rimL: [96, 40, 8, 16], rimR: [184, 40, 8, 16], floor: ['pc_floors', 96, 160, 32, 32] },  // Las Minas
-  { img: 'pc_forge', top: '#21111a', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_forge', 16, 128, 32, 32] },          // El Umbral
+  { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 240, 272, 48, 48], topTex: ['pc_castle', 0, 176, 96, 96, 0.5] },   // Las Criptas
+  { img: 'pc_rock', top: '#2a1f17', face: [[32, 96], [32, 112], [32, 112]], rimT: [32, 0, 16, 8], rimL: [0, 40, 8, 16], rimR: [88, 40, 8, 16], floor: ['pc_cave', 112, 224, 48, 32], topTex: ['pc_rock', 32, 24, 32, 32, 0.38] },            // El Nido
+  { img: 'pc_rock', top: '#2a3036', face: [[128, 96], [128, 112], [128, 112]], rimT: [128, 0, 16, 8], rimL: [96, 40, 8, 16], rimR: [184, 40, 8, 16], floor: ['pc_floors', 96, 160, 32, 32], topTex: ['pc_rock', 128, 24, 32, 32, 0.32] },  // Las Minas
+  { img: 'pc_forge', top: '#21111a', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_forge', 16, 128, 32, 32], topTex: ['pc_forge', 0, 128, 32, 32, 0.4] },          // El Umbral
 ];
 const HALL = { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 192, 272, 48, 48] };
 function roomBgDungeon(Dover) {
@@ -37,6 +37,13 @@ function roomBgDungeon(Dover) {
     g.beginPath(); g.ellipse(bx, by, bw / 2, bh / 2, 0, 0, Math.PI * 2); g.fill();
     if (dark && hash(i, 6, 76) < 0.5) { g.beginPath(); g.ellipse(bx + bw * 0.3, by + bh * 0.2, bw / 3, bh / 3, 0, 0, Math.PI * 2); g.fill(); }
   }
+  // Grietas en el suelo
+  for (let i = 0; i < Math.floor(c * r / 26); i++) {
+    let gx = Math.floor(hash(i, 7, 77) * c * CELL), gy = Math.floor(hash(i, 8, 78) * r * CELL);
+    if (wallAt(Math.floor(gx / CELL), Math.floor(gy / CELL))) continue;
+    g.fillStyle = 'rgba(0,0,0,0.32)';
+    for (let k = 0; k < 10 + Math.floor(hash(i, 9, 79) * 12); k++) { g.fillRect(gx, gy, 1, 1); gx += hash(i, k, 80) < 0.5 ? 1 : -1; gy += hash(i, k, 81) < 0.6 ? 1 : 0; if (hash(i, k, 82) < 0.12) { g.fillRect(gx + 1, gy - 1, 1, 1); } }
+  }
   // Muros: la cara (hasta tres franjas por encima del suelo) y, encima, la oscuridad con su borde
   const torches = [];
   for (let y = -BG_M; y < r + BG_M; y++) for (let x = -BG_M; x < c + BG_M; x++) {
@@ -56,6 +63,12 @@ function roomBgDungeon(Dover) {
     // parte de arriba: oscuridad, y un borde allí donde termina el muro
     const edge = (dx, dy) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < c && ny < r && !wallAt(nx, ny); };
     const faceBelow = (dx, dy) => { const nx = x + dx, ny = y + dy; if (!wallAt(nx, ny)) return false; let j = 0; while (j < 3 && wallAt(nx, ny + j + 1) && ny + j + 1 < r) j++; return ny + j + 1 < r && !wallAt(nx, ny + j + 1) && j <= 2; };
+    if (D.topTex && x >= -1 && y >= -1 && x <= c && y <= r) {   // la parte de arriba del muro: piedra o roca de la zona, en sombra
+      const [tk, tx, ty, tw2, th, dk] = D.topTex, tim = IMG[tk];
+      if (tim) { const ox = ((X % tw2) + tw2) % tw2, oy = ((Y % th) + th) % th;
+        for (let j = 0; j < CELL;) { const sy = (oy + j) % th, hh = Math.min(CELL - j, th - sy); for (let i = 0; i < CELL;) { const sx = (ox + i) % tw2, ww = Math.min(CELL - i, tw2 - sx); g.drawImage(tim, tx + sx, ty + sy, ww, hh, X + i, Y + j, ww, hh); i += ww; } j += hh; }
+        g.fillStyle = 'rgba(8,6,12,' + dk + ')'; g.fillRect(X, Y, CELL, CELL); }
+    }
     if (edge(0, -1)) blit(im, D.rimT, X, Y, 16, D.rimT[3]);
     if (edge(-1, 0) || faceBelow(-1, 0)) blit(im, D.rimL, X, Y, D.rimL[2], 16);
     if (edge(1, 0) || faceBelow(1, 0)) blit(im, D.rimR, X + CELL - D.rimR[2], Y, D.rimR[2], 16);
@@ -69,8 +82,9 @@ function roomBgDungeon(Dover) {
     for (let y = 1; y < r - 1; y++) for (let x = 1; x < c - 1; x++) {
       if (wallAt(x, y) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
       const byWall = wallAt(x, y - 1), h = hash(x, y, 61);
-      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.06)) continue;
+      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.08)) continue;
       const it = list[Math.floor(hash(x, y, 62) * list.length)];
+      if (!byWall && hash(x, y, 64) < 0.5) for (let n = 0; n < 2; n++) { const it2 = list[Math.floor(hash(x, y, 65 + n) * list.length)]; items.push({ it: it2, x: x * CELL + 8 + (hash(x, y, 67 + n) - 0.5) * 22, y: y * CELL + 12 + (hash(x, y, 69 + n) - 0.5) * 14 }); }   // en grupo, no sueltos
       for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (y + j >= 0 && y + j < r && x + i >= 0 && x + i < c) used[(y + j) * c + x + i] = 1;
       items.push({ it, x: x * CELL + 8 + (hash(x, y, 63) - 0.5) * 4, y: byWall ? y * CELL + Math.min(14, it[3] - 2) : y * CELL + 12 });
     }
