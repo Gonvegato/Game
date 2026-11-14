@@ -163,6 +163,12 @@ function renderWorld() {
   }
 
   // Columnas y rifles gemelos
+  for (const w of S.wells) {        // pozos: un remolino oscuro que gira hacia dentro
+    ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = GODS.void.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.7;
+    for (let i = 0; i < 3; i++) { const rr = w.r * (1 - ((S.t * 0.9 + i / 3) % 1)); ctx.beginPath(); ctx.arc(w.x, w.y, Math.max(2, rr), S.t * 3 + i * 2, S.t * 3 + i * 2 + 4.4); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
   for (const mn of S.mines) {       // minas: un bulto de hierro con una luz que parpadea
     const x = Math.round(mn.x), y = Math.round(mn.y);
     ctx.fillStyle = '#16101a'; ctx.fillRect(x - 4, y - 3, 8, 6); ctx.fillRect(x - 3, y - 4, 6, 8); ctx.fillStyle = PAL.I; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.fillStyle = PAL.i; ctx.fillRect(x - 3, y - 3, 6, 1);
@@ -237,6 +243,8 @@ function renderWorld() {
     if (e.wet > 0) { ctx.fillStyle = GODS.tide.color; for (let i = 0; i < 3; i++) { const a = S.t * 3 + i * 2.1; ctx.fillRect(Math.round(e.x + Math.cos(a) * (e.r + 2)), Math.round(e.y + e.r - 2 + ((S.t * 9 + i * 3) % 5)), 1, 2); } }
     if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
     if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
+    if (e.lit > 0) { ctx.fillStyle = GODS.light.color; const y0 = Math.round(e.y - e.r * 1.7 - 5), x0 = Math.round(e.x); ctx.fillRect(x0 - 1, y0 - 2, 2, 5); ctx.fillRect(x0 - 2, y0 - 1, 5, 2); ctx.globalAlpha = 0.5; ctx.fillRect(x0 - 3, y0, 7, 1); ctx.fillRect(x0, y0 - 3, 1, 7); ctx.globalAlpha = 1; }
+    if (e.sleep > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
     if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
     else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
     if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }

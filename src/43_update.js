@@ -87,6 +87,20 @@ function update(dt) {
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
+  for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
+    w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
+    for (const e of S.enemies.slice()) {
+      if (!active(e) || e.type.post) continue; const dx = w.x - e.x, dy = w.y - e.y, d = Math.hypot(dx, dy) || 1; if (d > w.r + e.r) continue;
+      w.got.add(e);
+      if (!e.boss && d > 6) { const f = Math.min(d, 130 * dt); e.x += dx / d * f; e.y += dy / d * f; }
+      if (w.stunC && d < 16 && !w.got.has('s' + S.enemies.indexOf(e))) { w.got.add('s' + S.enemies.indexOf(e)); stun(e, 0.5); }
+      if (pulse && w.pulse) dot(e, w.pulse * (has('o_crush') && d < 18 ? 2 : 1), GODS.void.color);
+    }
+    if (duoOn('lens')) { /* nada: los Cristales iluminan en su propio bucle */ }
+    if (w.life <= 0) { if (w.end) explode(w.x, w.y, w.r * 0.8, w.end, { col: GODS.void.color }); if (w.embers) for (const e of w.got) if (e && e.ember > 0 && active(e)) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 40, p.dmg * 0.35 * st, { col: GODS.dragon.color, soft: true }); } }
+  }
+  S.wells = S.wells.filter(w => w.life > 0);
+  if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
   for (const mn of S.mines) {     // minas de la Recámara de minas
     mn.life -= dt;
     if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
@@ -247,6 +261,8 @@ function update(dt) {
     e.flash = Math.max(0, e.flash - dt);
     { const far = e.wet > 0 && lv('tide_passive') ? 1.5 : 1; e.x += e.kx * dt * far; e.y += e.ky * dt * far; }   // Marea alta: los Empapados salen más lejos
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
+    if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
+    if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
@@ -286,7 +302,7 @@ function update(dt) {
     if (e.ember > 0) {
       if (!duoOn('eternal')) e.emberT -= dt;                                  // dúo Brasa eterna: no se apagan
       e.emberAcc += dt;
-      if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul, GODS.dragon.color); }
+      if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul * (duoOn('sunfire') && e.lit > 0 ? 2 : 1), GODS.dragon.color); }
       if (e.emberT <= 0) e.ember = 0;
       if (e.hp <= 0) continue;
     }
@@ -301,6 +317,7 @@ function update(dt) {
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
+    if (e.sleep > 0) { e.sleep -= dt; if (e.sleep <= 0) wake(e); continue; }   // dormido: ni se mueve ni ataca
     const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
     if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
       const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);
@@ -351,6 +368,7 @@ function update(dt) {
     const touch = e => {
       if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom);
       if (z.frost) addFrost(e, z.frost);
+      if (z.sleepOnce && active(e) && !z.sleepOnce.has(e)) { z.sleepOnce.add(e); sleep(e, 2); }
       if (z.slow) slow(e, 0.6, z.slow); if (z.bram) e.bram = 0.6; if (z.dmg) dot(e, z.dmg, z.col);
       if (z.flow && active(e)) { soak(e, 3); push(e, z.flow.ux, z.flow.uy, z.flow.f); }
       if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); if (z.frost1) addFrost(e, z.frost1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }

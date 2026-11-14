@@ -116,7 +116,7 @@ function pieceCard(pc) {
   return o;
 }
 // Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
-const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'd_blood', 'v_vapors', 'f_carve'];
+const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'd_blood', 'v_vapors', 'f_carve'];
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
 function pieceOptions(god) {

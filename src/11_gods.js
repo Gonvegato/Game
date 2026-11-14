@@ -72,6 +72,21 @@ const GODS = {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
+  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lanza del Ojo', mat: 'Lucero', color: '#ffb84d',
+    key: 'Iluminados: el daño que recibe uno lo reciben también, en parte, todos los demás Iluminados.', lines: {
+    enter: ['te ve. Te ha visto siempre.', 'enfoca a su elegido. La sala se queda sin sombras.'],
+    champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
+    take:  ['te sigue con la mirada mientras lo robas.', 'ya sabe dónde vas a guardarlo.'], master: ['parpadea. El mundo se apaga un instante.'] } },
+  dream: { title: 'El Que Bosteza', theme: 'Sueño', weapon: 'Rueca del Que Bosteza', mat: 'Legaña', color: '#c9a0dc',
+    key: 'Dormidos: no se mueven ni atacan hasta que algo los despierta, y el golpe que los despierta pega mucho más.', lines: {
+    enter: ['se estira. Su elegido hace la guardia por él.', 'bosteza, y se te cierran los ojos un momento.'],
+    champ: ['se da la vuelta en la cama.', 'murmura algo dormido. Era un nombre.'],
+    take:  ['te deja hacer. Mañana lo habrá olvidado.', 'sueña que le roban. No se despierta.'], master: ['abre un ojo. Solo uno.'] } },
+  void: { title: 'La Boca Sin Fondo', theme: 'Vacío', weapon: 'Anzuelo de la Boca', mat: 'Hueco', color: '#c44fd8',
+    key: 'Pozos: arrastran a los enemigos a un punto. Y cuanto más juntos están, más daño reciben.', lines: {
+    enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
+    champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
+    take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -150,6 +165,21 @@ const PIECES = [
   { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `El cargado cumple al instante las Sentencias de los enemigos que alcanza, con un ${30 * l}% más.` },
   { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s, y te curas ${l} por cada una.` },
   { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere con la Sentencia sin cumplir, pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}.` },
+  // Luz
+  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada bala Ilumina al enemigo 6 s. El ${20 + 10 * l}% del daño que recibe un Iluminado lo reciben también todos los demás Iluminados.` },
+  { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `El cargado Ilumina a todos los que alcanza. A los que ya lo estaban los ciega: quedan aturdidos 1 s y reciben un ${40 * l}% más.` },
+  { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un fogonazo donde estabas: Ilumina a los enemigos cercanos y les hace ${50 * l}% de daño.` },
+  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Todo tu daño sube un ${5 * l}% por cada enemigo Iluminado, hasta seis.` },
+  // Sueño
+  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Una de cada ${Math.max(2, 5 - l)} balas Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño.` },
+  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `El cargado no despierta a los Dormidos y les hace un ${80 * l}% más. A los que están despiertos los Duerme 2 s.` },
+  { id: 'dream_dodge',    god: 'dream',  slot: 'dodge',   name: 'Polvo de sueño',   desc: l => `El esquive deja ${2 + l} s una nube donde estabas: Duerme 2 s a cada enemigo que entre en ella, una vez.` },
+  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (Ascuas, Veneno, Heridas) no despierta a los Dormidos y les hace un ${50 * l}% más.` },
+  // Vacío
+  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada bala tira de los enemigos cercanos hacia el que recibe el disparo${l > 1 ? ', con más fuerza a cada nivel' : ''}. Así se apiñan.` },
+  { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `El cargado abre 2,5 s un pozo donde apuntas: arrastra a todos al centro, hace ${25 * l}% de daño por pulso y al cerrarse estalla (${100 * l}%).` },
+  { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `El esquive deja ${1 + l} s un pozo pequeño donde estabas, que arrastra hacia él a los enemigos cercanos.` },
+  { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada otro enemigo que tenga pegado, hasta cuatro.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
@@ -232,6 +262,21 @@ const DUOS = [
   { id: 'verdict',   slot: 'basic',   a: 'luck_basic',    b: 'end_basic',     name: 'Veredicto',         desc: 'Un crítico cumple la Sentencia del enemigo al instante.' },
   { id: 'autodafe',  slot: 'charge',  a: 'dragon_charge', b: 'end_charge',    name: 'Auto de fe',        desc: 'Al cumplir una Sentencia con el cargado, el enemigo recibe además 3 Ascuas.' },
   { id: 'obituary',  slot: 'passive', a: 'shade_passive', b: 'end_passive',   name: 'Obituario',         desc: 'Quien muere al cumplirse su Sentencia se levanta como Sombra.' },
+  // Luz (afines: Minerales, Tormenta, Dragones, Sombras)
+  { id: 'lens',      slot: 'basic',   a: 'stone_basic',   b: 'light_basic',   name: 'Lente',             desc: 'Los Cristales Iluminan a los enemigos que tengan cerca.' },
+  { id: 'beacon',    slot: 'basic',   a: 'storm_basic',   b: 'light_basic',   name: 'Faro',              desc: 'Los rayos de una descarga Iluminan a quien alcanzan.' },
+  { id: 'sunfire',   slot: 'passive', a: 'dragon_passive', b: 'light_passive', name: 'Sol de mediodía',  desc: 'Las Ascuas queman el doble a los Iluminados.' },
+  { id: 'eclipse',   slot: 'passive', a: 'shade_passive', b: 'light_passive', name: 'Eclipse',           desc: 'Cada Sombra viva cuenta como un Iluminado más para Sin sombra, y sus golpes Iluminan.' },
+  // Sueño (afines: Veneno, Tiempo, Manjares, Hielo)
+  { id: 'poppy',     slot: 'passive', a: 'venom_passive', b: 'dream_passive', name: 'Adormidera',        desc: 'Un enemigo que llega a 10 de Veneno se queda Dormido 3 s.' },
+  { id: 'siesta',    slot: 'dodge',   a: 'time_dodge',    b: 'dream_dodge',   name: 'Siesta',            desc: 'Los enemigos se duermen el doble de tiempo.' },
+  { id: 'digest',    slot: 'charge',  a: 'feast_charge',  b: 'dream_charge',  name: 'Digestión',         desc: 'Cada Dormido que alcanza el cargado te da 4 de Reserva.' },
+  { id: 'hibernate', slot: 'basic',   a: 'frost_basic',   b: 'dream_basic',   name: 'Hibernar',          desc: 'Al descongelarse, el enemigo se queda Dormido 2 s.' },
+  // Vacío (afines: Mareas, Dragones, Orcos, Bosque)
+  { id: 'maelstrom', slot: 'charge',  a: 'tide_charge',   b: 'void_charge',   name: 'Vorágine',          desc: 'El Maremoto lanza a los enemigos hacia la Singularidad en vez de lejos de ti.' },
+  { id: 'collapse',  slot: 'charge',  a: 'dragon_charge', b: 'void_charge',   name: 'Colapso',           desc: 'Al cerrarse, la Singularidad revienta las Ascuas de todos los que ha atrapado.' },
+  { id: 'funnel',    slot: 'dodge',   a: 'orc_dodge',     b: 'void_dodge',    name: 'Embudo',            desc: 'El Hueco aturde medio segundo a los enemigos que llegan a su centro.' },
+  { id: 'thicket',   slot: 'passive', a: 'wood_passive',  b: 'void_passive',  name: 'Espesura',          desc: 'Apiñados cuenta el doble en enemigos enraizados o entre zarzas.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -271,6 +316,12 @@ const TECHS = [
   { id: 'h_frenzy',  god: 'blood',  rar: 3, name: 'Marea roja',        desc: 'Por debajo del 30% de vida disparas un 40% más rápido.' },
   { id: 'e_ink',     god: 'end',    rar: 1, name: 'Tinta fresca',      desc: 'Una de cada cuatro balas pone una Sentencia al enemigo (40% del daño acumulado en 5 s).' },
   { id: 'e_seal',    god: 'end',    rar: 2, name: 'Sello',             desc: 'Cuando se cumple una Sentencia, el enemigo queda aturdido medio segundo.' },
+  { id: 'u_glint',   god: 'light',  rar: 1, name: 'Primer rayo',       desc: 'El primer golpe que le das a cada enemigo lo Ilumina 6 s.' },
+  { id: 'u_halo',    god: 'light',  rar: 2, name: 'Halo',              desc: 'Un Iluminado que muere estalla en luz: 100% de daño en área.' },
+  { id: 'z_yawn',    god: 'dream',  rar: 1, name: 'Bostezo',           desc: 'Los tres primeros enemigos de cada sala aparecen Dormidos 4 s.' },
+  { id: 'z_night',   god: 'dream',  rar: 2, name: 'Mala noche',        desc: 'Al despertar, el enemigo queda frenado a la mitad durante 2 s.' },
+  { id: 'o_tug',     god: 'void',   rar: 1, name: 'Tirón',             desc: 'Una de cada cuatro balas tira de los enemigos cercanos hacia el blanco.' },
+  { id: 'o_crush',   god: 'void',   rar: 2, name: 'Aplastar',          desc: 'Los enemigos en el centro de un pozo reciben el doble de su daño.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -289,6 +340,9 @@ const MASTERY = {
   frost:  { name: 'Invierno eterno',       desc: 'Los enemigos quedan Congelados el doble de tiempo.' },
   blood:  { name: 'Cobro final',           desc: 'Cada enemigo que muere sangrando te cura 2.' },
   end:    { name: 'Letra pequeña',         desc: 'Las Sentencias se cumplen en 3 s en vez de 5.' },
+  light:  { name: 'Mediodía',              desc: 'Los enemigos Iluminados no dejan de estarlo.' },
+  dream:  { name: 'Sueño profundo',        desc: 'Los Dormidos aguantan un golpe sin despertarse (y ese golpe también pega más).' },
+  void:   { name: 'Horizonte',             desc: 'Tus pozos son un 40% más grandes y duran un segundo más.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).

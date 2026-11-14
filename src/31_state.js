@@ -16,7 +16,7 @@ function newGame() {
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    mines: [], traps: [], stat: { frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    wells: [], mines: [], traps: [], stat: { share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -60,7 +60,7 @@ function nextWave() {
   }
   S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
-  S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
+  S.wells = []; S.yawn = 3; S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = ms.type === 'defend' ? buildRoom(false, 'aldea', 'big') : ms.type === 'assault' ? buildRoom(false, 'escombros', 'huge') : buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
@@ -91,6 +91,7 @@ function spawn(typeKey, q) {
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
   }
   if (q.raid) e.raid = true;
+  if (has('z_yawn') && S.yawn > 0 && !ty.boss && !ty.post) { S.yawn--; e.sleep = 4.6; e.sleepHits = 0; }   // Bostezo
   if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');

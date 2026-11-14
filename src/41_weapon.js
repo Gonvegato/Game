@@ -16,6 +16,10 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (bb) addBleed(e, bb);                                                                   // Herida abierta
     if (lv('end_basic') && src !== 'turret') addDoom(e);                                       // Sentencia
     if (src === 'echo' && duoOn('deadline') && e.doom) e.doom.acc += dmg; }                    // dúo Plazo vencido
+  { const lb2 = lv('light_basic'), db2 = lv('dream_basic'), vb2 = lv('void_basic');
+    if (lb2 || (src === 'shade' && duoOn('eclipse'))) light(e);                                // Señalar (y dúo Eclipse)
+    if (db2 && src === 'player' && p.shotN % Math.max(2, 5 - db2) === 0 && active(e)) sleep(e, 3);   // Arrullo
+    if (vb2 && src === 'player' && active(e)) tug(e, 70, 55 + 25 * vb2); }                     // Gravedad
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
@@ -24,6 +28,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('w_brine') && p.shotN % 4 === 0) push(e, ux, uy, 170);
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
     if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
+    if (has('o_tug') && p.shotN % 4 === 0 && active(e)) tug(e, 80, 110);
     if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
@@ -275,6 +280,10 @@ function endDodge() {
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
     if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
+    if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
+    if (dd2 && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 44, life: 2 + dd2, acc: 0.4, sleepOnce: new Set(), col: GODS.dream.color });   // Polvo de sueño
+    if (vd2 && !p.isLunge) addWell(from.x, from.y, 62, 1 + vd2, 0, 0, { stunC: duoOn('funnel') }); }   // Hueco (y dúo Embudo)
   { const fd = lv('frost_dodge'); if (fd && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 40, life: 4, acc: 0.4, frost: fd, col: GODS.frost.color }); }   // Paso de hielo
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
@@ -314,6 +323,9 @@ function chargePayoff(e) {
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
+  { const lc2 = lv('light_charge'), dc2 = lv('dream_charge');
+    if (lc2 && active(e)) { if (e.lit > 0) { stun(e, 1); hit(e, p.dmg * 0.4 * lc2, 0, 0, false, GODS.light.color); } light(e); }   // Destello
+    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; } else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
   const fc = lv('frost_charge'), ec = lv('end_charge');
   if (fc && active(e)) {                                                    // Quebrar
     if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }
@@ -398,6 +410,7 @@ function castCharged(snap, mult, echo) {
     }
     S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  { const vc2 = lv('void_charge'); if (vc2) addWell(snap.tx, snap.ty, 90, 2.5, p.dmg * 0.25 * vc2 * mult, p.dmg * vc2 * mult, { embers: duoOn('collapse') }); }   // Singularidad (y dúo Colapso)
   { const wc = lv('tide_charge'), bc = lv('wood_charge');
     if (wc) {                                                               // Maremoto
       const strong = duoOn('wager') && snap.die >= 5;                       // dúo Mar gruesa
@@ -407,7 +420,9 @@ function castCharged(snap, mult, echo) {
         if (duoOn('iceberg') && e.wet > 0) freeze(e);                         // dúo Témpano
         soak(e, 5); hit(e, p.dmg * 0.5 * wc * mult, (e.x - o.x) / d, (e.y - o.y) / d, false, GODS.tide.color);
         if (!active(e)) continue;
-        push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320); if (strong) stun(e, 1);
+        if (duoOn('maelstrom') && S.wells.length) { const w = S.wells[S.wells.length - 1], wd = Math.hypot(w.x - e.x, w.y - e.y) || 1; push(e, (w.x - e.x) / wd, (w.y - e.y) / wd, Math.min(520, wd * 4)); e.slamCd = 0.6; }   // dúo Vorágine
+        else push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320);
+        if (strong) stun(e, 1);
         if (duoOn('winetide')) addReserve(3);                                // dúo Marea de vino
         if (duoOn('tsunami') && e.needles > 0) discharge(e, 0.8, null);      // dúo Agua y rayo
       }

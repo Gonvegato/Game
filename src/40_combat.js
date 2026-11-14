@@ -80,6 +80,7 @@ function kill(e) {
   if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
   if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
+  if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('m_blood')) heal(3);                                                                  // Bala de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
@@ -126,6 +127,10 @@ function hit(e, dmg, ux, uy, big, col) {
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
+      if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
+      if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
+      if (e.sleep > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
@@ -137,6 +142,8 @@ function hit(e, dmg, ux, uy, big, col) {
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   if (e.doom && !S._doom) e.doom.acc += dmg;                                                   // Sentencia: va sumando
+  if (e.lit > 0 && !S._share) { const lb = lv('light_basic'); if (lb) { S._share = true; for (const o of S.enemies.slice()) if (o !== e && active(o) && o.lit > 0) { S.stat.share++; hit(o, dmg * (0.2 + 0.1 * lb), 0, 0, false, GODS.light.color); } S._share = false; } }   // Señalar: reparto entre Iluminados
+  if (has('u_glint') && !e.glinted) { e.glinted = true; light(e); }                            // Primer rayo
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
@@ -152,6 +159,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
+  if (e.sleep > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
   e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
@@ -188,7 +196,21 @@ function explode(x, y, r, dmg, o) {
 
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
-function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); }   // (dúo Salmuera)
+function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
+// Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
+function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
+const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
+function sleep(e, t) {
+  if (!active(e) || (e.sleepCd || 0) > S.t) return;
+  t *= duoOn('siesta') ? 2 : 1;
+  if (e.boss) { slow(e, t * 0.5, 0.5); e.sleepCd = S.t + 6; return; }
+  e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
+  note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
+}
+function wake(e) { e.sleep = 0; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
+function addWell(x, y, r, life, pulse, end, o) { const k = mastery('void') ? 1.4 : 1; S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
+const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
 // Hielo: la Escarcha se acumula; a la quinta, Congelado
 function freeze(e) {
   if (!active(e)) return;
@@ -196,6 +218,7 @@ function freeze(e) {
   e.frost = 0; e.frozen = e.boss ? dur * 0.5 : dur; S.stat.frozen++;
   if (e.boss) slow(e, dur, 0.4); else stun(e, dur);
   note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); blip(1500, 0.12, 'sine', 0.04, -600);
+  if (duoOn('hibernate')) e.napAfter = true;                                          // dúo Hibernar
   if (duoOn('glacier')) addCrystal(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Glaciar
   if (duoOn('hail') && e.needles > 0) discharge(e, 0.8, null);                        // dúo Granizo
 }
@@ -260,6 +283,7 @@ function addNeedles(e, n) {
 }
 function bolt(from, to, dmg, cas) {
   if (!to || !active(to)) return;
+  if (duoOn('beacon')) light(to);                                                     // dúo Faro
   const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1;
   S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: GODS.storm.color, w: 1.4 });
   hit(to, dmg, dx / d, dy / d, false, GODS.storm.color);

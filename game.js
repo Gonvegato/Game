@@ -134,6 +134,21 @@ const GODS = {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
+  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lanza del Ojo', mat: 'Lucero', color: '#ffb84d',
+    key: 'Iluminados: el daño que recibe uno lo reciben también, en parte, todos los demás Iluminados.', lines: {
+    enter: ['te ve. Te ha visto siempre.', 'enfoca a su elegido. La sala se queda sin sombras.'],
+    champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
+    take:  ['te sigue con la mirada mientras lo robas.', 'ya sabe dónde vas a guardarlo.'], master: ['parpadea. El mundo se apaga un instante.'] } },
+  dream: { title: 'El Que Bosteza', theme: 'Sueño', weapon: 'Rueca del Que Bosteza', mat: 'Legaña', color: '#c9a0dc',
+    key: 'Dormidos: no se mueven ni atacan hasta que algo los despierta, y el golpe que los despierta pega mucho más.', lines: {
+    enter: ['se estira. Su elegido hace la guardia por él.', 'bosteza, y se te cierran los ojos un momento.'],
+    champ: ['se da la vuelta en la cama.', 'murmura algo dormido. Era un nombre.'],
+    take:  ['te deja hacer. Mañana lo habrá olvidado.', 'sueña que le roban. No se despierta.'], master: ['abre un ojo. Solo uno.'] } },
+  void: { title: 'La Boca Sin Fondo', theme: 'Vacío', weapon: 'Anzuelo de la Boca', mat: 'Hueco', color: '#c44fd8',
+    key: 'Pozos: arrastran a los enemigos a un punto. Y cuanto más juntos están, más daño reciben.', lines: {
+    enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
+    champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
+    take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -212,6 +227,21 @@ const PIECES = [
   { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `El cargado cumple al instante las Sentencias de los enemigos que alcanza, con un ${30 * l}% más.` },
   { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s, y te curas ${l} por cada una.` },
   { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere con la Sentencia sin cumplir, pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}.` },
+  // Luz
+  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada bala Ilumina al enemigo 6 s. El ${20 + 10 * l}% del daño que recibe un Iluminado lo reciben también todos los demás Iluminados.` },
+  { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `El cargado Ilumina a todos los que alcanza. A los que ya lo estaban los ciega: quedan aturdidos 1 s y reciben un ${40 * l}% más.` },
+  { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un fogonazo donde estabas: Ilumina a los enemigos cercanos y les hace ${50 * l}% de daño.` },
+  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Todo tu daño sube un ${5 * l}% por cada enemigo Iluminado, hasta seis.` },
+  // Sueño
+  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Una de cada ${Math.max(2, 5 - l)} balas Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño.` },
+  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `El cargado no despierta a los Dormidos y les hace un ${80 * l}% más. A los que están despiertos los Duerme 2 s.` },
+  { id: 'dream_dodge',    god: 'dream',  slot: 'dodge',   name: 'Polvo de sueño',   desc: l => `El esquive deja ${2 + l} s una nube donde estabas: Duerme 2 s a cada enemigo que entre en ella, una vez.` },
+  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (Ascuas, Veneno, Heridas) no despierta a los Dormidos y les hace un ${50 * l}% más.` },
+  // Vacío
+  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada bala tira de los enemigos cercanos hacia el que recibe el disparo${l > 1 ? ', con más fuerza a cada nivel' : ''}. Así se apiñan.` },
+  { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `El cargado abre 2,5 s un pozo donde apuntas: arrastra a todos al centro, hace ${25 * l}% de daño por pulso y al cerrarse estalla (${100 * l}%).` },
+  { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `El esquive deja ${1 + l} s un pozo pequeño donde estabas, que arrastra hacia él a los enemigos cercanos.` },
+  { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada otro enemigo que tenga pegado, hasta cuatro.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
@@ -294,6 +324,21 @@ const DUOS = [
   { id: 'verdict',   slot: 'basic',   a: 'luck_basic',    b: 'end_basic',     name: 'Veredicto',         desc: 'Un crítico cumple la Sentencia del enemigo al instante.' },
   { id: 'autodafe',  slot: 'charge',  a: 'dragon_charge', b: 'end_charge',    name: 'Auto de fe',        desc: 'Al cumplir una Sentencia con el cargado, el enemigo recibe además 3 Ascuas.' },
   { id: 'obituary',  slot: 'passive', a: 'shade_passive', b: 'end_passive',   name: 'Obituario',         desc: 'Quien muere al cumplirse su Sentencia se levanta como Sombra.' },
+  // Luz (afines: Minerales, Tormenta, Dragones, Sombras)
+  { id: 'lens',      slot: 'basic',   a: 'stone_basic',   b: 'light_basic',   name: 'Lente',             desc: 'Los Cristales Iluminan a los enemigos que tengan cerca.' },
+  { id: 'beacon',    slot: 'basic',   a: 'storm_basic',   b: 'light_basic',   name: 'Faro',              desc: 'Los rayos de una descarga Iluminan a quien alcanzan.' },
+  { id: 'sunfire',   slot: 'passive', a: 'dragon_passive', b: 'light_passive', name: 'Sol de mediodía',  desc: 'Las Ascuas queman el doble a los Iluminados.' },
+  { id: 'eclipse',   slot: 'passive', a: 'shade_passive', b: 'light_passive', name: 'Eclipse',           desc: 'Cada Sombra viva cuenta como un Iluminado más para Sin sombra, y sus golpes Iluminan.' },
+  // Sueño (afines: Veneno, Tiempo, Manjares, Hielo)
+  { id: 'poppy',     slot: 'passive', a: 'venom_passive', b: 'dream_passive', name: 'Adormidera',        desc: 'Un enemigo que llega a 10 de Veneno se queda Dormido 3 s.' },
+  { id: 'siesta',    slot: 'dodge',   a: 'time_dodge',    b: 'dream_dodge',   name: 'Siesta',            desc: 'Los enemigos se duermen el doble de tiempo.' },
+  { id: 'digest',    slot: 'charge',  a: 'feast_charge',  b: 'dream_charge',  name: 'Digestión',         desc: 'Cada Dormido que alcanza el cargado te da 4 de Reserva.' },
+  { id: 'hibernate', slot: 'basic',   a: 'frost_basic',   b: 'dream_basic',   name: 'Hibernar',          desc: 'Al descongelarse, el enemigo se queda Dormido 2 s.' },
+  // Vacío (afines: Mareas, Dragones, Orcos, Bosque)
+  { id: 'maelstrom', slot: 'charge',  a: 'tide_charge',   b: 'void_charge',   name: 'Vorágine',          desc: 'El Maremoto lanza a los enemigos hacia la Singularidad en vez de lejos de ti.' },
+  { id: 'collapse',  slot: 'charge',  a: 'dragon_charge', b: 'void_charge',   name: 'Colapso',           desc: 'Al cerrarse, la Singularidad revienta las Ascuas de todos los que ha atrapado.' },
+  { id: 'funnel',    slot: 'dodge',   a: 'orc_dodge',     b: 'void_dodge',    name: 'Embudo',            desc: 'El Hueco aturde medio segundo a los enemigos que llegan a su centro.' },
+  { id: 'thicket',   slot: 'passive', a: 'wood_passive',  b: 'void_passive',  name: 'Espesura',          desc: 'Apiñados cuenta el doble en enemigos enraizados o entre zarzas.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -333,6 +378,12 @@ const TECHS = [
   { id: 'h_frenzy',  god: 'blood',  rar: 3, name: 'Marea roja',        desc: 'Por debajo del 30% de vida disparas un 40% más rápido.' },
   { id: 'e_ink',     god: 'end',    rar: 1, name: 'Tinta fresca',      desc: 'Una de cada cuatro balas pone una Sentencia al enemigo (40% del daño acumulado en 5 s).' },
   { id: 'e_seal',    god: 'end',    rar: 2, name: 'Sello',             desc: 'Cuando se cumple una Sentencia, el enemigo queda aturdido medio segundo.' },
+  { id: 'u_glint',   god: 'light',  rar: 1, name: 'Primer rayo',       desc: 'El primer golpe que le das a cada enemigo lo Ilumina 6 s.' },
+  { id: 'u_halo',    god: 'light',  rar: 2, name: 'Halo',              desc: 'Un Iluminado que muere estalla en luz: 100% de daño en área.' },
+  { id: 'z_yawn',    god: 'dream',  rar: 1, name: 'Bostezo',           desc: 'Los tres primeros enemigos de cada sala aparecen Dormidos 4 s.' },
+  { id: 'z_night',   god: 'dream',  rar: 2, name: 'Mala noche',        desc: 'Al despertar, el enemigo queda frenado a la mitad durante 2 s.' },
+  { id: 'o_tug',     god: 'void',   rar: 1, name: 'Tirón',             desc: 'Una de cada cuatro balas tira de los enemigos cercanos hacia el blanco.' },
+  { id: 'o_crush',   god: 'void',   rar: 2, name: 'Aplastar',          desc: 'Los enemigos en el centro de un pozo reciben el doble de su daño.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -351,6 +402,9 @@ const MASTERY = {
   frost:  { name: 'Invierno eterno',       desc: 'Los enemigos quedan Congelados el doble de tiempo.' },
   blood:  { name: 'Cobro final',           desc: 'Cada enemigo que muere sangrando te cura 2.' },
   end:    { name: 'Letra pequeña',         desc: 'Las Sentencias se cumplen en 3 s en vez de 5.' },
+  light:  { name: 'Mediodía',              desc: 'Los enemigos Iluminados no dejan de estarlo.' },
+  dream:  { name: 'Sueño profundo',        desc: 'Los Dormidos aguantan un golpe sin despertarse (y ese golpe también pega más).' },
+  void:   { name: 'Horizonte',             desc: 'Tus pozos son un 40% más grandes y duran un segundo más.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
@@ -532,6 +586,9 @@ const GLOSS = [
   [/Escarcha|Congelad|congela/, 'Escarcha', 'cada punto frena al enemigo; al quinto queda Congelado: no se mueve ni ataca, y puede romperse.'],
   [/Heridas?\b|sangra/, 'Heridas', 'el enemigo pierde vida cada medio segundo; más cuanto más herido estés tú.'],
   [/Sentencias?/, 'Sentencia', 'una cuenta atrás sobre el enemigo: al acabar recibe de golpe parte del daño que le hiciste mientras tanto.'],
+  [/Ilumina/, 'Iluminado', 'marcado con luz unos segundos: parte del daño que recibe uno lo reciben todos los Iluminados.'],
+  [/Dormid|Duerme/, 'Dormido', 'no se mueve ni ataca hasta que un golpe lo despierta; ese golpe hace más daño.'],
+  [/pozo|Singularidad/, 'Pozo', 'un punto que arrastra hacia él a los enemigos cercanos.'],
   [/crític/, 'Crítico', 'un golpe de suerte que hace el 250% del daño.'],
   [/aturd/, 'Aturdido', 'no se mueve ni ataca durante un momento.'],
   [/Compás/, 'Compás', 'pulsar el disparo justo cuando el anillo que te rodea se llena.'],
@@ -767,7 +824,7 @@ function newGame() {
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    mines: [], traps: [], stat: { frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    wells: [], mines: [], traps: [], stat: { share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -811,7 +868,7 @@ function nextWave() {
   }
   S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
-  S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
+  S.wells = []; S.yawn = 3; S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = ms.type === 'defend' ? buildRoom(false, 'aldea', 'big') : ms.type === 'assault' ? buildRoom(false, 'escombros', 'huge') : buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
@@ -842,6 +899,7 @@ function spawn(typeKey, q) {
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
   }
   if (q.raid) e.raid = true;
+  if (has('z_yawn') && S.yawn > 0 && !ty.boss && !ty.post) { S.yawn--; e.sleep = 4.6; e.sleepHits = 0; }   // Bostezo
   if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
@@ -977,7 +1035,7 @@ function pieceCard(pc) {
   return o;
 }
 // Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
-const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'd_blood', 'v_vapors', 'f_carve'];
+const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'd_blood', 'v_vapors', 'f_carve'];
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
 function pieceOptions(god) {
@@ -1576,6 +1634,7 @@ function kill(e) {
   if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
   if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
+  if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('m_blood')) heal(3);                                                                  // Bala de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
@@ -1622,6 +1681,10 @@ function hit(e, dmg, ux, uy, big, col) {
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
+      if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
+      if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
+      if (e.sleep > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
@@ -1633,6 +1696,8 @@ function hit(e, dmg, ux, uy, big, col) {
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   if (e.doom && !S._doom) e.doom.acc += dmg;                                                   // Sentencia: va sumando
+  if (e.lit > 0 && !S._share) { const lb = lv('light_basic'); if (lb) { S._share = true; for (const o of S.enemies.slice()) if (o !== e && active(o) && o.lit > 0) { S.stat.share++; hit(o, dmg * (0.2 + 0.1 * lb), 0, 0, false, GODS.light.color); } S._share = false; } }   // Señalar: reparto entre Iluminados
+  if (has('u_glint') && !e.glinted) { e.glinted = true; light(e); }                            // Primer rayo
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
@@ -1648,6 +1713,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
+  if (e.sleep > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
   e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
@@ -1684,7 +1750,21 @@ function explode(x, y, r, dmg, o) {
 
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
-function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); }   // (dúo Salmuera)
+function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
+// Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
+function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
+const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
+function sleep(e, t) {
+  if (!active(e) || (e.sleepCd || 0) > S.t) return;
+  t *= duoOn('siesta') ? 2 : 1;
+  if (e.boss) { slow(e, t * 0.5, 0.5); e.sleepCd = S.t + 6; return; }
+  e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
+  note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
+}
+function wake(e) { e.sleep = 0; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
+function addWell(x, y, r, life, pulse, end, o) { const k = mastery('void') ? 1.4 : 1; S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
+const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
 // Hielo: la Escarcha se acumula; a la quinta, Congelado
 function freeze(e) {
   if (!active(e)) return;
@@ -1692,6 +1772,7 @@ function freeze(e) {
   e.frost = 0; e.frozen = e.boss ? dur * 0.5 : dur; S.stat.frozen++;
   if (e.boss) slow(e, dur, 0.4); else stun(e, dur);
   note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); blip(1500, 0.12, 'sine', 0.04, -600);
+  if (duoOn('hibernate')) e.napAfter = true;                                          // dúo Hibernar
   if (duoOn('glacier')) addCrystal(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Glaciar
   if (duoOn('hail') && e.needles > 0) discharge(e, 0.8, null);                        // dúo Granizo
 }
@@ -1756,6 +1837,7 @@ function addNeedles(e, n) {
 }
 function bolt(from, to, dmg, cas) {
   if (!to || !active(to)) return;
+  if (duoOn('beacon')) light(to);                                                     // dúo Faro
   const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1;
   S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: GODS.storm.color, w: 1.4 });
   hit(to, dmg, dx / d, dy / d, false, GODS.storm.color);
@@ -1819,6 +1901,10 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (bb) addBleed(e, bb);                                                                   // Herida abierta
     if (lv('end_basic') && src !== 'turret') addDoom(e);                                       // Sentencia
     if (src === 'echo' && duoOn('deadline') && e.doom) e.doom.acc += dmg; }                    // dúo Plazo vencido
+  { const lb2 = lv('light_basic'), db2 = lv('dream_basic'), vb2 = lv('void_basic');
+    if (lb2 || (src === 'shade' && duoOn('eclipse'))) light(e);                                // Señalar (y dúo Eclipse)
+    if (db2 && src === 'player' && p.shotN % Math.max(2, 5 - db2) === 0 && active(e)) sleep(e, 3);   // Arrullo
+    if (vb2 && src === 'player' && active(e)) tug(e, 70, 55 + 25 * vb2); }                     // Gravedad
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
@@ -1827,6 +1913,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('w_brine') && p.shotN % 4 === 0) push(e, ux, uy, 170);
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
     if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
+    if (has('o_tug') && p.shotN % 4 === 0 && active(e)) tug(e, 80, 110);
     if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
@@ -2078,6 +2165,10 @@ function endDodge() {
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
     if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
+    if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
+    if (dd2 && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 44, life: 2 + dd2, acc: 0.4, sleepOnce: new Set(), col: GODS.dream.color });   // Polvo de sueño
+    if (vd2 && !p.isLunge) addWell(from.x, from.y, 62, 1 + vd2, 0, 0, { stunC: duoOn('funnel') }); }   // Hueco (y dúo Embudo)
   { const fd = lv('frost_dodge'); if (fd && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 40, life: 4, acc: 0.4, frost: fd, col: GODS.frost.color }); }   // Paso de hielo
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
@@ -2117,6 +2208,9 @@ function chargePayoff(e) {
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
+  { const lc2 = lv('light_charge'), dc2 = lv('dream_charge');
+    if (lc2 && active(e)) { if (e.lit > 0) { stun(e, 1); hit(e, p.dmg * 0.4 * lc2, 0, 0, false, GODS.light.color); } light(e); }   // Destello
+    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; } else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
   const fc = lv('frost_charge'), ec = lv('end_charge');
   if (fc && active(e)) {                                                    // Quebrar
     if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }
@@ -2201,6 +2295,7 @@ function castCharged(snap, mult, echo) {
     }
     S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  { const vc2 = lv('void_charge'); if (vc2) addWell(snap.tx, snap.ty, 90, 2.5, p.dmg * 0.25 * vc2 * mult, p.dmg * vc2 * mult, { embers: duoOn('collapse') }); }   // Singularidad (y dúo Colapso)
   { const wc = lv('tide_charge'), bc = lv('wood_charge');
     if (wc) {                                                               // Maremoto
       const strong = duoOn('wager') && snap.die >= 5;                       // dúo Mar gruesa
@@ -2210,7 +2305,9 @@ function castCharged(snap, mult, echo) {
         if (duoOn('iceberg') && e.wet > 0) freeze(e);                         // dúo Témpano
         soak(e, 5); hit(e, p.dmg * 0.5 * wc * mult, (e.x - o.x) / d, (e.y - o.y) / d, false, GODS.tide.color);
         if (!active(e)) continue;
-        push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320); if (strong) stun(e, 1);
+        if (duoOn('maelstrom') && S.wells.length) { const w = S.wells[S.wells.length - 1], wd = Math.hypot(w.x - e.x, w.y - e.y) || 1; push(e, (w.x - e.x) / wd, (w.y - e.y) / wd, Math.min(520, wd * 4)); e.slamCd = 0.6; }   // dúo Vorágine
+        else push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320);
+        if (strong) stun(e, 1);
         if (duoOn('winetide')) addReserve(3);                                // dúo Marea de vino
         if (duoOn('tsunami') && e.needles > 0) discharge(e, 0.8, null);      // dúo Agua y rayo
       }
@@ -2450,6 +2547,20 @@ function update(dt) {
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
+  for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
+    w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
+    for (const e of S.enemies.slice()) {
+      if (!active(e) || e.type.post) continue; const dx = w.x - e.x, dy = w.y - e.y, d = Math.hypot(dx, dy) || 1; if (d > w.r + e.r) continue;
+      w.got.add(e);
+      if (!e.boss && d > 6) { const f = Math.min(d, 130 * dt); e.x += dx / d * f; e.y += dy / d * f; }
+      if (w.stunC && d < 16 && !w.got.has('s' + S.enemies.indexOf(e))) { w.got.add('s' + S.enemies.indexOf(e)); stun(e, 0.5); }
+      if (pulse && w.pulse) dot(e, w.pulse * (has('o_crush') && d < 18 ? 2 : 1), GODS.void.color);
+    }
+    if (duoOn('lens')) { /* nada: los Cristales iluminan en su propio bucle */ }
+    if (w.life <= 0) { if (w.end) explode(w.x, w.y, w.r * 0.8, w.end, { col: GODS.void.color }); if (w.embers) for (const e of w.got) if (e && e.ember > 0 && active(e)) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 40, p.dmg * 0.35 * st, { col: GODS.dragon.color, soft: true }); } }
+  }
+  S.wells = S.wells.filter(w => w.life > 0);
+  if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
   for (const mn of S.mines) {     // minas de la Recámara de minas
     mn.life -= dt;
     if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
@@ -2610,6 +2721,8 @@ function update(dt) {
     e.flash = Math.max(0, e.flash - dt);
     { const far = e.wet > 0 && lv('tide_passive') ? 1.5 : 1; e.x += e.kx * dt * far; e.y += e.ky * dt * far; }   // Marea alta: los Empapados salen más lejos
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
+    if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
+    if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
@@ -2649,7 +2762,7 @@ function update(dt) {
     if (e.ember > 0) {
       if (!duoOn('eternal')) e.emberT -= dt;                                  // dúo Brasa eterna: no se apagan
       e.emberAcc += dt;
-      if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul, GODS.dragon.color); }
+      if (e.emberAcc >= 0.5) { e.emberAcc -= 0.5; dot(e, e.ember * p.dmg * 0.12 * embMul * (duoOn('sunfire') && e.lit > 0 ? 2 : 1), GODS.dragon.color); }
       if (e.emberT <= 0) e.ember = 0;
       if (e.hp <= 0) continue;
     }
@@ -2664,6 +2777,7 @@ function update(dt) {
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
+    if (e.sleep > 0) { e.sleep -= dt; if (e.sleep <= 0) wake(e); continue; }   // dormido: ni se mueve ni ataca
     const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
     if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
       const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);
@@ -2714,6 +2828,7 @@ function update(dt) {
     const touch = e => {
       if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom);
       if (z.frost) addFrost(e, z.frost);
+      if (z.sleepOnce && active(e) && !z.sleepOnce.has(e)) { z.sleepOnce.add(e); sleep(e, 2); }
       if (z.slow) slow(e, 0.6, z.slow); if (z.bram) e.bram = 0.6; if (z.dmg) dot(e, z.dmg, z.col);
       if (z.flow && active(e)) { soak(e, 3); push(e, z.flow.ux, z.flow.uy, z.flow.f); }
       if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); if (z.frost1) addFrost(e, z.frost1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
@@ -3448,6 +3563,12 @@ function renderWorld() {
   }
 
   // Columnas y rifles gemelos
+  for (const w of S.wells) {        // pozos: un remolino oscuro que gira hacia dentro
+    ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = GODS.void.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.7;
+    for (let i = 0; i < 3; i++) { const rr = w.r * (1 - ((S.t * 0.9 + i / 3) % 1)); ctx.beginPath(); ctx.arc(w.x, w.y, Math.max(2, rr), S.t * 3 + i * 2, S.t * 3 + i * 2 + 4.4); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
   for (const mn of S.mines) {       // minas: un bulto de hierro con una luz que parpadea
     const x = Math.round(mn.x), y = Math.round(mn.y);
     ctx.fillStyle = '#16101a'; ctx.fillRect(x - 4, y - 3, 8, 6); ctx.fillRect(x - 3, y - 4, 6, 8); ctx.fillStyle = PAL.I; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.fillStyle = PAL.i; ctx.fillRect(x - 3, y - 3, 6, 1);
@@ -3522,6 +3643,8 @@ function renderWorld() {
     if (e.wet > 0) { ctx.fillStyle = GODS.tide.color; for (let i = 0; i < 3; i++) { const a = S.t * 3 + i * 2.1; ctx.fillRect(Math.round(e.x + Math.cos(a) * (e.r + 2)), Math.round(e.y + e.r - 2 + ((S.t * 9 + i * 3) % 5)), 1, 2); } }
     if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
     if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
+    if (e.lit > 0) { ctx.fillStyle = GODS.light.color; const y0 = Math.round(e.y - e.r * 1.7 - 5), x0 = Math.round(e.x); ctx.fillRect(x0 - 1, y0 - 2, 2, 5); ctx.fillRect(x0 - 2, y0 - 1, 5, 2); ctx.globalAlpha = 0.5; ctx.fillRect(x0 - 3, y0, 7, 1); ctx.fillRect(x0, y0 - 3, 1, 7); ctx.globalAlpha = 1; }
+    if (e.sleep > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
     if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
     else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
     if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
@@ -3828,5 +3951,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, gunName, SPR, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();
