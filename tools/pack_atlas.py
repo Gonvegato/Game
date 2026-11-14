@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # Empaqueta en una sola imagen los fotogramas que el juego usa del CHARACTER MEGAPACK (overboy, itch.io).
-# Uso: python3 -I tools/pack_atlas.py "<carpeta del paquete descomprimido>"   → assets/chars.png y src/48_atlas.js
-# El paquete original no se redistribuye: aquí solo va lo que el juego dibuja, recortado y remuestreado.
-import sys, os, glob, json
+# Uso: python3 -I tools/pack_atlas.py   → assets/chars.png y src/48_atlas.js
+# Lee de la biblioteca sin pérdida (assets/library/megapack.png + .json), que guarda el paquete entero; ya no hace falta el zip.
+import sys, os, json
 from PIL import Image
-SRC = sys.argv[1]
+LIB = json.load(open('assets/library/megapack.json'))['chars']; LIBIMG = Image.open('assets/library/megapack.png').convert('RGBA')
 # clave del juego → (carpeta, {animación del juego: (sufijo de carpeta, máx. fotogramas, fps)})
 CAST = {
   'hero1': ('Knight_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Move', 10, 14), 'dash': ('Dash', 8, 20)}),
@@ -29,17 +29,18 @@ CAST = {
   'firstfist': ('GameMaster', {'idle': ('Idle', 12, 10), 'move': ('Idle', 12, 10), 'atk': ('ATK', 16, 14)}),
 }
 def frames_of(folder, suffix):
-    base = os.path.join(SRC, folder)
-    ds = [d for d in sorted(os.listdir(base)) if os.path.isdir(os.path.join(base, d)) and (d == suffix or d.endswith('_' + suffix))]
-    assert ds, (folder, suffix)
-    return sorted(glob.glob(os.path.join(base, ds[0], '*.png')))
+    A = LIB[folder]['a']; a = A[suffix] if suffix in A else A[[n for n in A if n.endswith('_' + suffix)][0]]
+    out = []
+    for x, y in a['f']:
+        im = Image.new('RGBA', tuple(a['size']), (0, 0, 0, 0)); im.paste(LIBIMG.crop((x, y, x + a['w'], y + a['h'])), tuple(a['off'])); out.append(im)
+    return out
 items, meta = [], {}
 for key, (folder, anims) in CAST.items():
     loaded = {}
     for a, (suffix, maxn, fps) in anims.items():
         fs = frames_of(folder, suffix)
         step = max(1, -(-len(fs) // maxn))          # remuestrea las animaciones largas
-        loaded[a] = ([Image.open(f).convert('RGBA') for f in fs[::step]], fps * (1 if step == 1 else 1) )
+        loaded[a] = (fs[::step], fps)
     size = loaded['idle'][0][0].size
     # recorte común a todos los fotogramas del personaje (los que tengan otro tamaño de lienzo se alinean por abajo-centro)
     def norm(im):
