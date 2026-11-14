@@ -1,0 +1,243 @@
+// ───────────────────────── Combate: consultas ─────────────────────────
+const active = e => e.spawn <= 0 && e.hp > 0;
+const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));
+const DUO = Object.fromEntries(DUOS.map(d => [d.id, d]));
+const duoFor = (a, b) => DUOS.find(d => (d.a === a && d.b === b) || (d.a === b && d.b === a));
+// Nivel de una técnica (0 si no la llevas). Si llevas un dúo que la contiene, cuenta con el nivel del dúo.
+const lv = id => { const cur = S.build[PIECE[id].slot]; if (!cur) return 0; if (cur.id === id) return cur.lvl; const D = DUO[cur.id]; return D && (D.a === id || D.b === id) ? cur.lvl : 0; };
+const duoOn = id => { const cur = S.build[DUO[id].slot]; return !!cur && cur.id === id; };
+const has = id => S.techs.has(id);
+const godsIn = slot => { const cur = S.build[slot]; if (!cur) return []; const D = DUO[cur.id]; return D ? [PIECE[D.a].god, PIECE[D.b].god] : [PIECE[cur.id].god]; };
+const godCount = g => SLOT_KEYS.filter(k => godsIn(k).includes(g)).length;
+const mastery = g => godCount(g) >= 3;
+const slotColor = slot => { const cur = S.build[slot]; return !cur ? C.energy : DUO[cur.id] ? RAR[3].color : GODS[PIECE[cur.id].god].color; };
+const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
+// ¿Lleva el arma montada esa pieza? ¿Está activa esa resonancia?
+const G = id => S.gun[PART[id].slot] === id;
+const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
+const braced = () => G('s_brace') && S.p.still >= 0.5;
+const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1);
+const gunRate = () => (G('b_short') ? 1.25 : 1) * ({ a_semi: 1.2, a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunDmg = () => ({ a_semi: 0.75, a_rotary: 0.3 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3 }[S.gun.mag] || 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
+// Avisar cuando despierta una resonancia nueva en esta partida
+function checkRes() { for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
+const dodgeMax = () => 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
+const dodgeCdOf = () => T.dodge.cd * (G('s_light') ? 0.65 : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
+const furyFull = () => S.p.fury >= 100;
+const resMax = () => 30 * (has('f_cellar') ? 2 : 1);
+const shadeCap = () => 2 + lv('shade_basic') + (has('s_legion') ? 3 : 0);
+const echoDelay = t => t * (has('t_overtime') ? 0.5 : 1);
+const isSlow = e => e.slowT > 0 || e.stun > 0;
+const rangeOf = () => S.p.range * gunRange() * (1 + 0.05 * tk('eye'));
+const periodOf = () => {
+  const p = S.p, bl = lv('orc_passive');
+  return 1 / (p.as * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
+};
+
+// Columnas: hasta dónde llega un rayo antes de chocar, si hay línea de tiro, y empujar fuera a quien se mete
+function rayClip(x, y, ux, uy, len) {
+  let b = len;
+  for (const c of S.pillars) {
+    const cx = c.x - x, cy = c.y - y, al = cx * ux + cy * uy;
+    if (al <= 0) continue;
+    const perp2 = cx * cx + cy * cy - al * al, r2 = c.r * c.r;
+    if (perp2 >= r2) continue;
+    const t = al - Math.sqrt(r2 - perp2);
+    if (t < b) b = Math.max(0, t);
+  }
+  return b;
+}
+function blocked(a, b) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; return rayClip(a.x, a.y, dx / d, dy / d, d) < d - 0.01; }
+function collide(o, r) {
+  let c0 = null;
+  for (const c of S.pillars) {
+    const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 0.01, min = c.r + r;
+    if (d < min) { o.x = c.x + dx / d * min; o.y = c.y + dy / d * min; c0 = c; }
+  }
+  return c0;
+}
+function nearestInRange() {
+  const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
+  for (const e of S.enemies) {
+    if (!active(e)) continue;
+    const d = dist(p, e) - e.r;
+    if (d <= rng && d < bd && !blocked(p, e)) { bd = d; bestE = e; }
+  }
+  return bestE;
+}
+// Otros enemigos vivos cerca de un punto o enemigo, del más cercano al más lejano
+function others(e, r, max) {
+  const out = [];
+  for (const o of S.enemies) { if (o === e || !active(o)) continue; const d = dist(e, o); if (d <= r) out.push([d, o]); }
+  return out.sort((a, b) => a[0] - b[0]).slice(0, max).map(x => x[1]);
+}
+const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: big ? 1.2 : 0.7, txt, col, big });
+
+// ───────────────────────── Recursos del jugador ─────────────────────────
+function gainFury(n) { const p = S.p; if (!godCount('orc')) return; p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
+function heal(n) {
+  const p = S.p;
+  if (n <= 0) return;
+  n *= mastery('feast') ? 1.5 : 1;
+  p.hp += n;
+  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
+  if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
+}
+function addGold(n) { const p = S.p; p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+
+// ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
+function kill(e) {
+  const p = S.p;
+  S.kills += 1;
+  for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
+  if (S.lock === e) S.lock = null;
+  blip(160, 0.12, 'sawtooth', 0.04, -90);
+  if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
+  if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
+  if (S.t < S.banquet) heal(4);
+  if (has('f_appet')) heal(1);                                                                 // Buen apetito
+  if (has('s_last') && !S.firstKill && !e.boss) { S.firstKill = true; raiseShade(e.x, e.y); }  // Último servicio                                                                 // Banquete
+  const tl = lv('dragon_passive');
+  if (tl && e.ember > 0) { addGold(tl); note(e.x, e.y - e.r - 10, '+' + tl + ' oro', RAR[3].color); }   // Tesoro
+  if (has('o_drums')) gainFury(10);
+  if (lv('orc_passive') && furyFull()) p.dodgeN = dodgeMax();                                  // Sed de sangre
+  if (has('m_quartz')) addCrystal(e.x, e.y);                                                   // Cuarzo vivo
+  const vp = lv('venom_passive');
+  if (vp && e.venom > 0) for (const o of others(e, 130, 1 + vp)) {                             // Plaga
+    S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.venom.color });
+    addVenom(o, e.venom);
+  }
+  if (lv('shade_basic') && e.mark > 0 && !e.boss) {                                            // Marca de tumba
+    const x = e.x, y = e.y; raiseShade(x, y);
+    if (duoOn('clockmark')) S.timers.push({ t: echoDelay(1.5), fn: () => raiseShade(x, y) });      // dúo Marca del reloj
+  }
+  const st = e.ember;
+  if (has('d_pyre') && st > 0) explode(e.x, e.y, 46, p.dmg * 0.3 * st, { ember: Math.ceil(st / 2), col: GODS.dragon.color });   // Pira
+}
+
+function hit(e, dmg, ux, uy, big, col) {
+  if (!active(e)) return;
+  const p = S.p, ob = lv('orc_basic'), tl = lv('dragon_passive'), gl = lv('feast_passive'), sl = lv('shade_passive'), ti = lv('time_passive');
+  if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                                                  // Tambor de guerra
+  if (tl) dmg *= 1 + Math.min((30 + 10 * tl) / 100, 0.01 * tl * Math.floor(p.gold / 10));     // Tesoro
+  if (gl) dmg *= 1 + 0.01 * gl * (p.reserve + (duoOn('hoardfeast') ? p.gold / 10 : 0));          // Glotón
+  if (sl) dmg *= 1 + 0.08 * sl * S.shades.length;                                              // Séquito
+  if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
+  if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
+  if (e.boss && e.act === 'dazed') dmg *= 2;
+  if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
+  if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
+  e.hp -= dmg; e.flash = 0.1;
+  const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
+  S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
+  for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
+  S.shake = Math.max(S.shake, big ? 5 : 1.6);
+  if (S.t - S.lastStop > 0.16) { S.hitstop = big ? 0.05 : 0.02; S.lastStop = S.t; }   // micropausa de impacto, sin encadenarse
+  gainFury(2);
+  if (e.hp > 0 && has('f_carve') && !e.boss && e.hp / e.maxHp < 0.12) { e.hp = 0; note(e.x, e.y - e.r - 12, '¡Trinchado!', GODS.feast.color); }   // Trinchar
+  if (e.hp <= 0) kill(e); else blip(520, 0.035, 'square', 0.025);
+}
+// Daño continuo: sin pausa ni empujón
+function dot(e, dmg, col) {
+  if (!active(e)) return;
+  const ti = lv('time_passive');
+  if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
+  if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
+  e.hp -= dmg;
+  S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
+  if (e.hp <= 0) kill(e);
+  return dmg;
+}
+// Toda explosión pasa por aquí, así que las técnicas que dicen "todas tus explosiones" afectan a cualquiera
+function explode(x, y, r, dmg, o) {
+  o = o || {};
+  const blood = has('d_blood'), vap = has('v_vapors');
+  if (blood) r *= 1.3;
+  S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.28, col: o.col || C.ink });
+  if (!o.soft) { S.shake = Math.max(S.shake, 4); blip(90, 0.2, 'sawtooth', 0.05, -40); }
+  for (const e of S.enemies.slice()) {
+    if (!active(e)) continue;
+    const dx = e.x - x, dy = e.y - y, d = Math.hypot(dx, dy) || 1;
+    if (d > r + e.r) continue;
+    if (dmg > 0 && e !== o.skip) hit(e, dmg, dx / d, dy / d, !o.soft, o.col);
+    if (!active(e)) continue;
+    if (o.push && !e.boss) { e.kx += dx / d * o.push; e.ky += dy / d * o.push; }
+    if (o.stun) stun(e, o.stun);
+    const em = (o.ember || 0) + (blood ? 2 : 0), ve = (o.venom || 0) + (vap ? 3 : 0);
+    if (em) addEmber(e, em);
+    if (ve) addVenom(e, ve);
+    if (o.zap) { discharge(e, 0.8, null); addNeedles(e, 2); }
+    if (o.payoff) chargePayoff(e);
+  }
+  if (has('o_drums')) gainFury(8);
+  if (has('m_reson') && !o.echo) {                                         // Resonancia
+    let c = null, cd = 170;
+    for (const k of S.crystals) { const d = Math.hypot(k.x - x, k.y - y); if (d < cd && d > 4) { cd = d; c = k; } }
+    if (c) S.timers.push({ t: 0.09, fn: () => explode(c.x, c.y, 36, S.p.dmg * 0.6, { col: GODS.stone.color, echo: true, soft: true }) });
+  }
+}
+
+// ───────────────────────── Lo que se acumula ─────────────────────────
+function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
+function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n); }
+function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
+function slow(e, t, f) { if (e.boss) f = 1 - (1 - f) * 0.4; e.slowT = Math.max(e.slowT, t); e.slowF = Math.min(e.slowF, f); }
+function addCrystal(x, y) {
+  S.crystals.push({ x: clamp(x, 12, T.room.w - 12), y: clamp(y, 12, T.room.h - 12), life: has('m_quartz') ? 18 : 9, acc: 0 });
+  const max = mastery('stone') ? 12 : 6;
+  while (S.crystals.length > max) S.crystals.shift();
+}
+// Agujas y rayos (Tormenta)
+function addNeedles(e, n) {
+  if (!active(e) || n <= 0) return;
+  e.needles = Math.min(6, e.needles + n); e.needleT = 6;
+  if (e.needles >= 6 && has('r_over') && e.autoCd <= 0) { e.autoCd = 0.4; discharge(e, 1, null); }   // Sobrecarga
+}
+function bolt(from, to, dmg, cas) {
+  if (!to || !active(to)) return;
+  const dx = to.x - from.x, dy = to.y - from.y, d = Math.hypot(dx, dy) || 1;
+  S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: to.x, y2: to.y, t: 0, life: 0.16, col: GODS.storm.color, w: 1.4 });
+  hit(to, dmg, dx / d, dy / d, false, GODS.storm.color);
+  if (!cas || !active(to)) return;
+  if (cas.venom) addVenom(to, cas.venom);                                                      // dúo Aguja envenenada
+  if (to.needles > 0 && !cas.seen.has(to) && mastery('storm')) discharge(to, cas.mult, cas);   // Tormenta perfecta
+  const c = lv('storm_passive');
+  if (c) addNeedles(to, c);                                                                    // Conductor
+}
+// Descargar las Agujas de un enemigo: daño por aguja y un rayo por aguja hacia otros. Devuelve cuántas tenía.
+function discharge(e, mult, cas) {
+  const n = e.needles;
+  if (!n || !active(e)) return 0;
+  cas = cas || { seen: new Set(), mult, venom: 0 };
+  cas.seen.add(e); e.needles = 0;
+  if (duoOn('syringe')) cas.venom = Math.max(cas.venom, e.venom);
+  const x = e.x, y = e.y, src = { x, y }, tg = others(e, 125, 6);
+  let nb = n;
+  if (duoOn('rod')) { const c = S.crystals.find(k => Math.hypot(k.x - x, k.y - y) < 150); if (c) { nb *= 2; S.fx.push({ k: 'beam', x1: x, y1: y, x2: c.x, y2: c.y, t: 0, life: 0.18, w: 2, col: GODS.storm.color }); src.x = c.x; src.y = c.y; } }   // dúo Pararrayos
+  S.fx.push({ k: 'ring', x, y, r: 16 + n * 3, t: 0, life: 0.22, col: GODS.storm.color });
+  blip(1000 + n * 120, 0.1, 'square', 0.04, -500);
+  hit(e, S.p.dmg * mult * n, 0, 0, true, GODS.storm.color);
+  for (let i = 0; i < Math.min(14, nb) && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
+  if (has('r_judge')) explode(x, y, 60, S.p.dmg * 3, { col: '#ffffff' });   // Juicio
+  return n;
+}
+// Sombras
+function raiseShade(x, y, life, temp) {
+  const base = (has('s_legion') ? 18 : 9) * (mastery('shade') ? 1.5 : 1);
+  if (!temp) { const own = S.shades.filter(s => !s.temp); if (own.length >= shadeCap()) { const old = own[0]; S.shades.splice(S.shades.indexOf(old), 1); } }
+  S.shades.push({ x: clamp(x, 8, T.room.w - 8), y: clamp(y, 8, T.room.h - 8), life: life || base, cd: 0.3, temp: !!temp });
+  S.fx.push({ k: 'ring', x, y, r: 16, t: 0, life: 0.3, col: GODS.shade.color });
+}
+function shadeEnd(s) {
+  if (duoOn('ashlegion')) explode(s.x, s.y, 40, S.p.dmg, { col: GODS.dragon.color, soft: true });                 // dúo Ejército de ceniza
+  if (duoOn('chargedshade')) for (const o of others(s, 70, 4)) discharge(o, 0.8, null);                           // dúo Sombras cargadas
+}
+function shadeStrike(s, e) {
+  const p = S.p, dmg = p.dmg * 0.4 * (mastery('shade') ? 1.5 : 1), dx = e.x - s.x, dy = e.y - s.y, d = Math.hypot(dx, dy) || 1;
+  if (lv('shade_passive')) onHit(e, dmg, dx / d, dy / d, false, GODS.shade.color, 'shade'); else hit(e, dmg, dx / d, dy / d, false, GODS.shade.color);
+  if (duoOn('ashlegion')) addEmber(e, 2);
+  if (duoOn('chargedshade')) addNeedles(e, 1);
+  if (duoOn('supper') && active(e) && !e.boss && e.hp / e.maxHp < 0.2) hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);   // dúo Última cena
+}
+
