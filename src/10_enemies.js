@@ -1,12 +1,12 @@
 // ───────────────────────── Enemigos ─────────────────────────
 const TYPES = {
-  stalker: { name: 'Acechador',   r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#e5506a', cost: 1 },
-  runner:  { name: 'Corredor',    r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#ff7a59', cost: 1 },
-  brute:   { name: 'Bruto',       r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#b8394f', cost: 3 },
-  mage:    { name: 'Mago',        r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff', cost: 2 },
-  bomber:  { name: 'Bombardero',  r: 7,  hp: 28,  speed: 46,  dmg: 16, ai: 'bomb',            shape: 'square',  color: '#ffa64d', cost: 2 },
-  leaper:  { name: 'Saltador',    r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#7fd36b', cost: 2 },
-  sniper:  { name: 'Tirador',     r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
+  stalker: { name: 'Necrófago',   r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#8fa58c', cost: 1 },
+  runner:  { name: 'Trasgo',      r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#7d9a4a', cost: 1 },
+  brute:   { name: 'Ogro',        r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#8a9a55', cost: 3 },
+  mage:    { name: 'Cultista',    r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff', cost: 2 },
+  bomber:  { name: 'Alquimista',  r: 7,  hp: 28,  speed: 46,  dmg: 16, ai: 'bomb',            shape: 'square',  color: '#ffa64d', cost: 2 },
+  leaper:  { name: 'Araña',       r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#9bd36b', cost: 2 },
+  sniper:  { name: 'Ballestero',  r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
   shaman:  { name: 'Chamán',      r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
@@ -26,9 +26,9 @@ const TOTAL = WORLDS.length * (RPW + 1);
 
 // Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Mecanismo ligero', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
-  { name: 'Núcleo denso',     desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
-  { name: 'Cañón largo',      desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
+  { name: 'Llave engrasada', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
+  { name: 'Pólvora fina',     desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
+  { name: 'Ánima pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
   { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
 ];
 

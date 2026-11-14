@@ -53,7 +53,7 @@ const PIECES = [
   // Dragones
   { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada bala clava ${pl(l, 'Ascua')}. Se apilan hasta 8 y queman todas a la vez.` },
   { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `El cargado clava ${1 + l} Ascuas y hace estallar todas las que tenga cada enemigo (${35 + 10 * (l - 1)}% por Ascua, en área). Con el rifle se abre en cono.` },
-  { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `El esquive es un salto largo que pasa por encima de las columnas, y al aterrizar hay una explosión de ${150 * l}% de daño.` },
+  { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `El esquive es un salto largo que pasa por encima de los muros, y al aterrizar hay una explosión de ${150 * l}% de daño.` },
   { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Quien muere con Ascuas suelta ${pl(l, 'moneda')}. Todo tu daño sube un ${l}% por cada 10 de oro que lleves, hasta +${30 + 10 * l}%.` },
   // Minerales
   { id: 'stone_basic',    god: 'stone',  slot: 'basic',   name: 'Esquirla',         desc: l => `${Math.max(1, 4 - l) > 1 ? 'Cada ' + Math.max(1, 4 - l) + ' balas dejan' : 'Cada bala deja'} un Cristal clavado junto al enemigo. Los Cristales duran 9 s.` },
@@ -112,7 +112,7 @@ const DUOS = [
   { id: 'echocry',   slot: 'charge',  a: 'orc_charge',    b: 'time_charge',  name: 'Grito con eco',      desc: 'El grito se repite solo 2 s después con la misma fuerza y sin gastar Furia.' },
   // Esquive
   { id: 'comet',     slot: 'dodge',   a: 'dragon_dodge',  b: 'storm_dodge',  name: 'Cometa',             desc: 'El impacto del aterrizaje descarga las Agujas de todos los que alcanza y les clava 2.' },
-  { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',   b: 'orc_dodge',    name: 'Avalancha',          desc: 'Embestir a un enemigo lo lanza por los aires. Si choca con una columna, un Cristal, la pared u otro enemigo, estalla: 300% de daño y aturde.' },
+  { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',   b: 'orc_dodge',    name: 'Avalancha',          desc: 'Embestir a un enemigo lo lanza por los aires. Si choca con un muro, un Cristal, la pared u otro enemigo, estalla: 300% de daño y aturde.' },
   { id: 'stalagm',   slot: 'dodge',   a: 'stone_dodge',   b: 'venom_dodge',  name: 'Estela de cristal',  desc: 'El rastro tóxico cristaliza: deja tres Cristales a lo largo, y todos tus Cristales envenenan a quien tengan cerca.' },
   { id: 'miasma',    slot: 'dodge',   a: 'venom_dodge',   b: 'time_dodge',   name: 'Miasma',             desc: 'Dentro de la burbuja, el Veneno hace daño el triple de rápido.' },
   { id: 'toast',     slot: 'dodge',   a: 'feast_dodge',   b: 'storm_dodge',  name: 'Brindis eléctrico',  desc: 'Al atravesar a un enemigo te curas 2 por cada Aguja que le descargues.' },
@@ -170,8 +170,8 @@ const MASTERY = {
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
 const PLANS = [
   { id: 'echo',    name: 'Arma gemela',   desc: 'Al esquivar dejas una copia del arma donde estabas: dispara sola 3 s a tu cadencia, al 50% de daño y con tus efectos.' },
-  { id: 'tempo',   name: 'Compás',        desc: 'Si pulsas justo cuando el anillo se llena, el disparo hace el doble de daño. Mantener pulsado o machacar el botón no cuenta.' },
-  { id: 'mortar',  name: 'Mortero',       desc: 'La Cámara de rayo deja de lanzar un rayo: lanza un proyectil que pasa por encima de las columnas y explota en área.', only: 'c_beam' },
+  { id: 'tempo',   name: 'Compás',        desc: 'El ¡Compás! vale con cualquier llave y hace el doble de daño en vez de +50%. Mantener pulsado o machacar el botón no cuenta.' },
+  { id: 'mortar',  name: 'Mortero',       desc: 'La Recámara de rayo deja de lanzar un rayo: lanza un proyectil que pasa por encima de los muros y explota en área.', only: 'c_beam' },
   { id: 'recoil',  name: 'Retroceso',     desc: 'El cargado te lanza hacia atrás como un esquive (activa tus técnicas de esquive) y se recupera un 35% antes.' },
   { id: 'double',  name: 'Doble esquive', desc: 'Llevas una carga más de esquive.' },
 ];

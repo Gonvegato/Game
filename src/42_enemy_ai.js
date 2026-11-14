@@ -16,7 +16,7 @@ function bossAI(e, dt, d, ux, uy) {
   } else if (e.act === 'charge') {
     e.x += e.lvx * dt; e.y += e.lvy * dt;
     if (!e.hitOnce && dist(e, p) < e.r + p.r + 3) { e.hitOnce = true; hurtPlayer(B.dmg + 5); }
-    for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r) { e.act = 'dazed'; e.at = 1.8; S.shake = 9; note(e.x, e.y - e.r - 14, '¡Aturdido!', C.ink, true); blip(200, 0.3, 'square', 0.06, -150); break; }
+    if (touchesWall(e, e.r + 1)) { e.act = 'dazed'; e.at = 1.8; S.shake = 9; note(e.x, e.y - e.r - 14, '¡Aturdido!', C.ink, true); blip(200, 0.3, 'square', 0.06, -150); }
     if (e.act === 'charge' && e.at <= 0) rest(0.6);
   } else if (e.act === 'dazed') {
     if (e.at <= 0) rest(0.3);
@@ -28,8 +28,8 @@ function bossAI(e, dt, d, ux, uy) {
   } else if (e.act === 'rest') {
     if (e.at <= 0) e.act = 'idle';
   } else {
-    const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
-    e.x += ux * sp * dt; e.y += uy * sp * dt;
+    const sp = e.speed * (e.slowT > 0 ? e.slowF : 1), [gx, gy] = navDir(e, ux, uy);
+    e.x += gx * sp * dt; e.y += gy * sp * dt;
     e.think -= dt;
     if (e.think > 0) return;
     e.think = ph > 2 ? 0.6 : ph > 1 ? 0.85 : 1.25;
@@ -49,7 +49,7 @@ function bossAI(e, dt, d, ux, uy) {
 }
 // Enemigos con comportamiento propio. Los últimos que quedan en la sala no huyen y se acercan.
 function enemyAI(e, dt, d, ux, uy, sp) {
-  const p = S.p, ai = e.type.ai, few = S.enemies.length + S.queue.length <= 2, keep = (near, far) => { const mv = d > (few ? Math.min(far, 140) : far) ? 1 : d < near && !few ? -0.6 : 0; e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt; };
+  const p = S.p, ai = e.type.ai, few = S.enemies.length + S.queue.length <= 2, keep = (near, far) => { const mv = d > (few ? Math.min(far, 140) : far) || blocked(e, p) ? 1 : d < near && !few ? -0.6 : 0; if (mv > 0) { const [gx, gy] = navDir(e, ux, uy); e.x += gx * sp * dt; e.y += gy * sp * dt; } else { e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt; } };
   e.aiCd -= dt;
   if (ai === 'bomb') {                   // Bombardero: lanza un proyectil en arco a donde estás
     keep(110, 190);
@@ -58,7 +58,7 @@ function enemyAI(e, dt, d, ux, uy, sp) {
     if (e.leapT > 0) { e.leapT -= dt; const k = 1 - Math.max(0, e.leapT) / 0.7; e.x = e.sx + (e.lx - e.sx) * k; e.y = e.sy + (e.ly - e.sy) * k; if (e.leapT <= 0) e.rec = 0.5; return; }
     if (e.rec > 0) { e.rec -= dt; return; }
     if (e.aiCd <= 0 && d > 60 && d < 210) { e.aiCd = 3; e.leapT = 0.7; e.sx = e.x; e.sy = e.y; e.lx = p.x; e.ly = p.y; S.hazards.push({ x: p.x, y: p.y, r: 32, t: 0.7, t0: 0.7, dmg: e.dmg, col: e.color }); return; }
-    e.x += ux * sp * dt; e.y += uy * sp * dt;
+    { const [gx, gy] = navDir(e, ux, uy); e.x += gx * sp * dt; e.y += gy * sp * dt; }
   } else if (ai === 'snipe') {           // Tirador: apunta con una línea y dispara
     if (e.aimT > 0) { e.aimT -= dt; const L = S.lasers.find(l => l.src === e); if (L && e.aimT > 0.35) { L.a = Math.atan2(p.y - e.y, p.x - e.x); L.x = e.x; L.y = e.y; } return; }
     keep(140, 250);

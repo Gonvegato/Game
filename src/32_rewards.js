@@ -9,7 +9,7 @@ const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + (isNew ? ' · nueva' : ' · ya descubierta'), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tu arma como está. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tu arma como está.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tu ' + gunName(S.gun).toLowerCase(), opts };

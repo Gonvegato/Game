@@ -16,8 +16,8 @@ const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
-const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1);
-const gunRate = () => (G('b_short') ? 1.25 : 1) * ({ a_semi: 1.2, a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1);
+const gunRate = () => ({ b_short: 1.25, b_bomb: 0.65 }[S.gun.barrel] || 1) * ({ a_semi: 1.2, a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
 const gunDmg = () => ({ a_semi: 0.75, a_rotary: 0.3 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3 }[S.gun.mag] || 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
 function checkRes() { for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
@@ -34,28 +34,6 @@ const periodOf = () => {
   return 1 / (p.as * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
-// Columnas: hasta dónde llega un rayo antes de chocar, si hay línea de tiro, y empujar fuera a quien se mete
-function rayClip(x, y, ux, uy, len) {
-  let b = len;
-  for (const c of S.pillars) {
-    const cx = c.x - x, cy = c.y - y, al = cx * ux + cy * uy;
-    if (al <= 0) continue;
-    const perp2 = cx * cx + cy * cy - al * al, r2 = c.r * c.r;
-    if (perp2 >= r2) continue;
-    const t = al - Math.sqrt(r2 - perp2);
-    if (t < b) b = Math.max(0, t);
-  }
-  return b;
-}
-function blocked(a, b) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; return rayClip(a.x, a.y, dx / d, dy / d, d) < d - 0.01; }
-function collide(o, r) {
-  let c0 = null;
-  for (const c of S.pillars) {
-    const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy) || 0.01, min = c.r + r;
-    if (d < min) { o.x = c.x + dx / d * min; o.y = c.y + dy / d * min; c0 = c; }
-  }
-  return c0;
-}
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
@@ -128,7 +106,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (e.boss && e.act === 'dazed') dmg *= 2;
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
-  e.hp -= dmg; e.flash = 0.1;
+  e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg;
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
@@ -144,7 +122,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
-  e.hp -= dmg;
+  e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
   return dmg;
@@ -184,7 +162,8 @@ function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
 function slow(e, t, f) { if (e.boss) f = 1 - (1 - f) * 0.4; e.slowT = Math.max(e.slowT, t); e.slowF = Math.min(e.slowF, f); }
 function addCrystal(x, y) {
-  S.crystals.push({ x: clamp(x, 12, T.room.w - 12), y: clamp(y, 12, T.room.h - 12), life: has('m_quartz') ? 18 : 9, acc: 0 });
+  const at = unstick(clamp(x, 12, T.room.w - 12), clamp(y, 12, T.room.h - 12));
+  S.crystals.push({ x: at.x, y: at.y, life: has('m_quartz') ? 18 : 9, acc: 0 });
   const max = mastery('stone') ? 12 : 6;
   while (S.crystals.length > max) S.crystals.shift();
 }

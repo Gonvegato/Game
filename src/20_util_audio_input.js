@@ -6,7 +6,9 @@ const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI;
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 const cv = $('game');
-const ctx = cv.getContext('2d');
+const scr = cv.getContext('2d');
+// El mundo se pinta en un lienzo pequeño (1 unidad = 1 píxel) y se amplía por un número entero: una sola rejilla de píxeles
+const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0 };
 

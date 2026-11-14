@@ -8,6 +8,8 @@ function update(dt) {
   if (S.hitstop > 0) { S.hitstop -= dt; return; }
   if (S.timers.length) { const due = []; for (const tm of S.timers) { tm.t -= dt; if (tm.t <= 0) due.push(tm); } S.timers = S.timers.filter(tm => tm.t > 0); for (const tm of due) tm.fn(); }
 
+  navUpdate(dt);
+
   // Oleadas
   S.waveT += dt;
   while (S.queue.length && S.queue[0].at <= S.waveT) spawn(S.queue.shift().type);
@@ -71,6 +73,15 @@ function update(dt) {
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
   const want = p.buffer > 0 || I.atk, g = S.gun, A = g.action;
   if (p.over > 0) p.over -= dt;
+  p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
+  if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
+    const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
+    if (near.length) {
+      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Culatazo!', C.ember, true);
+      S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 26, t: 0, life: 0.18, col: C.ink });
+      for (const e of near) { const d = dist(p, e) || 1; hit(e, p.dmg * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, true, C.ink); if (active(e)) { e.kx += (e.x - p.x) / d * 300; e.ky += (e.y - p.y) / d * 300; stun(e, 0.6); } }
+    }
+  }
   p.heatT -= dt; if (p.heatT <= 0) p.heat = Math.max(0, p.heat - dt * 0.45);
   const canFire = p.over <= 0 && !p.charging && p.dodgeT <= 0;
   if (A === 'a_draw') {   // De tensado: mantener para tensar, soltar para disparar
@@ -93,9 +104,10 @@ function update(dt) {
     } else { p.spin = Math.max(0, p.spin - dt * 2.5); p.gat = 0; }
   } else if (want && target && canFire && p.windup <= 0 && p.cd <= 0) {   // Cerrojo, semiautomático y ráfaga: a pulsaciones
     const period = periodOf();
-    p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
+    p.crit = (A === 'a_bolt' || S.plans.has('tempo')) && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
+    if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
   }
   if (p.windup > 0) {
@@ -208,6 +220,13 @@ function update(dt) {
     if (e.spawn > 0) { e.spawn -= dt; continue; }
     e.flash = Math.max(0, e.flash - dt);
     e.x += e.kx * dt; e.y += e.ky * dt;
+    e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
+    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > 70 && (touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
+      e.slamCd = 0.9; S.stat.slam++; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
+      S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
+      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9, kx / kl, ky / kl, true, C.ink); stun(e, 0.7);
+      if (e.hp <= 0) continue;
+    }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
     e.autoCd = Math.max(0, e.autoCd - dt); e.mark = Math.max(0, e.mark - dt);
     if (e.slowT > 0) e.slowT -= dt; else e.slowF = 1;
@@ -216,7 +235,7 @@ function update(dt) {
     if (e.fling > 0) {                   // dúo Avalancha: enemigo lanzado
       e.fling -= dt; e.x += e.fvx * dt; e.y += e.fvy * dt;
       let bump = e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3;
-      for (const c of S.pillars) if (Math.hypot(e.x - c.x, e.y - c.y) < c.r + e.r + 1) bump = true;
+      if (touchesWall(e, e.r + 1)) bump = true;
       for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 7) { bump = true; c.life = 0; }
       for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r) bump = true;
       if (bump) { e.fling = 0; explode(e.x, e.y, 50, p.dmg * 3, { stun: 0.6, col: GODS.stone.color }); gainFury(10); }
@@ -246,8 +265,8 @@ function update(dt) {
         if (e.cast <= 0) { S.shots.push({ x: e.x, y: e.y, vx: ux * 125, vy: uy * 125, r: 4, dmg: e.dmg, life: 3.5 }); e.cool = 2.4; blip(700, 0.08, 'triangle', 0.025, -300); }
       } else {
         e.cool -= dt;
-        const few = S.enemies.length + S.queue.length <= 2, mv = d > (few ? 140 : 195) ? 1 : d < 120 && !few ? -1 : 0;
-        e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt;
+        const few = S.enemies.length + S.queue.length <= 2, mv = d > (few ? 140 : 195) || blocked(e, p) ? 1 : d < 120 && !few ? -1 : 0;
+        if (mv > 0) { const [gx, gy] = navDir(e, ux, uy); e.x += gx * sp * dt; e.y += gy * sp * dt; } else { e.x += ux * mv * sp * dt; e.y += uy * mv * sp * dt; }
         if (e.cool <= 0 && d < 270) e.cast = 0.55;
       }
     } else if (e.lungeT > 0) {          // embestida del elegido
@@ -267,7 +286,8 @@ function update(dt) {
         e.lungeCd -= dt;
         if (e.lungeCd <= 0 && d < 150 && d > 45) { e.lungeCd = 3.5; e.lungeWind = 0.5; e.lvx = ux * 300; e.lvy = uy * 300; continue; }
       }
-      e.x += ux * sp * dt; e.y += uy * sp * dt;
+      const [gx, gy] = navDir(e, ux, uy);   // recto si te ve; por el camino si hay un muro en medio
+      e.x += gx * sp * dt; e.y += gy * sp * dt;
     }
   }
   // Zonas en el suelo: fuego o veneno
@@ -295,12 +315,7 @@ function update(dt) {
   for (const e of S.enemies) {
     e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2);
     if ((e.boss && e.act === 'leap') || e.leapT > 0) continue;             // en el aire no chocan
-    const c = collide(e, e.r);
-    if (c && active(e) && e.stun <= 0 && !e.boss) {   // rodear la columna en vez de quedarse pegado
-      const nx = e.x - c.x, ny = e.y - c.y, nl = Math.hypot(nx, ny) || 1, tx = -ny / nl, ty = nx / nl;
-      const dotp = tx * (p.x - e.x) + ty * (p.y - e.y), sg = Math.abs(dotp) > 8 ? Math.sign(dotp) : e.side;
-      e.x += tx * sg * e.speed * dt * 0.8; e.y += ty * sg * e.speed * dt * 0.8;
-    }
+    collide(e, e.r);
   }
   S.enemies = S.enemies.filter(e => e.hp > 0);
 
@@ -308,7 +323,7 @@ function update(dt) {
   for (const s of S.shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (s.x < 0 || s.y < 0 || s.x > T.room.w || s.y > T.room.h) s.life = 0;
-    for (const c of S.pillars) if (Math.hypot(s.x - c.x, s.y - c.y) < c.r + s.r) s.life = 0;
+    if (isWallAt(s.x, s.y)) s.life = 0;
     if (s.life > 0 && Math.hypot(s.x - p.x, s.y - p.y) < s.r + p.r) { if (p.inv <= 0) { hurtPlayer(s.dmg); s.life = 0; } }
   }
   S.shots = S.shots.filter(s => s.life > 0);

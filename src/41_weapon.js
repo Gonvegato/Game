@@ -41,6 +41,11 @@ function shot(e, dmg, ux, uy, big, col) {
     }
   }
   if (duoOn('warthunder') && furyFull()) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);          // dúo Trueno de guerra
+  if (G('m_chain')) {                                                                          // Bala enramada: salta al más cercano
+    const o = others(e, 95, 1)[0];
+    if (o) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
+  }
+  if (G('m_heavy') && active(e) && !e.boss) { e.kx += ux * 150; e.ky += uy * 150; }               // Bala de cañón: empuja
 }
 
 // Un tirón del gatillo: mecanismo y cargador deciden cuánto y cómo; el cañón decide a quién le da.
@@ -50,19 +55,21 @@ function fireBasic(target) {
   if (!target && !draw) { p.cd = 0.12; p.crit = false; return; }   // tensando se puede soltar sin objetivo
   p.shotN += 1; p.trig += 1;
   let mult = gunDmg();
-  if (p.crit) { mult *= 2; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
+  if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
   if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
   if (draw) mult *= 0.6 + 1.6 * p.drawPow;
   if (res('furnace')) mult *= 1 + 0.4 * p.heat;                              // resonancia Fragua viva
-  const big = p.crit || imb || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
+  const big = p.crit || imb || p.quickBig || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
-  p.crit = false;
+  p.crit = false; p.quickBig = false;
   blip(1250, 0.07, 'square', 0.035, -700);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos
     barrelFire(target, mult * 0.45, big, col, reach);
     for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1250, 0.05, 'square', 0.03, -700); barrelFire(t2, mult * 0.45, big, col, reach); } } });
   } else barrelFire(target, mult, big, col, reach);
+  if (imb && target && active(target)) { S.stat.blessed++; explode(target.x, target.y, 40, p.dmg * 1.2, { col: '#ffffff' }); }   // Bala bendita
   if (res('leadstorm') && p.trig % 10 === 0 && target && active(target)) discharge(target, 1, null);        // resonancia Tormenta de plomo
   if (res('firingline')) for (const sh of S.shades) {                        // resonancia Línea de tiro
     let tg = null, td = 220;
@@ -89,11 +96,16 @@ function barrelFire(target, m, big, col, reach) {
   const ang = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, ux = Math.cos(ang), uy = Math.sin(ang);
   p.face = ang;
   const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: p.x + ux * 14, y1: p.y + uy * 14, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
-  if (B === 'b_pierce') {                // atraviesa en línea
-    const len = rayClip(p.x, p.y, ux, uy, reach + 30); let left = 3;
-    tracer(p.x + ux * len, p.y + uy * len, big ? 3 : 1.6);
-    const line = S.enemies.filter(e => { if (!active(e)) return false; const ex = e.x - p.x, ey = e.y - p.y, al = ex * ux + ey * uy; return al >= 0 && al <= len + e.r && Math.abs(ex * uy - ey * ux) <= 5 + e.r; }).sort((a, b) => dist(p, a) - dist(p, b));
-    for (const e of line) { shot(e, p.dmg * m, ux, uy, big, col); if (res('quarry') && left-- > 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // resonancia Barreno
+  if (B === 'b_pierce') {                // atraviesa en línea y rebota una vez en los muros
+    const total = reach + 30, h = rayHit(p.x, p.y, ux, uy, total); let left = 3;
+    tracer(p.x + ux * h.len, p.y + uy * h.len, big ? 3 : 1.6);
+    const along = (ox, oy, vx, vy, len) => S.enemies.filter(e => { if (!active(e)) return false; const ex = e.x - ox, ey = e.y - oy, al = ex * vx + ey * vy; return al >= 0 && al <= len + e.r && Math.abs(ex * vy - ey * vx) <= 5 + e.r; }).sort((a, b) => Math.hypot(a.x - ox, a.y - oy) - Math.hypot(b.x - ox, b.y - oy));
+    for (const e of along(p.x, p.y, ux, uy, h.len)) { shot(e, p.dmg * m, ux, uy, big, col); if (res('quarry') && left-- > 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // resonancia Barreno
+    if (h.side) {                        // rebote: el resto del recorrido, y un tramo de regalo
+      const bx = p.x + ux * (h.len - 1), by = p.y + uy * (h.len - 1), vx = h.side === 'x' ? -ux : ux, vy = h.side === 'y' ? -uy : uy, l2 = rayHit(bx, by, vx, vy, total - h.len + 70).len;
+      S.fx.push({ k: 'ring', x: bx, y: by, r: 6, t: 0, life: 0.12, col }); S.fx.push({ k: 'tracer', x1: bx, y1: by, x2: bx + vx * l2, y2: by + vy * l2, t: 0, life: big ? 0.2 : 0.13, col, w: big ? 2.4 : 1.4 });
+      for (const e of along(bx, by, vx, vy, l2)) { S.stat.bounce++; shot(e, p.dmg * m, vx, vy, big, col); if (res('pinball') && active(e)) discharge(e, 1, null); }   // resonancia Carambola
+    }
     if (big) S.shake = Math.max(S.shake, 3);
   } else if (!target) tracer(p.x + ux * reach, p.y + uy * reach);   // tensado soltado al aire
   else if (B === 'b_twin') {             // dos enemigos distintos a la vez
@@ -113,15 +125,36 @@ function barrelFire(target, m, big, col, reach) {
     }
     S.shake = Math.max(S.shake, 4);
     if (res('dragonbreath')) S.zones.push({ x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * (reach + 10), y2: p.y + uy * (reach + 10), life: 2.2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // resonancia Aliento de dragón
+  } else if (B === 'b_bomb') {           // bomba en arco: pasa por encima de los muros y revienta en área
+    const tx = target.x, ty = target.y, fl = 0.2 + dist(p, target) / 520, dm = p.dmg * m * 0.8;
+    S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
+    S.fx.push({ k: 'ring', x: tx, y: ty, r: 16, t: 0, life: fl, col: C.ember });
+    S.timers.push({ t: fl, fn: () => {
+      S.fx.push({ k: 'ring', x: tx, y: ty, r: 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); blip(140, 0.18, 'sawtooth', 0.05, -80);
+      let n = 0;
+      for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = Math.hypot(e.x - tx, e.y - ty); if (d > 40 + e.r) continue; n++; shot(e, dm, (e.x - tx) / (d || 1), (e.y - ty) / (d || 1), big, col); }
+      S.stat.bombHits += n; S.stat.bombs++;
+      if (res('firerain')) S.zones.push({ x: tx, y: ty, r: 36, life: 2.5, acc: 0.4, ember: 1, col: GODS.dragon.color });   // resonancia Lluvia de brasas
+    } });
   } else if (B === 'b_spike') {          // estocada que atraviesa
     shot(target, p.dmg * m * 1.8, ux, uy, true, col);
     if (res('executor')) { stun(target, 0.4); gainFury(15); }                // resonancia Verdugo
     if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     if (p.dodgeT <= 0) lunge(ang, dist(p, target) + target.r + 22);
-  } else {                               // cañón largo o corto: una bala a un enemigo
+  } else {                               // arcabuz o pistolete: una bala a un enemigo
     const far = B === 'b_long' && dist(p, target) - target.r > reach * 0.5;
     if (far) S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 9, t: 0, life: 0.15, col: C.ink });
     tracer(target.x, target.y, far ? 1.8 : 0); shot(target, p.dmg * m * (far ? 1.4 : 1), ux, uy, far || big, col);
+    if (B === 'b_long') {                // Remate: si mata, la bala sigue
+      let from = target, hops = 0;
+      while (!active(from) && hops < 3) {
+        const next = others(from, 115, 1)[0]; if (!next) break;
+        const d = dist(from, next) || 1; hops++; S.stat.finish++;
+        S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: next.x, y2: next.y, t: 0, life: 0.14, col, w: 1.6 });
+        shot(next, p.dmg * m, (next.x - from.x) / d, (next.y - from.y) / d, big, col); from = next;
+      }
+      if (hops) note(target.x, target.y - 12, hops > 1 ? `¡Remate x${hops}!` : '¡Remate!', C.ember);
+    }
   }
 }
 // Estocada: un esquive corto que atraviesa
@@ -156,6 +189,7 @@ function endDodge() {
   }
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
+  if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Culata de fresno / Pistolete: sales del esquive con el arma lista
   p.dodgeFrom = null; p.fly = false; p.lanceDmg = 0;
 }
 // Lo que pasa al atravesar a un enemigo con el esquive
