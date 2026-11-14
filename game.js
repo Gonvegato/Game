@@ -260,30 +260,33 @@ const WEAPONS = {
     { name: 'Asta ligera',    desc: '+12% de cadencia', cost: { iron: 2, feast: 3 }, stat: 'as', mult: 1.12 } ] },
 };
 // Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
+// Está pensado para unas 30 horas de juego hasta completarlo: los primeros rangos son baratos y los últimos, caros.
+const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));
 const TREE = [
   { name: 'Cuerpo', sub: 'Aguantar más y moverte mejor', nodes: [
-    { id: 'hp',      name: 'Aguante',         max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${10 * r} de vida máxima` },
-    { id: 'skin',    name: 'Piel curtida',    max: 3, cost: [20, 35, 55],        desc: r => `Recibes un ${5 * r}% menos de daño` },
-    { id: 'feet',    name: 'Pies ligeros',    max: 3, cost: [15, 28, 45],        desc: r => `+${4 * r}% de velocidad de movimiento` },
-    { id: 'mend',    name: 'Remiendo',        max: 3, cost: [15, 28, 45],        desc: r => `Recuperas ${4 * r} de vida más al limpiar cada sala` },
-    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [60, 120],           desc: r => (r < 2 ? 'Una carga más de esquive' : 'Una carga más de esquive, y todas se recargan un 20% antes') },
-    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [40, 70, 110],       desc: r => `Una vez por partida, al morir te levantas con un ${10 + 20 * r}% de vida` } ] },
+    { id: 'hp',      name: 'Aguante',         max: 8, cost: curve(8, 1.55, 8),  desc: r => `+${10 * r} de vida máxima` },
+    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `Recibes un ${5 * r}% menos de daño` },
+    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `+${3 * r}% de velocidad de movimiento` },
+    { id: 'mend',    name: 'Remiendo',        max: 5, cost: curve(15, 1.7, 5),  desc: r => `Recuperas ${4 * r} de vida más al limpiar cada sala` },
+    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [90, 220],          desc: r => (r < 2 ? 'Una carga más de esquive' : 'Una carga más de esquive, y todas se recargan un 20% antes') },
+    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [60, 130, 260],     desc: r => `Una vez por partida, al morir te levantas con un ${10 + 20 * r}% de vida` } ] },
   { name: 'Oficio', sub: 'Sacarle más al arma', nodes: [
-    { id: 'rate',    name: 'Pulso firme',     max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${3 * r}% de cadencia` },
-    { id: 'dmg',     name: 'Golpe certero',   max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${4 * r}% de daño` },
-    { id: 'eye',     name: 'Ojo de herrero',  max: 3, cost: [15, 28, 45],        desc: r => `+${5 * r}% de alcance` },
-    { id: 'brake',   name: 'Frenazo corto',   max: 3, cost: [18, 32, 50],        desc: r => `El frenazo de cada disparo dura un ${8 * r}% menos` },
-    { id: 'armorer', name: 'Maestro armero',  max: 3, cost: [18, 32, 50],        desc: r => `El disparo cargado carga un ${10 * r}% más rápido` },
-    { id: 'coup',    name: 'Golpe de gracia', max: 3, cost: [25, 45, 70],        desc: r => `+${12 * r}% de daño a enemigos por debajo del 30% de vida` } ] },
+    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(8, 1.55, 8),  desc: r => `+${3 * r}% de cadencia` },
+    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(8, 1.55, 8),  desc: r => `+${4 * r}% de daño` },
+    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(15, 1.7, 5),  desc: r => `+${5 * r}% de alcance` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(15, 1.7, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos` },
+    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(15, 1.7, 5),  desc: r => `El disparo cargado carga un ${10 * r}% más rápido` },
+    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(15, 1.7, 5),  desc: r => `+${8 * r}% de daño a enemigos por debajo del 30% de vida` } ] },
   { name: 'Memoria', sub: 'Lo que recuerdas de otras vidas', nodes: [
-    { id: 'purse',   name: 'Bolsa honda',     max: 3, cost: [12, 24, 40],        desc: r => `Empiezas cada partida con ${30 * r} de oro` },
-    { id: 'nose',    name: 'Olfato',          max: 3, cost: [15, 28, 45],        desc: r => `Las salas de almas dan un ${20 * r}% más` },
-    { id: 'luck',    name: 'Favor robado',    max: 3, cost: [20, 36, 56],        desc: r => `Las técnicas salen raras o épicas más a menudo (+${8 * r}%)` },
-    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [30, 55, 85],        desc: r => `Puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'} por sala` },
-    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [50],                desc: () => 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres' },
-    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [90],                desc: () => 'Empiezas cada partida eligiendo una técnica entre tres' },
-    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [70],                desc: () => 'Al acabar una sala siempre hay una puerta más donde elegir' } ] },
+    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(15, 1.7, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
+    { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(15, 1.7, 5),  desc: r => `Las salas de almas dan un ${10 * r}% más` },
+    { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `Las técnicas salen raras o épicas más a menudo (+${5 * r}%)` },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [40, 90, 180],      desc: r => `Puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'} por sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [120],              desc: () => 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Empiezas cada partida eligiendo una técnica entre tres' },
+    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [160],              desc: () => 'Al acabar una sala siempre hay una puerta más donde elegir' } ] },
 ];
+const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
   souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para tu árbol de habilidades. Solo se consiguen aquí.' },
@@ -447,7 +450,7 @@ bindHold($('btnAtk'), 'atk'); bindHold($('btnDodge'), 'dodge'); bindHold($('btnC
 // Almas (solo en salas de almas) para tu árbol. Hierro Místico y materiales de cada deidad para forjar.
 // Se guarda en el navegador, igual que la partida en curso.
 const zeroMats = () => Object.fromEntries(GOD_KEYS.map(g => [g, 0]));
-let M = { souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, weapon: 'rifle', owned: ['rifle'], wup: {}, tree: {}, run: null };
+let M = { souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, weapon: 'rifle', owned: ['rifle'], wup: {}, tree: {}, run: null, time: 0, earned: 0 };
 try { const raw = localStorage.getItem('kiteo.save3'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { mats: Object.assign(M.mats, o.mats || {}) }); if (!WEAPONS[M.weapon]) M.weapon = 'rifle'; } } catch (e) {}
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
 const tk = id => +M.tree[id] || 0;   // rango de una habilidad del árbol
@@ -464,7 +467,7 @@ const pay = c => { for (const [g, n] of Object.entries(c)) { if (g === 'iron') M
 const where = n => { if (n > TOTAL) return 'el final'; const W = Math.ceil(n / (RPW + 1)), r = n - (W - 1) * (RPW + 1); return WORLDS[W - 1].name + (r > RPW ? ', ante ' + TYPES[WORLDS[W - 1].boss].name : ', sala ' + r); };
 const lootTxt = () => { const m = GOD_KEYS.filter(g => S.matsRun[g]).map(g => S.matsRun[g] + ' ' + GODS[g].mat); if (S.ironRun) m.unshift(S.ironRun + ' de Hierro Místico'); return `<b>${S.soulsRun}</b> almas` + (m.length ? ', ' + m.join(', ') : ''); };
 function endRun(win) {
-  M.souls += S.soulsRun; M.iron += S.ironRun; for (const g of GOD_KEYS) M.mats[g] += S.matsRun[g];
+  M.souls += S.soulsRun; M.earned += S.soulsRun; M.iron += S.ironRun; for (const g of GOD_KEYS) M.mats[g] += S.matsRun[g];
   M.runs += 1; M.best = Math.max(M.best, win ? TOTAL + 1 : S.wave); if (win) M.wins += 1;
   M.run = null; save();
 }
@@ -508,7 +511,7 @@ function startRun() {
   newGame(); M.run = null;
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.weapon = M.weapon;
-  p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.04 * tk('feet'); p.gold = 30 * tk('purse');
+  p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
   S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
@@ -587,7 +590,7 @@ function sysTick() {
 
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
-const rollRar = () => { const r = Math.random() + 0.08 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
+const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el arma', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tu arma', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || x.only === S.weapon)).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
@@ -601,7 +604,7 @@ function roomCleared() {
   const here = WORLDS[W - 1].name + ' · sala ' + S.room + ' de ' + RPW;
   let got = '';
   if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
-  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.2 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
+  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
   else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
@@ -765,10 +768,16 @@ function forgeHtml() {
   }
   const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
     return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('')).join('');
+  const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
+  const hm = h => (h >= 1 ? Math.floor(h) + ' h ' : '') + Math.round((h % 1) * 60) + ' min';
+  const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
+  const pace = `Árbol: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo en la mazmorra: ${hm(hrs)}.` +
+    (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : ' El ritmo de almas por hora aparecerá cuando lleves un rato jugado.');
   const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${where(M.best)}${M.wins ? '. Has cruzado el Umbral ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
   const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${where(M.run.wave + 1)}</button><button class="fi" data-act="go"><b>Empezar de nuevo</b><span>Abandona la partida en curso</span><i></i></button></div>` : `<button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
   return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
+    <p class="fine">${pace}</p>
     <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. El Hierro Místico sale de sus vetas y hace falta para todo lo que forjes; los demás materiales los sueltan los elegidos de cada deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
     ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
@@ -779,7 +788,7 @@ function forgeAct(act) {
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'w') { const w = WEAPONS[id]; if (M.owned.includes(id)) M.weapon = id; else if (canPay(w.cost)) { pay(w.cost); M.owned.push(id); M.weapon = id; } else ok = false; }
   else if (k === 'wu') { const u = WEAPONS[id].ups[+n], key = id + ':' + n; if (!M.wup[key] && canPay(u.cost)) { pay(u.cost); M.wup[key] = true; } else ok = false; }
-  else if (k === 't') { const nd = TREE.flatMap(br => br.nodes).find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
+  else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
   blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
   save(); renderOverlay();
 }
@@ -956,7 +965,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.boss && e.act === 'dazed') dmg *= 2;
-  if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.12 * tk('coup');                                       // árbol: Golpe de gracia
+  if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1;
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
@@ -1535,7 +1544,7 @@ function update(dt) {
     const period = periodOf();
     p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
-    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.5 : W === 'shotgun' ? 0.6 : W === 'lance' ? 0.6 : W === 'rifle' && wup(1) ? 0.75 : 1) * (1 - 0.08 * tk('brake'));
+    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.5 : W === 'shotgun' ? 0.6 : W === 'lance' ? 0.6 : W === 'rifle' && wup(1) ? 0.75 : 1) * (1 - 0.06 * tk('brake'));
     p.windupTarget = target; p.cd = period; p.buffer = 0;
   }
   if (p.windup > 0) {
@@ -2113,7 +2122,7 @@ function frame(now) {
   const m = S.mode;
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
-  else if (m === 'play') { if (I.startP) setMode('pause'); else update(dt); }
+  else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
     if (I.navL && pickSel > 0) { pickSel--; moved = true; }
