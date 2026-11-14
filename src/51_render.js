@@ -324,11 +324,11 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    const packHero = drawChar(heroKey(), p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, fx < 0, false);
+    const packHero = drawHero(p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, p.face, false);
     if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
-    if (!packHero) drawGun(p.x, py + 1, p.face, kick);
-    if (glow && !packHero) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
+    drawGun(p.x, py + (packHero ? -2 : 1), p.face, kick);   // el arma que lleva, apuntando
+    if (glow) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;

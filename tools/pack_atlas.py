@@ -7,10 +7,6 @@ from PIL import Image
 LIB = json.load(open('assets/library/megapack.json'))['chars']; LIBIMG = Image.open('assets/library/megapack.png').convert('RGBA')
 # clave del juego → (carpeta, {animación del juego: (sufijo de carpeta, máx. fotogramas, fps)})
 CAST = {
-  'hero1': ('Knight_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Move', 10, 14), 'dash': ('Dash', 8, 20)}),
-  'hero2': ('Knight_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 14), 'dash': ('Dash', 10, 20)}),
-  'hero3': ('Knight_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 14), 'dash': ('Dash', 2, 10)}),
-  'hero4': ('Knight_LVL4', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 14), 'dash': ('Dash', 2, 10)}),
   'stalker': ('Goblin_Regular_01 (Green Skinned)', {'idle': ('Idle', 1, 1), 'move': ('Move', 10, 12), 'atk': ('ATK_Full', 10, 18)}),
   'runner': ('Mimic_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Move', 14, 20), 'atk': ('Dash_Full', 14, 24)}),
   'brute': ('Orc_Barbare_01 (Green Skinned)', {'idle': ('Idle', 1, 1), 'move': ('Move', 5, 7), 'atk': ('ATK_Full', 12, 14)}),
@@ -66,6 +62,9 @@ CAST.update({
   'adv_archer': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Archer', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('ATK_Full', 6, 12)}),
   'adv_dwarf': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Dwarf', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Attack', 11, 16)}),
   'adv_knight': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Knight', {'idle': ('Idle', 1, 1), 'move': ('Run', 8, 12), 'atk': ('Attack', 11, 16)}),
+  'hunter_s': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Side-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Side-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Side-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Side-Sheet.png', 8, 18)}),
+  'hunter_u': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Up-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Up-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Up-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Top-Sheet.png', 8, 18)}),
+  'hunter_d': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Down-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Down-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Down-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Down-Sheet.png', 8, 18)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
@@ -91,7 +90,7 @@ def frames_of(folder, suffix):
         out = [im.crop((i * fw, row * fh, (i + 1) * fw, (row + 1) * fh)) for i in range(im.width // fw)]
         return [f for f in out if f.getbbox()]
     if folder.startswith('@'):   # tira horizontal de fotogramas cuadrados (Pixel Crawler y similares)
-        im = Image.open(PC + folder[1:] + '/' + suffix).convert('RGBA'); n = im.width // im.height
+        im = Image.open(PC + folder[1:].rstrip('/') + '/' + suffix).convert('RGBA'); n = im.width // im.height
         return [im.crop((i * im.height, 0, (i + 1) * im.height, im.height)) for i in range(n)]
     A = LIB[folder]['a']; a = A[suffix] if suffix in A else A[[n for n in A if n.endswith('_' + suffix)][0]]
     out = []

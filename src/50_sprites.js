@@ -523,4 +523,43 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
   return true;
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
-const heroKey = () => 'hero' + (S.p.tier || 1);
+const heroKey = () => 'hunter_s';
+// Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
+// el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
+let HERO_TMP = null, HERO_SIL = null;
+function heroGodColor() {
+  const n = {};
+  for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id], gs = D ? [PIECE[D.a] && PIECE[D.a].god, PIECE[D.b] && PIECE[D.b].god] : [PIECE[cur.id] && PIECE[cur.id].god]; for (const g of gs) if (g) n[g] = (n[g] || 0) + (cur.lvl || 1); }
+  const best = Object.keys(n).sort((a, b) => n[b] - n[a])[0];
+  return best ? GODS[best].color : C.ember;
+}
+function drawHero(anim, time, x, yFeet, face, flash) {
+  const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'hunter_u' : 'hunter_d') : 'hunter_s', flip = key === 'hunter_s' && fx < 0;
+  const m = ATLAS[key]; if (!m || !IMG.chars) return false;
+  const tier = S.p.tier || 1, col = heroGodColor();
+  if (tier >= 2) {   // aura en el suelo, que late
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col;
+    ctx.globalAlpha = 0.16 + 0.07 * tier + 0.05 * Math.sin(S.t * 5); ctx.beginPath(); ctx.ellipse(x, yFeet - 2, 12 + 4 * tier, 4 + 1.5 * tier, 0, 0, Math.PI * 2); ctx.fill();
+    if (tier >= 3) { ctx.globalAlpha = 0.11 + 0.04 * Math.sin(S.t * 7); ctx.beginPath(); ctx.ellipse(x, yFeet - 12, 10 + 2 * tier, 16, 0, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    if (Math.random() < 0.08 * (tier - 1)) S.fx.push({ k: 'spark', x: x + rnd(-6, 6), y: yFeet - rnd(2, 20), vx: rnd(-8, 8), vy: rnd(-40, -20), t: 0, life: rnd(0.4, 0.8), col });
+  }
+  const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1];
+  if (!HERO_TMP) { HERO_TMP = document.createElement('canvas'); HERO_TMP.width = 64; HERO_TMP.height = 64; }
+  const t = HERO_TMP.getContext('2d'); t.clearRect(0, 0, 64, 64); t.globalCompositeOperation = 'source-over'; t.drawImage(flash ? IMG.charsF : IMG.chars, sx, sy, m.w, m.h, 0, 0, m.w, m.h);
+  if (tier >= 2 && !flash) { t.globalCompositeOperation = 'source-atop'; t.globalAlpha = 0.08 + 0.07 * (tier - 1); t.fillStyle = col; t.fillRect(0, 0, m.w, m.h); t.globalAlpha = 1; }
+  // contorno de 1 píxel para que se lea sobre cualquier suelo: claro al principio, del color de su deidad cuando sube de nivel
+  if (!HERO_SIL) { HERO_SIL = document.createElement('canvas'); HERO_SIL.width = 64; HERO_SIL.height = 64; }
+  const sl = HERO_SIL.getContext('2d'); sl.clearRect(0, 0, 64, 64); sl.globalCompositeOperation = 'source-over'; sl.drawImage(HERO_TMP, 0, 0); sl.globalCompositeOperation = 'source-in'; sl.fillStyle = tier >= 2 ? col : '#f3e6c8'; sl.fillRect(0, 0, 64, 64);
+  const ox = flip ? 0 : Math.round(x - m.ax), oy = Math.round(yFeet - m.gy);
+  ctx.save(); ctx.globalAlpha = tier >= 2 ? 0.75 + 0.2 * Math.sin(S.t * 6) : 0.55;
+  if (flip) { ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); }
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.drawImage(HERO_SIL, 0, 0, m.w, m.h, (flip ? -m.ax : ox) + dx, oy + dy, m.w, m.h);
+  ctx.restore();
+  if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); ctx.restore(); }
+  else ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
+  if (tier >= 4) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.18 + 0.08 * Math.sin(S.t * 9);   // a pleno poder, brilla
+    if (flip) { ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); } else ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
+    ctx.restore(); }
+  return true;
+}
