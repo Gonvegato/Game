@@ -33,10 +33,10 @@ const TYPES = {
   shaman:  { name: 'Chamán',      r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
-  guardian:  { name: 'El Guardián',            r: 22, hp: 700,  speed: 40, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
-  matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1000, speed: 58, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
-  colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 1500, speed: 30, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
-  nameless:  { name: 'El Sin Nombre',          r: 22, hp: 2200, speed: 50, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
+  guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
+  matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1500, speed: 62, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
+  colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
+  nameless:  { name: 'El Sin Nombre',          r: 22, hp: 3000, speed: 54, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
 };
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
 const WORLDS = [
@@ -201,6 +201,15 @@ const TECHS = [
   { id: 's_guard',   god: 'shade',  rar: 1, name: 'Guardia de honor',  desc: 'Tus Sombras destruyen los proyectiles enemigos que tocan.' },
   { id: 's_legion',  god: 'shade',  rar: 2, name: 'Legión',            desc: 'Caben 3 Sombras más y duran el doble.' },
   { id: 'r_over',    god: 'storm',  rar: 2, name: 'Sobrecarga',        desc: 'Cuando un enemigo llega al tope de Agujas, se descarga solo: 100% de daño por cada una y un rayo por aguja.', req: ['storm_basic'] },
+  // Ofrendas: técnicas sueltas que sirven aunque no lleves nada más de esa deidad
+  { id: 'd_warm',    god: 'dragon', rar: 1, name: 'Aliento tibio',     desc: 'Una de cada cuatro balas clava una Ascua.' },
+  { id: 'm_skin',    god: 'stone',  rar: 1, name: 'Piel de piedra',    desc: 'Recibes un 10% menos de daño.' },
+  { id: 'v_slow',    god: 'venom',  rar: 1, name: 'Toxina lenta',      desc: 'Una de cada tres balas aplica 1 de Veneno.' },
+  { id: 'f_appet',   god: 'feast',  rar: 1, name: 'Buen apetito',      desc: 'Cada baja te cura 1.' },
+  { id: 'o_scars',   god: 'orc',    rar: 1, name: 'Cicatrices',        desc: '+15% de daño mientras estés por debajo de la mitad de vida.' },
+  { id: 't_second',  god: 'time',   rar: 1, name: 'Un segundo más',    desc: 'El esquive se recarga un 20% antes.' },
+  { id: 's_last',    god: 'shade',  rar: 1, name: 'Último servicio',   desc: 'El primer enemigo que mates en cada sala se levanta como Sombra.' },
+  { id: 'r_spark',   god: 'storm',  rar: 1, name: 'Chispa',            desc: 'Una de cada cinco balas suelta un rayo a otro enemigo.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -243,29 +252,37 @@ const WEAPONS = {
   shotgun: { name: 'Escopeta', desc: 'Alcance corto y un abanico de cinco perdigones: de cerca pueden entrar todos en el mismo enemigo. El cargado es una andanada de quince.', cost: { iron: 3, orc: 3, feast: 3 }, ups: [
     { name: 'Cañones largos', desc: '+20% de alcance', cost: { iron: 1, stone: 3 }, stat: 'range', mult: 1.2 },
     { name: 'Pólvora negra',  desc: '+15% de daño', cost: { iron: 2, dragon: 3 }, stat: 'dmg', mult: 1.15 } ] },
-  gatling: { name: 'Ametralladora', desc: 'Mantén pulsado: cada bala acelera la siguiente hasta el triple de cadencia, con menos daño por bala. Mientras disparas casi no te mueves. El cargado es un rayo que atraviesa.', cost: { iron: 3, stone: 3, storm: 3 }, ups: [
+  gatling: { name: 'Ametralladora', desc: 'No se dispara a golpes: mantén pulsado, los cañones tardan medio segundo en girar y después escupe siete balas por segundo, repartidas entre los enemigos que tengas delante. Poco daño por bala, te mueves despacio mientras dispara y, si no sueltas, se recalienta y se bloquea. El cargado es fuego de supresión: tres segundos disparando sola en todas direcciones.', cost: { iron: 3, stone: 3, storm: 3 }, ups: [
     { name: 'Cinta larga',   desc: '+12% de cadencia', cost: { iron: 1, time: 3 }, stat: 'as', mult: 1.12 },
     { name: 'Balas pesadas', desc: '+15% de daño', cost: { iron: 2, orc: 3 }, stat: 'dmg', mult: 1.15 } ] },
   lance: { name: 'Lanza', desc: 'No disparas: cada ataque es una estocada que te lanza a través del enemigo, invulnerable, y cuenta como atravesarlo con el esquive. El cargado es una carga larga que atraviesa a todos.', cost: { iron: 3, shade: 3, dragon: 3 }, ups: [
     { name: 'Punta templada', desc: '+20% de daño', cost: { iron: 1, stone: 3 }, stat: 'dmg', mult: 1.2 },
     { name: 'Asta ligera',    desc: '+12% de cadencia', cost: { iron: 2, feast: 3 }, stat: 'as', mult: 1.12 } ] },
 };
+// Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
 const TREE = [
-  { name: 'Cuerpo', nodes: [
-    { id: 'c1', name: 'Aguante',          desc: '+20 de vida', cost: 15 },
-    { id: 'c2', name: 'Segundo aliento',  desc: 'Una vez por partida, al morir te levantas con un 30% de vida', cost: 40 },
-    { id: 'c3', name: 'Piel curtida',     desc: 'Recibes un 15% menos de daño', cost: 70 },
-    { id: 'c4', name: 'Reflejos',         desc: 'Una carga más de esquive', cost: 120 } ] },
-  { name: 'Oficio', nodes: [
-    { id: 'o1', name: 'Pulso firme',      desc: '+8% de cadencia', cost: 15 },
-    { id: 'o2', name: 'Ojo de herrero',   desc: '+10% de alcance', cost: 40 },
-    { id: 'o3', name: 'Golpe certero',    desc: '+12% de daño', cost: 70 },
-    { id: 'o4', name: 'Maestro armero',   desc: 'El disparo cargado carga un 25% más rápido', cost: 120 } ] },
-  { name: 'Memoria', nodes: [
-    { id: 'm1', name: 'Buen ojo',         desc: 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres', cost: 20 },
-    { id: 'm2', name: 'Regateo',          desc: 'Una vez por sala puedes volver a sortear las técnicas', cost: 50 },
-    { id: 'm3', name: 'Recuerdo vivo',    desc: 'Empiezas cada partida eligiendo una técnica entre tres', cost: 90 },
-    { id: 'm4', name: 'Otra puerta',      desc: 'Al acabar una sala puedes elegir entre cuatro puertas en vez de tres', cost: 120 } ] },
+  { name: 'Cuerpo', sub: 'Aguantar más y moverte mejor', nodes: [
+    { id: 'hp',      name: 'Aguante',         max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${10 * r} de vida máxima` },
+    { id: 'skin',    name: 'Piel curtida',    max: 3, cost: [20, 35, 55],        desc: r => `Recibes un ${5 * r}% menos de daño` },
+    { id: 'feet',    name: 'Pies ligeros',    max: 3, cost: [15, 28, 45],        desc: r => `+${4 * r}% de velocidad de movimiento` },
+    { id: 'mend',    name: 'Remiendo',        max: 3, cost: [15, 28, 45],        desc: r => `Recuperas ${4 * r} de vida más al limpiar cada sala` },
+    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [60, 120],           desc: r => (r < 2 ? 'Una carga más de esquive' : 'Una carga más de esquive, y todas se recargan un 20% antes') },
+    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [40, 70, 110],       desc: r => `Una vez por partida, al morir te levantas con un ${10 + 20 * r}% de vida` } ] },
+  { name: 'Oficio', sub: 'Sacarle más al arma', nodes: [
+    { id: 'rate',    name: 'Pulso firme',     max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${3 * r}% de cadencia` },
+    { id: 'dmg',     name: 'Golpe certero',   max: 5, cost: [8, 12, 18, 26, 36], desc: r => `+${4 * r}% de daño` },
+    { id: 'eye',     name: 'Ojo de herrero',  max: 3, cost: [15, 28, 45],        desc: r => `+${5 * r}% de alcance` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 3, cost: [18, 32, 50],        desc: r => `El frenazo de cada disparo dura un ${8 * r}% menos` },
+    { id: 'armorer', name: 'Maestro armero',  max: 3, cost: [18, 32, 50],        desc: r => `El disparo cargado carga un ${10 * r}% más rápido` },
+    { id: 'coup',    name: 'Golpe de gracia', max: 3, cost: [25, 45, 70],        desc: r => `+${12 * r}% de daño a enemigos por debajo del 30% de vida` } ] },
+  { name: 'Memoria', sub: 'Lo que recuerdas de otras vidas', nodes: [
+    { id: 'purse',   name: 'Bolsa honda',     max: 3, cost: [12, 24, 40],        desc: r => `Empiezas cada partida con ${30 * r} de oro` },
+    { id: 'nose',    name: 'Olfato',          max: 3, cost: [15, 28, 45],        desc: r => `Las salas de almas dan un ${20 * r}% más` },
+    { id: 'luck',    name: 'Favor robado',    max: 3, cost: [20, 36, 56],        desc: r => `Las técnicas salen raras o épicas más a menudo (+${8 * r}%)` },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [30, 55, 85],        desc: r => `Puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'} por sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [50],                desc: () => 'Al desmontar un arma eliges entre cuatro técnicas en vez de tres' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [90],                desc: () => 'Empiezas cada partida eligiendo una técnica entre tres' },
+    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [70],                desc: () => 'Al acabar una sala siempre hay una puerta más donde elegir' } ] },
 ];
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
@@ -433,7 +450,10 @@ const zeroMats = () => Object.fromEntries(GOD_KEYS.map(g => [g, 0]));
 let M = { souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, weapon: 'rifle', owned: ['rifle'], wup: {}, tree: {}, run: null };
 try { const raw = localStorage.getItem('kiteo.save3'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { mats: Object.assign(M.mats, o.mats || {}) }); if (!WEAPONS[M.weapon]) M.weapon = 'rifle'; } } catch (e) {}
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
-const tr = id => !!M.tree[id];
+const tk = id => +M.tree[id] || 0;   // rango de una habilidad del árbol
+// El árbol antiguo era de sí o no: lo que tuvieras comprado pasa a rango 1 de su equivalente
+{ const OLD = { c1: 'hp', c2: 'revive', c3: 'skin', c4: 'reflex', o1: 'rate', o2: 'eye', o3: 'dmg', o4: 'armorer', m1: 'eye4', m2: 'reroll', m3: 'recall', m4: 'door' };
+  for (const [a, b] of Object.entries(OLD)) if (M.tree[a]) { M.tree[b] = Math.max(tk(b), 1); delete M.tree[a]; } }
 const wup = i => !!M.wup[S.weapon + ':' + i];
 const matName = g => (g === 'iron' ? 'Hierro Místico' : GODS[g].mat);
 const matHave = g => (g === 'iron' ? M.iron : M.mats[g]);
@@ -476,7 +496,7 @@ function newGame() {
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
-      fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0,
+      fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, over: 0, gat: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
@@ -488,11 +508,10 @@ function startRun() {
   newGame(); M.run = null;
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.weapon = M.weapon;
-  if (tr('c1')) p.maxHp += 20;
-  if (tr('o3')) p.dmg *= 1.12;
-  p.hp = p.maxHp; p.revive = tr('c2') ? 1 : 0; p.dodgeN = dodgeMax();
+  p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.04 * tk('feet'); p.gold = 30 * tk('purse');
+  p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
   S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
-  if (tr('m3')) {   // Recuerdo vivo: empiezas eligiendo una técnica
+  if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
     const opts = PIECES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
     pickQueue = [() => ({ eyebrow: 'Recuerdo vivo', title: 'Recuerdas una técnica de otra vida', opts })];
     advancePick(); return;
@@ -510,9 +529,9 @@ function nextWave() {
   const list = [];
   if (S.bossRoom) list.push(world.boss);
   else {
-    let budget = n === 1 ? 4 : 4.5 + n * 1.1 + (S.roomType === 'god' ? 0 : 2.5);
+    let budget = n === 1 ? 5 : 6 + n * 1.45 + (S.roomType === 'god' ? 0 : 2.5);
     const pool = n === 1 ? ['stalker'] : world.pool;
-    while (budget > 0.5 && list.length < 16) {
+    while (budget > 0.5 && list.length < 20) {
       const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5);
       if (!cand.length) break;
       const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost;
@@ -520,8 +539,8 @@ function nextWave() {
     list.sort(() => Math.random() - 0.5);
     if (S.roomType === 'god') list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de la deidad
   }
-  S.drop = null; S.waveT = 0; S.waveClear = 0;
-  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.45 }));
+  S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
+  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.pillars = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   S.p.x = T.room.w / 2; S.p.y = T.room.h * (S.bossRoom ? 0.75 : 0.5);
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
@@ -543,7 +562,7 @@ function spawn(typeKey) {
     if (Math.hypot(x - p.x, y - p.y) > 230) break;
   }
   const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
-  const hp = Math.round(ty.hp * (1 + 0.1 * (S.wave - 1)));
+  const hp = Math.round(ty.hp * (1 + 0.16 * (S.wave - 1)));
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
     ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, needles: 0, needleT: 0, mark: 0, stun: 0, slowT: 0, slowF: 1, autoCd: 0, fieldAcc: 0, fling: 0, fvx: 0, fvy: 0,
@@ -568,7 +587,7 @@ function sysTick() {
 
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
-const rollRar = () => { const r = Math.random(); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
+const rollRar = () => { const r = Math.random() + 0.08 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el arma', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tu arma', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || x.only === S.weapon)).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
@@ -576,13 +595,13 @@ const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); retur
 function roomCleared() {
   const p = S.p, n = S.wave, W = S.world;
   if (S.bossRoom) { bossDown(); return; }
-  p.hp = Math.min(p.maxHp, p.hp + 10);
+  p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
   const gold = 8 + 2 * n; addGold(gold);
-  pickQueue = []; S.rerolls = tr('m2') ? 1 : 0;
+  pickQueue = []; S.rerolls = tk('reroll');
   const here = WORLDS[W - 1].name + ' · sala ' + S.room + ' de ' + RPW;
   let got = '';
   if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
-  else if (S.roomType === 'souls') { const k = 12 + 4 * W; S.soulsRun += k; got = '+' + k + ' almas'; }
+  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.2 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
   else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
@@ -596,7 +615,7 @@ function roomCleared() {
 function bossDown() {
   const p = S.p;
   if (S.world >= WORLDS.length) { winRun(); return; }
-  p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.4)); addGold(40);
+  p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.3)); addGold(40);
   S.cleared = WORLDS[S.world - 1].name + ' superado · recuperas vida · +40 de oro';
   sayRaw('[Has vencido a ' + TYPES[WORLDS[S.world - 1].boss].name + ']', C.ink);
   pickQueue = [planScreen(S.cleared), doorScreen]; S.rerolls = 0;
@@ -604,13 +623,13 @@ function bossDown() {
 }
 // Puertas: cada una enseña qué da la sala siguiente
 function doorScreen() {
-  const n = 3 + (tr('m4') ? 1 : 0), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
-  const bag = ['souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
+  const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
+  const bag = ['souls', 'souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
   const res = () => { const k = bag.find(x => !kinds.some(d => d.type === x)); return { type: k || 'gold' }; };
-  kinds.push({ type: 'god', god: gods.pop() });
+  kinds.push(n === 1 && Math.random() < 0.4 ? res() : { type: 'god', god: gods.pop() });
   while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.45 ? { type: 'god', god: gods.pop() } : res());
   kinds.sort(() => Math.random() - 0.5);
-  return { eyebrow: S.cleared || 'Siguiente sala', title: '¿Qué puerta cruzas?', opts: kinds.map(d => {
+  return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
       return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, apply: () => { S.next = d; } }; }
     const R = ROOMS[d.type];
@@ -672,19 +691,28 @@ function pieceCard(pc) {
     return o;
   }
   o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
-  if (cur) o.note = 'Sustituye a ' + curName(cur) + (prog ? ' · ' + prog : '');
+  if (cur) { o.swap = true; o.note = 'Sustituye a ' + curName(cur) + (prog ? ' · ' + prog : ''); }
   o.apply = () => { S.build[pc.slot] = { id: pc.id, lvl }; };
   return o;
 }
-const techOk = t => !S.techs.has(t.id) && godCount(t.god) >= 1 && (t.req || []).every(id => lv(id) > 0);
+// Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
+const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'd_blood', 'v_vapors', 'f_carve'];
+const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
 function pieceOptions(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
   for (const t of TECHS.filter(x => x.god === god && techOk(x)))
     cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
-  // sorteo ponderado: lo raro sale menos, y un dúo disponible sale más
-  return cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).slice(0, tr('m1') ? 4 : 3).map(x => x[1]);
+  // Sorteo ponderado: lo raro sale menos y un dúo disponible sale más.
+  // Lo que sustituiría a una técnica que ya llevas va al final: solo aparece si no hay otra cosa que ofrecer, y como mucho una.
+  const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);
+  const n = tk('eye4') ? 4 : 3, keep = order.filter(c => !c.swap).slice(0, n), swaps = order.filter(c => c.swap);
+  if (keep.length < n && swaps.length) keep.push(swaps[0]);
+  // Y siempre puedes no tocar nada: fundes el arma por oro y material
+  const gold = 20 + 4 * S.wave;
+  keep.push({ tag: 'Fundir', name: 'Fundir el arma', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
+  return keep;
 }
 
 // ───────────────────────── Tienda (antes de cada jefe) ─────────────────────────
@@ -735,8 +763,8 @@ function forgeHtml() {
     if (own) w.ups.forEach((u, i) => { const got = M.wup[id + ':' + i];
       arms += `<button class="fi sub${got ? ' on' : canPay(u.cost) ? '' : ' off'}" data-act="wu:${id}:${i}"><b>${u.name}</b><span>${u.desc}</span><i>${got ? 'Forjada' : costTxt(u.cost)}</i></button>`; });
   }
-  const tree = TREE.map(br => `<h3>${br.name}</h3>` + br.nodes.map((n, i) => { const got = tr(n.id), open = i === 0 || tr(br.nodes[i - 1].id);
-    return `<button class="fi${got ? ' on' : open && M.souls >= n.cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name}</b><span>${n.desc}</span><i>${got ? 'Aprendida' : open ? n.cost + ' almas' : 'Bloqueada'}</i></button>`; }).join('')).join('');
+  const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
+    return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('')).join('');
   const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${where(M.best)}${M.wins ? '. Has cruzado el Umbral ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
   const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${where(M.run.wave + 1)}</button><button class="fi" data-act="go"><b>Empezar de nuevo</b><span>Abandona la partida en curso</span><i></i></button></div>` : `<button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
   return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
@@ -751,7 +779,7 @@ function forgeAct(act) {
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'w') { const w = WEAPONS[id]; if (M.owned.includes(id)) M.weapon = id; else if (canPay(w.cost)) { pay(w.cost); M.owned.push(id); M.weapon = id; } else ok = false; }
   else if (k === 'wu') { const u = WEAPONS[id].ups[+n], key = id + ':' + n; if (!M.wup[key] && canPay(u.cost)) { pay(u.cost); M.wup[key] = true; } else ok = false; }
-  else if (k === 't') { for (const br of TREE) br.nodes.forEach((nd, i) => { if (nd.id !== id) return; const open = i === 0 || tr(br.nodes[i - 1].id); if (!tr(id) && open && M.souls >= nd.cost) { M.souls -= nd.cost; M.tree[id] = true; } else ok = false; }); }
+  else if (k === 't') { const nd = TREE.flatMap(br => br.nodes).find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
   blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
   save(); renderOverlay();
 }
@@ -822,18 +850,18 @@ const mastery = g => godCount(g) >= 3;
 const slotColor = slot => { const cur = S.build[slot]; return !cur ? C.energy : DUO[cur.id] ? RAR[3].color : GODS[PIECE[cur.id].god].color; };
 const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
 const wstat = k => WEAPONS[S.weapon].ups.reduce((m, u, i) => m * (u.stat === k && M.wup[S.weapon + ':' + i] ? u.mult : 1), 1);
-const dodgeMax = () => 1 + (S.plans.has('double') ? 1 : 0) + (tr('c4') ? 1 : 0);
-const dodgeCdOf = () => T.dodge.cd * (S.weapon === 'pistols' ? 0.65 * (wup(1) ? 0.8 : 1) : 1);
+const dodgeMax = () => 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
+const dodgeCdOf = () => T.dodge.cd * (S.weapon === 'pistols' ? 0.65 * (wup(1) ? 0.8 : 1) : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
 const furyFull = () => S.p.fury >= 100;
 const resMax = () => 30 * (has('f_cellar') ? 2 : 1);
 const shadeCap = () => 2 + lv('shade_basic') + (has('s_legion') ? 3 : 0);
 const echoDelay = t => t * (has('t_overtime') ? 0.5 : 1);
 const isSlow = e => e.slowT > 0 || e.stun > 0;
 const WRANGE = { pistols: 0.8, bow: 1.4, shotgun: 0.5, lance: 0.5 }, WRATE = { pistols: 1.25, bow: 0.65 };
-const rangeOf = () => S.p.range * (WRANGE[S.weapon] || 1) * wstat('range') * (tr('o2') ? 1.1 : 1);
+const rangeOf = () => S.p.range * (WRANGE[S.weapon] || 1) * wstat('range') * (1 + 0.05 * tk('eye'));
 const periodOf = () => {
   const p = S.p, bl = lv('orc_passive');
-  return 1 / (p.as * (WRATE[S.weapon] || 1) * wstat('as') * (tr('o1') ? 1.08 : 1) * (S.weapon === 'gatling' ? 1 + 2 * p.spin : 1) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
+  return 1 / (p.as * (WRATE[S.weapon] || 1) * wstat('as') * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
 // Columnas: hasta dónde llega un rayo antes de chocar, si hay línea de tiro, y empujar fuera a quien se mete
@@ -897,7 +925,9 @@ function kill(e) {
   blip(160, 0.12, 'sawtooth', 0.04, -90);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
   if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
-  if (S.t < S.banquet) heal(4);                                                                 // Banquete
+  if (S.t < S.banquet) heal(4);
+  if (has('f_appet')) heal(1);                                                                 // Buen apetito
+  if (has('s_last') && !S.firstKill && !e.boss) { S.firstKill = true; raiseShade(e.x, e.y); }  // Último servicio                                                                 // Banquete
   const tl = lv('dragon_passive');
   if (tl && e.ember > 0) { addGold(tl); note(e.x, e.y - e.r - 10, '+' + tl + ' oro', RAR[3].color); }   // Tesoro
   if (has('o_drums')) gainFury(10);
@@ -926,6 +956,8 @@ function hit(e, dmg, ux, uy, big, col) {
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.boss && e.act === 'dazed') dmg *= 2;
+  if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.12 * tk('coup');                                       // árbol: Golpe de gracia
+  if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1;
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
@@ -1049,6 +1081,11 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
   if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática
+  if (src === 'player') {   // ofrendas
+    if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
+    if (has('v_slow') && p.shotN % 3 === 0) addVenom(e, 1);
+    if (has('r_spark') && p.shotN % 5 === 0) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);
+  }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
 }
@@ -1084,7 +1121,7 @@ function fireBasic(target) {
   p.shotN += 1;
   let mult = wstat('dmg');
   if (p.crit) { mult *= 2; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
-  if (W === 'gatling') mult *= 0.6;
+  if (W === 'gatling') mult *= 0.3;
   const big = p.crit, col = slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
@@ -1119,7 +1156,14 @@ function fireBasic(target) {
     const [ux, uy] = aim(target), d = dist(p, target);
     shot(target, p.dmg * mult * 1.8, ux, uy, true, col);
     lunge(Math.atan2(uy, ux), d + target.r + 22);
-  } else bullet(target, mult);           // Rifle y ametralladora
+  } else if (W === 'gatling') {          // Ametralladora: riega a los que estén en un cono hacia el objetivo
+    const [ux, uy] = aim(target), base = Math.atan2(uy, ux);
+    const cone = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= rng && Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), base)) < 0.38 && !blocked(p, e));
+    const t2 = cone.length && Math.random() < 0.55 ? cone[Math.floor(Math.random() * cone.length)] : target;
+    const dx = t2.x - p.x, dy = t2.y - p.y, d = Math.hypot(dx, dy) || 1;
+    S.fx.push({ k: 'tracer', x1: p.x + ux * 14, y1: p.y + uy * 14, x2: t2.x + rnd(-3, 3), y2: t2.y + rnd(-3, 3), t: 0, life: 0.06, col });
+    shot(t2, p.dmg * mult, dx / d, dy / d, false, col);
+  } else bullet(target, mult);           // Rifle
 }
 // Estocada: un esquive corto que atraviesa
 function lunge(a, d) {
@@ -1214,6 +1258,17 @@ function castCharged(snap, mult, echo) {
       blip(900, 0.06, 'triangle', 0.03, -400);
       for (const e of S.enemies.slice()) { if (!active(e) || Math.hypot(e.x - tx, e.y - ty) > R + e.r) continue; hit(e, dmg * 0.45, 0, 0, w === 0, col); if (w === 0) chargePayoff(e); }
     } });
+  } else if (W === 'gatling') {          // fuego de supresión: tres segundos disparando sola a todo lo que haya cerca
+    if (!echo) { p.heat = 0; p.over = 0; }
+    for (let i = 0; i < 36; i++) S.timers.push({ t: 0.08 * i, fn: () => {
+      const near = S.enemies.filter(e => active(e) && dist(o, e) - e.r <= rangeOf() && !blocked(o, e));
+      if (!near.length) return;
+      const e = near[Math.floor(Math.random() * near.length)], dx = e.x - o.x, dy = e.y - o.y, d = Math.hypot(dx, dy) || 1;
+      S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: e.x, y2: e.y, t: 0, life: 0.07, col });
+      if (i % 6 === 0) blip(1100, 0.04, 'square', 0.025, -500);
+      if (echo) hit(e, dmg * 0.09, dx / d, dy / d, false, col); else shot(e, dmg * 0.09, dx / d, dy / d, false, col);
+      if (i % 9 === 0) chargePayoff(e);
+    } });
   } else if (W === 'lance') {            // carga larga que atraviesa (el eco no se mueve)
     if (!echo) { lunge(snap.dir, 240); p.lanceDmg = dmg * 0.6; }
   } else if (lv('dragon_charge')) {      // Aliento: cono (crece con la Furia en el dúo Rugido)
@@ -1286,13 +1341,13 @@ function fireCharged(am) {
 function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
-  dmg *= (tr('c3') ? 0.85 : 1) * (1 + 0.2 * (S.world - 1));
+  dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);
   gainFury(15);
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento
-    p.revive -= 1; p.hp = Math.round(p.maxHp * 0.3); p.inv = 1.5;
+    p.revive -= 1; p.hp = Math.round(p.maxHp * (0.1 + 0.2 * tk('revive'))); p.inv = 1.5;
     note(p.x, p.y - 18, 'Segundo aliento', C.ember, true); blip(440, 0.5, 'triangle', 0.07, 600);
   } else if (p.hp <= 0) { p.hp = 0; endRun(false); setMode('dead'); }
 }
@@ -1331,7 +1386,7 @@ function bossAI(e, dt, d, ux, uy) {
     e.x += ux * sp * dt; e.y += uy * sp * dt;
     e.think -= dt;
     if (e.think > 0) return;
-    e.think = ph > 2 ? 0.8 : ph > 1 ? 1.1 : 1.6;
+    e.think = ph > 2 ? 0.6 : ph > 1 ? 0.85 : 1.25;
     const kit = B.kit.filter(a => a !== e.last && (a !== 'slam' || d < 95) && (a !== 'charge' || d > 80) && (a !== 'summon' || S.enemies.length < 8));
     const a = d < 80 && B.kit.includes('slam') && e.last !== 'slam' ? 'slam' : kit[Math.floor(Math.random() * kit.length)] || 'ring';
     e.last = a;
@@ -1429,7 +1484,7 @@ function update(dt) {
   // Disparo cargado
   if (I.chg && !p.charging && !p.drawing && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
   if (p.charging) {
-    const before = p.charge; p.charge += dt * (tr('o4') ? 1.25 : 1);
+    const before = p.charge; p.charge += dt * (1 + 0.1 * tk('armorer'));
     if (before < T.charge.full && p.charge >= T.charge.full) blip(1500, 0.06, 'sine', 0.04);
     if (am > 0.35) p.chargeDir = Math.atan2(I.ay, I.ax);
     else if (target) p.chargeDir = Math.atan2(target.y - p.y, target.x - p.x);
@@ -1448,13 +1503,26 @@ function update(dt) {
       if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x);
       if (!I.atk) { p.drawing = false; p.drawPow = p.draw; p.cd = periodOf() * 0.3; fireBasic(target); }
     }
+  } else if (W === 'gatling') {   // Ametralladora: girar, escupir y recalentarse
+    if (p.over > 0) p.over -= dt;
+    const firing = I.atk && p.over <= 0 && !p.charging && p.dodgeT <= 0;
+    if (firing) {
+      const was = p.spin; p.spin = Math.min(1, p.spin + dt / 0.5);
+      if (was < 1 && p.spin >= 1) blip(900, 0.08, 'sawtooth', 0.03, 600);
+      if (p.spin >= 1 && target) {
+        p.gat -= dt;
+        const step = periodOf() / 6.6;                       // unas siete balas por segundo con la cadencia base
+        while (p.gat <= 0) { p.gat += step; fireBasic(target); }
+        p.heat = Math.min(1, p.heat + dt * 0.27);
+        if (p.heat >= 1) { p.over = 1.6; p.spin = 0; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); blip(120, 0.4, 'sawtooth', 0.06, -60); }
+      }
+    } else { p.spin = Math.max(0, p.spin - dt * 2.5); p.heat = Math.max(0, p.heat - dt * (p.over > 0 ? 0.62 : 0.45)); p.gat = 0; }
   } else if (want && target && !p.charging && p.dodgeT <= 0 && p.windup <= 0 && p.cd <= 0) {
     const period = periodOf();
     p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
-    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.7 : W === 'rifle' && wup(1) ? 0.75 : 1);
+    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.7 : W === 'rifle' && wup(1) ? 0.75 : 1) * (1 - 0.08 * tk('brake'));
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (W === 'gatling' && I.atk) p.spin = Math.min(1, p.spin + 0.1);
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -1469,8 +1537,8 @@ function update(dt) {
   if (p.charging) mult = T.charge.slow;
   else if (p.drawing) mult = free ? 1 : 0.4;
   else if (p.windup > 0) mult = free ? 1 : P.windupSlow;
-  else if (I.atk && target) mult = free ? 1 : W === 'gatling' ? 0.15 : P.holdSlow;
-  if (!I.atk) p.spin = Math.max(0, p.spin - dt * 1.6);
+  else if (I.atk && W === 'gatling') mult = free ? 1 : p.over > 0 ? 0.8 : 0.3 + 0.35 * (1 - p.spin);
+  else if (I.atk && target) mult = free ? 1 : P.holdSlow;
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
     p.x += p.dvx * p.speed * T.dodge.mult * dt; p.y += p.dvy * p.speed * T.dodge.mult * dt;
@@ -1904,7 +1972,11 @@ function render() {
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
-  if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * p.draw); ctx.stroke(); }
+  if (S.weapon === 'gatling') {
+    ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.35 + 0.5 * p.spin; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, S.t * 14 * p.spin, S.t * 14 * p.spin + Math.PI * 1.4); ctx.stroke(); ctx.globalAlpha = 1;
+    if (p.heat > 0.02) { ctx.strokeStyle = p.over > 0 ? '#ffffff' : C.blood; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * p.heat); ctx.stroke(); }
+  }
+  else if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * p.draw); ctx.stroke(); }
   else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
   else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * clamp(1 - p.cd / period, 0, 1)); ctx.stroke(); ctx.globalAlpha = 1; }
   else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
