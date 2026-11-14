@@ -56,9 +56,9 @@ function doorScreen() {
   kinds.sort(() => Math.random() - 0.5);
   return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
-      return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, apply: () => { S.next = d; } }; }
+      return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, ico: ['sword', 1], apply: () => { S.next = d; } }; }
     const R = ROOMS[d.type];
-    return { tag: R.tag, name: R.name, desc: R.desc, note: 'Sin elegido: más enemigos corrientes', color: R.color, apply: () => { S.next = d; } };
+    return { tag: R.tag, name: R.name, desc: R.desc, note: 'Sin elegido: más enemigos corrientes', color: R.color, ico: [{ souls: 'lantern', gold: 'chest', heart: 'potion', iron: 'shield', anvil: 'axe' }[d.type] || 'gem', 0], apply: () => { S.next = d; } };
   }) };
 }
 function advancePick() {

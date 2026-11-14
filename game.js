@@ -801,6 +801,16 @@ const cv = $('game');
 const scr = cv.getContext('2d');
 // El mundo se pinta en un lienzo pequeño (1 unidad = 1 píxel) y se amplía por un número entero: una sola rejilla de píxeles
 const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
+// Imágenes de un paquete comprado o gratuito (carpeta assets/). Si alguna no carga, el juego usa su dibujo propio.
+// Créditos y licencia: assets/LICENSE-fantasy-rpg-pixel-pack.txt
+const IMG = {};
+function loadImg(k, src) { const im = new Image(); im.onload = () => { IMG[k] = im; }; im.src = src; }
+loadImg('vfx', 'assets/pickups_vfx.png'); loadImg('items', 'assets/items.png');
+const VFX = { coin: 0, silver: 1, ruby: 2, sapphire: 3, emerald: 4, torch: 5, voidTorch: 6, slashIce: 7, slashFire: 8, slashVoid: 9 };
+// Un fotograma de una tira de 8 (32×32), centrado en (x, y)
+function strip(row, frame, x, y) { if (!IMG.vfx) return false; ctx.drawImage(IMG.vfx, (((frame | 0) % 8) + 8) % 8 * 32, row * 32, 32, 32, Math.round(x - 16), Math.round(y - 16), 32, 32); return true; }
+const ICO = { potion: 0, mana: 1, vial: 2, sword: 3, shield: 4, chest: 5, gem: 6, book: 7, key: 8, axe: 9, bow: 10, staff: 11, helm: 12, ring: 13, scroll: 14, bomb: 15, lantern: 16, mug: 17 };
+const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO[name] * 32}px -${(tier || 0) * 32}px"></span>`;
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0 };
 
@@ -1166,9 +1176,9 @@ function doorScreen() {
   kinds.sort(() => Math.random() - 0.5);
   return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
-      return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, apply: () => { S.next = d; } }; }
+      return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Su elegido guarda la sala. Si lo matas, desmontas el ${G.weapon} y te llevas una técnica. Suelta ${G.mat}.`, note: `Llevas técnicas suyas en ${k} de 4 acciones · ${MASTERY[d.god].name}: ${Math.min(k, 3)}/3`, color: G.color, ico: ['sword', 1], apply: () => { S.next = d; } }; }
     const R = ROOMS[d.type];
-    return { tag: R.tag, name: R.name, desc: R.desc, note: 'Sin elegido: más enemigos corrientes', color: R.color, apply: () => { S.next = d; } };
+    return { tag: R.tag, name: R.name, desc: R.desc, note: 'Sin elegido: más enemigos corrientes', color: R.color, ico: [{ souls: 'lantern', gold: 'chest', heart: 'potion', iron: 'shield', anvil: 'axe' }[d.type] || 'gem', 0], apply: () => { S.next = d; } };
   }) };
 }
 function advancePick() {
@@ -1271,7 +1281,7 @@ function openShop() {
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
   return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
-    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
+    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0)}${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
     `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button>`;
 }
 function shopAct(act) {
@@ -1867,7 +1877,7 @@ function heal(n) {
   if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
   if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
 }
-function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
 
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
@@ -3285,7 +3295,7 @@ function update(dt) {
       if (e.lungeWind <= 0) { e.lungeT = 0.3; e.lungeHit = false; }
     } else if (e.wind > 0) {
       e.wind -= dt;
-      if (e.wind <= 0) { if (d < e.r + p.r + e.type.reach) hurtPlayer(e.dmg); e.rec = 0.55; }
+      if (e.wind <= 0) { S.fx.push({ k: 'slash', x: e.x + ux * (e.r + 8), y: e.y + uy * (e.r + 8), a: Math.atan2(uy, ux), row: e.champ ? VFX.slashVoid : VFX.slashFire, t: 0, life: 0.28 }); if (d < e.r + p.r + e.type.reach) hurtPlayer(e.dmg); e.rec = 0.55; }
     } else if (e.rec > 0) e.rec -= dt;
     else if (d < e.r + p.r + 3) e.wind = e.type.wind;
     else {
@@ -3940,8 +3950,10 @@ function lights() {
   for (const t of bg.torches) {
     if (t.x < cam.x - 60 || t.x > cam.x + view.w + 60 || t.y < cam.y - 60 || t.y > cam.y + view.h + 60) continue;
     const f = (fr + t.x) % 3;
+    if (!strip(S.world === 4 ? VFX.voidTorch : VFX.torch, S.t * 10 + t.x, t.x, t.y - 2)) {
     ctx.fillStyle = '#e8642c'; ctx.fillRect(t.x - 2, t.y - 3, 4, 4); ctx.fillRect(t.x - 1 + (f === 1 ? 1 : f === 2 ? -1 : 0), t.y - 5, 2, 2);
     ctx.fillStyle = '#ffb347'; ctx.fillRect(t.x - 1, t.y - 2, 2, 3); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(t.x - 1 + (f === 2 ? 1 : 0), t.y - 1, 1, 2);
+    }
     ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ff9a3c';
     ctx.globalAlpha = 0.05 + 0.012 * f; ctx.beginPath(); ctx.arc(t.x, t.y + 6, 44, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 0.07; ctx.beginPath(); ctx.arc(t.x, t.y + 4, 22, 0, Math.PI * 2); ctx.fill();
@@ -4022,6 +4034,7 @@ function renderWorld() {
   // Cristales, Bocados y arma caída
   for (const c of S.crystals) {      // cristal clavado en el suelo: una gema de píxeles con su brillo
     const a = Math.min(1, c.life), x = Math.round(c.x), y = Math.round(c.y), col = GODS.stone.color;
+    if (IMG.vfx) { ctx.globalAlpha = 0.22 * a; ctx.fillStyle = col; ctx.fillRect(x - 7, y + 3, 14, 4); ctx.globalAlpha = a; strip(VFX.sapphire, S.t * 9 + x, x, y - 6); ctx.globalAlpha = 1; continue; }
     ctx.globalAlpha = 0.22 * a; ctx.fillStyle = col; ctx.fillRect(x - 7, y - 2, 14, 6); ctx.fillRect(x - 5, y - 4, 10, 10);
     ctx.globalAlpha = a; ctx.fillStyle = '#16101a'; ctx.fillRect(x - 3, y - 8, 6, 12); ctx.fillRect(x - 4, y - 5, 8, 7);
     ctx.fillStyle = tone(col, -0.35); ctx.fillRect(x - 2, y - 7, 4, 10); ctx.fillRect(x - 3, y - 4, 6, 5);
@@ -4227,6 +4240,8 @@ function renderWorld() {
     else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
     else if (f.k === 'smoke') { const sz = k > 0.6 ? 2 : 3; ctx.fillStyle = k > 0.5 ? '#b9b3ad' : '#7d7780'; ctx.globalAlpha = 0.55 * k; ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 1, sz, sz); }
     else if (f.k === 'flash') { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y) - 1, 4, 2); ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 2, 2, 4); ctx.fillStyle = '#ff8a3c'; ctx.fillRect(Math.round(f.x) - 3, Math.round(f.y), 1, 1); ctx.fillRect(Math.round(f.x) + 2, Math.round(f.y) - 1, 1, 1); }
+    else if (f.k === 'coin') { ctx.globalAlpha = Math.min(1, k * 3); if (!strip(VFX.coin, f.t * 16, f.x, f.y - 22 * (1 - k))) { ctx.fillStyle = RAR[3].color; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y - 22 * (1 - k)) - 2, 4, 4); } }
+    else if (f.k === 'slash') { if (IMG.vfx) { ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y)); ctx.rotate(f.a); ctx.drawImage(IMG.vfx, Math.min(7, Math.floor(f.t / f.life * 8)) * 32, f.row * 32, 32, 32, -16, -16, 32, 32); ctx.restore(); } }
     else if (f.k === 'spark') { ctx.fillStyle = f.col; ctx.globalAlpha = k; ctx.fillRect(f.x - 1, f.y - 1, 2, 2); }
     else if (f.k === 'num') wtext(f.txt, f.x, f.y, f.big ? 12 : 8, f.col || (f.big ? C.ember : C.ink), Math.min(1, k * 2));
     ctx.globalAlpha = 1;
@@ -4380,7 +4395,7 @@ function renderOverlay() {
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;

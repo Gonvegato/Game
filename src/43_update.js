@@ -373,7 +373,7 @@ function update(dt) {
       if (e.lungeWind <= 0) { e.lungeT = 0.3; e.lungeHit = false; }
     } else if (e.wind > 0) {
       e.wind -= dt;
-      if (e.wind <= 0) { if (d < e.r + p.r + e.type.reach) hurtPlayer(e.dmg); e.rec = 0.55; }
+      if (e.wind <= 0) { S.fx.push({ k: 'slash', x: e.x + ux * (e.r + 8), y: e.y + uy * (e.r + 8), a: Math.atan2(uy, ux), row: e.champ ? VFX.slashVoid : VFX.slashFire, t: 0, life: 0.28 }); if (d < e.r + p.r + e.type.reach) hurtPlayer(e.dmg); e.rec = 0.55; }
     } else if (e.rec > 0) e.rec -= dt;
     else if (d < e.r + p.r + 3) e.wind = e.type.wind;
     else {

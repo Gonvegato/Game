@@ -71,7 +71,7 @@ function heal(n) {
   if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
   if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
 }
-function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
 
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {

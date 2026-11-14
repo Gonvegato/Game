@@ -1,0 +1,16 @@
+========================================================================
+LICENSE - FANTASY RPG & DUNGEON PIXEL ART STARTER PACK (v1.0)
+========================================================================
+
+You are free to:
+- Use these assets in both FREE and COMMERCIAL games and projects.
+- Modify, recolor, and adapt the sprites to fit your game's needs.
+
+Restrictions:
+- You may NOT resell, redistribute, or repackage the raw asset files
+  as your own asset pack (even if modified).
+
+Attribution:
+- Not required, but greatly appreciated!
+- If you enjoy this free starter pack, please consider leaving a rating
+  on Itch.io and following for upcoming expansion packs!

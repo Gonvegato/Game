@@ -50,8 +50,10 @@ function lights() {
   for (const t of bg.torches) {
     if (t.x < cam.x - 60 || t.x > cam.x + view.w + 60 || t.y < cam.y - 60 || t.y > cam.y + view.h + 60) continue;
     const f = (fr + t.x) % 3;
+    if (!strip(S.world === 4 ? VFX.voidTorch : VFX.torch, S.t * 10 + t.x, t.x, t.y - 2)) {
     ctx.fillStyle = '#e8642c'; ctx.fillRect(t.x - 2, t.y - 3, 4, 4); ctx.fillRect(t.x - 1 + (f === 1 ? 1 : f === 2 ? -1 : 0), t.y - 5, 2, 2);
     ctx.fillStyle = '#ffb347'; ctx.fillRect(t.x - 1, t.y - 2, 2, 3); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(t.x - 1 + (f === 2 ? 1 : 0), t.y - 1, 1, 2);
+    }
     ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ff9a3c';
     ctx.globalAlpha = 0.05 + 0.012 * f; ctx.beginPath(); ctx.arc(t.x, t.y + 6, 44, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 0.07; ctx.beginPath(); ctx.arc(t.x, t.y + 4, 22, 0, Math.PI * 2); ctx.fill();
@@ -132,6 +134,7 @@ function renderWorld() {
   // Cristales, Bocados y arma caída
   for (const c of S.crystals) {      // cristal clavado en el suelo: una gema de píxeles con su brillo
     const a = Math.min(1, c.life), x = Math.round(c.x), y = Math.round(c.y), col = GODS.stone.color;
+    if (IMG.vfx) { ctx.globalAlpha = 0.22 * a; ctx.fillStyle = col; ctx.fillRect(x - 7, y + 3, 14, 4); ctx.globalAlpha = a; strip(VFX.sapphire, S.t * 9 + x, x, y - 6); ctx.globalAlpha = 1; continue; }
     ctx.globalAlpha = 0.22 * a; ctx.fillStyle = col; ctx.fillRect(x - 7, y - 2, 14, 6); ctx.fillRect(x - 5, y - 4, 10, 10);
     ctx.globalAlpha = a; ctx.fillStyle = '#16101a'; ctx.fillRect(x - 3, y - 8, 6, 12); ctx.fillRect(x - 4, y - 5, 8, 7);
     ctx.fillStyle = tone(col, -0.35); ctx.fillRect(x - 2, y - 7, 4, 10); ctx.fillRect(x - 3, y - 4, 6, 5);
@@ -337,6 +340,8 @@ function renderWorld() {
     else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
     else if (f.k === 'smoke') { const sz = k > 0.6 ? 2 : 3; ctx.fillStyle = k > 0.5 ? '#b9b3ad' : '#7d7780'; ctx.globalAlpha = 0.55 * k; ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 1, sz, sz); }
     else if (f.k === 'flash') { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y) - 1, 4, 2); ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 2, 2, 4); ctx.fillStyle = '#ff8a3c'; ctx.fillRect(Math.round(f.x) - 3, Math.round(f.y), 1, 1); ctx.fillRect(Math.round(f.x) + 2, Math.round(f.y) - 1, 1, 1); }
+    else if (f.k === 'coin') { ctx.globalAlpha = Math.min(1, k * 3); if (!strip(VFX.coin, f.t * 16, f.x, f.y - 22 * (1 - k))) { ctx.fillStyle = RAR[3].color; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y - 22 * (1 - k)) - 2, 4, 4); } }
+    else if (f.k === 'slash') { if (IMG.vfx) { ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y)); ctx.rotate(f.a); ctx.drawImage(IMG.vfx, Math.min(7, Math.floor(f.t / f.life * 8)) * 32, f.row * 32, 32, 32, -16, -16, 32, 32); ctx.restore(); } }
     else if (f.k === 'spark') { ctx.fillStyle = f.col; ctx.globalAlpha = k; ctx.fillRect(f.x - 1, f.y - 1, 2, 2); }
     else if (f.k === 'num') wtext(f.txt, f.x, f.y, f.big ? 12 : 8, f.col || (f.big ? C.ember : C.ink), Math.min(1, k * 2));
     ctx.globalAlpha = 1;
