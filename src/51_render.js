@@ -116,11 +116,14 @@ function renderWorld() {
     ctx.globalAlpha = 1; ctx.lineCap = 'butt';
   }
   // Cristales, Bocados y arma caída
-  for (const c of S.crystals) {
-    const r = 5, a = Math.min(1, c.life);
-    ctx.fillStyle = GODS.stone.color; ctx.globalAlpha = 0.25 * a; ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(c.x, c.y - r * 1.6); ctx.lineTo(c.x + r, c.y); ctx.lineTo(c.x, c.y + r * 1.1); ctx.lineTo(c.x - r, c.y); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.8; ctx.stroke(); ctx.globalAlpha = 1;
+  for (const c of S.crystals) {      // cristal clavado en el suelo: una gema de píxeles con su brillo
+    const a = Math.min(1, c.life), x = Math.round(c.x), y = Math.round(c.y), col = GODS.stone.color;
+    ctx.globalAlpha = 0.22 * a; ctx.fillStyle = col; ctx.fillRect(x - 7, y - 2, 14, 6); ctx.fillRect(x - 5, y - 4, 10, 10);
+    ctx.globalAlpha = a; ctx.fillStyle = '#16101a'; ctx.fillRect(x - 3, y - 8, 6, 12); ctx.fillRect(x - 4, y - 5, 8, 7);
+    ctx.fillStyle = tone(col, -0.35); ctx.fillRect(x - 2, y - 7, 4, 10); ctx.fillRect(x - 3, y - 4, 6, 5);
+    ctx.fillStyle = col; ctx.fillRect(x - 2, y - 7, 2, 9); ctx.fillRect(x - 3, y - 4, 2, 4);
+    ctx.fillStyle = '#eafffb'; ctx.fillRect(x - 2, y - 6, 1, 3 + (Math.floor(S.t * 5 + x) % 2));
+    ctx.globalAlpha = 1;
   }
   for (const f of S.fields) {   // burbujas de tiempo
     ctx.fillStyle = GODS.time.color; ctx.globalAlpha = 0.1 + 0.05 * Math.sin(S.t * 3); ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
@@ -137,10 +140,12 @@ function renderWorld() {
     ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.25 + 0.6 * k; ctx.lineWidth = 1 + l.w * k;
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + ux * len, l.y + uy * len); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  if (S.drop) {
-    const d = S.drop, r = 6 + Math.sin(S.t * 6);
-    ctx.fillStyle = GODS[d.god].color; ctx.beginPath(); ctx.moveTo(d.x, d.y - r * 1.4); ctx.lineTo(d.x + r, d.y); ctx.lineTo(d.x, d.y + r * 1.4); ctx.lineTo(d.x - r, d.y); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.stroke();
+  if (S.drop) {                      // el arma bendecida, clavada en el suelo y brillando en el color de su deidad
+    const d = S.drop, x = Math.round(d.x), y = Math.round(d.y + Math.sin(S.t * 4) * 1.5), col = GODS[d.god].color;
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col; ctx.globalAlpha = 0.12 + 0.05 * Math.sin(S.t * 6); ctx.beginPath(); ctx.arc(x, y - 4, 16, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#16101a'; ctx.fillRect(x - 2, y - 15, 4, 16); ctx.fillRect(x - 5, y - 5, 10, 3); ctx.fillRect(x - 2, y - 2, 4, 6);
+    ctx.fillStyle = col; ctx.fillRect(x - 1, y - 14, 2, 10); ctx.fillStyle = tone(col, 0.6); ctx.fillRect(x - 1, y - 14, 1, 9);
+    ctx.fillStyle = PAL.g; ctx.fillRect(x - 4, y - 4, 8, 1); ctx.fillStyle = PAL.B; ctx.fillRect(x - 1, y - 3, 2, 4); ctx.fillStyle = PAL.g; ctx.fillRect(x - 1, y + 1, 2, 1);
   }
 
   // Columnas y rifles gemelos
@@ -158,8 +163,11 @@ function renderWorld() {
   // Enemigos
   for (const e of S.enemies) {
     if (e.spawn > 0) {
-      ctx.strokeStyle = e.color; ctx.globalAlpha = 0.6; ctx.lineWidth = e.champ ? 2.2 : 1.2;
-      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 10 * (e.spawn / 0.65), 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; continue;
+      // aparición: un círculo de invocación que se cierra y columnas de humo
+      const k = clamp(e.spawn / 0.65, 0, 1), x = Math.round(e.x), y = Math.round(e.y + e.r);
+      ctx.fillStyle = e.color; ctx.globalAlpha = 0.25 + 0.4 * (1 - k); ctx.beginPath(); ctx.ellipse(x, y, e.r + 3 + 8 * k, (e.r + 3 + 8 * k) * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.8; for (let i = 0; i < 4; i++) { const px = x - e.r + ((i * 7 + Math.floor(S.t * 10)) % (e.r * 2 + 1)); ctx.fillRect(px, y - Math.round((1 - k) * (e.r * 2 + 4)) - (i % 2) * 3, 1, 3 + (i % 3)); }
+      ctx.globalAlpha = 1; continue;
     }
     if (e.wind > 0) { // aviso de golpe
       const k = 1 - e.wind / e.type.wind;
@@ -185,11 +193,12 @@ function renderWorld() {
       if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }
-    if (e.champ) { // el arma bendecida que lleva, en el color de su deidad
-      const wx = Math.cos(e.dir), wy = Math.sin(e.dir);
-      ctx.strokeStyle = e.color; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(e.x + wx * 3, e.y + wy * 3); ctx.lineTo(e.x + wx * (e.r + 9), e.y + wy * (e.r + 9)); ctx.stroke(); ctx.lineCap = 'butt';
-      ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 3.5, 0, Math.PI * 2); ctx.stroke();
+    if (e.champ) { // la espada bendecida que lleva, en el color de su deidad
+      ctx.save(); ctx.translate(Math.round(e.x), Math.round(e.y)); ctx.rotate(e.dir);
+      ctx.fillStyle = '#16101a'; ctx.fillRect(3, -2, e.r + 9, 4); ctx.fillRect(5, -4, 3, 8);
+      ctx.fillStyle = e.color; ctx.fillRect(8, -1, e.r + 3, 2); ctx.fillStyle = tone(e.color, 0.6); ctx.fillRect(8, -1, e.r + 3, 1);
+      ctx.fillStyle = PAL.g; ctx.fillRect(6, -3, 1, 6); ctx.fillStyle = PAL.B; ctx.fillRect(4, -1, 2, 2);
+      ctx.restore();
     }
     // Lo acumulado: Ascuas a la izquierda, Veneno a la derecha, sazón arriba, aturdido en blanco
     if (e.ember > 0) { ctx.strokeStyle = GODS.dragon.color; ctx.lineWidth = 0.8 + Math.min(3, 0.3 * e.ember); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); wtext(String(e.ember), e.x - e.r - 6, e.y + 3, 7, GODS.dragon.color); }
@@ -210,15 +219,19 @@ function renderWorld() {
   // Marca de objetivo
   const tg = S.target && active(S.target) ? S.target : null;
   if (tg) {
-    const locked = S.lock === tg, r = tg.r + 7 + Math.sin(S.t * 8) * 0.8;
-    ctx.strokeStyle = locked ? C.ember : C.energy; ctx.lineWidth = 1.4;
-    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + (locked ? Math.PI / 4 : 0); ctx.beginPath(); ctx.arc(tg.x, tg.y, r, a - 0.35, a + 0.35); ctx.stroke(); }
+    // cuatro esquinas de píxel alrededor del objetivo; doradas, y rojizas si está fijado
+    const locked = S.lock === tg, r = Math.round(tg.r + 5 + (Math.floor(S.t * 4) % 2)), x = Math.round(tg.x), y = Math.round(tg.y - 2);
+    ctx.fillStyle = locked ? C.ember : C.energy;
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const cx = x + sx * r, cy = y + sy * r; ctx.fillRect(Math.min(cx, cx - sx * 3), cy, 4, 1); ctx.fillRect(cx, Math.min(cy, cy - sy * 3), 1, 4); }
   }
 
   // Proyectiles enemigos
   for (const sh of S.shots) {
-    ctx.fillStyle = C.arcane; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(sh.x, sh.y, sh.r + 3, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(sh.x, sh.y, sh.r, 0, Math.PI * 2); ctx.fill();
+    const x = Math.round(sh.x), y = Math.round(sh.y), r = Math.max(2, Math.round(sh.r)), tw = Math.floor(S.t * 12 + x) % 2;
+    ctx.fillStyle = C.arcane; ctx.globalAlpha = 0.28; ctx.fillRect(x - r - 2, y - r, r * 2 + 4, r * 2); ctx.fillRect(x - r, y - r - 2, r * 2, r * 2 + 4);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(x - r, y - r + 1, r * 2, r * 2 - 2); ctx.fillRect(x - r + 1, y - r, r * 2 - 2, r * 2);
+    ctx.fillStyle = C.arcane; ctx.fillRect(x - r + 1, y - r + 1, r * 2 - 2, r * 2 - 2);
+    ctx.fillStyle = '#f0e4ff'; ctx.fillRect(x - 1 + tw, y - 1, 2 - tw, 2 - tw);
   }
 
   // Efectos bajo el jugador
@@ -263,7 +276,7 @@ function renderWorld() {
     if (f.k === 'tracer') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k; ctx.lineWidth = (2.2 * k + 0.6) * (f.w || 1); ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); }
     else if (f.k === 'ring') { ctx.strokeStyle = f.col; ctx.globalAlpha = k; ctx.lineWidth = 3 * k + 0.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.6 * k), 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = f.col; ctx.globalAlpha = 0.18 * k; ctx.fill(); }
     else if (f.k === 'beam') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k * 0.5; ctx.lineWidth = f.w * 3 * k; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = k; ctx.lineWidth = f.w * k; ctx.stroke(); }
-    else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; ctx.fillStyle = f.col; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill(); }
+    else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
     else if (f.k === 'spark') { ctx.fillStyle = f.col; ctx.globalAlpha = k; ctx.fillRect(f.x - 1, f.y - 1, 2, 2); }
     else if (f.k === 'num') wtext(f.txt, f.x, f.y, f.big ? 12 : 8, f.col || (f.big ? C.ember : C.ink), Math.min(1, k * 2));
     ctx.globalAlpha = 1;
