@@ -3,7 +3,7 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [44, 32] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [44, 32], hall: [24, 22] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -117,7 +117,7 @@ const ROOM_GEN = {
     for (let i = 0, t = 0; i < Math.floor(c * r / 110) && t < 400; t++) {
       const x = ri(5, c - 7), y = ri(5, r - 7);
       if (Math.hypot(x - sx, y - sy) < 5 || !areaFree(g, x - 3, y - 3, 8, 8)) continue;
-      ob(g, x, y, 2, 2, Math.random() < 0.5 ? 'rock' : 'tree', { v: ri(0, 7) }); i++;
+      ob(g, x, y, 2, 2, ['rock', 'tree', 'tree', 'ruin'][ri(0, 3)], { v: ri(0, 13) }); i++;
     }
     return [sx, sy];
   },
@@ -126,7 +126,7 @@ const ROOM_GEN = {
     OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
     outBorder(g, c, r);
     const cx = c >> 1, cy = r >> 1;
-    [[0.22, 0.26], [0.78, 0.26], [0.22, 0.74], [0.78, 0.74]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 2, Math.floor(r * fy) - 1, 5, 3, 'house', { v: i }));
+    [[0.22, 0.26], [0.78, 0.26], [0.22, 0.74], [0.78, 0.74]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 1, 6, 3, 'house', { v: i }));
     ob(g, cx - 10, cy, 2, 1, 'well'); ob(g, cx + 8, cy - 1, 1, 1, 'barrel', { v: 0 }); ob(g, cx + 9, cy - 1, 1, 1, 'barrel', { v: 1 }); ob(g, cx + 8, cy, 1, 1, 'barrel', { v: 2 });
     for (const [x, y] of [[cx - 8, 5], [cx + 6, r - 7], [5, cy - 6], [c - 7, cy + 4]]) ob(g, x, y, 2, 2, 'tree', { v: ri(0, 7) });
     OUT.paths.push([[cx, 4], [cx, r - 4]], [[4, cy], [c - 4, cy]]);
@@ -138,18 +138,30 @@ const ROOM_GEN = {
     outBorder(g, c, r);
     const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL });
     ob(g, cx - 11, 0, 22, 5, 'castle');
-    ob(g, 5, 9, 6, 4, 'house', { v: 0, big: true }); ob(g, c - 11, 9, 6, 4, 'house', { v: 1, big: true });
+    ob(g, 3, 10, 8, 3, 'house', { v: 0, big: true }); ob(g, c - 11, 10, 8, 3, 'house', { v: 1, big: true });
     ob(g, cx - 1, 15, 2, 1, 'well'); ob(g, cx + 6, 13, 2, 1, 'board');
-    ob(g, 11, 13, 1, 1, 'npc'); ob(g, c - 12, 13, 1, 1, 'npc');
+    ob(g, 12, 13, 1, 1, 'npc'); ob(g, c - 13, 13, 1, 1, 'npc');
     for (const [x, y] of [[6, 19], [9, 18], [7, 22]]) ob(g, x, y, 1, 1, 'npc');
-    ob(g, 12, 21, 1, 1, 'barrel', { v: 0 }); ob(g, 12, 9, 1, 1, 'barrel', { v: 1 }); ob(g, c - 13, 9, 1, 1, 'barrel', { v: 2 }); ob(g, c - 5, 17, 2, 2, 'tree', { v: 2 }); ob(g, 16, 22, 2, 2, 'tree', { v: 4 }); ob(g, c - 14, 20, 2, 2, 'rock', { v: 1 });
+    ob(g, 12, 21, 1, 1, 'barrel', { v: 0 }); ob(g, 12, 11, 1, 1, 'barrel', { v: 1 }); ob(g, c - 13, 11, 1, 1, 'barrel', { v: 2 }); ob(g, c - 5, 17, 2, 2, 'tree', { v: 2 }); ob(g, 16, 22, 2, 2, 'tree', { v: 4 }); ob(g, c - 14, 20, 2, 2, 'rock', { v: 1 });
     for (let y = r - 8; y < r - 5; y++) for (let x = 2; x < c - 2; x++) if (x !== cx) g[y][x] = 2;   // el arroyo, con su puente
     OUT.bridges.push({ x: cx, y: r - 8, h: 3 });
-    OUT.npcs.push({ key: 'smith', x: 11.5, y: 14 }, { key: 'keeper', x: c - 11.5, y: 14, flip: true }, { key: 'decoy', x: 6.5, y: 20 }, { key: 'post', x: 9.5, y: 19 }, { key: 'turret', x: 7.5, y: 23 }, { key: 'trainer', x: 10.5, y: 22 });
-    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(8, 13.7), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 8, 13.7), { id: 'inn', label: 'La posada' }),
+    OUT.npcs.push({ key: 'smith', x: 12.5, y: 14 }, { key: 'keeper', x: c - 12.5, y: 14, flip: true }, { key: 'decoy', x: 6.5, y: 20 }, { key: 'post', x: 9.5, y: 19 }, { key: 'turret', x: 7.5, y: 23 }, { key: 'trainer', x: 10.5, y: 22 });
+    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(7, 13.6), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 7, 13.6), { id: 'inn', label: 'La posada' }),
       Object.assign(P(8.5, 21), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 14.7), { id: 'board', label: 'El tablón de encargos' }));
-    OUT.paths.push([[cx, 7], [cx, 14]], [[cx, 17], [cx, r - 9]], [[9, 14.5], [cx - 2, 14.5]], [[cx + 2, 14.5], [c - 9, 14.5]], [[cx, r - 4.5], [cx, r - 3]]);
+    OUT.paths.push([[cx, 7], [cx, 14]], [[cx, 17], [cx, r - 9]], [[7, 14.5], [cx - 2, 14.5]], [[cx + 2, 14.5], [c - 7, 14.5]], [[cx, r - 4.5], [cx, r - 3]]);
     return [cx, 11];
+  },
+  // El salón del trono: muros alrededor, alfombra hasta el trono, guardias a los lados y la puerta abajo
+  hall(g, c, r) {
+    OUT = { interior: 'throne', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    fillRect(g, 0, 0, c, 5); fillRect(g, 0, r - 2, c, 2); fillRect(g, 0, 0, 2, r); fillRect(g, c - 2, 0, 2, r);
+    const cx = c >> 1;
+    for (let y = r - 2; y < r; y++) for (const x of [cx - 1, cx]) g[y][x] = 0;   // la puerta
+    fillRect(g, cx - 1, 5, 2, 1);                                                 // el trono
+    for (const x of [5, c - 7]) for (const y of [8, 13]) fillRect(g, x, y, 2, 2);  // columnas
+    OUT.npcs.push({ key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
+    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Audiencia con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+    return [cx, r - 4];
   },
   // Arena de jefe: abierta, con pilares cuadrados contra los que estrellarlo
   arena(g, c, r) {
@@ -158,7 +170,7 @@ const ROOM_GEN = {
   },
 };
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza'].includes(k));
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall'].includes(k));
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
 function buildRoom(boss, kindF, sizeF) {

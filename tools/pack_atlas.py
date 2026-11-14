@@ -55,9 +55,16 @@ CAST.update({
   'villager': ('Dwarfette_LVL1', {'idle': ('Idle', 6, 6), 'move': ('Move', 8, 10)}),
   'smith': ('Dwarfette_LVL3', {'idle': ('Idle', 5, 5), 'move': ('Idle', 5, 5)}),
   'trainer': ('Dwarfette_LVL4', {'idle': ('Idle', 7, 6), 'move': ('Idle', 7, 6)}),
+  'guard': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Soldier', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
+  'guard_k': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Knight', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
+  'priest': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Priest', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
+PC = 'assets/library/packs/'
 def frames_of(folder, suffix):
+    if folder.startswith('@'):   # tira horizontal de fotogramas cuadrados (Pixel Crawler y similares)
+        im = Image.open(PC + folder[1:] + '/' + suffix).convert('RGBA'); n = im.width // im.height
+        return [im.crop((i * im.height, 0, (i + 1) * im.height, im.height)) for i in range(n)]
     A = LIB[folder]['a']; a = A[suffix] if suffix in A else A[[n for n in A if n.endswith('_' + suffix)][0]]
     out = []
     for x, y in a['f']:

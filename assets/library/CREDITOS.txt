@@ -1,0 +1,6 @@
+Créditos y licencias del arte de terceros (ver también los Terms.txt y Readme.txt de cada paquete en assets/library/packs)
+
+- CHARACTER MEGAPACK y RPG HEROES & ENEMIES — overboy (overboy.itch.io). Uso personal y comercial; no revender ni redistribuir los archivos.
+- Biomes y Ancient Ruins — Androx (byandrox.itch.io). Biomes: Creative Commons Attribution 4.0 (obliga a citar al autor). Ancient Ruins: uso personal y comercial; no revender como paquete.
+- Pixel Crawler (Free Pack, Castle, Cave, Cemetery, Desert, Fairy Forest, Forge, Garden, Hideout, Library, Sewer, Bat, Small Bat) — Anokolisa (anokolisa.itch.io). Cualquier proyecto, también comercial; crédito no obligatorio; no revender los recursos.
+- Fantasy RPG Pixel Pack (versión gratuita) — ver assets/LICENSE-fantasy-rpg-pixel-pack.txt.

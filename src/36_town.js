@@ -8,14 +8,16 @@ const PLACES = {
   king: { name: 'El salón del trono', tabs: ['king'] },
 };
 let forgePlace = 'board';
-function openTown() {
+function openTown(from) {
   newGame();
-  const room = buildRoom(false, 'plaza', 'plaza');
+  const room = buildRoom(false, from === 'hall' ? 'hall' : 'plaza', from === 'hall' ? 'hall' : 'plaza');
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = [];
   S.town = { spots: room.out.spots, npcs: room.out.npcs, near: null };
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
+  if (from === 'castle') { const k = room.out.spots.find(s => s.id === 'king'); S.p.x = k.x; S.p.y = k.y + 20; S.p.face = Math.PI / 2; }
   S.mode = 'town'; modeT = 0; renderOverlay();
-  if (!M.metKing) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
+  if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
+  else if (!M.metKing && from !== 'castle') sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
 }
 function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; blip(520, 0.06, 'triangle', 0.04, 200); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
@@ -29,7 +31,7 @@ function townUpdate(dt) {
   let near = null, bd = 30;
   for (const s of S.town.spots) { const d = Math.hypot(s.x - p.x, s.y - p.y); if (d < bd) { bd = d; near = s; } }
   S.town.near = near;
-  if (near && I.atkP && modeT > 0.3) openPlace(near.id);
+  if (near && I.atkP && modeT > 0.3) { if (near.id === 'exit') openTown('castle'); else if (near.id === 'king' && S.out && !S.out.interior) { openTown('hall'); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {

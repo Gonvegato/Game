@@ -1,6 +1,6 @@
 // ───────────────────────── Exteriores: suelos y decorado del paquete de biomas (byandrox, itch.io) ─────────────────────────
 // La sala se pinta una vez: hierba, agua con sus orillas, caminos, y encima rocas, árboles y casas ordenados de arriba abajo.
-loadImg('biome', 'assets/biomes.png');
+loadImg('biome', 'assets/biomes.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
 const BIO = {
   grass: { tiles: [0, 0], inner: [64, 0], water: [64, 32], base: '#819447' },
   tree: [[243, 32, 26, 32], [246, 65, 20, 31], [272, 65, 16, 31], [292, 67, 24, 29], [243, 100, 24, 26], [276, 102, 22, 24], [245, 8, 21, 21], [272, 37, 16, 22]],
@@ -10,7 +10,8 @@ const BIO = {
   sign: [[337, 2, 14, 13], [352, 2, 16, 13], [369, 1, 14, 13]],
   well: [339, 69, 26, 19], vbridge: [340, 18, 24, 44], stairs: [336, 96, 32, 32], wall: [368, 96, 32, 16],
   deco: [[160, 74, 15, 6], [161, 99, 14, 10], [162, 87, 13, 9], [178, 74, 5, 5], [179, 68, 5, 5], [185, 72, 5, 5], [186, 65, 5, 5], [178, 97, 7, 7], [182, 105, 7, 7], [178, 81, 12, 14], [145, 69, 13, 10], [130, 86, 11, 8]],
-  lily: [[192, 68, 16, 11], [192, 81, 16, 13]], cobble: [7, 71, 34, 31], tall: [7, 118, 33, 40],
+  lily: [[192, 68, 16, 11], [192, 81, 16, 13]],
+  ruin: [[161, 146, 29, 29], [274, 145, 26, 31], [304, 144, 15, 48], [321, 160, 14, 32], [274, 177, 29, 25], [164, 209, 25, 31], [276, 209, 24, 30], [306, 196, 29, 43], [241, 226, 29, 30], [273, 241, 30, 30], [194, 263, 44, 39], [337, 1, 14, 46], [352, 1, 16, 46], [353, 55, 14, 24]], cobble: [7, 71, 34, 31], tall: [7, 118, 33, 40],   // ruin: de Ancient Ruins (Androx), torres caídas, pilares y piedras con runas
 };
 // Una casa de aldea pintada a mano con la paleta del paquete (el paquete no trae edificios)
 function drawHouse(g, X, Y, W, H, v) {
@@ -36,6 +37,7 @@ function drawHouse(g, X, Y, W, H, v) {
 function roomBgOut() {
   const im = IMG.biome;
   if (ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls && (ROOM_BG.ok || !im)) return ROOM_BG;
+  if (!IMG.houses && S.out.obs.some(o => o.kind === 'house') && im) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
   const c = NAV.cols, r = NAV.rows, O = S.out, B = BIO[O.biome] || BIO.grass, cvs = document.createElement('canvas'), g = cvs.getContext('2d'), Mg = BG_M;
   cvs.width = (c + Mg * 2) * CELL; cvs.height = (r + Mg * 2) * CELL; g.imageSmoothingEnabled = false;
   g.fillStyle = B.base; g.fillRect(0, 0, cvs.width, cvs.height);
@@ -77,9 +79,14 @@ function roomBgOut() {
     const X = o.x * CELL, Y = o.y * CELL, W = o.w * CELL, H = o.h * CELL, cx = X + W / 2, by = Y + H;
     if (o.kind === 'rock') items.push({ by, fn: () => { shadow(cx, by, 15); stand(BIO.rock[o.v % 4], cx, by); } });
     else if (o.kind === 'tree') items.push({ by, fn: () => { shadow(cx, by, 11); stand(BIO.tree[o.v % 6], cx, by); } });
+    else if (o.kind === 'ruin') items.push({ by, fn: () => { const sp = BIO.ruin[o.v % BIO.ruin.length]; shadow(cx, by, Math.min(15, sp[2] / 2)); if (IMG.ruins) g.drawImage(IMG.ruins, sp[0], sp[1], sp[2], sp[3], Math.round(cx - sp[2] / 2), by + 2 - sp[3], sp[2], sp[3]); } });
     else if (o.kind === 'barrel') items.push({ by, fn: () => { shadow(cx, by, 7); stand(BIO.barrel[o.v % 3], cx, by); } });
     else if (o.kind === 'well') items.push({ by, fn: () => { shadow(cx, by + 2, 13); stand(BIO.well, cx, by + 3); } });
-    else if (o.kind === 'house') items.push({ by, fn: () => drawHouse(g, X, Y - (o.big ? 18 : 12), W, H + (o.big ? 18 : 12), o.v) });
+    else if (o.kind === 'house') items.push({ by, fn: () => {   // casas montadas con el Pixel Crawler Free Pack; si no han cargado, la dibujada a mano
+      const hs = IMG.houses, list = o.big ? [0, 1, 4] : [2, 3, 5], h = HOUSES[list[o.v % list.length]];
+      if (hs) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 4, by - 2, W - 4, 5); g.drawImage(hs, h[0], h[1], h[2], h[3], Math.round(cx - h[2] / 2), by + 2 - h[3], h[2], h[3]); }
+      else drawHouse(g, X, Y - (o.big ? 18 : 12), W, H + (o.big ? 18 : 12), o.v);
+    } });
     else if (o.kind === 'board') items.push({ by, fn: () => {   // el tablón de encargos: dos postes, un tablero y pergaminos clavados
       shadow(cx, by, 15); g.fillStyle = '#4a2e22'; g.fillRect(X + 2, Y - 10, 3, 26); g.fillRect(X + W - 5, Y - 10, 3, 26);
       g.fillStyle = '#2a1a18'; g.fillRect(X, Y - 13, W, 19); g.fillStyle = '#8a6240'; g.fillRect(X + 1, Y - 12, W - 2, 17); g.fillStyle = '#a67c52'; g.fillRect(X + 1, Y - 12, W - 2, 2);
