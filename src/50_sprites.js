@@ -418,6 +418,40 @@ const BIG = {
     P.l(22, 30, 26, 33, rk[0]); P.l(43, 30, 39, 33, rk[0]); P.l(24, 44, 28, 47, rk[0]); P.l(41, 44, 37, 47, rk[0]);   // grietas
     return P.outline().g;
   },
+  // El Primer Puño: el dios de la guerra, un coloso de piel curtida con cuernos, coraza de hueso y dos hachas
+  firstfist() {
+    const P = Painter(72, 70), sk = ['#7a4a2a', '#b07a48', '#d9a066'], bone = ['#8f8a7c', '#d9d2c0', '#f4f0e0'], iron = ['#3a3a48', '#6a6a7c', '#a8a8ba'], hide = ['#3d2718', '#6b4428', '#8f6238'], red = ['#6a1a1a', '#b8382e', '#e8642c'];
+    P.e(27, 64, 7, 4, sk); P.r(22, 50, 10, 13, sk);                         // pie y pierna
+    P.e(36, 38, 17, 16, sk);                                                // torso (se completa al reflejar)
+    P.r(22, 44, 14, 8, hide); P.t(22, 52, 34, 52, 27, 60, red);             // faldón
+    P.e(14, 27, 11, 9, bone); P.t(6, 22, 12, 20, 4, 10, bone);              // hombrera de hueso con púa
+    P.r(6, 33, 10, 16, sk); P.e(10, 52, 6.5, 6, sk);                        // brazo y puño
+    P.r(9, 20, 3, 44, hide); P.t(0, 18, 12, 14, 12, 30, iron); P.t(0, 18, 4, 30, 12, 30, iron);   // hacha
+    P.e(36, 14, 9.5, 10, sk);                                               // cabeza
+    P.t(27, 10, 30, 6, 18, 0, bone);                                        // cuerno
+    P.mirror();
+    P.r(29, 11, 14, 3, ['#2a140c', '#2a140c', '#2a140c']); P.put(31, 12, '#ffe08a'); P.put(32, 12, '#ff8a3c'); P.put(39, 12, '#ffe08a'); P.put(40, 12, '#ff8a3c');
+    P.r(31, 18, 10, 3, ['#2a140c', '#2a140c', '#2a140c']); P.put(31, 17, bone[2]); P.put(40, 17, bone[2]); P.put(31, 18, bone[1]); P.put(40, 18, bone[1]);
+    for (let y = 30; y < 44; y += 4) P.r(30, y, 12, 2, bone);                // costillar de la coraza
+    P.r(34, 26, 4, 20, bone);
+    return P.outline().g;
+  },
+  // Estandarte de guerra: un mástil con un pendón rojo y un cráneo
+  post() {
+    const P = Painter(18, 30), wood = ['#3d2718', '#6b4428', '#8f6238'], red = ['#6a1a1a', '#b8382e', '#e8642c'];
+    P.r(8, 4, 2, 24, wood); P.e(9, 28, 5, 2, ['#2a2630', '#4a4552', '#6a6472']);
+    P.r(10, 6, 7, 10, red); P.t(10, 16, 17, 16, 13, 21, red);
+    P.e(9, 3, 3, 3, [PAL.N, PAL.n, '#ffffff']); P.put(8, 3, PAL.k); P.put(10, 3, PAL.k);
+    P.put(12, 9, PAL.k); P.put(14, 9, PAL.k); P.put(13, 11, PAL.k); P.put(12, 12, PAL.k); P.put(14, 12, PAL.k);
+    return P.outline().g;
+  },
+  // La campana de la aldea, en su espadaña de piedra
+  keep() {
+    const P = Painter(26, 34), st = ['#4a4759', '#77748c', '#a8a5bd'], wood = ['#3d2718', '#6b4428', '#8f6238'], br = ['#8a5a1e', '#d49a3a', '#ffd98a'];
+    P.r(3, 26, 20, 7, st); P.r(4, 8, 4, 19, st); P.r(18, 8, 4, 19, st); P.t(2, 9, 24, 9, 13, 0, wood);
+    P.r(8, 10, 10, 2, wood); P.e(13, 18, 4.5, 5.5, br); P.r(8, 22, 10, 2, br); P.put(13, 25, br[0]); P.put(12, 25, br[0]);
+    return P.outline().g;
+  },
   // El Sin Nombre: rey sin rostro, corona de hierro, manto raído y manos de hueso
   nameless() {
     const P = Painter(54, 62), robe = ['#221a30', '#3b2f52', '#5c4c7c'], trim = ['#7a6a9c', '#b8a8d8', '#e8e0f8'], iron = ['#3a3a48', '#6a6a7c', '#a8a8ba'];

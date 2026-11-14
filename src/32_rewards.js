@@ -17,12 +17,14 @@ const partScreen = eyebrow => () => {
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
 function roomCleared() {
-  const p = S.p, n = S.wave, W = S.world;
+  const p = S.p, n = S.lvl, W = S.world, ms = S.mission;
+  if (ms.type === 'defend') { defendCleared(); return; }
+  if (ms.type === 'assault') { missionWin(); return; }
   if (S.bossRoom) { bossDown(); return; }
   p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
   const gold = 8 + 2 * n; addGold(gold);
   pickQueue = []; S.rerolls = tk('reroll');
-  const here = WORLDS[W - 1].name + ' · sala ' + S.room + ' de ' + RPW;
+  const here = ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms);
   let got = '';
   if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
@@ -32,19 +34,12 @@ function roomCleared() {
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
   if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', ROOMS[S.roomType].color); blip(700, 0.2, 'triangle', 0.05, 500); }
-  if (S.room < RPW) pickQueue.push(doorScreen);
-  else afterPicks = openShop;                       // tras la última sala del mundo: tienda y jefe
+  if (ms.type === 'doors') { if (S.room < RPW) pickQueue.push(doorScreen); else afterPicks = missionWin; }   // incursión: cinco salas y se cobra
+  else if (S.room < roomsOf(ms) - 1) pickQueue.push(doorScreen);
+  else afterPicks = openShop;                       // antes del guardián o del dios: tienda
   advancePick();
 }
-function bossDown() {
-  const p = S.p;
-  if (S.world >= WORLDS.length) { winRun(); return; }
-  p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.3)); addGold(40);
-  S.cleared = WORLDS[S.world - 1].name + ' superado · recuperas vida · +40 de oro';
-  sayRaw('[Has vencido a ' + TYPES[WORLDS[S.world - 1].boss].name + ']', C.ink);
-  pickQueue = [partScreen(S.cleared), planScreen('Y además'), doorScreen]; S.rerolls = 0;
-  advancePick();
-}
+function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }
 // Puertas: cada una enseña qué da la sala siguiente
 function doorScreen() {
   const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
@@ -135,7 +130,7 @@ function pieceOptions(god) {
   const n = tk('eye4') ? 4 : 3, keep = order.filter(c => !c.swap).slice(0, n), swaps = order.filter(c => c.swap);
   if (keep.length < n && swaps.length) keep.push(swaps[0]);
   // Y siempre puedes no tocar nada: fundes el arma por oro y material
-  const gold = 20 + 4 * S.wave;
+  const gold = 20 + 4 * S.lvl;
   keep.push({ tag: 'Fundir', name: 'Fundir el arma', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
   return keep;
 }

@@ -173,6 +173,11 @@ function renderWorld() {
     ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8); ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
   }
 
+  if (S.keep) {                      // la campana de la aldea
+    const k = S.keep; ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(k.x, k.y + 14, 15, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
+    ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -320,4 +325,18 @@ function renderWorld() {
   }
 
   lights();
+  // Flechas en el borde de la pantalla hacia lo que importa y no se ve: estandartes, la campana, el arma caída
+  ctx.setTransform(1, 0, 0, 1, -cam.x, -cam.y);
+  const pointer = (x, y, col) => {
+    if (x > cam.x + 6 && x < cam.x + view.w - 6 && y > cam.y + 6 && y < cam.y + view.h - 6) return;
+    const px = Math.round(clamp(x, cam.x + 12, cam.x + view.w - 12)), py = Math.round(clamp(y, cam.y + 34, cam.y + view.h - 16)), a = Math.atan2(y - py, x - px), b = Math.floor(S.t * 4) % 2;
+    ctx.save(); ctx.translate(px, py); ctx.rotate(a);
+    ctx.fillStyle = '#16101a'; ctx.beginPath(); ctx.moveTo(8 + b, 0); ctx.lineTo(-4, -6); ctx.lineTo(-4, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(6 + b, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  };
+  for (const e of S.enemies) if (e.type.post) pointer(e.x, e.y, C.blood);
+  if (S.keep) pointer(S.keep.x, S.keep.y, C.energy);
+  if (S.drop) pointer(S.drop.x, S.drop.y, GODS[S.drop.god].color);
+  if (S.mission && S.mission.type !== 'assault' && !S.keep) { const all = S.enemies.filter(e => active(e)); if (all.length && all.length <= 2 && !S.queue.length) for (const e of all) pointer(e.x, e.y, C.ink); }   // los dos últimos enemigos, para no buscarlos
 }

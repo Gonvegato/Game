@@ -12,9 +12,9 @@ function renderOverlay() {
   if (m === 'play') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
-    h = `<p class="eyebrow">Prototipo</p><h1>Sala de Kiteo</h1>
-      <p class="lead">Eres un herrero sin dios. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos.</p>
-      <p class="lead">Cuatro mundos, cada uno con cinco salas, una tienda y un jefe. Al acabar una sala eliges puerta: en unas espera el elegido de una deidad, al que robas una técnica; en otras hay almas, Hierro Místico, vida u oro. Al morir vuelves a la forja: con las almas creces tú y con los materiales forjas tu arma.</p>
+    h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
+      <p class="lead">Los ejércitos de los dioses arrasaron tu pueblo cuando eras un niño. Te crio un herrero: te enseñó a forjar y a pelear, y un elegido lo mató. Ahora vas de reino en reino como mercenario, con un arma hecha por ti y una sola idea: matar a los dioses.</p>
+      <p class="lead">Cada disparo te frena un instante: dispara, da un paso, dispara. Cada reino es un mapa con cuatro zonas; en cada zona hay tres encargos y un guardián. Cuando caigan los cuatro, el dios saldrá a buscarte.</p>
       <dl class="keys">
         <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
         <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
@@ -23,15 +23,15 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">Empezar</button>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
   } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · ${where(S.wave)}</p><h1>${gunName(S.gun)}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
-    h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
-      <p class="lead">Caíste en ${where(S.wave)}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja.</p>
+    h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
+      <p class="lead">${S.failTxt || 'Caíste'} · ${whereNow()}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja. El encargo sigue en pie: puedes volver a intentarlo.</p>
       <button id="ovBtn" class="primary">A la forja</button>`;
   } else if (m === 'win') {
-    h = `<p class="eyebrow">Los cuatro mundos superados</p><h1>Has cruzado el Umbral</h1>
-      <p class="lead">${S.kills} bajas. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos del Sin Nombre encuentras una pieza: ' + S.found : ''}. Lo que robaste a los dioses se queda aquí.</p>
+    h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
+      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
       <button id="ovBtn" class="primary">A la forja</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
@@ -63,16 +63,18 @@ function renderHud() {
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
   const left = S.enemies.length + S.queue.length, bo = S.enemies.find(e => e.boss && e.spawn <= 0), inRun = S.wave > 0;
   const key = [Math.ceil(p.hp), p.maxHp, Math.round(p.reserve), S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, JSON.stringify(S.build), JSON.stringify(S.gun), S.techs.size, S.plans.size,
-    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1].join('|');
+    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
-  $('wave').textContent = !inRun ? '' : S.bossRoom ? WORLDS[S.world - 1].name + ' · jefe' : WORLDS[S.world - 1].name + ' · sala ' + S.room + ' de ' + RPW + ' · quedan ' + left;
+  const ms = S.mission;
+  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.defWave + ' de 4 · quedan ' + left : ms.type === 'assault' ? 'Asalto · estandartes ' + (S.postsDown || 0) + ' de 3' : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
   $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
   $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';
-  $('boss').hidden = !bo || S.mode !== 'play';
-  if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
+  $('boss').hidden = (!bo && !S.keep) || S.mode !== 'play';
+  if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
+  else if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
   $('dev').textContent = dev;
   $('hint').textContent = HINTS[lastDev] || HINTS.none;
   $('touch').hidden = lastDev !== 'touch';

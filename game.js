@@ -34,11 +34,14 @@ const TYPES = {
   lancer:  { name: 'Lancero',     r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
   bat:     { name: 'Murciélago',  r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  post:    { name: 'Estandarte',  r: 10, hp: 230, speed: 0,   dmg: 0,  shape: 'square',  color: '#c0392b', cost: 99, post: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
   matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1500, speed: 62, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
   colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
   nameless:  { name: 'El Sin Nombre',          r: 22, hp: 3000, speed: 54, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
+  // Dioses: el jefe final de un reino
+  firstfist: { name: 'El Primer Puño',         r: 28, hp: 3400, speed: 50, dmg: 38, shape: 'square',  color: '#d9a066', boss: true, phases: 3, kit: ['slam', 'charge', 'leap', 'ring', 'summon'], sum: 'brute' },
 };
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
 const WORLDS = [
@@ -641,7 +644,7 @@ bindHold($('btnAtk'), 'atk'); bindHold($('btnDodge'), 'dodge'); bindHold($('btnC
 // Almas (solo en salas de almas) para tu árbol. Hierro Místico y materiales de cada deidad para forjar.
 // Se guarda en el navegador, igual que la partida en curso.
 const zeroMats = () => Object.fromEntries(GOD_KEYS.map(g => [g, 0]));
-let M = { souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, parts: {}, gun: Object.assign({}, BASE_GUN), tree: {}, run: null, time: 0, earned: 0 };
+let M = { done: {}, souls: 0, iron: 0, mats: zeroMats(), runs: 0, best: 0, wins: 0, parts: {}, gun: Object.assign({}, BASE_GUN), tree: {}, run: null, time: 0, earned: 0 };
 try { const raw = localStorage.getItem('kiteo.save3'); if (raw) { const o = JSON.parse(raw); M = Object.assign(M, o, { mats: Object.assign(M.mats, o.mats || {}) }); } } catch (e) {}
 // Piezas: 1 descubierta, 2 forjada (puedes empezar con ella). Las básicas vienen forjadas.
 for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
@@ -651,7 +654,8 @@ for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
   if (M.weapon && OLDW[M.weapon]) { M.gun = Object.assign({}, BASE_GUN); for (const id of OLDW[M.weapon]) M.gun[PART[id].slot] = id; }
   delete M.owned; delete M.weapon; delete M.wup;
   M.gun = Object.assign({}, BASE_GUN, M.gun); for (const k of GSLOT_KEYS) if (!PART[M.gun[k]] || M.parts[M.gun[k]] !== 2) M.gun[k] = BASE_GUN[k];
-  if (M.run && !M.run.gun) M.run = null;
+  if (M.run && (!M.run.gun || !M.run.mission)) M.run = null;
+  M.done = M.done || {};
 }
 save();
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
@@ -666,24 +670,22 @@ const costTxt = c => Object.entries(c).map(([g, n]) => n + ' ' + matName(g)).joi
 const canPay = c => Object.entries(c).every(([g, n]) => matHave(g) >= n);
 const pay = c => { for (const [g, n] of Object.entries(c)) { if (g === 'iron') M.iron -= n; else M.mats[g] -= n; } };
 // "mundo 2, sala 3" a partir del número de encuentro
-const where = n => { if (n > TOTAL) return 'el final'; const W = Math.ceil(n / (RPW + 1)), r = n - (W - 1) * (RPW + 1); return WORLDS[W - 1].name + (r > RPW ? ', ante ' + TYPES[WORLDS[W - 1].boss].name : ', sala ' + r); };
 const lootTxt = () => { const m = GOD_KEYS.filter(g => S.matsRun[g]).map(g => S.matsRun[g] + ' ' + GODS[g].mat); if (S.ironRun) m.unshift(S.ironRun + ' de Hierro Místico'); return `<b>${S.soulsRun}</b> almas` + (m.length ? ', ' + m.join(', ') : ''); };
 function endRun(win) {
   M.souls += S.soulsRun; M.earned += S.soulsRun; M.iron += S.ironRun; for (const g of GOD_KEYS) M.mats[g] += S.matsRun[g];
-  M.runs += 1; M.best = Math.max(M.best, win ? TOTAL + 1 : S.wave); if (win) M.wins += 1;
+  M.runs += 1; if (win) M.wins += 1;
   M.run = null; save();
 }
-function winRun() { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } endRun(true); setMode('win'); }
 // Guardado de la partida en curso: al entrar en cada sala
 function saveRun() {
   const p = S.p;
   // Copia completa: lo que ganes después en esta sala no se cuela en el guardado; al continuar, la sala se repite sin cobrar nada dos veces
-  M.run = JSON.parse(JSON.stringify({ wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
+  M.run = JSON.parse(JSON.stringify({ mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
     p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve } }));
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame();
+  const r = M.run; newGame(); S.mission = r.mission;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -711,8 +713,8 @@ function newGame() {
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
-function startRun() {
-  newGame(); M.run = null;
+function startRun(mission) {
+  newGame(); M.run = null; S.mission = mission;
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
@@ -720,7 +722,7 @@ function startRun() {
   S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
     const opts = PIECES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
-    pickQueue = [() => ({ eyebrow: 'Recuerdo vivo', title: 'Recuerdas una técnica de otra vida', opts })];
+    pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts })];
     advancePick(); return;
   }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -729,15 +731,18 @@ function startRun() {
 // Entrar en la siguiente sala (o en el jefe del mundo)
 function nextWave() {
   S.wave += 1;
-  const n = S.wave, W = Math.ceil(n / (RPW + 1)), r = n - (W - 1) * (RPW + 1), world = WORLDS[W - 1];
-  S.world = W; S.room = r; S.bossRoom = r > RPW;
-  S.roomType = S.bossRoom ? 'boss' : S.next.type; S.god = S.bossRoom ? null : S.next.god;
-  C.floor = world.floor; C.tile = world.tile;
+  const ms = S.mission, n = S.wave, r = n, W = ms.z + 1, world = WORLDS[W - 1], K = KINGDOMS.find(x => x.id === ms.k);
+  S.world = W; S.room = r; S.bossRoom = (ms.type === 'boss' && r === 3) || (ms.type === 'god' && r === 2);
+  // Nivel de dificultad: sube con la zona y con lo adentro que estés de la misión
+  S.lvl = ms.type === 'god' ? 14 : ms.z * 3 + (ms.type === 'doors' ? r : ms.type === 'boss' ? 3 + r : 3);
+  const first = ms.z === 0 && ms.type === 'doors' && r === 1 && !isDone(ms.id), bossKey = ms.type === 'god' ? K.god : world.boss;
+  S.roomType = S.bossRoom ? 'boss' : ms.type === 'defend' || ms.type === 'assault' ? ms.type : S.next.type; S.god = S.roomType === 'god' ? S.next.god : null;
+  C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = 0;
   const list = [];
-  if (S.bossRoom) list.push(world.boss);
-  else {
-    let budget = n === 1 ? 5 : 6 + n * 1.45 + (S.roomType === 'god' ? 0 : 2.5);
-    const pool = n === 1 ? ['stalker'] : world.pool;
+  if (S.bossRoom) list.push(bossKey);
+  else if (ms.type === 'doors' || ms.type === 'boss' || ms.type === 'god') {
+    let budget = first ? 5 : 6 + S.lvl * 1.45 + (S.roomType === 'god' ? 0 : 2.5);
+    const pool = first ? ['stalker'] : world.pool;
     while (budget > 0.5 && list.length < 20) {
       const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5);
       if (!cand.length) break;
@@ -749,21 +754,23 @@ function nextWave() {
   S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
-  const room = buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = n === 1 ? [] : room.traps;
+  const room = ms.type === 'defend' ? buildRoom(false, 'aldea', 'big') : ms.type === 'assault' ? buildRoom(false, 'escombros', 'huge') : buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
-  if (r === 1) note(S.p.x, S.p.y - 30, world.name, C.ink, true);
-  if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[world.boss].name, C.blood, true);
+  if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
+  if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
+  if (ms.type === 'defend') { S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: 260 + 70 * ms.z, maxHp: 260 + 70 * ms.z, flash: 0 }; S.defWave = 1; fillDefWave(); }
+  if (ms.type === 'assault') setupAssault();
   saveRun();
 }
 
-function spawn(typeKey) {
-  const ty = TYPES[typeKey], p = S.p;
+function spawn(typeKey, q) {
+  const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
   const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
-  const hp = Math.round(ty.hp * (1 + 0.16 * (S.wave - 1)));
-  { const at = freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
+  const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 1 : 0.8 + 0.15 * S.mission.z) : 1 + 0.16 * (S.lvl - 1)));
+  { const at = q.pos ? q.pos : q.near ? unstick(clamp(q.near.x + rnd(-46, 46), 20, T.room.w - 20), clamp(q.near.y + rnd(-46, 46), 20, T.room.h - 20)) : S.keep ? freeSpot(S.keep, Math.min(T.room.w, T.room.h) * 0.42) : freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
     ember: 0, emberT: 0, emberAcc: 0, venom: 0, venAcc: 0, needles: 0, needleT: 0, mark: 0, stun: 0, slowT: 0, slowF: 1, autoCd: 0, fieldAcc: 0, fling: 0, fvx: 0, fvy: 0,
@@ -771,11 +778,13 @@ function spawn(typeKey) {
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 5.5 * CELL, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
   // Élites: a partir del segundo mundo, algunos enemigos corrientes llegan con un rasgo y un aura que lo avisa
-  if (!ty.boss && !ty.champ && !ty.fly && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
+  if (!ty.boss && !ty.champ && !ty.fly && !ty.post && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
     e.elite = ['fast', 'tough', 'volatile'][Math.floor(Math.random() * 3)];
     if (e.elite === 'fast') e.speed *= 1.45;
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
   }
+  if (q.raid) e.raid = true;
+  if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
 }
@@ -811,12 +820,14 @@ const partScreen = eyebrow => () => {
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
 function roomCleared() {
-  const p = S.p, n = S.wave, W = S.world;
+  const p = S.p, n = S.lvl, W = S.world, ms = S.mission;
+  if (ms.type === 'defend') { defendCleared(); return; }
+  if (ms.type === 'assault') { missionWin(); return; }
   if (S.bossRoom) { bossDown(); return; }
   p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
   const gold = 8 + 2 * n; addGold(gold);
   pickQueue = []; S.rerolls = tk('reroll');
-  const here = WORLDS[W - 1].name + ' · sala ' + S.room + ' de ' + RPW;
+  const here = ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms);
   let got = '';
   if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
@@ -826,19 +837,12 @@ function roomCleared() {
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
   if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', ROOMS[S.roomType].color); blip(700, 0.2, 'triangle', 0.05, 500); }
-  if (S.room < RPW) pickQueue.push(doorScreen);
-  else afterPicks = openShop;                       // tras la última sala del mundo: tienda y jefe
+  if (ms.type === 'doors') { if (S.room < RPW) pickQueue.push(doorScreen); else afterPicks = missionWin; }   // incursión: cinco salas y se cobra
+  else if (S.room < roomsOf(ms) - 1) pickQueue.push(doorScreen);
+  else afterPicks = openShop;                       // antes del guardián o del dios: tienda
   advancePick();
 }
-function bossDown() {
-  const p = S.p;
-  if (S.world >= WORLDS.length) { winRun(); return; }
-  p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.3)); addGold(40);
-  S.cleared = WORLDS[S.world - 1].name + ' superado · recuperas vida · +40 de oro';
-  sayRaw('[Has vencido a ' + TYPES[WORLDS[S.world - 1].boss].name + ']', C.ink);
-  pickQueue = [partScreen(S.cleared), planScreen('Y además'), doorScreen]; S.rerolls = 0;
-  advancePick();
-}
+function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }
 // Puertas: cada una enseña qué da la sala siguiente
 function doorScreen() {
   const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
@@ -929,7 +933,7 @@ function pieceOptions(god) {
   const n = tk('eye4') ? 4 : 3, keep = order.filter(c => !c.swap).slice(0, n), swaps = order.filter(c => c.swap);
   if (keep.length < n && swaps.length) keep.push(swaps[0]);
   // Y siempre puedes no tocar nada: fundes el arma por oro y material
-  const gold = 20 + 4 * S.wave;
+  const gold = 20 + 4 * S.lvl;
   keep.push({ tag: 'Fundir', name: 'Fundir el arma', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
   return keep;
 }
@@ -952,8 +956,8 @@ function openShop() {
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
 }
 function shopHtml() {
-  const p = S.p, boss = TYPES[WORLDS[S.world - 1].boss].name;
-  return `<p class="eyebrow">Tienda · ${WORLDS[S.world - 1].name}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la mazmorra: gástalo.</p><div class="forge"><section>` +
+  const p = S.p, boss = S.mission.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === S.mission.k).god].name : TYPES[WORLDS[S.world - 1].boss].name;
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
     S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
     `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">Cruzar la puerta de ${boss}</button>`;
 }
@@ -991,18 +995,18 @@ function forgeHtml() {
   const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
   const pace = `Árbol: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo en la mazmorra: ${hm(hrs)}.` +
     (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : ' El ritmo de almas por hora aparecerá cuando lleves un rato jugado.');
-  const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${where(M.best)}${M.wins ? '. Has cruzado el Umbral ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
-  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${where(M.run.wave + 1)}</button><button class="fi" data-act="go"><b>Empezar de nuevo</b><span>Abandona la partida en curso</span><i></i></button></div>` : `<button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
-  return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
+  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, sala ${M.run.wave + 1}</button></div>` : '';
+  return `<p class="eyebrow">La forja de Alec · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p><h1>${M.runs ? 'Entre encargo y encargo' : 'El primer contrato'}</h1>
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
-    <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. Las piezas de arma se descubren dentro: las sueltan los jefes, las vetas de Hierro Místico y la tienda. Forjarlas cuesta hierro y material de alguna deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
-    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    <p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>
+    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
-  if (k === 'go') { startRun(); return; }
+  if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
+  if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
   else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
@@ -1014,7 +1018,7 @@ let listSel = -1;
 function bindList() {
   const els = [...ovBody.querySelectorAll('.fi')], fn = S.mode === 'shop' ? shopAct : forgeAct;
   els.forEach(el => el.addEventListener('click', () => { audioInit(); listSel = els.indexOf(el); fn(el.dataset.act); }));
-  if (listSel < 0 || listSel >= els.length) listSel = S.mode === 'shop' ? 0 : els.findIndex(el => el.classList.contains('primary'));
+  if (listSel < 0 || listSel >= els.length) listSel = S.mode === 'shop' ? 0 : Math.max(els.findIndex(el => el.classList.contains('primary')), els.findIndex(el => el.dataset.act && el.dataset.act.startsWith('m:') && !el.classList.contains('on')));
   if (listSel < 0) listSel = 0;
   els.forEach((el, i) => el.classList.toggle('sel', i === listSel));
 }
@@ -1099,12 +1103,102 @@ function legHint(id) {
   const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p]));
   return L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '';
 }
+// ───────────────────────── Reinos, zonas y misiones ─────────────────────────
+// Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
+// de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
+// Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
+const MTYPES = {
+  doors:   { name: 'Incursión', desc: 'Cinco salas seguidas. Tras cada una eliges puerta.' },
+  defend:  { name: 'Defensa',   desc: 'Cuatro oleadas contra una aldea. Si derriban la campana, fracasas.' },
+  assault: { name: 'Asalto',    desc: 'Un campamento con tres estandartes que no dejan de llamar refuerzos. Derríbalos todos.' },
+  boss:    { name: 'Guardián',  desc: 'Dos salas, una tienda y el guardián de la zona.' },
+  god:     { name: 'Dios',      desc: 'Una sala, una tienda y el dios.' },
+};
+const KINGDOMS = [
+  { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro',
+    lore: 'El rey de Valdehierro paga en hierro y no hace preguntas. Los ejércitos del Primer Puño ya han tomado medio reino.',
+    god: 'firstfist', zones: [
+      { name: 'Las Criptas',          m: ['El osario viejo', 'La aldea de Fuenteseca', 'El campamento de los profanadores'] },
+      { name: 'El Nido',              m: ['Las galerías de seda', 'La aldea de Robledal', 'El campamento de la colmena'] },
+      { name: 'Las Minas de Cristal', m: ['El pozo hondo', 'La aldea de Peñablanca', 'El campamento de los picadores'] },
+      { name: 'El Umbral',            m: ['El paso de ceniza', 'La aldea de Últimaluz', 'El campamento del estandarte negro'] },
+    ] },
+];
+const MKINDS = ['doors', 'defend', 'assault'];
+const kingdomNow = () => KINGDOMS[0];
+function missionOf(id) {
+  const [k, z, i] = id.split(':'), K = KINGDOMS.find(x => x.id === k);
+  if (z === 'g') return { id, k, z: 3, type: 'god', name: TYPES[K.god].name, zone: K.title };
+  const Z = K.zones[+z];
+  if (i === 'b') return { id, k, z: +z, type: 'boss', name: TYPES[WORLDS[+z].boss].name, zone: Z.name };
+  return { id, k, z: +z, type: MKINDS[+i], name: Z.m[+i], zone: Z.name };
+}
+const isDone = id => !!(M.done || {})[id];
+const zoneOpen = (K, z) => [0, 1, 2].every(i => isDone(`${K.id}:${z}:${i}`));
+const godOpen = K => K.zones.every((_, z) => isDone(`${K.id}:${z}:b`));
+const payOf = ms => (ms.type === 'god' ? 160 : ms.type === 'boss' ? 55 + 15 * ms.z : 18 + 8 * ms.z);
+const roomsOf = ms => (ms.type === 'doors' ? RPW : ms.type === 'boss' ? 3 : ms.type === 'god' ? 2 : 1);
+const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · ' + ms.name; };
+
+// El mapa del reino, en la forja: cuatro zonas con sus misiones y, en medio, el dios
+function mapHtml() {
+  const K = kingdomNow(), nDone = Object.keys(M.done || {}).filter(id => id.startsWith(K.id)).length;
+  const btn = (id, label, sub, locked) => `<button class="fi${isDone(id) ? ' on' : locked ? ' off' : ''}" data-act="${locked ? 'x' : 'm'}:${id}"><b>${label}</b><span>${sub}</span><i>${isDone(id) ? 'Hecha' : locked ? 'Cerrada' : payOf(missionOf(id)) + ' almas'}</i></button>`;
+  const zones = K.zones.map((Z, z) => {
+    const W = WPAL[z], open = zoneOpen(K, z), boss = TYPES[WORLDS[z].boss].name;
+    return `<section class="zone" style="--zf:${W.f[1]};--zc:${W.capHi}"><h3>${Z.name}</h3>` +
+      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name + ' · ' + MTYPES[MKINDS[i]].desc, false)).join('') +
+      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona · ' + MTYPES.boss.desc : 'Completa las tres misiones de la zona para llegar hasta él.', !open) + '</section>';
+  }).join('');
+  const g = godOpen(K), G = TYPES[K.god];
+  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><div class="kmap">${zones}</div>` +
+    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino · ' + MTYPES.god.desc : 'Derrota a los cuatro guardianes y saldrá a buscarte.', !g)}</section>`;
+}
+
+// Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado
+function missionWin() {
+  const ms = S.mission, first = !isDone(ms.id);
+  M.done = M.done || {}; M.done[ms.id] = 1;
+  S.pay = first ? payOf(ms) : Math.round(payOf(ms) * 0.3); S.soulsRun += S.pay; S.first = first;
+  if (ms.type === 'boss' || ms.type === 'god') { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } }
+  endRun(true); setMode('win');
+}
+function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode('dead'); }
+const resumePlay = () => { S.mode = 'play'; modeT = 0; renderOverlay(); };
+const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+
+// ── Defensa de una aldea: oleadas; parte de los enemigos va a por la campana en vez de a por ti ──
+function fillDefWave() {
+  const w = S.defWave; let budget = 7 + S.lvl * 1.3 + w * 3; const list = [], pool = WORLDS[S.world - 1].pool;
+  while (budget > 0.5 && list.length < 22) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
+  S.queue = list.map((type, i) => ({ type, at: S.waveT + 1 + i * 0.4, raid: i % 2 === 0 && !TYPES[type].fly }));
+  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de 4', C.blood, true); sayRaw('[Oleada ' + w + ' de 4. La mitad va a por la campana: no la dejes sola.]', C.blood);
+}
+function defendCleared() {
+  const p = S.p;
+  if (S.defWave >= 4) { missionWin(); return; }
+  S.defWave += 1; p.hp = Math.min(p.maxHp, p.hp + 8 + 4 * tk('mend')); addGold(12 + 2 * S.lvl);
+  pickQueue = [pieceScreen(lootGod(), 'Oleada rechazada · entre los caídos hay un arma bendecida')]; S.rerolls = tk('reroll');
+  afterPicks = () => { resumePlay(); fillDefWave(); };
+  advancePick();
+}
+// ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
+function setupAssault() {
+  const p = S.p, spots = [];
+  for (let i = 0, tries = 0; i < 3 && tries < 200; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
+  for (const c of spots) spawn('post', { pos: c });
+  let budget = 6 + S.lvl * 1.2; const pool = WORLDS[S.world - 1].pool, list = [];
+  while (budget > 0.5 && list.length < 14) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
+  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
+  S.postsDown = 0;
+  sayRaw('[Tres estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
+}
 // ───────────────────────── Salas: muros, formas y caminos ─────────────────────────
 // Cada sala es una rejilla de casillas de CELL unidades. Un generador decide qué casillas son muro;
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -1192,6 +1286,12 @@ const ROOM_GEN = {
     for (let j = my; j < my + 5; j++) { g[j][x0] = g[j][x0 + 1] = g[j][x0 + w - 2] = g[j][x0 + w - 1] = 0; }
     return [c >> 1, r >> 1];
   },
+  // Aldea: cuatro casas de piedra alrededor de una plaza con la campana en medio
+  aldea(g, c, r) {
+    for (const [fx, fy] of [[0.2, 0.22], [0.8, 0.22], [0.2, 0.78], [0.8, 0.78]]) fillRect(g, Math.floor(c * fx) - 2, Math.floor(r * fy) - 1, 5, 3);
+    fillRect(g, (c >> 1) - 9, (r >> 1) - 1, 2, 2); fillRect(g, (c >> 1) + 7, (r >> 1) - 1, 2, 2);
+    return [c >> 1, (r >> 1) + 4];
+  },
   // Arena de jefe: abierta, con pilares cuadrados contra los que estrellarlo
   arena(g, c, r) {
     for (const [fx, fy] of [[0.22, 0.3], [0.78, 0.3], [0.22, 0.72], [0.78, 0.72], [0.5, 0.52]]) fillRect(g, Math.floor(c * fx) - 1, Math.floor(r * fy) - 1, 3, 3);
@@ -1199,13 +1299,13 @@ const ROOM_GEN = {
   },
 };
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => k !== 'arena');
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => k !== 'arena' && k !== 'aldea');
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
-function buildRoom(boss) {
+function buildRoom(boss, kindF, sizeF) {
   for (let attempt = 0; attempt < 12; attempt++) {
-    const kind = boss ? 'arena' : ROOM_FORCE && attempt < 6 ? ROOM_FORCE : attempt > 8 ? 'columnas' : ROOM_KINDS[Math.floor(Math.random() * ROOM_KINDS.length)];
-    const [c, r] = ROOM_SIZES[boss ? 'boss' : ['small', 'mid', 'mid', 'big'][ri(0, 3)]];
+    const kind = boss ? 'arena' : kindF && attempt < 8 ? kindF : ROOM_FORCE && attempt < 6 ? ROOM_FORCE : attempt > 8 ? 'columnas' : ROOM_KINDS[Math.floor(Math.random() * ROOM_KINDS.length)];
+    const [c, r] = ROOM_SIZES[boss ? 'boss' : sizeF || ['small', 'mid', 'mid', 'big'][ri(0, 3)]];
     const g = Array.from({ length: r }, () => new Array(c).fill(0));
     const [sx, sy] = ROOM_GEN[kind](g, c, r);
     for (let j = sy - 1; j <= sy + 1; j++) for (let i = sx - 1; i <= sx + 1; i++) if (g[j] && i >= 0 && i < c) g[j][i] = 0;   // el punto de entrada, despejado
@@ -1411,6 +1511,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
+  if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de 3]', C.ink); if (S.postsDown < 3) S.pendingLoot = true; }
   if (G('m_blood')) heal(3);                                                                  // Bala de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
@@ -2162,12 +2263,14 @@ function update(dt) {
   // Red de seguridad: si nadie recibe daño en 25 s y no queda nadie por llegar, los que quedan reaparecen a la vista
   if (S.enemies.length && !S.queue.length && S.t - (S.lastHitT || 0) > 25 && S.t - (S.roomT || 0) > 25) {
     S.lastHitT = S.t;
-    for (const e of S.enemies) { if (e.boss) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
+    for (const e of S.enemies) { if (e.boss || e.type.post) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
   }
 
   // Oleadas
   S.waveT += dt;
-  while (S.queue.length && S.queue[0].at <= S.waveT) spawn(S.queue.shift().type);
+  while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
+  if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
+  if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había un arma bendecida')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
     if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
@@ -2435,8 +2538,19 @@ function update(dt) {
       if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
       if (e.hp <= 0) continue;
     }
+    if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
+      e.x = e.px; e.y = e.py; e.kx = e.ky = 0; e.stun = 0; e.aiCd -= dt;
+      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 15) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); blip(300, 0.2, 'sawtooth', 0.04, 200); } }
+      continue;
+    }
     if (e.stun > 0) { e.stun -= dt; continue; }
     const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
+    if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
+      const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);
+      if (kd > k.r + e.r + 3) { e.x += kx / kd * sp * dt; e.y += ky / kd * sp * dt; }
+      else { e.raidCd = (e.raidCd || 0.6) - dt; if (e.raidCd <= 0) { e.raidCd = 1; k.hp -= Math.max(4, e.dmg * 0.6); k.flash = 0.15; S.shake = Math.max(S.shake, 2); blip(240, 0.08, 'square', 0.04, -80); if (k.hp <= 0) { missionFail('La campana ha caído y la aldea con ella.'); return; } } }
+      continue;
+    }
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
     if (e.lungeWind <= 0 && e.lungeT <= 0) e.dir = Math.atan2(dy, dx);
     if (e.boss) { bossAI(e, dt * (e.slowT > 0 ? e.slowF : 1), d, ux, uy); continue; }
@@ -2967,6 +3081,40 @@ const BIG = {
     P.l(22, 30, 26, 33, rk[0]); P.l(43, 30, 39, 33, rk[0]); P.l(24, 44, 28, 47, rk[0]); P.l(41, 44, 37, 47, rk[0]);   // grietas
     return P.outline().g;
   },
+  // El Primer Puño: el dios de la guerra, un coloso de piel curtida con cuernos, coraza de hueso y dos hachas
+  firstfist() {
+    const P = Painter(72, 70), sk = ['#7a4a2a', '#b07a48', '#d9a066'], bone = ['#8f8a7c', '#d9d2c0', '#f4f0e0'], iron = ['#3a3a48', '#6a6a7c', '#a8a8ba'], hide = ['#3d2718', '#6b4428', '#8f6238'], red = ['#6a1a1a', '#b8382e', '#e8642c'];
+    P.e(27, 64, 7, 4, sk); P.r(22, 50, 10, 13, sk);                         // pie y pierna
+    P.e(36, 38, 17, 16, sk);                                                // torso (se completa al reflejar)
+    P.r(22, 44, 14, 8, hide); P.t(22, 52, 34, 52, 27, 60, red);             // faldón
+    P.e(14, 27, 11, 9, bone); P.t(6, 22, 12, 20, 4, 10, bone);              // hombrera de hueso con púa
+    P.r(6, 33, 10, 16, sk); P.e(10, 52, 6.5, 6, sk);                        // brazo y puño
+    P.r(9, 20, 3, 44, hide); P.t(0, 18, 12, 14, 12, 30, iron); P.t(0, 18, 4, 30, 12, 30, iron);   // hacha
+    P.e(36, 14, 9.5, 10, sk);                                               // cabeza
+    P.t(27, 10, 30, 6, 18, 0, bone);                                        // cuerno
+    P.mirror();
+    P.r(29, 11, 14, 3, ['#2a140c', '#2a140c', '#2a140c']); P.put(31, 12, '#ffe08a'); P.put(32, 12, '#ff8a3c'); P.put(39, 12, '#ffe08a'); P.put(40, 12, '#ff8a3c');
+    P.r(31, 18, 10, 3, ['#2a140c', '#2a140c', '#2a140c']); P.put(31, 17, bone[2]); P.put(40, 17, bone[2]); P.put(31, 18, bone[1]); P.put(40, 18, bone[1]);
+    for (let y = 30; y < 44; y += 4) P.r(30, y, 12, 2, bone);                // costillar de la coraza
+    P.r(34, 26, 4, 20, bone);
+    return P.outline().g;
+  },
+  // Estandarte de guerra: un mástil con un pendón rojo y un cráneo
+  post() {
+    const P = Painter(18, 30), wood = ['#3d2718', '#6b4428', '#8f6238'], red = ['#6a1a1a', '#b8382e', '#e8642c'];
+    P.r(8, 4, 2, 24, wood); P.e(9, 28, 5, 2, ['#2a2630', '#4a4552', '#6a6472']);
+    P.r(10, 6, 7, 10, red); P.t(10, 16, 17, 16, 13, 21, red);
+    P.e(9, 3, 3, 3, [PAL.N, PAL.n, '#ffffff']); P.put(8, 3, PAL.k); P.put(10, 3, PAL.k);
+    P.put(12, 9, PAL.k); P.put(14, 9, PAL.k); P.put(13, 11, PAL.k); P.put(12, 12, PAL.k); P.put(14, 12, PAL.k);
+    return P.outline().g;
+  },
+  // La campana de la aldea, en su espadaña de piedra
+  keep() {
+    const P = Painter(26, 34), st = ['#4a4759', '#77748c', '#a8a5bd'], wood = ['#3d2718', '#6b4428', '#8f6238'], br = ['#8a5a1e', '#d49a3a', '#ffd98a'];
+    P.r(3, 26, 20, 7, st); P.r(4, 8, 4, 19, st); P.r(18, 8, 4, 19, st); P.t(2, 9, 24, 9, 13, 0, wood);
+    P.r(8, 10, 10, 2, wood); P.e(13, 18, 4.5, 5.5, br); P.r(8, 22, 10, 2, br); P.put(13, 25, br[0]); P.put(12, 25, br[0]);
+    return P.outline().g;
+  },
   // El Sin Nombre: rey sin rostro, corona de hierro, manto raído y manos de hueso
   nameless() {
     const P = Painter(54, 62), robe = ['#221a30', '#3b2f52', '#5c4c7c'], trim = ['#7a6a9c', '#b8a8d8', '#e8e0f8'], iron = ['#3a3a48', '#6a6a7c', '#a8a8ba'];
@@ -3189,6 +3337,11 @@ function renderWorld() {
     ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8); ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
   }
 
+  if (S.keep) {                      // la campana de la aldea
+    const k = S.keep; ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(k.x, k.y + 14, 15, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
+    ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -3336,6 +3489,20 @@ function renderWorld() {
   }
 
   lights();
+  // Flechas en el borde de la pantalla hacia lo que importa y no se ve: estandartes, la campana, el arma caída
+  ctx.setTransform(1, 0, 0, 1, -cam.x, -cam.y);
+  const pointer = (x, y, col) => {
+    if (x > cam.x + 6 && x < cam.x + view.w - 6 && y > cam.y + 6 && y < cam.y + view.h - 6) return;
+    const px = Math.round(clamp(x, cam.x + 12, cam.x + view.w - 12)), py = Math.round(clamp(y, cam.y + 34, cam.y + view.h - 16)), a = Math.atan2(y - py, x - px), b = Math.floor(S.t * 4) % 2;
+    ctx.save(); ctx.translate(px, py); ctx.rotate(a);
+    ctx.fillStyle = '#16101a'; ctx.beginPath(); ctx.moveTo(8 + b, 0); ctx.lineTo(-4, -6); ctx.lineTo(-4, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(6 + b, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  };
+  for (const e of S.enemies) if (e.type.post) pointer(e.x, e.y, C.blood);
+  if (S.keep) pointer(S.keep.x, S.keep.y, C.energy);
+  if (S.drop) pointer(S.drop.x, S.drop.y, GODS[S.drop.god].color);
+  if (S.mission && S.mission.type !== 'assault' && !S.keep) { const all = S.enemies.filter(e => active(e)); if (all.length && all.length <= 2 && !S.queue.length) for (const e of all) pointer(e.x, e.y, C.ink); }   // los dos últimos enemigos, para no buscarlos
 }
 // ───────────────────────── La sala dibujada: losas, muros de sillería y antorchas ─────────────────────────
 // Se pinta una sola vez por sala en un lienzo aparte (con un margen de muro alrededor) y luego se copia cada fotograma.
@@ -3444,9 +3611,9 @@ function renderOverlay() {
   if (m === 'play') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
-    h = `<p class="eyebrow">Prototipo</p><h1>Sala de Kiteo</h1>
-      <p class="lead">Eres un herrero sin dios. Cada disparo te frena un instante: dispara, da un paso, dispara. Si pulsas a ritmo te mueves a toda velocidad entre disparos.</p>
-      <p class="lead">Cuatro mundos, cada uno con cinco salas, una tienda y un jefe. Al acabar una sala eliges puerta: en unas espera el elegido de una deidad, al que robas una técnica; en otras hay almas, Hierro Místico, vida u oro. Al morir vuelves a la forja: con las almas creces tú y con los materiales forjas tu arma.</p>
+    h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
+      <p class="lead">Los ejércitos de los dioses arrasaron tu pueblo cuando eras un niño. Te crio un herrero: te enseñó a forjar y a pelear, y un elegido lo mató. Ahora vas de reino en reino como mercenario, con un arma hecha por ti y una sola idea: matar a los dioses.</p>
+      <p class="lead">Cada disparo te frena un instante: dispara, da un paso, dispara. Cada reino es un mapa con cuatro zonas; en cada zona hay tres encargos y un guardián. Cuando caigan los cuatro, el dios saldrá a buscarte.</p>
       <dl class="keys">
         <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
         <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
@@ -3455,15 +3622,15 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">Empezar</button>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
   } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · ${where(S.wave)}</p><h1>${gunName(S.gun)}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
-    h = `<p class="eyebrow">Has muerto</p><h1>Vuelves atrás, recordándolo todo</h1>
-      <p class="lead">Caíste en ${where(S.wave)}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja.</p>
+    h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
+      <p class="lead">${S.failTxt || 'Caíste'} · ${whereNow()}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja. El encargo sigue en pie: puedes volver a intentarlo.</p>
       <button id="ovBtn" class="primary">A la forja</button>`;
   } else if (m === 'win') {
-    h = `<p class="eyebrow">Los cuatro mundos superados</p><h1>Has cruzado el Umbral</h1>
-      <p class="lead">${S.kills} bajas. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos del Sin Nombre encuentras una pieza: ' + S.found : ''}. Lo que robaste a los dioses se queda aquí.</p>
+    h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
+      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
       <button id="ovBtn" class="primary">A la forja</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
@@ -3495,16 +3662,18 @@ function renderHud() {
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
   const left = S.enemies.length + S.queue.length, bo = S.enemies.find(e => e.boss && e.spawn <= 0), inRun = S.wave > 0;
   const key = [Math.ceil(p.hp), p.maxHp, Math.round(p.reserve), S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, JSON.stringify(S.build), JSON.stringify(S.gun), S.techs.size, S.plans.size,
-    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1].join('|');
+    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
-  $('wave').textContent = !inRun ? '' : S.bossRoom ? WORLDS[S.world - 1].name + ' · jefe' : WORLDS[S.world - 1].name + ' · sala ' + S.room + ' de ' + RPW + ' · quedan ' + left;
+  const ms = S.mission;
+  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.defWave + ' de 4 · quedan ' + left : ms.type === 'assault' ? 'Asalto · estandartes ' + (S.postsDown || 0) + ' de 3' : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
   $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
   $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';
-  $('boss').hidden = !bo || S.mode !== 'play';
-  if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
+  $('boss').hidden = (!bo && !S.keep) || S.mode !== 'play';
+  if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
+  else if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
   $('dev').textContent = dev;
   $('hint').textContent = HINTS[lastDev] || HINTS.none;
   $('touch').hidden = lastDev !== 'touch';

@@ -95,6 +95,13 @@ h1{margin:0;font:400 clamp(32px,6.5vw,46px)/1 var(--title);color:var(--energy);t
 .forge section{display:flex;flex-direction:column;gap:8px;min-width:0}
 .forge h3{margin:6px 0 0;font:600 13px/1.2 var(--display);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
 .fi.sub{margin-left:18px}
+.kingdom{display:flex;flex-direction:column;gap:10px}
+.kingdom h2{margin:0;font:400 28px/1 var(--title);color:var(--energy)}
+.kmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.zone{display:flex;flex-direction:column;gap:6px;min-width:0;padding:10px;border:2px solid var(--zc,var(--line));background:linear-gradient(180deg,var(--zf,var(--wall)),var(--wall) 70%)}
+.zone h3{margin:0 0 2px;font:600 15px/1.2 var(--display);color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.zone.god{--zc:var(--ember);align-items:stretch}
+.zone .fi.off{opacity:.55}
 .forge h2{margin:0;font:600 16px/1.2 var(--display);color:var(--ember)}
 .fi{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;background:var(--wall);border:2px solid var(--line);padding:10px 12px;border-radius:2px;color:var(--ink);font:inherit;cursor:pointer}
 .fi b{font:600 15px/1.2 var(--display)}

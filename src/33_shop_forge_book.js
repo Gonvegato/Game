@@ -16,8 +16,8 @@ function openShop() {
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
 }
 function shopHtml() {
-  const p = S.p, boss = TYPES[WORLDS[S.world - 1].boss].name;
-  return `<p class="eyebrow">Tienda · ${WORLDS[S.world - 1].name}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la mazmorra: gástalo.</p><div class="forge"><section>` +
+  const p = S.p, boss = S.mission.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === S.mission.k).god].name : TYPES[WORLDS[S.world - 1].boss].name;
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
     S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
     `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">Cruzar la puerta de ${boss}</button>`;
 }
@@ -55,18 +55,18 @@ function forgeHtml() {
   const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
   const pace = `Árbol: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo en la mazmorra: ${hm(hrs)}.` +
     (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : ' El ritmo de almas por hora aparecerá cuando lleves un rato jugado.');
-  const past = M.runs ? `Llevas ${M.runs} ${M.runs === 1 ? 'vida' : 'vidas'}. Lo más lejos que has llegado: ${where(M.best)}${M.wins ? '. Has cruzado el Umbral ' + M.wins + (M.wins === 1 ? ' vez' : ' veces') : ''}.` : 'Es tu primera vida.';
-  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${where(M.run.wave + 1)}</button><button class="fi" data-act="go"><b>Empezar de nuevo</b><span>Abandona la partida en curso</span><i></i></button></div>` : `<button class="fi primary" data-act="go">Entrar en la mazmorra</button>`;
-  return `<p class="eyebrow">La forja · vida ${M.runs + 1}</p><h1>${M.runs ? 'Vuelves atrás, recordándolo todo' : 'Antes de entrar'}</h1>
+  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, sala ${M.run.wave + 1}</button></div>` : '';
+  return `<p class="eyebrow">La forja de Alec · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p><h1>${M.runs ? 'Entre encargo y encargo' : 'El primer contrato'}</h1>
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
-    <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. Las piezas de arma se descubren dentro: las sueltan los jefes, las vetas de Hierro Místico y la tienda. Forjarlas cuesta hierro y material de alguna deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
-    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    <p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>
+    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
-  if (k === 'go') { startRun(); return; }
+  if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
+  if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
   else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
@@ -78,7 +78,7 @@ let listSel = -1;
 function bindList() {
   const els = [...ovBody.querySelectorAll('.fi')], fn = S.mode === 'shop' ? shopAct : forgeAct;
   els.forEach(el => el.addEventListener('click', () => { audioInit(); listSel = els.indexOf(el); fn(el.dataset.act); }));
-  if (listSel < 0 || listSel >= els.length) listSel = S.mode === 'shop' ? 0 : els.findIndex(el => el.classList.contains('primary'));
+  if (listSel < 0 || listSel >= els.length) listSel = S.mode === 'shop' ? 0 : Math.max(els.findIndex(el => el.classList.contains('primary')), els.findIndex(el => el.dataset.act && el.dataset.act.startsWith('m:') && !el.classList.contains('on')));
   if (listSel < 0) listSel = 0;
   els.forEach((el, i) => el.classList.toggle('sel', i === listSel));
 }

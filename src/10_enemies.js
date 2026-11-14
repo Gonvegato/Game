@@ -11,11 +11,14 @@ const TYPES = {
   lancer:  { name: 'Lancero',     r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
   bat:     { name: 'Murciélago',  r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  post:    { name: 'Estandarte',  r: 10, hp: 230, speed: 0,   dmg: 0,  shape: 'square',  color: '#c0392b', cost: 99, post: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
   matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1500, speed: 62, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
   colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
   nameless:  { name: 'El Sin Nombre',          r: 22, hp: 3000, speed: 54, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
+  // Dioses: el jefe final de un reino
+  firstfist: { name: 'El Primer Puño',         r: 28, hp: 3400, speed: 50, dmg: 38, shape: 'square',  color: '#d9a066', boss: true, phases: 3, kit: ['slam', 'charge', 'leap', 'ring', 'summon'], sum: 'brute' },
 };
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
 const WORLDS = [
