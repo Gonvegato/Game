@@ -34,7 +34,8 @@ const keys = new Set(), tapped = new Set();   // tapped: pulsaciones más cortas
 const down = c => keys.has(c) || tapped.has(c);
 const touch = { joyId: null, ox: 0, oy: 0, x: 0, y: 0, atk: false, dodge: false, chg: false };
 let lastDev = 'none', padName = '', padBlocked = false;
-const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false };
+const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false, navX: 0, navY: 0 };
+const navRep = { x: 0, y: 0, at: 0 };
 const prev = { atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
 
 addEventListener('keydown', e => {
@@ -94,6 +95,11 @@ function pollInput() {
   const mm = Math.hypot(mx, my);
   if (mm > 1) { mx /= mm; my /= mm; }
   if (mx < -0.6 || my < -0.6) nav = -1; else if (mx > 0.6 || my > 0.6) nav = 1;
+  // Navegación por menús en dos ejes: gana el eje dominante; al mantener, repite
+  { const nx = Math.abs(mx) > 0.6 && Math.abs(mx) >= Math.abs(my) ? Math.sign(mx) : 0, ny = !nx && Math.abs(my) > 0.6 ? Math.sign(my) : 0, t = performance.now();
+    I.navX = I.navY = 0;
+    if (nx !== navRep.x || ny !== navRep.y) { navRep.x = nx; navRep.y = ny; navRep.at = t + 380; I.navX = nx; I.navY = ny; }
+    else if ((nx || ny) && t >= navRep.at) { navRep.at = t + 150; I.navX = nx; I.navY = ny; } }
 
   I.mx = mx; I.my = my; I.ax = ax; I.ay = ay; I.atk = atk; I.chg = chg;
   I.atkP = atk && !prev.atk;

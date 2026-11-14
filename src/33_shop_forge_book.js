@@ -82,12 +82,31 @@ function bindList() {
   if (listSel < 0) listSel = 0;
   els.forEach((el, i) => el.classList.toggle('sel', i === listSel));
 }
+// Moverse por un menú según dónde está cada botón en pantalla: derecha va al de la derecha, abajo al de abajo
+function navPick(els, cur, dx, dy) {
+  if (!els[cur]) return els.length ? 0 : -1;
+  const a = els[cur].getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+  let best = -1, bs = 1e9;
+  els.forEach((el, i) => {
+    if (i === cur) return;
+    const b = el.getBoundingClientRect();
+    // distancia en el eje pulsado, de borde a borde; y cuánto se desvía en el otro eje (0 si se solapan)
+    const along = dx ? (dx > 0 ? b.left - a.right : a.left - b.right) : (dy > 0 ? b.top - a.bottom : a.top - b.bottom);
+    if (along < -4) return;
+    if ((dx ? (b.left + b.width / 2 - ax) * dx : (b.top + b.height / 2 - ay) * dy) <= 2) return;
+    const off = dx ? Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)) : Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right));
+    const ctr = dx ? Math.abs(b.top + b.height / 2 - ay) : Math.abs(b.left + b.width / 2 - ax);
+    const score = Math.max(0, along) + off * 4 + ctr * 0.3;
+    if (score < bs) { bs = score; best = i; }
+  });
+  return best < 0 ? cur : best;
+}
 function listInput() {
   const els = [...ovBody.querySelectorAll('.fi')];
-  let moved = false;
-  if (I.navL && listSel > 0) { listSel--; moved = true; }
-  if (I.navR && listSel < els.length - 1) { listSel++; moved = true; }
-  if (moved) { els.forEach((el, i) => el.classList.toggle('sel', i === listSel)); els[listSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
+  if (I.navX || I.navY) {
+    const n = navPick(els, listSel, I.navX, I.navY);
+    if (n !== listSel && n >= 0) { listSel = n; els.forEach((el, i) => el.classList.toggle('sel', i === listSel)); els[listSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
+  }
   if (I.atkP && modeT > 0.3 && els[listSel]) els[listSel].click();
 }
 

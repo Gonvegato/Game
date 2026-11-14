@@ -90,8 +90,7 @@ function frame(now) {
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
-    if (I.navL && pickSel > 0) { pickSel--; moved = true; }
-    if (I.navR && pickSel < pickOpts.length - 1) { pickSel++; moved = true; }
+    if (I.navX || I.navY) { const n = navPick([...ovBody.querySelectorAll('.card')], pickSel, I.navX, I.navY); if (n >= 0 && n !== pickSel) { pickSel = n; moved = true; } }
     if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
     if (I.dodgeP) rerollPick();
