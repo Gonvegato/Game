@@ -31,6 +31,8 @@ const TYPES = {
   leaper:  { name: 'Araña',       r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#9bd36b', cost: 2 },
   sniper:  { name: 'Ballestero',  r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
   shaman:  { name: 'Chamán',      r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
+  lancer:  { name: 'Lancero',     r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
+  bat:     { name: 'Murciélago',  r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
@@ -40,10 +42,10 @@ const TYPES = {
 };
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
 const WORLDS = [
-  { name: 'Las Criptas',           floor: '#1a1e29', tile: '#1f2431', pool: ['stalker', 'runner', 'mage', 'brute'],                                         boss: 'guardian' },
-  { name: 'El Nido',               floor: '#1b2420', tile: '#202b25', pool: ['stalker', 'runner', 'leaper', 'bomber', 'brute'],                             boss: 'matriarch' },
-  { name: 'Las Minas de Cristal',  floor: '#1a2030', tile: '#212a40', pool: ['runner', 'mage', 'sniper', 'shaman', 'brute', 'leaper'],                      boss: 'colossus' },
-  { name: 'El Umbral',             floor: '#241a22', tile: '#2c2029', pool: ['stalker', 'runner', 'mage', 'brute', 'bomber', 'leaper', 'sniper', 'shaman'], boss: 'nameless' },
+  { name: 'Las Criptas',           floor: '#1a1e29', tile: '#1f2431', pool: ['stalker', 'runner', 'mage', 'brute', 'bat'],                                         boss: 'guardian' },
+  { name: 'El Nido',               floor: '#1b2420', tile: '#202b25', pool: ['stalker', 'runner', 'leaper', 'bomber', 'brute', 'bat'],                             boss: 'matriarch' },
+  { name: 'Las Minas de Cristal',  floor: '#1a2030', tile: '#212a40', pool: ['runner', 'mage', 'sniper', 'shaman', 'brute', 'leaper', 'lancer'],                      boss: 'colossus' },
+  { name: 'El Umbral',             floor: '#241a22', tile: '#2c2029', pool: ['stalker', 'runner', 'mage', 'brute', 'bomber', 'leaper', 'sniper', 'shaman', 'lancer', 'bat'], boss: 'nameless' },
 ];
 const TOTAL = WORLDS.length * (RPW + 1);
 
@@ -639,7 +641,7 @@ function newGame() {
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    stat: { sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    traps: [], stat: { spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -682,7 +684,7 @@ function nextWave() {
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind;
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.traps = n === 1 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, world.name, C.ink, true);
@@ -1138,7 +1140,15 @@ function buildRoom(boss) {
     }
     NAV.cols = c; NAV.rows = r; NAV.wall = new Uint8Array(c * r); NAV.dist = new Int16Array(c * r).fill(-1); NAV.t = 0; NAV.pc = -1;
     for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) NAV.wall[y * c + x] = g[y][x];
-    return { w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
+    // Trampas de pinchos: placas de 2×2 en suelo libre, lejos de la entrada
+    const traps = [];
+    for (let i = 0, tries = 0; i < (boss ? 3 : ri(2, 5)) && tries < 80; tries++) {
+      const x = ri(2, c - 4), y = ri(2, r - 4);
+      if (g[y][x] || g[y][x + 1] || g[y + 1][x] || g[y + 1][x + 1] || Math.hypot(x - sx, y - sy) < 5) continue;
+      if (traps.some(t => Math.abs(t.x / CELL - x) < 4 && Math.abs(t.y / CELL - y) < 4)) continue;
+      traps.push({ x: x * CELL, y: y * CELL, w: CELL * 2, h: CELL * 2, off: Math.random() * 3.4, state: 0, acc: 0, hitP: false }); i++;
+    }
+    return { traps, w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
   }
 }
 const isWallAt = (x, y) => { const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL); return cx < 0 || cy < 0 || cx >= NAV.cols || cy >= NAV.rows || NAV.wall[cy * NAV.cols + cx] === 1; };
@@ -1313,6 +1323,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
+  stain(e); for (let i = 0; i < (e.boss ? 14 : 4); i++) S.fx.push({ k: 'smoke', x: e.x + rnd(-e.r, e.r), y: e.y + rnd(-e.r, e.r * 0.5), vx: rnd(-10, 10), vy: -rnd(8, 26), t: 0, life: rnd(0.4, 0.8) });
   blip(160, 0.12, 'sawtooth', 0.04, -90);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
   if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
@@ -1578,6 +1589,11 @@ function fireBasic(target) {
   const big = p.crit || imb || p.quickBig || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
+  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // pólvora negra: fogonazo y humo en la boca del arma
+    const mx = p.x + Math.cos(p.face) * 17, my = p.y + 1 + Math.sin(p.face) * 17;
+    S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.06 });
+    for (let i = 0; i < (g.action === 'a_rotary' ? 1 : 3); i++) S.fx.push({ k: 'smoke', x: mx, y: my, vx: Math.cos(p.face) * rnd(8, 30) + rnd(-8, 8), vy: Math.sin(p.face) * rnd(8, 30) - rnd(4, 14), t: 0, life: rnd(0.35, 0.7) });
+  }
   blip(1250, 0.07, 'square', 0.035, -700);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos
     barrelFire(target, mult * 0.45, big, col, reach);
@@ -2265,12 +2281,12 @@ function update(dt) {
     } else if (e.rec > 0) e.rec -= dt;
     else if (d < e.r + p.r + 3) e.wind = e.type.wind;
     else {
-      if (e.champ) {
+      if (e.champ || e.type.lunge) {
         e.lungeCd -= dt;
-        if (e.lungeCd <= 0 && d < 150 && d > 45) { e.lungeCd = 3.5; e.lungeWind = 0.5; e.lvx = ux * 300; e.lvy = uy * 300; continue; }
+        if (e.lungeCd <= 0 && d < 150 && d > 45 && !blocked(e, p)) { e.lungeCd = 3.5; e.lungeWind = 0.5; e.lvx = ux * 300; e.lvy = uy * 300; continue; }
       }
-      const [gx, gy] = navDir(e, ux, uy);   // recto si te ve; por el camino si hay un muro en medio
-      e.x += gx * sp * dt; e.y += gy * sp * dt;
+      if (e.type.fly) { const w = Math.sin(S.t * 7 + e.x * 0.05) * 0.7; e.x += (ux - uy * w) * sp * dt; e.y += (uy + ux * w) * sp * dt; }   // vuela en zigzag por encima de los muros
+      else { const [gx, gy] = navDir(e, ux, uy); e.x += gx * sp * dt; e.y += gy * sp * dt; }   // recto si te ve; por el camino si hay un muro en medio
     }
   }
   // Zonas en el suelo: fuego o veneno
@@ -2302,7 +2318,7 @@ function update(dt) {
   }
   for (const e of S.enemies) {
     e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2);
-    if ((e.boss && e.act === 'leap') || e.leapT > 0) continue;             // en el aire no chocan
+    if ((e.boss && e.act === 'leap') || e.leapT > 0 || e.type.fly) continue;   // en el aire no chocan
     collide(e, e.r);
   }
   S.enemies = S.enemies.filter(e => e.hp > 0);
@@ -2334,7 +2350,16 @@ function update(dt) {
   S.lasers = S.lasers.filter(l => l.t > 0 && (!l.src || active(l.src)));
 
   // Efectos
-  for (const f of S.fx) { f.t += dt; if (f.k === 'spark') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.k === 'num') f.y -= 22 * dt; }
+  // Trampas de pinchos: reposo, aviso y arriba. Pinchan a quien esté encima, enemigos incluidos.
+  for (const tr of S.traps) {
+    const ph = (S.t + tr.off) % 3.4; tr.state = ph < 2 ? 0 : ph < 2.7 ? 1 : 2;
+    if (tr.state !== 2) { tr.hitP = false; tr.acc = 0.5; continue; }
+    const on = o => o.x > tr.x - o.r * 0.4 && o.x < tr.x + tr.w + o.r * 0.4 && o.y > tr.y - o.r * 0.4 && o.y < tr.y + tr.h + o.r * 0.4;
+    if (!tr.hitP && p.dodgeT <= 0 && on(p)) { tr.hitP = true; hurtPlayer(7 + 2 * S.world); }
+    tr.acc += dt;
+    if (tr.acc >= 0.5) { tr.acc = 0; for (const e of S.enemies.slice()) if (active(e) && !e.type.fly && e.leapT <= 0 && !(e.boss && e.act === 'leap') && on(e)) { S.stat.spike++; hit(e, Math.max(p.dmg * 1.5, e.boss ? 0 : e.maxHp * 0.2), 0, 0, false, C.ink); } }
+  }
+  for (const f of S.fx) { f.t += dt; if (f.k === 'spark' || f.k === 'smoke') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.k === 'num') f.y -= 22 * dt; }
   S.fx = S.fx.filter(f => f.t < f.life);
   if (S.fx.length > 500) S.fx.splice(0, S.fx.length - 500);
 }
@@ -2550,6 +2575,46 @@ const ART = {
     '...oIIo.oiIo.....',
     '...ooo..oIIIo....',
     '........oooo.....' ] },
+  // Lancero: esqueleto con capacete y una lanza larga por delante
+  lancer: { pal: { e: '#ff5d7a' }, legs: 3, rows: [
+    '....ooooo...........',
+    '...oiiiiio..........',
+    '..oiiwiiiio.........',
+    '..oIIIIIIIo.........',
+    '..onennenoo.........',
+    '..onnkknno..........',
+    '...onnnno...........',
+    '..ooNNNNooo.......o.',
+    '.onnnNnNnnnoooooooio',
+    '.onoonnnobbbbbbbbiiw',
+    '.oNoonNnooooooooooio',
+    '..o.onnno.........o.',
+    '....oNNNo...........',
+    '....onono...........',
+    '....onono...........',
+    '...onNoNno..........',
+    '...ooo.ooo..........' ],
+    alt: [
+    '....onono...........',
+    '...onNo.ono.........',
+    '...ooo.oNno.........' ] },
+  // Murciélago: visto desde arriba, con las alas abiertas o recogidas
+  bat: { pal: { c: '#6a4f86', C: '#3f2d55', e: '#ff5a4a' }, legs: 7, rows: [
+    '.o....o..o....o.',
+    'oco..oCooCo..oco',
+    'occooCcccccooCco',
+    'ocCCcceccecCCcco',
+    '.ocCCccccccCCco.',
+    '..oooCccccCooo..',
+    '.....oCooCo.....' ],
+    alt: [
+    '................',
+    '.....o.oo.o.....',
+    '..oooCooooCooo..',
+    '.occCceccecCcco.',
+    'occCCccccccCCcco',
+    'ocooooCccCooooco',
+    '.o....oooo....o.' ] },
   // Sombra alzada: la silueta de quien cayó, con dos ojos encendidos
   shade: { pal: { c: '#8e7bd0', C: '#4f4288', e: '#ffffff' }, legs: 0, rows: [
     '....oooo....',
@@ -2836,6 +2901,20 @@ function renderWorld() {
 
   if (S.mode === 'title') { lights(); return; }
 
+  // Trampas de pinchos
+  for (const tr of S.traps) {
+    ctx.fillStyle = '#16101a'; ctx.fillRect(tr.x + 1, tr.y + 1, tr.w - 2, tr.h - 2);
+    ctx.fillStyle = '#3a3540'; ctx.fillRect(tr.x + 2, tr.y + 2, tr.w - 4, tr.h - 4); ctx.fillStyle = '#4a4552'; ctx.fillRect(tr.x + 2, tr.y + 2, tr.w - 4, 1); ctx.fillRect(tr.x + 2, tr.y + 2, 1, tr.h - 4);
+    ctx.fillStyle = '#2c2832'; ctx.fillRect(tr.x + 2, tr.y + tr.h / 2, tr.w - 4, 1); ctx.fillRect(tr.x + tr.w / 2, tr.y + 2, 1, tr.h - 4);
+    ctx.strokeStyle = tr.state === 1 ? C.blood : '#16101a'; ctx.lineWidth = 1; ctx.strokeRect(tr.x + 1.5, tr.y + 1.5, tr.w - 3, tr.h - 3);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+      const x = tr.x + 4 + i * 8, y = tr.y + 5 + j * 8;
+      if (tr.state === 2) { ctx.fillStyle = '#16101a'; ctx.fillRect(x - 2, y - 5, 4, 7); ctx.fillStyle = PAL.i; ctx.fillRect(x - 1, y - 3, 2, 4); ctx.fillStyle = PAL.w; ctx.fillRect(x - 1, y - 5, 1, 3); ctx.fillStyle = PAL.I; ctx.fillRect(x, y - 1, 1, 2); }
+      else if (tr.state === 1) { ctx.fillStyle = PAL.i; ctx.fillRect(x - 1, y - 1 - (Math.floor(S.t * 12) % 2), 2, 2); }
+      else { ctx.fillStyle = '#16101a'; ctx.fillRect(x - 1, y - 1, 2, 2); }
+    }
+  }
+
   // Alcance
   ctx.beginPath(); ctx.arc(p.x, p.y, rangeOf(), 0, Math.PI * 2);
   ctx.strokeStyle = C.energy; ctx.globalAlpha = S.noTarget > 0 ? 0.55 : 0.13; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
@@ -3040,6 +3119,8 @@ function renderWorld() {
     else if (f.k === 'ring') { ctx.strokeStyle = f.col; ctx.globalAlpha = k; ctx.lineWidth = 3 * k + 0.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.6 * k), 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = f.col; ctx.globalAlpha = 0.18 * k; ctx.fill(); }
     else if (f.k === 'beam') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k * 0.5; ctx.lineWidth = f.w * 3 * k; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = k; ctx.lineWidth = f.w * k; ctx.stroke(); }
     else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
+    else if (f.k === 'smoke') { const sz = k > 0.6 ? 2 : 3; ctx.fillStyle = k > 0.5 ? '#b9b3ad' : '#7d7780'; ctx.globalAlpha = 0.55 * k; ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 1, sz, sz); }
+    else if (f.k === 'flash') { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y) - 1, 4, 2); ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 2, 2, 4); ctx.fillStyle = '#ff8a3c'; ctx.fillRect(Math.round(f.x) - 3, Math.round(f.y), 1, 1); ctx.fillRect(Math.round(f.x) + 2, Math.round(f.y) - 1, 1, 1); }
     else if (f.k === 'spark') { ctx.fillStyle = f.col; ctx.globalAlpha = k; ctx.fillRect(f.x - 1, f.y - 1, 2, 2); }
     else if (f.k === 'num') wtext(f.txt, f.x, f.y, f.big ? 12 : 8, f.col || (f.big ? C.ember : C.ink), Math.min(1, k * 2));
     ctx.globalAlpha = 1;
@@ -3129,6 +3210,16 @@ function vignette(w, h) {
   const g = VIG.getContext('2d'), gr = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.hypot(w, h) * 0.56);
   gr.addColorStop(0, 'rgba(8,5,12,0)'); gr.addColorStop(1, 'rgba(8,5,12,0.62)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
   return VIG;
+}
+// Lo que queda de un enemigo: una mancha en el suelo y algún hueso, pintados sobre el fondo de la sala para que se queden ahí
+function stain(e) {
+  const bg = ROOM_BG; if (!bg || bg.walls !== S.walls) return;
+  const g = bg.c.getContext('2d'), ox = BG_M * CELL, oy = BG_M * CELL, bone = ['lancer', 'sniper'].some(k => TYPES[k] === e.type), n = e.boss ? 60 : 8 + e.r * 2;
+  g.globalAlpha = 0.5; g.fillStyle = bone ? '#3a3640' : tone(e.color, -0.62);
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, d = Math.random() * Math.random() * (e.r + 5), x = Math.round(e.x + Math.cos(a) * d), y = Math.round(e.y + e.r * 0.6 + Math.sin(a) * d * 0.6); if (!isWallAt(x, y)) g.fillRect(ox + x, oy + y, Math.random() < 0.3 ? 2 : 1, 1); }
+  g.globalAlpha = 0.8;
+  if (bone) for (let i = 0; i < 3; i++) { const x = Math.round(e.x + rnd(-6, 6)), y = Math.round(e.y + e.r * 0.6 + rnd(-3, 3)); if (!isWallAt(x, y)) { g.fillStyle = '#a39c84'; g.fillRect(ox + x, oy + y, 3, 1); g.fillStyle = '#cfc8ae'; g.fillRect(ox + x, oy + y, 1, 1); } }
+  g.globalAlpha = 1;
 }
 // ───────────────────────── Interfaz (DOM) ─────────────────────────
 const ov = $('overlay'), ovBody = $('ovBody');

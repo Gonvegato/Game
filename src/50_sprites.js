@@ -209,6 +209,46 @@ const ART = {
     '...oIIo.oiIo.....',
     '...ooo..oIIIo....',
     '........oooo.....' ] },
+  // Lancero: esqueleto con capacete y una lanza larga por delante
+  lancer: { pal: { e: '#ff5d7a' }, legs: 3, rows: [
+    '....ooooo...........',
+    '...oiiiiio..........',
+    '..oiiwiiiio.........',
+    '..oIIIIIIIo.........',
+    '..onennenoo.........',
+    '..onnkknno..........',
+    '...onnnno...........',
+    '..ooNNNNooo.......o.',
+    '.onnnNnNnnnoooooooio',
+    '.onoonnnobbbbbbbbiiw',
+    '.oNoonNnooooooooooio',
+    '..o.onnno.........o.',
+    '....oNNNo...........',
+    '....onono...........',
+    '....onono...........',
+    '...onNoNno..........',
+    '...ooo.ooo..........' ],
+    alt: [
+    '....onono...........',
+    '...onNo.ono.........',
+    '...ooo.oNno.........' ] },
+  // Murciélago: visto desde arriba, con las alas abiertas o recogidas
+  bat: { pal: { c: '#6a4f86', C: '#3f2d55', e: '#ff5a4a' }, legs: 7, rows: [
+    '.o....o..o....o.',
+    'oco..oCooCo..oco',
+    'occooCcccccooCco',
+    'ocCCcceccecCCcco',
+    '.ocCCccccccCCco.',
+    '..oooCccccCooo..',
+    '.....oCooCo.....' ],
+    alt: [
+    '................',
+    '.....o.oo.o.....',
+    '..oooCooooCooo..',
+    '.occCceccecCcco.',
+    'occCCccccccCCcco',
+    'ocooooCccCooooco',
+    '.o....oooo....o.' ] },
   // Sombra alzada: la silueta de quien cayó, con dos ojos encendidos
   shade: { pal: { c: '#8e7bd0', C: '#4f4288', e: '#ffffff' }, legs: 0, rows: [
     '....oooo....',

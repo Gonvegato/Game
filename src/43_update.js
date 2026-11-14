@@ -290,12 +290,12 @@ function update(dt) {
     } else if (e.rec > 0) e.rec -= dt;
     else if (d < e.r + p.r + 3) e.wind = e.type.wind;
     else {
-      if (e.champ) {
+      if (e.champ || e.type.lunge) {
         e.lungeCd -= dt;
-        if (e.lungeCd <= 0 && d < 150 && d > 45) { e.lungeCd = 3.5; e.lungeWind = 0.5; e.lvx = ux * 300; e.lvy = uy * 300; continue; }
+        if (e.lungeCd <= 0 && d < 150 && d > 45 && !blocked(e, p)) { e.lungeCd = 3.5; e.lungeWind = 0.5; e.lvx = ux * 300; e.lvy = uy * 300; continue; }
       }
-      const [gx, gy] = navDir(e, ux, uy);   // recto si te ve; por el camino si hay un muro en medio
-      e.x += gx * sp * dt; e.y += gy * sp * dt;
+      if (e.type.fly) { const w = Math.sin(S.t * 7 + e.x * 0.05) * 0.7; e.x += (ux - uy * w) * sp * dt; e.y += (uy + ux * w) * sp * dt; }   // vuela en zigzag por encima de los muros
+      else { const [gx, gy] = navDir(e, ux, uy); e.x += gx * sp * dt; e.y += gy * sp * dt; }   // recto si te ve; por el camino si hay un muro en medio
     }
   }
   // Zonas en el suelo: fuego o veneno
@@ -327,7 +327,7 @@ function update(dt) {
   }
   for (const e of S.enemies) {
     e.x = clamp(e.x, e.r + 2, T.room.w - e.r - 2); e.y = clamp(e.y, e.r + 2, T.room.h - e.r - 2);
-    if ((e.boss && e.act === 'leap') || e.leapT > 0) continue;             // en el aire no chocan
+    if ((e.boss && e.act === 'leap') || e.leapT > 0 || e.type.fly) continue;   // en el aire no chocan
     collide(e, e.r);
   }
   S.enemies = S.enemies.filter(e => e.hp > 0);
@@ -359,7 +359,16 @@ function update(dt) {
   S.lasers = S.lasers.filter(l => l.t > 0 && (!l.src || active(l.src)));
 
   // Efectos
-  for (const f of S.fx) { f.t += dt; if (f.k === 'spark') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.k === 'num') f.y -= 22 * dt; }
+  // Trampas de pinchos: reposo, aviso y arriba. Pinchan a quien esté encima, enemigos incluidos.
+  for (const tr of S.traps) {
+    const ph = (S.t + tr.off) % 3.4; tr.state = ph < 2 ? 0 : ph < 2.7 ? 1 : 2;
+    if (tr.state !== 2) { tr.hitP = false; tr.acc = 0.5; continue; }
+    const on = o => o.x > tr.x - o.r * 0.4 && o.x < tr.x + tr.w + o.r * 0.4 && o.y > tr.y - o.r * 0.4 && o.y < tr.y + tr.h + o.r * 0.4;
+    if (!tr.hitP && p.dodgeT <= 0 && on(p)) { tr.hitP = true; hurtPlayer(7 + 2 * S.world); }
+    tr.acc += dt;
+    if (tr.acc >= 0.5) { tr.acc = 0; for (const e of S.enemies.slice()) if (active(e) && !e.type.fly && e.leapT <= 0 && !(e.boss && e.act === 'leap') && on(e)) { S.stat.spike++; hit(e, Math.max(p.dmg * 1.5, e.boss ? 0 : e.maxHp * 0.2), 0, 0, false, C.ink); } }
+  }
+  for (const f of S.fx) { f.t += dt; if (f.k === 'spark' || f.k === 'smoke') { f.x += f.vx * dt; f.y += f.vy * dt; } if (f.k === 'num') f.y -= 22 * dt; }
   S.fx = S.fx.filter(f => f.t < f.life);
   if (S.fx.length > 500) S.fx.splice(0, S.fx.length - 500);
 }
