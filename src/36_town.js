@@ -12,7 +12,8 @@ function openTown(from) {
   newGame();
   const room = buildRoom(false, from === 'hall' ? 'hall' : 'plaza', from === 'hall' ? 'hall' : 'plaza');
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = [];
-  S.town = { spots: room.out.spots, npcs: room.out.npcs, near: null };
+  S.town = { spots: room.out.spots, npcs: room.out.npcs.slice(), near: null };
+  for (const w of room.out.wander || []) { const [ax, ay, aw, ah] = w.area, n = { key: w.key, x: ax + Math.random() * aw, y: ay + Math.random() * ah, area: w.area, tx: 0, ty: 0, wait: Math.random() * 2, walking: false }; n.tx = n.x; n.ty = n.y; S.town.npcs.push(n); }
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
   if (from === 'castle') { const k = room.out.spots.find(s => s.id === 'king'); S.p.x = k.x; S.p.y = k.y + 20; S.p.face = Math.PI / 2; }
   S.mode = 'town'; modeT = 0; renderOverlay();
@@ -31,15 +32,22 @@ function townUpdate(dt) {
   let near = null, bd = 30;
   for (const s of S.town.spots) { const d = Math.hypot(s.x - p.x, s.y - p.y); if (d < bd) { bd = d; near = s; } }
   S.town.near = near;
+  for (const n of S.town.npcs) {   // los paseantes van de un sitio a otro de su zona y se paran un rato
+    if (!n.area) continue;
+    if (n.wait > 0) { n.wait -= dt; n.walking = false; continue; }
+    const dx = n.tx - n.x, dy = n.ty - n.y, d = Math.hypot(dx, dy);
+    if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
+    const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
+  }
   if (near && I.atkP && modeT > 0.3) { if (near.id === 'exit') openTown('castle'); else if (near.id === 'king' && S.out && !S.out.interior) { openTown('hall'); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {
   const tw = S.town, p = S.p;
-  for (const n of tw.npcs) {
+  for (const n of tw.npcs.slice().sort((a, b) => a.y - b.y)) {
     const x = n.x * CELL, y = n.y * CELL;
     ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.ellipse(x, y, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-    drawChar(n.key, 'idle', S.t + x * 0.01, x, y, !!n.flip, false);
+    drawChar(n.key, n.walking ? 'move' : 'idle', S.t + x * 0.01, x, y, !!n.flip, false);
   }
   for (const s of tw.spots) {
     const on = s === tw.near, b = Math.round(Math.sin(S.t * 5 + s.x) * 1.5);

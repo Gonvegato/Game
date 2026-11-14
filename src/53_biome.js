@@ -1,6 +1,6 @@
 // ───────────────────────── Exteriores: suelos y decorado del paquete de biomas (byandrox, itch.io) ─────────────────────────
 // La sala se pinta una vez: hierba, agua con sus orillas, caminos, y encima rocas, árboles y casas ordenados de arriba abajo.
-loadImg('biome', 'assets/biomes.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
+loadImg('biome', 'assets/biomes.png'); loadImg('town', 'assets/town.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
 const BIO = {
   grass: { tiles: [0, 0], inner: [64, 0], water: [64, 32], base: '#819447' },
   tree: [[243, 32, 26, 32], [246, 65, 20, 31], [272, 65, 16, 31], [292, 67, 24, 29], [243, 100, 24, 26], [276, 102, 22, 24], [245, 8, 21, 21], [272, 37, 16, 22]],
@@ -61,9 +61,30 @@ function roomBgOut() {
     else if (water(x - 1, y - 1)) tile(B.inner, 0, 0, x, y); else if (water(x + 1, y - 1)) tile(B.inner, 16, 0, x, y); else if (water(x - 1, y + 1)) tile(B.inner, 0, 16, x, y); else if (water(x + 1, y + 1)) tile(B.inner, 16, 16, x, y);
     else tile(B.tiles, 16, 16, x, y);
   }
-  const dry = (x, y) => at(x, y) === 0 && !water(x, y) && !water(x - 1, y) && !water(x + 1, y) && !water(x, y - 1) && !water(x, y + 1);
+  const onPave = (x, y) => (O.paves || []).some(([px, py, pw, ph]) => x >= px && y >= py && x < px + pw && y < py + ph);
+  const dry = (x, y) => at(x, y) === 0 && !onPave(x, y) && !water(x, y) && !water(x - 1, y) && !water(x + 1, y) && !water(x, y - 1) && !water(x, y + 1);
   // Caminos empedrados, flores y nenúfares
-  for (const path of O.paths) for (let k = 0; k + 1 < path.length; k++) {
+  // Empedrado (Pixel Crawler): ladrillo gris repetido, con bordillo y alguna mata de hierba asomando por el borde
+  const tw = IMG.town;
+  if (tw && O.paves) {
+    const T0 = TOWN.stone_floor, sx0 = T0[0], sy0 = T0[1] + 16, PW = 48, PH = 48;
+    for (const [px, py, pw, ph] of O.paves) {
+      const X0 = px * CELL, Y0 = py * CELL, X1 = (px + pw) * CELL, Y1 = (py + ph) * CELL;
+      for (let y = Y0; y < Y1; y += 16) for (let x = X0; x < X1; x += 16) g.drawImage(tw, sx0 + (x % PW), sy0 + (y % PH), 16, 16, x, y, 16, 16);
+    }
+    const paved = (x, y) => O.paves.some(([px, py, pw, ph]) => x >= px && y >= py && x < px + pw && y < py + ph);
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
+      if (!paved(x, y)) continue;
+      const X = x * CELL, Y = y * CELL;
+      if (!paved(x, y - 1)) { g.fillStyle = '#4a4a3e'; g.fillRect(X, Y, CELL, 2); g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(X, Y + 2, CELL, 2); }
+      if (!paved(x, y + 1)) { g.fillStyle = '#4a4a3e'; g.fillRect(X, Y + CELL - 2, CELL, 2); g.fillStyle = '#8c8a78'; g.fillRect(X, Y + CELL - 3, CELL, 1); }
+      if (!paved(x - 1, y)) { g.fillStyle = '#4a4a3e'; g.fillRect(X, Y, 2, CELL); }
+      if (!paved(x + 1, y)) { g.fillStyle = '#4a4a3e'; g.fillRect(X + CELL - 2, Y, 2, CELL); }
+      const edge = !paved(x, y - 1) || !paved(x, y + 1) || !paved(x - 1, y) || !paved(x + 1, y);
+      if (edge && hash(x, y, 31) < 0.22) { const d = BIO.deco[Math.floor(hash(x, y, 32) * 3)]; spr(d, X + hash(x, y, 33) * 6, Y + (paved(x, y - 1) ? 10 : -2)); }
+    }
+  }
+  for (const path of (tw && O.paves ? [] : O.paths)) for (let k = 0; k + 1 < path.length; k++) {
     const [ax, ay] = path[k], [bx, by] = path[k + 1], n = Math.ceil(Math.hypot(bx - ax, by - ay) * 16 / 11);
     for (let i = 0; i <= n; i++) { const x = (ax + (bx - ax) * i / n) * 16, y = (ay + (by - ay) * i / n) * 16; spr(BIO.cobble, x - 17 + (hash(i, k, 3) - 0.5) * 6, y - 15 + (hash(i, k, 4) - 0.5) * 6); }
   }
@@ -80,6 +101,20 @@ function roomBgOut() {
     if (o.kind === 'rock') items.push({ by, fn: () => { shadow(cx, by, 15); stand(BIO.rock[o.v % 4], cx, by); } });
     else if (o.kind === 'tree') items.push({ by, fn: () => { shadow(cx, by, 11); stand(BIO.tree[o.v % 6], cx, by); } });
     else if (o.kind === 'ruin') items.push({ by, fn: () => { const sp = BIO.ruin[o.v % BIO.ruin.length]; shadow(cx, by, Math.min(15, sp[2] / 2)); if (IMG.ruins) g.drawImage(IMG.ruins, sp[0], sp[1], sp[2], sp[3], Math.round(cx - sp[2] / 2), by + 2 - sp[3], sp[2], sp[3]); } });
+    else if (o.kind === 'prop') items.push({ by, fn: () => { const t = TOWN[o.k]; if (!tw || !t) return; shadow(cx, by, Math.min(16, t[2] / 2.4)); g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(cx - t[2] / 2), by + 2 - t[3], t[2], t[3]); } });
+    else if (o.kind === 'fence') items.push({ by, fn: () => {   // valla de madera, en tramos horizontales o verticales
+      g.fillStyle = '#3a241c'; if (o.horiz) { g.fillRect(X, by - 11, CELL, 2); g.fillRect(X, by - 6, CELL, 2); for (const dx of [1, 9]) { g.fillRect(X + dx, by - 14, 4, 13); } g.fillStyle = '#8a6240'; g.fillRect(X, by - 11, CELL, 1); g.fillRect(X, by - 6, CELL, 1); for (const dx of [2, 10]) g.fillRect(X + dx, by - 13, 2, 11); }
+      else { g.fillRect(X + 5, Y - 8, 6, CELL + 8); g.fillStyle = '#8a6240'; g.fillRect(X + 6, Y - 7, 4, CELL + 6); g.fillStyle = '#a67c52'; g.fillRect(X + 6, Y - 7, 4, 2); g.fillStyle = '#5b3a2a'; g.fillRect(X + 6, Y + 4, 4, 1); }
+    } });
+    else if (o.kind === 'stall') items.push({ by, fn: () => {   // puesto del mercado: mostrador, toldo a rayas y género del Pixel Crawler
+      const cols = [['#c0392b', '#efe6c8'], ['#3d6ea8', '#efe6c8'], ['#5a8a3c', '#efe6c8']][o.v % 3];
+      shadow(cx, by, W / 2);
+      g.fillStyle = '#3a241c'; g.fillRect(X + 2, by - 34, 3, 34); g.fillRect(X + W - 5, by - 34, 3, 34);
+      g.fillStyle = '#3a241c'; g.fillRect(X, by - 14, W, 12); g.fillStyle = '#a67c52'; g.fillRect(X + 1, by - 13, W - 2, 10); g.fillStyle = '#8a6240'; for (let x = X + 6; x < X + W - 2; x += 7) g.fillRect(x, by - 13, 1, 10); g.fillStyle = '#c69a6a'; g.fillRect(X + 1, by - 13, W - 2, 2);
+      for (let i = 0; i < 4; i++) { const v = TOWN['veg' + (1 + (i + o.v) % 4)]; if (tw && v) g.drawImage(tw, v[0], v[1], v[2], v[3], X + 3 + i * 11, by - 24, v[2], v[3]); }
+      for (let i = 0; i * 6 < W + 4; i++) { g.fillStyle = cols[i % 2]; g.fillRect(X - 2 + i * 6, by - 44, 6, 10); g.beginPath(); g.moveTo(X - 2 + i * 6, by - 34); g.lineTo(X + 4 + i * 6, by - 34); g.lineTo(X + 1 + i * 6, by - 31); g.fill(); }
+      g.fillStyle = '#2a1a18'; g.fillRect(X - 2, by - 45, W + 4, 1); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X, by - 33, W, 3);
+    } });
     else if (o.kind === 'barrel') items.push({ by, fn: () => { shadow(cx, by, 7); stand(BIO.barrel[o.v % 3], cx, by); } });
     else if (o.kind === 'well') items.push({ by, fn: () => { shadow(cx, by + 2, 13); stand(BIO.well, cx, by + 3); } });
     else if (o.kind === 'house') items.push({ by, fn: () => {   // casas montadas con el Pixel Crawler Free Pack; si no han cargado, la dibujada a mano

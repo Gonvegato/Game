@@ -58,10 +58,19 @@ CAST.update({
   'guard': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Soldier', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
   'guard_k': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Knight', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
   'priest': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Priest', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
+  'king': ('#Royal_Family_Elthen/King Sprite Sheet.png|64|32', {'idle': ('0', 4, 4), 'move': ('1', 8, 10), 'atk': ('6', 7, 8)}),
+  'queen': ('#Royal_Family_Elthen/Queen Sprite Sheet.png|32|32', {'idle': ('0', 8, 6), 'move': ('1', 8, 10)}),
+  'cit_peasant': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Peasant_A", {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Walk/Walk-Sheet.png', 6, 9)}),
+  'cit_tavern_a': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_A", {'idle': ('Idle_Hold/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Hold/Walk_Side-Sheet.png', 6, 9)}),
+  'cit_tavern_b': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_B", {'idle': ('Idle/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk/Walk_Side-Sheet.png', 6, 9)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
 PC = 'assets/library/packs/'
 def frames_of(folder, suffix):
+    if folder.startswith('#'):   # hoja en rejilla: «ruta|ancho|alto», sufijo = fila; cuenta los fotogramas no vacíos
+        path, fw, fh = folder[1:].split('|'); fw, fh = int(fw), int(fh); im = Image.open(PC + path).convert('RGBA'); row = int(suffix)
+        out = [im.crop((i * fw, row * fh, (i + 1) * fw, (row + 1) * fh)) for i in range(im.width // fw)]
+        return [f for f in out if f.getbbox()]
     if folder.startswith('@'):   # tira horizontal de fotogramas cuadrados (Pixel Crawler y similares)
         im = Image.open(PC + folder[1:] + '/' + suffix).convert('RGBA'); n = im.width // im.height
         return [im.crop((i * im.height, 0, (i + 1) * im.height, im.height)) for i in range(n)]

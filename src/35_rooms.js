@@ -3,7 +3,7 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [44, 32], hall: [24, 22] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -123,33 +123,48 @@ const ROOM_GEN = {
   },
   // Aldea al aire libre: cuatro casas alrededor de la campana, un pozo y barriles
   aldea_ext(g, c, r) {
-    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [] };
     outBorder(g, c, r);
     const cx = c >> 1, cy = r >> 1;
     [[0.22, 0.26], [0.78, 0.26], [0.22, 0.74], [0.78, 0.74]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 1, 6, 3, 'house', { v: i }));
     ob(g, cx - 10, cy, 2, 1, 'well'); ob(g, cx + 8, cy - 1, 1, 1, 'barrel', { v: 0 }); ob(g, cx + 9, cy - 1, 1, 1, 'barrel', { v: 1 }); ob(g, cx + 8, cy, 1, 1, 'barrel', { v: 2 });
     for (const [x, y] of [[cx - 8, 5], [cx + 6, r - 7], [5, cy - 6], [c - 7, cy + 4]]) ob(g, x, y, 2, 2, 'tree', { v: ri(0, 7) });
-    OUT.paths.push([[cx, 4], [cx, r - 4]], [[4, cy], [c - 4, cy]]);
+    OUT.paves.push([cx - 1, 2, 2, r - 4], [2, cy - 1, c - 4, 2], [cx - 4, cy - 3, 8, 6]);   // calles empedradas y la plazuela de la campana
     return [cx, cy + 4];
   },
-  // La plaza del reino: el castillo arriba, la forja y la posada a los lados, el patio de armas, el tablón y el pozo
+  // La plaza del reino: el castillo arriba; la plaza mayor empedrada con el pozo, el tablón y el mercado; la forja con su patio
+  // a la izquierda y la posada con su terraza a la derecha; abajo el patio de armas vallado, el huerto, más casas y el arroyo
   plaza(g, c, r) {
-    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], wander: [] };
     outBorder(g, c, r);
-    const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL });
-    ob(g, cx - 11, 0, 22, 5, 'castle');
-    ob(g, 3, 10, 8, 3, 'house', { v: 0, big: true }); ob(g, c - 11, 10, 8, 3, 'house', { v: 1, big: true });
-    ob(g, cx - 1, 15, 2, 1, 'well'); ob(g, cx + 6, 13, 2, 1, 'board');
-    ob(g, 12, 13, 1, 1, 'npc'); ob(g, c - 13, 13, 1, 1, 'npc');
-    for (const [x, y] of [[6, 19], [9, 18], [7, 22]]) ob(g, x, y, 1, 1, 'npc');
-    ob(g, 12, 21, 1, 1, 'barrel', { v: 0 }); ob(g, 12, 11, 1, 1, 'barrel', { v: 1 }); ob(g, c - 13, 11, 1, 1, 'barrel', { v: 2 }); ob(g, c - 5, 17, 2, 2, 'tree', { v: 2 }); ob(g, 16, 22, 2, 2, 'tree', { v: 4 }); ob(g, c - 14, 20, 2, 2, 'rock', { v: 1 });
-    for (let y = r - 8; y < r - 5; y++) for (let x = 2; x < c - 2; x++) if (x !== cx) g[y][x] = 2;   // el arroyo, con su puente
-    OUT.bridges.push({ x: cx, y: r - 8, h: 3 });
-    OUT.npcs.push({ key: 'smith', x: 12.5, y: 14 }, { key: 'keeper', x: c - 12.5, y: 14, flip: true }, { key: 'decoy', x: 6.5, y: 20 }, { key: 'post', x: 9.5, y: 19 }, { key: 'turret', x: 7.5, y: 23 }, { key: 'trainer', x: 10.5, y: 22 });
-    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(7, 13.6), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 7, 13.6), { id: 'inn', label: 'La posada' }),
-      Object.assign(P(8.5, 21), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 14.7), { id: 'board', label: 'El tablón de encargos' }));
-    OUT.paths.push([[cx, 7], [cx, 14]], [[cx, 17], [cx, r - 9]], [[7, 14.5], [cx - 2, 14.5]], [[cx + 2, 14.5], [c - 7, 14.5]], [[cx, r - 4.5], [cx, r - 3]]);
-    return [cx, 11];
+    const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL }), deco = (x, y, w, h, kind, extra) => ob(g, x, y, w, h, kind, extra);
+    deco(cx - 11, 0, 22, 5, 'castle');
+    deco(3, 9, 8, 3, 'house', { v: 0, big: true }); deco(c - 11, 9, 8, 3, 'house', { v: 1, big: true });   // forja y posada
+    deco(4, 3, 6, 2, 'house', { v: 0 }); deco(c - 10, 3, 6, 2, 'house', { v: 1 });                         // casas junto al castillo
+    deco(c - 11, 27, 8, 3, 'house', { v: 2, big: true }); deco(c - 19, 28, 6, 2, 'house', { v: 2 });           // casas del sur
+    // la plaza mayor y sus calles
+    OUT.paves.push([13, 8, c - 26, 15], [cx - 2, 5, 4, 3], [cx - 2, 23, 4, r - 23 - 4], [9, 13, 4, 3], [c - 13, 13, 4, 3]);
+    deco(cx - 1, 15, 2, 1, 'well'); deco(cx + 6, 11, 2, 1, 'board');
+    for (const [x, v] of [[15, 0], [19, 1], [c - 21, 2], [c - 17, 0]]) deco(x, 19, 3, 1, 'stall', { v });          // el mercado
+    // patio de la forja
+    deco(3, 14, 3, 2, 'prop', { k: 'anvil' }); deco(7, 14, 2, 2, 'prop', { k: 'furnace' }); deco(3, 17, 3, 1, 'prop', { k: 'workbench' });
+    // terraza de la posada
+    deco(c - 9, 15, 3, 1, 'prop', { k: 'bench' }); deco(c - 5, 15, 2, 1, 'barrel', { v: 0 }); deco(c - 9, 18, 3, 1, 'prop', { k: 'bench' }); deco(c - 4, 17, 1, 1, 'barrel', { v: 1 });
+    // patio de armas, vallado
+    for (let x = 4; x < 14; x++) { if (x < 8 || x > 9) deco(x, 24, 1, 1, 'fence', { horiz: 1 }); deco(x, r - 10, 1, 1, 'fence', { horiz: 1 }); }
+    for (let y = 25; y < r - 10; y++) { deco(4, y, 1, 1, 'fence', { horiz: 0 }); deco(13, y, 1, 1, 'fence', { horiz: 0 }); }
+    // huerto
+    deco(c - 24, 31, 2, 2, 'prop', { k: 'scarecrow' }); deco(c - 21, 32, 2, 1, 'prop', { k: 'hay' }); deco(c - 9, 32, 2, 1, 'prop', { k: 'hay' });
+    // árboles y arbustos sueltos
+    for (const [x, y, k] of [[13, 4, 'shrub'], [c - 15, 4, 'shrub2'], [16, 26, 'bush3'], [18, 30, 'bush1'], [c - 4, 21, 'bush2'], [11, 21, 'bush4'], [c - 24, 25, 'shrub'], [3, 21, 'bush2']]) deco(x, y, 2, 2, 'prop', { k });
+    for (let y = r - 6; y < r - 3; y++) for (let x = 2; x < c - 2; x++) if (x < cx - 2 || x > cx + 1) g[y][x] = 2;   // el arroyo, con su puente
+    OUT.bridges.push({ x: cx - 1, y: r - 6, h: 3 }, { x: cx, y: r - 6, h: 3 });
+    OUT.npcs.push({ key: 'smith', x: 6.5, y: 17 }, { key: 'keeper', x: c - 6.5, y: 14, flip: true }, { key: 'decoy', x: 7, y: 28 }, { key: 'post', x: 10.5, y: 27 }, { key: 'turret', x: 8.5, y: 29.6 }, { key: 'trainer', x: 11.5, y: 29.2 },
+      { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'cit_tavern_a', x: c - 8, y: 17.2 }, { key: 'villager', x: 17, y: 21 }, { key: 'villager', x: c - 19, y: 21, flip: true });
+    OUT.wander.push({ key: 'cit_peasant', area: [14, 9, c - 28, 9] }, { key: 'cit_tavern_b', area: [14, 9, c - 28, 9] }, { key: 'cit_peasant', area: [cx - 2, 23, 4, 7] }, { key: 'villager', area: [14, 12, c - 28, 6] }, { key: 'cit_tavern_b', area: [c - 12, 13, 8, 4] });
+    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(7, 12.6), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 7, 12.6), { id: 'inn', label: 'La posada' }),
+      Object.assign(P(9, 25.6), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 12.7), { id: 'board', label: 'El tablón de encargos' }));
+    return [cx, 12];
   },
   // El salón del trono: muros alrededor, alfombra hasta el trono, guardias a los lados y la puerta abajo
   hall(g, c, r) {
@@ -159,7 +174,7 @@ const ROOM_GEN = {
     for (let y = r - 2; y < r; y++) for (const x of [cx - 1, cx]) g[y][x] = 0;   // la puerta
     fillRect(g, cx - 1, 5, 2, 1);                                                 // el trono
     for (const x of [5, c - 7]) for (const y of [8, 13]) fillRect(g, x, y, 2, 2);  // columnas
-    OUT.npcs.push({ key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
+    OUT.npcs.push({ key: 'king', x: cx, y: 6.15 }, { key: 'queen', x: cx + 1.6, y: 6.9, flip: true }, { key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
     OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Audiencia con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
