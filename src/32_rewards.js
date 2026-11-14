@@ -16,27 +16,31 @@ const partScreen = eyebrow => () => {
 };
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
+// Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
-  const p = S.p, n = S.lvl, W = S.world, ms = S.mission;
-  if (ms.type === 'defend') { defendCleared(); return; }
-  if (ms.type === 'assault') { missionWin(); return; }
+  const p = S.p, n = S.lvl, W = S.world, ms = S.mission, N = roomsOf(ms), last = S.room >= N;
   if (S.bossRoom) { bossDown(); return; }
   p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
-  const gold = 8 + 2 * n; addGold(gold);
+  const gold = Math.round(8 + 2 * n); addGold(gold);
   pickQueue = []; S.rerolls = tk('reroll');
-  const here = ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms);
+  const unit = ms.type === 'defend' ? 'oleada' : ms.type === 'assault' ? 'campamento' : 'sala', here = ms.name + ' · ' + unit + ' ' + S.room + ' de ' + N;
   let got = '';
-  if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
+  if (ms.type === 'defend') {
+    S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.12);   // entre oleadas los aldeanos apuntalan la campana
+    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay un arma bendecida'));
+  } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
+  else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
   else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
-  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', ROOMS[S.roomType].color); blip(700, 0.2, 'triangle', 0.05, 500); }
-  if (ms.type === 'doors') { if (S.room < RPW) pickQueue.push(doorScreen); else afterPicks = missionWin; }   // incursión: cinco salas y se cobra
-  else if (S.room < roomsOf(ms) - 1) pickQueue.push(doorScreen);
-  else afterPicks = openShop;                       // antes del guardián o del dios: tienda
+  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', (ROOMS[S.roomType] || { color: C.ink }).color); blip(700, 0.2, 'triangle', 0.05, 500); }
+  const onward = ms.type === 'defend' || ms.type === 'assault' || S.room + 1 >= N && hasBoss(ms) ? null : doorScreen;   // en defensa y asalto no hay puertas; antes del jefe tampoco
+  if (last) afterPicks = missionWin;
+  else if (shopAfter(ms, S.room)) afterPicks = openShop;     // la tienda decide después por dónde sigues
+  else if (onward) pickQueue.push(onward);
   advancePick();
 }
 function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }

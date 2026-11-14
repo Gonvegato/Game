@@ -68,7 +68,7 @@ function renderHud() {
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
   const ms = S.mission;
-  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.defWave + ' de 4 · quedan ' + left : ms.type === 'assault' ? 'Asalto · estandartes ' + (S.postsDown || 0) + ' de 3' : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
+  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left : ms.type === 'assault' ? 'Asalto · campamento ' + S.room + ' de ' + roomsOf(ms) + ' · estandartes ' + (S.postsDown || 0) + ' de ' + (S.postsAll || 3) : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
   $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
   $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';

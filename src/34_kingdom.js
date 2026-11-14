@@ -2,12 +2,13 @@
 // Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
 // Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
+// Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
 const MTYPES = {
-  doors:   { name: 'Incursión', desc: 'Cinco salas seguidas. Tras cada una eliges puerta.' },
-  defend:  { name: 'Defensa',   desc: 'Cuatro oleadas contra una aldea. Si derriban la campana, fracasas.' },
-  assault: { name: 'Asalto',    desc: 'Un campamento con tres estandartes que no dejan de llamar refuerzos. Derríbalos todos.' },
-  boss:    { name: 'Guardián',  desc: 'Dos salas, una tienda y el guardián de la zona.' },
-  god:     { name: 'Dios',      desc: 'Una sala, una tienda y el dios.' },
+  doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas, con puerta a elegir tras cada una y dos tiendas por el camino.' },
+  defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Doce oleadas contra una aldea. Tras cada una te llevas una técnica. Si derriban la campana, fracasas.' },
+  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos, cada uno con estandartes que llaman refuerzos sin parar. Derríbalos todos.' },
+  boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas, dos tiendas y el guardián de la zona.' },
+  god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas, dos tiendas y el dios.' },
 };
 const KINGDOMS = [
   { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro',
@@ -31,8 +32,10 @@ function missionOf(id) {
 const isDone = id => !!(M.done || {})[id];
 const zoneOpen = (K, z) => [0, 1, 2].every(i => isDone(`${K.id}:${z}:${i}`));
 const godOpen = K => K.zones.every((_, z) => isDone(`${K.id}:${z}:b`));
-const payOf = ms => (ms.type === 'god' ? 160 : ms.type === 'boss' ? 55 + 15 * ms.z : 18 + 8 * ms.z);
-const roomsOf = ms => (ms.type === 'doors' ? RPW : ms.type === 'boss' ? 3 : ms.type === 'god' ? 2 : 1);
+const payOf = ms => (ms.type === 'god' ? 400 : ms.type === 'boss' ? 150 + 40 * ms.z : 60 + 25 * ms.z);
+const roomsOf = ms => MTYPES[ms.type].rooms;
+const shopAfter = (ms, r) => MTYPES[ms.type].shops.includes(r);
+const hasBoss = ms => ms.type === 'boss' || ms.type === 'god';
 const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · ' + ms.name; };
 
 // El mapa del reino, en la forja: cuatro zonas con sus misiones y, en medio, el dios
@@ -62,30 +65,27 @@ function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode(
 const resumePlay = () => { S.mode = 'play'; modeT = 0; renderOverlay(); };
 const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
 
-// ── Defensa de una aldea: oleadas; parte de los enemigos va a por la campana en vez de a por ti ──
+// ── Defensa de una aldea: cada oleada es un tramo; parte de los enemigos va a por la campana en vez de a por ti ──
 function fillDefWave() {
-  const w = S.defWave; let budget = 7 + S.lvl * 1.3 + w * 3; const list = [], pool = WORLDS[S.world - 1].pool;
-  while (budget > 0.5 && list.length < 22) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
-  S.queue = list.map((type, i) => ({ type, at: S.waveT + 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly }));
-  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de 4', C.blood, true); sayRaw('[Oleada ' + w + ' de 4. Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
-}
-function defendCleared() {
-  const p = S.p;
-  if (S.defWave >= 4) { missionWin(); return; }
-  S.keep.hp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.15);   // entre oleadas los aldeanos la apuntalan un poco
-  S.defWave += 1; p.hp = Math.min(p.maxHp, p.hp + 8 + 4 * tk('mend')); addGold(12 + 2 * S.lvl);
-  pickQueue = [pieceScreen(lootGod(), 'Oleada rechazada · entre los caídos hay un arma bendecida')]; S.rerolls = tk('reroll');
-  afterPicks = () => { resumePlay(); fillDefWave(); };
-  advancePick();
+  const w = S.room; let budget = 8 + S.lvl * 1.5; const list = [], pool = WORLDS[S.world - 1].pool;
+  while (budget > 0.5 && list.length < 26) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
+  list.sort(() => Math.random() - 0.5);
+  if (w % 3 === 0) list.splice(Math.ceil(list.length / 2), 0, 'champ');   // cada tres oleadas llega un elegido con los asaltantes
+  S.queue = list.map((type, i) => ({ type, at: 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly && type !== 'champ' }));
+  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de ' + roomsOf(S.mission), C.blood, true);
+  if (w === 1) sayRaw('[Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
 }
 // ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
 function setupAssault() {
   const p = S.p, spots = [];
-  for (let i = 0, tries = 0; i < 3 && tries < 200; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
+  S.postsAll = S.room >= 4 ? 4 : 3;
+  for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
-  let budget = 6 + S.lvl * 1.2; const pool = WORLDS[S.world - 1].pool, list = [];
+  let budget = 7 + S.lvl * 1.4; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 14) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
   S.postsDown = 0;
-  sayRaw('[Tres estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
+  S.postsAll = spots.length;
+  if (S.room === 1) sayRaw('[Los estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
+  note(S.p.x, S.p.y - 30, 'Campamento ' + S.room + ' de ' + roomsOf(S.mission), C.blood, true);
 }

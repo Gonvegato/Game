@@ -38,12 +38,12 @@ function endRun(win) {
 function saveRun() {
   const p = S.p;
   // Copia completa: lo que ganes después en esta sala no se cuela en el guardado; al continuar, la sala se repite sin cobrar nada dos veces
-  M.run = JSON.parse(JSON.stringify({ mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
+  M.run = JSON.parse(JSON.stringify({ keepHp: S.keepHp == null ? null : S.keepHp, mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
     p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve } }));
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission;
+  const r = M.run; newGame(); S.mission = r.mission; S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();

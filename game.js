@@ -852,12 +852,12 @@ function endRun(win) {
 function saveRun() {
   const p = S.p;
   // Copia completa: lo que ganes después en esta sala no se cuela en el guardado; al continuar, la sala se repite sin cobrar nada dos veces
-  M.run = JSON.parse(JSON.stringify({ mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
+  M.run = JSON.parse(JSON.stringify({ keepHp: S.keepHp == null ? null : S.keepHp, mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
     p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve } }));
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission;
+  const r = M.run; newGame(); S.mission = r.mission; S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -904,24 +904,25 @@ function startRun(mission) {
 function nextWave() {
   S.wave += 1;
   const ms = S.mission, n = S.wave, r = n, W = ms.z + 1, world = WORLDS[W - 1], K = KINGDOMS.find(x => x.id === ms.k);
-  S.world = W; S.room = r; S.bossRoom = (ms.type === 'boss' && r === 3) || (ms.type === 'god' && r === 2);
+  S.world = W; S.room = r; S.bossRoom = hasBoss(ms) && r === roomsOf(ms);
   // Nivel de dificultad: sube con la zona y con lo adentro que estés de la misión
-  S.lvl = ms.type === 'god' ? 14 : ms.z * 3 + (ms.type === 'doors' ? r : ms.type === 'boss' ? 3 + r : 3);
+  S.lvl = ms.z * 2.5 + (ms.type === 'doors' ? r : ms.type === 'defend' ? r * 1.15 : ms.type === 'assault' ? 1 + r * 2.6 : ms.type === 'boss' ? 2 + r * 1.3 : 9 + r * 1.2);
   const first = ms.z === 0 && ms.type === 'doors' && r === 1 && !isDone(ms.id), bossKey = ms.type === 'god' ? K.god : world.boss;
   S.roomType = S.bossRoom ? 'boss' : ms.type === 'defend' || ms.type === 'assault' ? ms.type : S.next.type; S.god = S.roomType === 'god' ? S.next.god : null;
-  C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = 0;
+  C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = ms.type === 'defend' ? r : 0;
   const list = [];
   if (S.bossRoom) list.push(bossKey);
   else if (ms.type === 'doors' || ms.type === 'boss' || ms.type === 'god') {
-    let budget = first ? 5 : 6 + S.lvl * 1.45 + (S.roomType === 'god' ? 0 : 2.5);
+    let budget = first ? 5 : 7.5 + S.lvl * 1.7 + (S.roomType === 'god' ? 0 : 2.5);
     const pool = first ? ['stalker'] : world.pool;
-    while (budget > 0.5 && list.length < 20) {
+    while (budget > 0.5 && list.length < 24) {
       const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5);
       if (!cand.length) break;
       const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost;
     }
     list.sort(() => Math.random() - 0.5);
     if (S.roomType === 'god') list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de la deidad
+    if (S.roomType === 'god' && S.lvl >= 12) list.push('champ');                    // muy adentro, los elegidos van de dos en dos
   }
   S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
@@ -932,7 +933,7 @@ function nextWave() {
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
-  if (ms.type === 'defend') { S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: 520 + 120 * ms.z, maxHp: 520 + 120 * ms.z, flash: 0 }; S.defWave = 1; fillDefWave(); }
+  if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
   saveRun();
 }
@@ -941,7 +942,7 @@ function spawn(typeKey, q) {
   const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
   const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
-  const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 1 : 0.8 + 0.15 * S.mission.z) : 1 + 0.16 * (S.lvl - 1)));
+  const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 3.2 : 2 + 0.4 * S.mission.z) : 1 + 0.18 * (S.lvl - 1)));
   { const at = q.pos ? q.pos : q.near ? unstick(clamp(q.near.x + rnd(-46, 46), 20, T.room.w - 20), clamp(q.near.y + rnd(-46, 46), 20, T.room.h - 20)) : S.keep ? freeSpot(S.keep, Math.min(T.room.w, T.room.h) * 0.42) : freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
@@ -950,7 +951,7 @@ function spawn(typeKey, q) {
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 5.5 * CELL, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
   // Élites: a partir del segundo mundo, algunos enemigos corrientes llegan con un rasgo y un aura que lo avisa
-  if (!ty.boss && !ty.champ && !ty.fly && !ty.post && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
+  if (!ty.boss && !ty.champ && !ty.fly && !ty.post && (S.world >= 2 || S.lvl >= 6) && Math.random() < 0.05 + 0.035 * S.world + 0.006 * S.lvl) {
     e.elite = ['fast', 'tough', 'volatile'][Math.floor(Math.random() * 3)];
     if (e.elite === 'fast') e.speed *= 1.45;
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
@@ -992,27 +993,31 @@ const partScreen = eyebrow => () => {
 };
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
+// Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
-  const p = S.p, n = S.lvl, W = S.world, ms = S.mission;
-  if (ms.type === 'defend') { defendCleared(); return; }
-  if (ms.type === 'assault') { missionWin(); return; }
+  const p = S.p, n = S.lvl, W = S.world, ms = S.mission, N = roomsOf(ms), last = S.room >= N;
   if (S.bossRoom) { bossDown(); return; }
   p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
-  const gold = 8 + 2 * n; addGold(gold);
+  const gold = Math.round(8 + 2 * n); addGold(gold);
   pickQueue = []; S.rerolls = tk('reroll');
-  const here = ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms);
+  const unit = ms.type === 'defend' ? 'oleada' : ms.type === 'assault' ? 'campamento' : 'sala', here = ms.name + ' · ' + unit + ' ' + S.room + ' de ' + N;
   let got = '';
-  if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
+  if (ms.type === 'defend') {
+    S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.12);   // entre oleadas los aldeanos apuntalan la campana
+    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay un arma bendecida'));
+  } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
+  else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
   else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
-  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', ROOMS[S.roomType].color); blip(700, 0.2, 'triangle', 0.05, 500); }
-  if (ms.type === 'doors') { if (S.room < RPW) pickQueue.push(doorScreen); else afterPicks = missionWin; }   // incursión: cinco salas y se cobra
-  else if (S.room < roomsOf(ms) - 1) pickQueue.push(doorScreen);
-  else afterPicks = openShop;                       // antes del guardián o del dios: tienda
+  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', (ROOMS[S.roomType] || { color: C.ink }).color); blip(700, 0.2, 'triangle', 0.05, 500); }
+  const onward = ms.type === 'defend' || ms.type === 'assault' || S.room + 1 >= N && hasBoss(ms) ? null : doorScreen;   // en defensa y asalto no hay puertas; antes del jefe tampoco
+  if (last) afterPicks = missionWin;
+  else if (shopAfter(ms, S.room)) afterPicks = openShop;     // la tienda decide después por dónde sigues
+  else if (onward) pickQueue.push(onward);
   advancePick();
 }
 function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }
@@ -1129,14 +1134,18 @@ function openShop() {
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
 }
 function shopHtml() {
-  const p = S.p, boss = S.mission.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === S.mission.k).god].name : TYPES[WORLDS[S.world - 1].boss].name;
-  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>Antes de ${boss}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
+  const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
     S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
-    `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">Cruzar la puerta de ${boss}</button>`;
+    `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button>`;
 }
 function shopAct(act) {
   const [k, i] = act.split(':'), p = S.p;
-  if (k === 'boss') { S.mode = 'play'; modeT = 0; nextWave(); renderOverlay(); return; }
+  if (k === 'boss') {   // salir de la tienda: al jefe, a la siguiente oleada o campamento, o a elegir puerta
+    const ms = S.mission, direct = ms.type === 'defend' || ms.type === 'assault' || (hasBoss(ms) && S.room + 1 >= roomsOf(ms));
+    if (direct) { S.mode = 'play'; modeT = 0; nextWave(); renderOverlay(); } else { pickQueue = [doorScreen]; advancePick(); }
+    return;
+  }
   const it = S.shop.items[+i];
   if (it.sold || p.gold < it.price) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
   if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
@@ -1280,12 +1289,13 @@ function legHint(id) {
 // Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
 // Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
+// Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
 const MTYPES = {
-  doors:   { name: 'Incursión', desc: 'Cinco salas seguidas. Tras cada una eliges puerta.' },
-  defend:  { name: 'Defensa',   desc: 'Cuatro oleadas contra una aldea. Si derriban la campana, fracasas.' },
-  assault: { name: 'Asalto',    desc: 'Un campamento con tres estandartes que no dejan de llamar refuerzos. Derríbalos todos.' },
-  boss:    { name: 'Guardián',  desc: 'Dos salas, una tienda y el guardián de la zona.' },
-  god:     { name: 'Dios',      desc: 'Una sala, una tienda y el dios.' },
+  doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas, con puerta a elegir tras cada una y dos tiendas por el camino.' },
+  defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Doce oleadas contra una aldea. Tras cada una te llevas una técnica. Si derriban la campana, fracasas.' },
+  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos, cada uno con estandartes que llaman refuerzos sin parar. Derríbalos todos.' },
+  boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas, dos tiendas y el guardián de la zona.' },
+  god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas, dos tiendas y el dios.' },
 };
 const KINGDOMS = [
   { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro',
@@ -1309,8 +1319,10 @@ function missionOf(id) {
 const isDone = id => !!(M.done || {})[id];
 const zoneOpen = (K, z) => [0, 1, 2].every(i => isDone(`${K.id}:${z}:${i}`));
 const godOpen = K => K.zones.every((_, z) => isDone(`${K.id}:${z}:b`));
-const payOf = ms => (ms.type === 'god' ? 160 : ms.type === 'boss' ? 55 + 15 * ms.z : 18 + 8 * ms.z);
-const roomsOf = ms => (ms.type === 'doors' ? RPW : ms.type === 'boss' ? 3 : ms.type === 'god' ? 2 : 1);
+const payOf = ms => (ms.type === 'god' ? 400 : ms.type === 'boss' ? 150 + 40 * ms.z : 60 + 25 * ms.z);
+const roomsOf = ms => MTYPES[ms.type].rooms;
+const shopAfter = (ms, r) => MTYPES[ms.type].shops.includes(r);
+const hasBoss = ms => ms.type === 'boss' || ms.type === 'god';
 const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · ' + ms.name; };
 
 // El mapa del reino, en la forja: cuatro zonas con sus misiones y, en medio, el dios
@@ -1340,32 +1352,29 @@ function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode(
 const resumePlay = () => { S.mode = 'play'; modeT = 0; renderOverlay(); };
 const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
 
-// ── Defensa de una aldea: oleadas; parte de los enemigos va a por la campana en vez de a por ti ──
+// ── Defensa de una aldea: cada oleada es un tramo; parte de los enemigos va a por la campana en vez de a por ti ──
 function fillDefWave() {
-  const w = S.defWave; let budget = 7 + S.lvl * 1.3 + w * 3; const list = [], pool = WORLDS[S.world - 1].pool;
-  while (budget > 0.5 && list.length < 22) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
-  S.queue = list.map((type, i) => ({ type, at: S.waveT + 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly }));
-  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de 4', C.blood, true); sayRaw('[Oleada ' + w + ' de 4. Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
-}
-function defendCleared() {
-  const p = S.p;
-  if (S.defWave >= 4) { missionWin(); return; }
-  S.keep.hp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.15);   // entre oleadas los aldeanos la apuntalan un poco
-  S.defWave += 1; p.hp = Math.min(p.maxHp, p.hp + 8 + 4 * tk('mend')); addGold(12 + 2 * S.lvl);
-  pickQueue = [pieceScreen(lootGod(), 'Oleada rechazada · entre los caídos hay un arma bendecida')]; S.rerolls = tk('reroll');
-  afterPicks = () => { resumePlay(); fillDefWave(); };
-  advancePick();
+  const w = S.room; let budget = 8 + S.lvl * 1.5; const list = [], pool = WORLDS[S.world - 1].pool;
+  while (budget > 0.5 && list.length < 26) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
+  list.sort(() => Math.random() - 0.5);
+  if (w % 3 === 0) list.splice(Math.ceil(list.length / 2), 0, 'champ');   // cada tres oleadas llega un elegido con los asaltantes
+  S.queue = list.map((type, i) => ({ type, at: 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly && type !== 'champ' }));
+  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de ' + roomsOf(S.mission), C.blood, true);
+  if (w === 1) sayRaw('[Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
 }
 // ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
 function setupAssault() {
   const p = S.p, spots = [];
-  for (let i = 0, tries = 0; i < 3 && tries < 200; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
+  S.postsAll = S.room >= 4 ? 4 : 3;
+  for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
-  let budget = 6 + S.lvl * 1.2; const pool = WORLDS[S.world - 1].pool, list = [];
+  let budget = 7 + S.lvl * 1.4; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 14) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
   S.postsDown = 0;
-  sayRaw('[Tres estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
+  S.postsAll = spots.length;
+  if (S.room === 1) sayRaw('[Los estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
+  note(S.p.x, S.p.y - 30, 'Campamento ' + S.room + ' de ' + roomsOf(S.mission), C.blood, true);
 }
 // ───────────────────────── Salas: muros, formas y caminos ─────────────────────────
 // Cada sala es una rejilla de casillas de CELL unidades. Un generador decide qué casillas son muro;
@@ -1685,7 +1694,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
-  if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de 3]', C.ink); if (S.postsDown < 3) S.pendingLoot = true; }
+  if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
   if (has('i_shatter') && e.frozen > 0) for (const o of others(e, 100, 4)) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: GODS.frost.color }); hit(o, p.dmg * 0.4, 0, 0, false, GODS.frost.color); }   // Astillas
   if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
@@ -4055,7 +4064,7 @@ function renderHud() {
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
   const ms = S.mission;
-  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.defWave + ' de 4 · quedan ' + left : ms.type === 'assault' ? 'Asalto · estandartes ' + (S.postsDown || 0) + ' de 3' : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
+  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left : ms.type === 'assault' ? 'Asalto · campamento ' + S.room + ' de ' + roomsOf(ms) + ' · estandartes ' + (S.postsDown || 0) + ' de ' + (S.postsAll || 3) : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
   $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
   $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';

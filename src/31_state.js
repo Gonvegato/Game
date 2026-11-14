@@ -39,24 +39,25 @@ function startRun(mission) {
 function nextWave() {
   S.wave += 1;
   const ms = S.mission, n = S.wave, r = n, W = ms.z + 1, world = WORLDS[W - 1], K = KINGDOMS.find(x => x.id === ms.k);
-  S.world = W; S.room = r; S.bossRoom = (ms.type === 'boss' && r === 3) || (ms.type === 'god' && r === 2);
+  S.world = W; S.room = r; S.bossRoom = hasBoss(ms) && r === roomsOf(ms);
   // Nivel de dificultad: sube con la zona y con lo adentro que estés de la misión
-  S.lvl = ms.type === 'god' ? 14 : ms.z * 3 + (ms.type === 'doors' ? r : ms.type === 'boss' ? 3 + r : 3);
+  S.lvl = ms.z * 2.5 + (ms.type === 'doors' ? r : ms.type === 'defend' ? r * 1.15 : ms.type === 'assault' ? 1 + r * 2.6 : ms.type === 'boss' ? 2 + r * 1.3 : 9 + r * 1.2);
   const first = ms.z === 0 && ms.type === 'doors' && r === 1 && !isDone(ms.id), bossKey = ms.type === 'god' ? K.god : world.boss;
   S.roomType = S.bossRoom ? 'boss' : ms.type === 'defend' || ms.type === 'assault' ? ms.type : S.next.type; S.god = S.roomType === 'god' ? S.next.god : null;
-  C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = 0;
+  C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = ms.type === 'defend' ? r : 0;
   const list = [];
   if (S.bossRoom) list.push(bossKey);
   else if (ms.type === 'doors' || ms.type === 'boss' || ms.type === 'god') {
-    let budget = first ? 5 : 6 + S.lvl * 1.45 + (S.roomType === 'god' ? 0 : 2.5);
+    let budget = first ? 5 : 7.5 + S.lvl * 1.7 + (S.roomType === 'god' ? 0 : 2.5);
     const pool = first ? ['stalker'] : world.pool;
-    while (budget > 0.5 && list.length < 20) {
+    while (budget > 0.5 && list.length < 24) {
       const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5);
       if (!cand.length) break;
       const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost;
     }
     list.sort(() => Math.random() - 0.5);
     if (S.roomType === 'god') list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de la deidad
+    if (S.roomType === 'god' && S.lvl >= 12) list.push('champ');                    // muy adentro, los elegidos van de dos en dos
   }
   S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
@@ -67,7 +68,7 @@ function nextWave() {
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
-  if (ms.type === 'defend') { S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: 520 + 120 * ms.z, maxHp: 520 + 120 * ms.z, flash: 0 }; S.defWave = 1; fillDefWave(); }
+  if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
   saveRun();
 }
@@ -76,7 +77,7 @@ function spawn(typeKey, q) {
   const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
   const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
-  const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 1 : 0.8 + 0.15 * S.mission.z) : 1 + 0.16 * (S.lvl - 1)));
+  const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 3.2 : 2 + 0.4 * S.mission.z) : 1 + 0.18 * (S.lvl - 1)));
   { const at = q.pos ? q.pos : q.near ? unstick(clamp(q.near.x + rnd(-46, 46), 20, T.room.w - 20), clamp(q.near.y + rnd(-46, 46), 20, T.room.h - 20)) : S.keep ? freeSpot(S.keep, Math.min(T.room.w, T.room.h) * 0.42) : freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
     spawn: 0.65, flash: 0, kx: 0, ky: 0, wind: 0, rec: 0, cool: rnd(0.8, 1.8), cast: 0, dir: 0,
@@ -85,7 +86,7 @@ function spawn(typeKey, q) {
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 5.5 * CELL, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
   // Élites: a partir del segundo mundo, algunos enemigos corrientes llegan con un rasgo y un aura que lo avisa
-  if (!ty.boss && !ty.champ && !ty.fly && !ty.post && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
+  if (!ty.boss && !ty.champ && !ty.fly && !ty.post && (S.world >= 2 || S.lvl >= 6) && Math.random() < 0.05 + 0.035 * S.world + 0.006 * S.lvl) {
     e.elite = ['fast', 'tough', 'volatile'][Math.floor(Math.random() * 3)];
     if (e.elite === 'fast') e.speed *= 1.45;
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }

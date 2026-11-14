@@ -73,7 +73,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
-  if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de 3]', C.ink); if (S.postsDown < 3) S.pendingLoot = true; }
+  if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
   if (has('i_shatter') && e.frozen > 0) for (const o of others(e, 100, 4)) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: GODS.frost.color }); hit(o, p.dmg * 0.4, 0, 0, false, GODS.frost.color); }   // Astillas
   if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
