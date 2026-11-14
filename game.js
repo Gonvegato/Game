@@ -149,6 +149,21 @@ const GODS = {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
+  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Daga de Azogue', mat: 'Azogue', color: '#cfd6de',
+    key: 'Un Reflejo tuyo se coloca al otro lado del enemigo y repite lo que haces desde allí.', lines: {
+    enter: ['te mira desde un charco. Llevas tu cara.', 'pone a su elegido frente a un espejo. Salen dos.'],
+    champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
+    take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
+  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
+    key: 'Un sabueso pelea a tu lado: muerde a quien tú disparas y obedece a tu cargado y a tu esquive.', lines: {
+    enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
+    champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
+    take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
+  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
+    key: 'Temple: el arma se va endureciendo mientras disparas, y cada punto la hace pegar más. Los golpes que recibes lo enfrían.', lines: {
+    enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
+    champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
+    take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -242,6 +257,21 @@ const PIECES = [
   { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `El cargado abre 2,5 s un pozo donde apuntas: arrastra a todos al centro, hace ${25 * l}% de daño por pulso y al cerrarse estalla (${100 * l}%).` },
   { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `El esquive deja ${1 + l} s un pozo pequeño donde estabas, que arrastra hacia él a los enemigos cercanos.` },
   { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada otro enemigo que tenga pegado, hasta cuatro.` },
+  // Espejos
+  { id: 'mirror_basic',   god: 'mirror', slot: 'basic',   name: 'Reflejo',          desc: l => `Tienes un Reflejo al otro lado de tu objetivo. Cada vez que disparas, él dispara también, al ${30 * l}% de daño y con tus efectos.` },
+  { id: 'mirror_charge',  god: 'mirror', slot: 'charge',  name: 'Doble',            desc: l => `Tu Reflejo repite el cargado desde donde está, al ${40 + 15 * l}% de daño: el enemigo lo recibe por los dos lados.` },
+  { id: 'mirror_dodge',   god: 'mirror', slot: 'dodge',   name: 'Engaño',           desc: l => `Al esquivar dejas tu imagen donde estabas: los enemigos cercanos se quedan mirándola, aturdidos ${(0.6 + 0.3 * l).toFixed(1)} s.` },
+  { id: 'mirror_passive', god: 'mirror', slot: 'passive', name: 'Azogue',           desc: l => `Cuando te golpean, el golpe rebota: todos los enemigos cercanos reciben ${100 * l}% de tu daño.` },
+  // Bestias
+  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Un sabueso pelea a tu lado: muerde al enemigo que tú disparas (${60 * l}% de daño, con tus efectos), y tus balas hacen un 15% más a su presa.` },
+  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `El cargado manda al sabueso saltar sobre el objetivo: ${250 * l}% de daño en área y aturde 1 s.` },
+  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Al esquivar, el sabueso embiste a los enemigos que tenías encima: ${80 * l}% de daño y los aparta.` },
+  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos por debajo del 30% de vida reciben un ${25 * l}% más de daño de todo.` },
+  // Forja
+  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(3, 9 - l * 2)} balas el arma gana 1 de Temple (hasta 10): +3% de daño cada uno. Cuando te golpean pierdes la mitad.` },
+  { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `El cargado añade un golpe de martillo a tu alrededor: ${120 * l}% de daño, aturde, y cada enemigo golpeado te da 1 de Temple.` },
+  { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Al salir del esquive, tus ${1 + l} siguientes balas salen al rojo: +50% de daño y salpican al enemigo de al lado.` },
+  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma rinde más: +${5 * l}% de daño, de cadencia y de alcance.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
@@ -339,6 +369,21 @@ const DUOS = [
   { id: 'collapse',  slot: 'charge',  a: 'dragon_charge', b: 'void_charge',   name: 'Colapso',           desc: 'Al cerrarse, la Singularidad revienta las Ascuas de todos los que ha atrapado.' },
   { id: 'funnel',    slot: 'dodge',   a: 'orc_dodge',     b: 'void_dodge',    name: 'Embudo',            desc: 'El Hueco aturde medio segundo a los enemigos que llegan a su centro.' },
   { id: 'thicket',   slot: 'passive', a: 'wood_passive',  b: 'void_passive',  name: 'Espesura',          desc: 'Apiñados cuenta el doble en enemigos enraizados o entre zarzas.' },
+  // Espejos (afines: Sombras, Tiempo, Fortuna, Luz)
+  { id: 'doubles',   slot: 'basic',   a: 'shade_basic',   b: 'mirror_basic',  name: 'Dobles',            desc: 'Cuando tu Reflejo dispara, tus Sombras disparan con él.' },
+  { id: 'prismatic', slot: 'basic',   a: 'light_basic',   b: 'mirror_basic',  name: 'Prisma vivo',       desc: 'Los disparos del Reflejo hacen el doble de daño a los Iluminados.' },
+  { id: 'afterimage', slot: 'charge', a: 'time_charge',   b: 'mirror_charge', name: 'Imagen tardía',     desc: 'La repetición de Rebobinar sale también desde el Reflejo.' },
+  { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Uno de cada tres golpes que recibes se lo lleva el Reflejo: no pierdes vida.' },
+  // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
+  { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Cada mordisco te da 4 de Furia, y con la Furia llena el sabueso muerde el doble de rápido.' },
+  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Cada mordisco aplica 2 de Veneno.' },
+  { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'La embestida de la Manada abre 2 Heridas a cada enemigo y te cura 2 por cada uno.' },
+  { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'El salto del sabueso enraíza 1,5 s a todo lo que alcanza.' },
+  // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
+  { id: 'forgefire', slot: 'basic',   a: 'dragon_basic',  b: 'forge_basic',   name: 'Fuego de fragua',   desc: 'Con 5 o más de Temple, cada bala clava una Ascua de más.' },
+  { id: 'whetstone', slot: 'passive', a: 'stone_passive', b: 'forge_passive', name: 'Piedra de amolar',  desc: 'Cada Cristal que haya en la sala cuenta como un punto más de Temple.' },
+  { id: 'warhammer', slot: 'charge',  a: 'orc_charge',    b: 'forge_charge',  name: 'Martillo de guerra', desc: 'El Martillazo crece con la Furia y da el doble de Temple.' },
+  { id: 'quench',    slot: 'dodge',   a: 'storm_dodge',   b: 'forge_dodge',   name: 'Templar al rayo',   desc: 'Cada bala al rojo clava 2 Agujas.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -384,6 +429,12 @@ const TECHS = [
   { id: 'z_night',   god: 'dream',  rar: 2, name: 'Mala noche',        desc: 'Al despertar, el enemigo queda frenado a la mitad durante 2 s.' },
   { id: 'o_tug',     god: 'void',   rar: 1, name: 'Tirón',             desc: 'Una de cada cuatro balas tira de los enemigos cercanos hacia el blanco.' },
   { id: 'o_crush',   god: 'void',   rar: 2, name: 'Aplastar',          desc: 'Los enemigos en el centro de un pozo reciben el doble de su daño.' },
+  { id: 'q_shard',   god: 'mirror', rar: 1, name: 'Esquirla de espejo', desc: 'Una de cada cinco balas se repite contra el mismo enemigo, a la mitad de daño.' },
+  { id: 'q_break',   god: 'mirror', rar: 2, name: 'Siete años',        desc: 'Después de recibir un golpe, tu siguiente disparo hace el triple.' },
+  { id: 'a_pup',     god: 'beast',  rar: 1, name: 'Cachorro',          desc: 'Un cachorro te acompaña y muerde a quien disparas (30% de daño).' },
+  { id: 'a_feral',   god: 'beast',  rar: 2, name: 'Sed de caza',       desc: 'Cada enemigo que remata el sabueso te cura 2.' },
+  { id: 'g_whet',    god: 'forge',  rar: 1, name: 'Bien afilada',      desc: '+8% de daño.' },
+  { id: 'g_slag',    god: 'forge',  rar: 2, name: 'Recalentar',        desc: 'Con el Temple al máximo, cada bala salpica en área pequeña (30% del daño).' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -405,6 +456,9 @@ const MASTERY = {
   light:  { name: 'Mediodía',              desc: 'Los enemigos Iluminados no dejan de estarlo.' },
   dream:  { name: 'Sueño profundo',        desc: 'Los Dormidos aguantan un golpe sin despertarse (y ese golpe también pega más).' },
   void:   { name: 'Horizonte',             desc: 'Tus pozos son un 40% más grandes y duran un segundo más.' },
+  mirror: { name: 'Sala de espejos',       desc: 'Tienes un segundo Reflejo, a un lado del enemigo.' },
+  beast:  { name: 'Jauría',                desc: 'Tienes un segundo sabueso.' },
+  forge:  { name: 'Obra maestra',          desc: 'El Temple llega a 15 y ya no se pierde al recibir golpes.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
@@ -589,6 +643,9 @@ const GLOSS = [
   [/Ilumina/, 'Iluminado', 'marcado con luz unos segundos: parte del daño que recibe uno lo reciben todos los Iluminados.'],
   [/Dormid|Duerme/, 'Dormido', 'no se mueve ni ataca hasta que un golpe lo despierta; ese golpe hace más daño.'],
   [/pozo|Singularidad/, 'Pozo', 'un punto que arrastra hacia él a los enemigos cercanos.'],
+  [/Reflejo/, 'Reflejo', 'una copia tuya que se coloca al otro lado de tu objetivo.'],
+  [/sabueso/, 'Sabueso', 'un perro que te sigue y muerde por su cuenta al enemigo que disparas.'],
+  [/Temple/, 'Temple', 'puntos que el arma acumula al disparar: cada uno, +3% de daño. Recibir un golpe quita la mitad.'],
   [/crític/, 'Crítico', 'un golpe de suerte que hace el 250% del daño.'],
   [/aturd/, 'Aturdido', 'no se mueve ni ataca durante un momento.'],
   [/Compás/, 'Compás', 'pulsar el disparo justo cuando el anillo que te rodea se llena.'],
@@ -817,14 +874,14 @@ function newGame() {
     t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
-      face: 0, pend: 0, clip: 0, orbA: 0, orbAway: 0, wardCd: 0, runUp: 0, drumT: null, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
+      face: 0, temper: 0, redhot: 0, broke: false, pend: 0, clip: 0, orbA: 0, orbAway: 0, wardCd: 0, runUp: 0, drumT: null, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
       fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, heatT: 0, over: 0, gat: 0, shells: 2, trig: 0, still: 0, feastShot: false,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    wells: [], mines: [], traps: [], stat: { share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    mirrors: [], pets: [], wells: [], mines: [], traps: [], stat: { mirror: 0, mcharge: 0, bite: 0, pounce: 0, temper: 0, share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -1035,7 +1092,7 @@ function pieceCard(pc) {
   return o;
 }
 // Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
-const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'd_blood', 'v_vapors', 'f_carve'];
+const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'q_shard', 'a_pup', 'g_whet', 'd_blood', 'v_vapors', 'f_carve'];
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
 function pieceOptions(god) {
@@ -1571,9 +1628,9 @@ const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
-const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
-const gunRate = () => ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
-const gunDmg = () => ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
+const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
+const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunDmg = () => (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
 const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
@@ -1682,6 +1739,10 @@ function hit(e, dmg, ux, uy, big, col) {
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    { const fb3 = lv('forge_basic'), bp3 = lv('beast_passive');
+      if (fb3 || p.temper > 0) dmg *= 1 + 0.03 * temperNow();                                   // Temple
+      if (bp3 && e.hp / e.maxHp < 0.3) dmg *= 1 + 0.25 * bp3;                                   // Olfato
+      if (has('g_whet')) dmg *= 1.08; }
     { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
       if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
       if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
@@ -1752,6 +1813,19 @@ function explode(x, y, r, dmg, o) {
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
+// Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
+const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
+const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const temperMax = () => (mastery('forge') ? 15 : 10);
+const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
+function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
+function bite(pet, e, k) {
+  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1; S.stat.bite++;
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 4, t: 0, life: 0.1, col: GODS.beast.color });
+  onHit(e, p.dmg * k, (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
+  if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
+  if (!active(e) && has('a_feral')) heal(2);
+}
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
 const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
@@ -1915,6 +1989,11 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
     if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
     if (has('o_tug') && p.shotN % 4 === 0 && active(e)) tug(e, 80, 110);
+    if (has('q_shard') && p.shotN % 5 === 0 && active(e) && !S._shard) { S._shard = true; S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 6, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, ux, uy, false, GODS.mirror.color); S._shard = false; }
+    if (S.pets.length && S.pets.some(pt => pt.prey === e)) hit(e, dmg * 0.15, 0, 0, false, GODS.beast.color);   // Sabueso: +15% a su presa
+    if (p.redhot > 0) { const o = others(e, 60, 1)[0]; if (o) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.1, col: GODS.forge.color }); hit(o, dmg * 0.5, 0, 0, false, GODS.forge.color); } if (duoOn('quench')) addNeedles(e, 2); }   // Al rojo (y dúo Templar al rayo)
+    if (has('g_slag') && p.temper >= temperMax()) explode(e.x, e.y, 30, dmg * 0.3, { col: GODS.forge.color, soft: true, skip: e });
+    if (duoOn('forgefire') && temperNow() >= 5) addEmber(e, 1);
     if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
@@ -1978,6 +2057,8 @@ function fireBasic(target) {
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
+  if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
   let onetwo = false;
   if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
@@ -2007,6 +2088,16 @@ function fireBasic(target) {
     if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); }
   }
   p.feastShot = false;
+  { const mb = lv('mirror_basic'), fb3 = lv('forge_basic');
+    if (mb && target && active(target)) for (const m of S.mirrors) {          // Reflejo: dispara contigo desde el otro lado
+      const d = Math.hypot(target.x - m.x, target.y - m.y) || 1; S.stat.mirror++;
+      S.fx.push({ k: 'tracer', x1: m.x, y1: m.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.mirror.color });
+      onHit(target, p.dmg * mult * 0.3 * mb * (duoOn('prismatic') && target.lit > 0 ? 2 : 1), (target.x - m.x) / d, (target.y - m.y) / d, false, GODS.mirror.color, 'mirror');
+      if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
+    }
+    if (fb3 && p.shotN % Math.max(3, 9 - fb3 * 2) === 0) addTemper(1);         // Temple
+    if (p.redhot > 0) p.redhot -= 1;
+    for (const pt of S.pets) if (target && active(target)) pt.prey = target; }  // el sabueso va a por quien disparas
   if (lastB) p.cd = Math.max(p.cd, 1.2);
   if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Culata de muelle: saltito tras disparar
     const m = Math.hypot(I.mx, I.my); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
@@ -2166,6 +2257,11 @@ function endDodge() {
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
     if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const md = lv('mirror_dodge'), bd3 = lv('beast_dodge'), fd3 = lv('forge_dodge');
+    if (md && !p.isLunge) { S.fx.push({ k: 'ghost', x: from.x, y: from.y, t: 0, life: 0.6 + 0.3 * md }); S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 70, t: 0, life: 0.25, col: GODS.mirror.color }); for (const e of S.enemies) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 70 + e.r) stun(e, 0.6 + 0.3 * md); }   // Engaño
+    if (bd3 && !p.isLunge && S.pets.length) { const pt = S.pets[0]; pt.x = from.x; pt.y = from.y; S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 50, t: 0, life: 0.2, col: GODS.beast.color });
+      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(2); } } } }   // Manada (y dúo Rastro de sangre)
+    if (fd3 && !p.isLunge) p.redhot = 1 + fd3; }                              // Al rojo
   { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
     if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
     if (dd2 && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 44, life: 2 + dd2, acc: 0.4, sleepOnce: new Set(), col: GODS.dream.color });   // Polvo de sueño
@@ -2296,6 +2392,11 @@ function castCharged(snap, mult, echo) {
     }
     S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  { const fc3 = lv('forge_charge'), bc3 = lv('beast_charge');
+    if (fc3) { const big2 = duoOn('warhammer') ? 1 + snap.fury / 100 : 1, R = 70 * big2; S.fx.push({ k: 'ring', x: o.x, y: o.y, r: R, t: 0, life: 0.3, col: GODS.forge.color }); S.shake = Math.max(S.shake, 7);
+      for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > R + e.r) continue; hit(e, p.dmg * 1.2 * fc3 * mult, (e.x - o.x) / d, (e.y - o.y) / d, true, GODS.forge.color); if (active(e)) stun(e, 0.6); if (!echo) addTemper(duoOn('warhammer') ? 2 : 1); } }   // Martillazo (y dúo Martillo de guerra)
+    if (bc3 && S.pets.length) { const pt = S.pets[0], tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'tracer', x1: pt.x, y1: pt.y, x2: tx, y2: ty, t: 0, life: 0.2, col: GODS.beast.color, w: 2 }); pt.x = tx; pt.y = ty; S.stat.pounce++;
+      explode(tx, ty, 52, p.dmg * 2.5 * bc3 * mult, { col: GODS.beast.color, stun: 1 }); if (duoOn('wolfthorn')) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - tx, e.y - ty) < 52 + e.r) root(e, 1.5); } }   // ¡A por él! (y dúo Lobo entre zarzas)
   { const vc2 = lv('void_charge'); if (vc2) addWell(snap.tx, snap.ty, 90, 2.5, p.dmg * 0.25 * vc2 * mult, p.dmg * vc2 * mult, { embers: duoOn('collapse') }); }   // Singularidad (y dúo Colapso)
   { const wc = lv('tide_charge'), bc = lv('wood_charge');
     if (wc) {                                                               // Maremoto
@@ -2359,8 +2460,9 @@ function fireCharged(am) {
   if (tc) {                              // Rebobinar: se repite desde el mismo sitio
     const m = mastery('time') ? 1 : 0.6 + 0.15 * (tc - 1), d = echoDelay(2);
     S.fx.push({ k: 'clock', x: snap.x, y: snap.y, t: 0, life: d });
-    S.timers.push({ t: d, fn: () => castCharged(Object.assign({}, snap, { bonus: 1 }), m, true) });
+    S.timers.push({ t: d, fn: () => { castCharged(Object.assign({}, snap, { bonus: 1 }), m, true); if (duoOn('afterimage')) for (const mr of S.mirrors) castCharged(Object.assign({}, snap, { x: mr.x, y: mr.y, dir: Math.atan2(snap.ty - mr.y, snap.tx - mr.x), bonus: 1 }), m * 0.5, true); } });   // (dúo Imagen tardía)
   }
+  { const mc = lv('mirror_charge'); if (mc) for (const mr of S.mirrors) { S.stat.mcharge++; castCharged(Object.assign({}, snap, { x: mr.x, y: mr.y, dir: Math.atan2(snap.ty - mr.y, snap.tx - mr.x), bonus: 1 }), 0.4 + 0.15 * mc, true); } }   // Doble: el Reflejo repite el cargado
   let cd = ch.cd;
   p.cd = Math.max(p.cd, 0.25);
   if (S.plans.has('recoil') && !moves) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
@@ -2376,6 +2478,10 @@ function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
+  if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
+  { const mp = lv('mirror_passive'); if (mp) explode(p.x, p.y, 64, p.dmg * mp, { col: GODS.mirror.color }); }   // Azogue
+  if (has('q_break')) p.broke = true;
+  if (!mastery('forge')) p.temper = Math.floor(p.temper / 2);
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
@@ -2548,6 +2654,23 @@ function update(dt) {
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
+  // Reflejos: se colocan al otro lado del objetivo (el segundo, a un lado)
+  { const n = mirrorN(); while (S.mirrors.length < n) S.mirrors.push({ x: p.x, y: p.y }); S.mirrors.length = n;
+    S.mirrors.forEach((m, i) => { const tg = target; let wx, wy;
+      if (tg) { const dx = tg.x - p.x, dy = tg.y - p.y, d = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx) + (i ? Math.PI / 2 : 0), r = Math.min(70, d); wx = tg.x + Math.cos(a) * r; wy = tg.y + Math.sin(a) * r; }
+      else { wx = p.x - Math.cos(p.face) * 30 * (i ? -1 : 1); wy = p.y - Math.sin(p.face) * 30; }
+      const at = unstick(clamp(wx, 12, T.room.w - 12), clamp(wy, 12, T.room.h - 12)); m.x += (at.x - m.x) * Math.min(1, dt * 9); m.y += (at.y - m.y) * Math.min(1, dt * 9); }); }
+  // Sabuesos: van a por la presa (quien disparas) y muerden
+  { const n = petN(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5, prey: null, dir: 0 }); S.pets.length = n;
+    const lb = lv('beast_basic'), k = lb ? 0.6 * lb : 0.3;
+    for (const pt of S.pets) {
+      if (!pt.prey || !active(pt.prey)) { pt.prey = null; let bd = 170; for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd) { bd = d; pt.prey = e; } } }
+      const goal = pt.prey || { x: p.x + 14, y: p.y + 10, r: 0 }, dx = goal.x - pt.x, dy = goal.y - pt.y, d = Math.hypot(dx, dy) || 1, reach = (goal.r || 0) + 8;
+      if (d > reach) { const sp = Math.min(d - reach + 1, 150 * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; pt.dir = dx; }
+      if (dist(pt, p) > 300) { pt.x = p.x; pt.y = p.y; }
+      pt.cd -= dt * (duoOn('warhound') && furyFull() ? 2 : 1);
+      if (pt.prey && d <= reach + 4 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pt.prey, k); }
+    } }
   for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
     w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
     for (const e of S.enemies.slice()) {
@@ -3154,6 +3277,19 @@ const ART = {
     'occCCccccccCCcco',
     'ocooooCccCooooco',
     '.o....oooo....o.' ] },
+  // Sabueso: perro de presa de pelo rojizo
+  hound: { pal: { c: '#b5652a', C: '#7a3f18', e: '#ffe08a' }, legs: 2, rows: [
+    '.........oo.o.',
+    'o.......occoco',
+    'oo..ooooocceco',
+    'ocooccccccccnk',
+    '.occccccccCoo.',
+    '.occCCcccCo...',
+    '.oCooCooCoCo..',
+    '.oo.oo.oo.oo..' ],
+    alt: [
+    '..oCooCooCo...',
+    '..oo.oo.oo....' ] },
   // Sombra alzada: la silueta de quien cayó, con dos ojos encendidos
   shade: { pal: { c: '#8e7bd0', C: '#4f4288', e: '#ffffff' }, legs: 0, rows: [
     '....oooo....',
@@ -3585,6 +3721,8 @@ function renderWorld() {
     drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
+  for (const m of S.mirrors) { ctx.globalAlpha = 0.5 + 0.1 * Math.sin(S.t * 7); drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, true); ctx.globalAlpha = 0.6; drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, false); ctx.globalAlpha = 1; }
+  for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -3715,6 +3853,7 @@ function renderWorld() {
     ctx.fillStyle = PAL.i; ctx.fillRect(bx - 5, by, 1, 1); ctx.fillRect(bx + 4, by - 1, 1, 1); ctx.fillRect(bx, by - 5, 1, 1); ctx.fillRect(bx - 1, by + 4, 1, 1);
   }
   if (S.gun.stock === 's_shield' && p.wardCd <= 0) { const a = S.t * 2.4, sx = Math.round(p.x + Math.cos(a) * 13), sy = Math.round(p.y - 2 + Math.sin(a) * 7); ctx.fillStyle = '#16101a'; ctx.fillRect(sx - 3, sy - 4, 6, 8); ctx.fillStyle = PAL.i; ctx.fillRect(sx - 2, sy - 3, 4, 6); ctx.fillStyle = PAL.g; ctx.fillRect(sx - 1, sy - 1, 2, 2); }
+  if (p.temper > 0) { const n = Math.min(15, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
   if (S.gun.mag === 'm_last') for (let i = 0; i < 6; i++) { ctx.fillStyle = i < 6 - (p.clip || 0) ? (i === 0 ? C.ember : C.ink) : C.edge; ctx.fillRect(Math.round(p.x) - 9 + (5 - i) * 3, Math.round(p.y - p.r - 12), 2, 4); }
   if (S.gun.action === 'a_pend' && p.pend > 0) for (let i = 0; i < p.pend; i++) { ctx.fillStyle = C.ember; ctx.fillRect(Math.round(p.x) - p.pend * 2 + i * 4, Math.round(p.y + p.r + 14), 2, 2); }
   if (S.gun.mag === 'm_drum') for (let i = 0; i < 2; i++) { ctx.fillStyle = i < p.shells && !(p.cd > 0.3 && p.shells === 2) ? C.ember : C.edge; ctx.fillRect(p.x - 5 + i * 6, p.y - p.r - 12, 4, 5); }

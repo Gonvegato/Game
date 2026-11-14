@@ -184,6 +184,8 @@ function renderWorld() {
     drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
+  for (const m of S.mirrors) { ctx.globalAlpha = 0.5 + 0.1 * Math.sin(S.t * 7); drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, true); ctx.globalAlpha = 0.6; drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, false); ctx.globalAlpha = 1; }
+  for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -314,6 +316,7 @@ function renderWorld() {
     ctx.fillStyle = PAL.i; ctx.fillRect(bx - 5, by, 1, 1); ctx.fillRect(bx + 4, by - 1, 1, 1); ctx.fillRect(bx, by - 5, 1, 1); ctx.fillRect(bx - 1, by + 4, 1, 1);
   }
   if (S.gun.stock === 's_shield' && p.wardCd <= 0) { const a = S.t * 2.4, sx = Math.round(p.x + Math.cos(a) * 13), sy = Math.round(p.y - 2 + Math.sin(a) * 7); ctx.fillStyle = '#16101a'; ctx.fillRect(sx - 3, sy - 4, 6, 8); ctx.fillStyle = PAL.i; ctx.fillRect(sx - 2, sy - 3, 4, 6); ctx.fillStyle = PAL.g; ctx.fillRect(sx - 1, sy - 1, 2, 2); }
+  if (p.temper > 0) { const n = Math.min(15, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
   if (S.gun.mag === 'm_last') for (let i = 0; i < 6; i++) { ctx.fillStyle = i < 6 - (p.clip || 0) ? (i === 0 ? C.ember : C.ink) : C.edge; ctx.fillRect(Math.round(p.x) - 9 + (5 - i) * 3, Math.round(p.y - p.r - 12), 2, 4); }
   if (S.gun.action === 'a_pend' && p.pend > 0) for (let i = 0; i < p.pend; i++) { ctx.fillStyle = C.ember; ctx.fillRect(Math.round(p.x) - p.pend * 2 + i * 4, Math.round(p.y + p.r + 14), 2, 2); }
   if (S.gun.mag === 'm_drum') for (let i = 0; i < 2; i++) { ctx.fillStyle = i < p.shells && !(p.cd > 0.3 && p.shells === 2) ? C.ember : C.edge; ctx.fillRect(p.x - 5 + i * 6, p.y - p.r - 12, 4, 5); }

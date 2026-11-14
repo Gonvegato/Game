@@ -87,6 +87,21 @@ const GODS = {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
+  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Daga de Azogue', mat: 'Azogue', color: '#cfd6de',
+    key: 'Un Reflejo tuyo se coloca al otro lado del enemigo y repite lo que haces desde allí.', lines: {
+    enter: ['te mira desde un charco. Llevas tu cara.', 'pone a su elegido frente a un espejo. Salen dos.'],
+    champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
+    take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
+  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
+    key: 'Un sabueso pelea a tu lado: muerde a quien tú disparas y obedece a tu cargado y a tu esquive.', lines: {
+    enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
+    champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
+    take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
+  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
+    key: 'Temple: el arma se va endureciendo mientras disparas, y cada punto la hace pegar más. Los golpes que recibes lo enfrían.', lines: {
+    enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
+    champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
+    take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -180,6 +195,21 @@ const PIECES = [
   { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `El cargado abre 2,5 s un pozo donde apuntas: arrastra a todos al centro, hace ${25 * l}% de daño por pulso y al cerrarse estalla (${100 * l}%).` },
   { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `El esquive deja ${1 + l} s un pozo pequeño donde estabas, que arrastra hacia él a los enemigos cercanos.` },
   { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada otro enemigo que tenga pegado, hasta cuatro.` },
+  // Espejos
+  { id: 'mirror_basic',   god: 'mirror', slot: 'basic',   name: 'Reflejo',          desc: l => `Tienes un Reflejo al otro lado de tu objetivo. Cada vez que disparas, él dispara también, al ${30 * l}% de daño y con tus efectos.` },
+  { id: 'mirror_charge',  god: 'mirror', slot: 'charge',  name: 'Doble',            desc: l => `Tu Reflejo repite el cargado desde donde está, al ${40 + 15 * l}% de daño: el enemigo lo recibe por los dos lados.` },
+  { id: 'mirror_dodge',   god: 'mirror', slot: 'dodge',   name: 'Engaño',           desc: l => `Al esquivar dejas tu imagen donde estabas: los enemigos cercanos se quedan mirándola, aturdidos ${(0.6 + 0.3 * l).toFixed(1)} s.` },
+  { id: 'mirror_passive', god: 'mirror', slot: 'passive', name: 'Azogue',           desc: l => `Cuando te golpean, el golpe rebota: todos los enemigos cercanos reciben ${100 * l}% de tu daño.` },
+  // Bestias
+  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Un sabueso pelea a tu lado: muerde al enemigo que tú disparas (${60 * l}% de daño, con tus efectos), y tus balas hacen un 15% más a su presa.` },
+  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `El cargado manda al sabueso saltar sobre el objetivo: ${250 * l}% de daño en área y aturde 1 s.` },
+  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Al esquivar, el sabueso embiste a los enemigos que tenías encima: ${80 * l}% de daño y los aparta.` },
+  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos por debajo del 30% de vida reciben un ${25 * l}% más de daño de todo.` },
+  // Forja
+  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(3, 9 - l * 2)} balas el arma gana 1 de Temple (hasta 10): +3% de daño cada uno. Cuando te golpean pierdes la mitad.` },
+  { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `El cargado añade un golpe de martillo a tu alrededor: ${120 * l}% de daño, aturde, y cada enemigo golpeado te da 1 de Temple.` },
+  { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Al salir del esquive, tus ${1 + l} siguientes balas salen al rojo: +50% de daño y salpican al enemigo de al lado.` },
+  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma rinde más: +${5 * l}% de daño, de cadencia y de alcance.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
@@ -277,6 +307,21 @@ const DUOS = [
   { id: 'collapse',  slot: 'charge',  a: 'dragon_charge', b: 'void_charge',   name: 'Colapso',           desc: 'Al cerrarse, la Singularidad revienta las Ascuas de todos los que ha atrapado.' },
   { id: 'funnel',    slot: 'dodge',   a: 'orc_dodge',     b: 'void_dodge',    name: 'Embudo',            desc: 'El Hueco aturde medio segundo a los enemigos que llegan a su centro.' },
   { id: 'thicket',   slot: 'passive', a: 'wood_passive',  b: 'void_passive',  name: 'Espesura',          desc: 'Apiñados cuenta el doble en enemigos enraizados o entre zarzas.' },
+  // Espejos (afines: Sombras, Tiempo, Fortuna, Luz)
+  { id: 'doubles',   slot: 'basic',   a: 'shade_basic',   b: 'mirror_basic',  name: 'Dobles',            desc: 'Cuando tu Reflejo dispara, tus Sombras disparan con él.' },
+  { id: 'prismatic', slot: 'basic',   a: 'light_basic',   b: 'mirror_basic',  name: 'Prisma vivo',       desc: 'Los disparos del Reflejo hacen el doble de daño a los Iluminados.' },
+  { id: 'afterimage', slot: 'charge', a: 'time_charge',   b: 'mirror_charge', name: 'Imagen tardía',     desc: 'La repetición de Rebobinar sale también desde el Reflejo.' },
+  { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Uno de cada tres golpes que recibes se lo lleva el Reflejo: no pierdes vida.' },
+  // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
+  { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Cada mordisco te da 4 de Furia, y con la Furia llena el sabueso muerde el doble de rápido.' },
+  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Cada mordisco aplica 2 de Veneno.' },
+  { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'La embestida de la Manada abre 2 Heridas a cada enemigo y te cura 2 por cada uno.' },
+  { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'El salto del sabueso enraíza 1,5 s a todo lo que alcanza.' },
+  // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
+  { id: 'forgefire', slot: 'basic',   a: 'dragon_basic',  b: 'forge_basic',   name: 'Fuego de fragua',   desc: 'Con 5 o más de Temple, cada bala clava una Ascua de más.' },
+  { id: 'whetstone', slot: 'passive', a: 'stone_passive', b: 'forge_passive', name: 'Piedra de amolar',  desc: 'Cada Cristal que haya en la sala cuenta como un punto más de Temple.' },
+  { id: 'warhammer', slot: 'charge',  a: 'orc_charge',    b: 'forge_charge',  name: 'Martillo de guerra', desc: 'El Martillazo crece con la Furia y da el doble de Temple.' },
+  { id: 'quench',    slot: 'dodge',   a: 'storm_dodge',   b: 'forge_dodge',   name: 'Templar al rayo',   desc: 'Cada bala al rojo clava 2 Agujas.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -322,6 +367,12 @@ const TECHS = [
   { id: 'z_night',   god: 'dream',  rar: 2, name: 'Mala noche',        desc: 'Al despertar, el enemigo queda frenado a la mitad durante 2 s.' },
   { id: 'o_tug',     god: 'void',   rar: 1, name: 'Tirón',             desc: 'Una de cada cuatro balas tira de los enemigos cercanos hacia el blanco.' },
   { id: 'o_crush',   god: 'void',   rar: 2, name: 'Aplastar',          desc: 'Los enemigos en el centro de un pozo reciben el doble de su daño.' },
+  { id: 'q_shard',   god: 'mirror', rar: 1, name: 'Esquirla de espejo', desc: 'Una de cada cinco balas se repite contra el mismo enemigo, a la mitad de daño.' },
+  { id: 'q_break',   god: 'mirror', rar: 2, name: 'Siete años',        desc: 'Después de recibir un golpe, tu siguiente disparo hace el triple.' },
+  { id: 'a_pup',     god: 'beast',  rar: 1, name: 'Cachorro',          desc: 'Un cachorro te acompaña y muerde a quien disparas (30% de daño).' },
+  { id: 'a_feral',   god: 'beast',  rar: 2, name: 'Sed de caza',       desc: 'Cada enemigo que remata el sabueso te cura 2.' },
+  { id: 'g_whet',    god: 'forge',  rar: 1, name: 'Bien afilada',      desc: '+8% de daño.' },
+  { id: 'g_slag',    god: 'forge',  rar: 2, name: 'Recalentar',        desc: 'Con el Temple al máximo, cada bala salpica en área pequeña (30% del daño).' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -343,6 +394,9 @@ const MASTERY = {
   light:  { name: 'Mediodía',              desc: 'Los enemigos Iluminados no dejan de estarlo.' },
   dream:  { name: 'Sueño profundo',        desc: 'Los Dormidos aguantan un golpe sin despertarse (y ese golpe también pega más).' },
   void:   { name: 'Horizonte',             desc: 'Tus pozos son un 40% más grandes y duran un segundo más.' },
+  mirror: { name: 'Sala de espejos',       desc: 'Tienes un segundo Reflejo, a un lado del enemigo.' },
+  beast:  { name: 'Jauría',                desc: 'Tienes un segundo sabueso.' },
+  forge:  { name: 'Obra maestra',          desc: 'El Temple llega a 15 y ya no se pierde al recibir golpes.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).

@@ -29,6 +29,11 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
     if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
     if (has('o_tug') && p.shotN % 4 === 0 && active(e)) tug(e, 80, 110);
+    if (has('q_shard') && p.shotN % 5 === 0 && active(e) && !S._shard) { S._shard = true; S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 6, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, ux, uy, false, GODS.mirror.color); S._shard = false; }
+    if (S.pets.length && S.pets.some(pt => pt.prey === e)) hit(e, dmg * 0.15, 0, 0, false, GODS.beast.color);   // Sabueso: +15% a su presa
+    if (p.redhot > 0) { const o = others(e, 60, 1)[0]; if (o) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.1, col: GODS.forge.color }); hit(o, dmg * 0.5, 0, 0, false, GODS.forge.color); } if (duoOn('quench')) addNeedles(e, 2); }   // Al rojo (y dúo Templar al rayo)
+    if (has('g_slag') && p.temper >= temperMax()) explode(e.x, e.y, 30, dmg * 0.3, { col: GODS.forge.color, soft: true, skip: e });
+    if (duoOn('forgefire') && temperNow() >= 5) addEmber(e, 1);
     if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
@@ -92,6 +97,8 @@ function fireBasic(target) {
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
+  if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
   let onetwo = false;
   if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
@@ -121,6 +128,16 @@ function fireBasic(target) {
     if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); }
   }
   p.feastShot = false;
+  { const mb = lv('mirror_basic'), fb3 = lv('forge_basic');
+    if (mb && target && active(target)) for (const m of S.mirrors) {          // Reflejo: dispara contigo desde el otro lado
+      const d = Math.hypot(target.x - m.x, target.y - m.y) || 1; S.stat.mirror++;
+      S.fx.push({ k: 'tracer', x1: m.x, y1: m.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.mirror.color });
+      onHit(target, p.dmg * mult * 0.3 * mb * (duoOn('prismatic') && target.lit > 0 ? 2 : 1), (target.x - m.x) / d, (target.y - m.y) / d, false, GODS.mirror.color, 'mirror');
+      if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
+    }
+    if (fb3 && p.shotN % Math.max(3, 9 - fb3 * 2) === 0) addTemper(1);         // Temple
+    if (p.redhot > 0) p.redhot -= 1;
+    for (const pt of S.pets) if (target && active(target)) pt.prey = target; }  // el sabueso va a por quien disparas
   if (lastB) p.cd = Math.max(p.cd, 1.2);
   if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Culata de muelle: saltito tras disparar
     const m = Math.hypot(I.mx, I.my); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
@@ -280,6 +297,11 @@ function endDodge() {
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
     if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const md = lv('mirror_dodge'), bd3 = lv('beast_dodge'), fd3 = lv('forge_dodge');
+    if (md && !p.isLunge) { S.fx.push({ k: 'ghost', x: from.x, y: from.y, t: 0, life: 0.6 + 0.3 * md }); S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 70, t: 0, life: 0.25, col: GODS.mirror.color }); for (const e of S.enemies) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 70 + e.r) stun(e, 0.6 + 0.3 * md); }   // Engaño
+    if (bd3 && !p.isLunge && S.pets.length) { const pt = S.pets[0]; pt.x = from.x; pt.y = from.y; S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 50, t: 0, life: 0.2, col: GODS.beast.color });
+      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(2); } } } }   // Manada (y dúo Rastro de sangre)
+    if (fd3 && !p.isLunge) p.redhot = 1 + fd3; }                              // Al rojo
   { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
     if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
     if (dd2 && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 44, life: 2 + dd2, acc: 0.4, sleepOnce: new Set(), col: GODS.dream.color });   // Polvo de sueño
@@ -410,6 +432,11 @@ function castCharged(snap, mult, echo) {
     }
     S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  { const fc3 = lv('forge_charge'), bc3 = lv('beast_charge');
+    if (fc3) { const big2 = duoOn('warhammer') ? 1 + snap.fury / 100 : 1, R = 70 * big2; S.fx.push({ k: 'ring', x: o.x, y: o.y, r: R, t: 0, life: 0.3, col: GODS.forge.color }); S.shake = Math.max(S.shake, 7);
+      for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > R + e.r) continue; hit(e, p.dmg * 1.2 * fc3 * mult, (e.x - o.x) / d, (e.y - o.y) / d, true, GODS.forge.color); if (active(e)) stun(e, 0.6); if (!echo) addTemper(duoOn('warhammer') ? 2 : 1); } }   // Martillazo (y dúo Martillo de guerra)
+    if (bc3 && S.pets.length) { const pt = S.pets[0], tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'tracer', x1: pt.x, y1: pt.y, x2: tx, y2: ty, t: 0, life: 0.2, col: GODS.beast.color, w: 2 }); pt.x = tx; pt.y = ty; S.stat.pounce++;
+      explode(tx, ty, 52, p.dmg * 2.5 * bc3 * mult, { col: GODS.beast.color, stun: 1 }); if (duoOn('wolfthorn')) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - tx, e.y - ty) < 52 + e.r) root(e, 1.5); } }   // ¡A por él! (y dúo Lobo entre zarzas)
   { const vc2 = lv('void_charge'); if (vc2) addWell(snap.tx, snap.ty, 90, 2.5, p.dmg * 0.25 * vc2 * mult, p.dmg * vc2 * mult, { embers: duoOn('collapse') }); }   // Singularidad (y dúo Colapso)
   { const wc = lv('tide_charge'), bc = lv('wood_charge');
     if (wc) {                                                               // Maremoto
@@ -473,8 +500,9 @@ function fireCharged(am) {
   if (tc) {                              // Rebobinar: se repite desde el mismo sitio
     const m = mastery('time') ? 1 : 0.6 + 0.15 * (tc - 1), d = echoDelay(2);
     S.fx.push({ k: 'clock', x: snap.x, y: snap.y, t: 0, life: d });
-    S.timers.push({ t: d, fn: () => castCharged(Object.assign({}, snap, { bonus: 1 }), m, true) });
+    S.timers.push({ t: d, fn: () => { castCharged(Object.assign({}, snap, { bonus: 1 }), m, true); if (duoOn('afterimage')) for (const mr of S.mirrors) castCharged(Object.assign({}, snap, { x: mr.x, y: mr.y, dir: Math.atan2(snap.ty - mr.y, snap.tx - mr.x), bonus: 1 }), m * 0.5, true); } });   // (dúo Imagen tardía)
   }
+  { const mc = lv('mirror_charge'); if (mc) for (const mr of S.mirrors) { S.stat.mcharge++; castCharged(Object.assign({}, snap, { x: mr.x, y: mr.y, dir: Math.atan2(snap.ty - mr.y, snap.tx - mr.x), bonus: 1 }), 0.4 + 0.15 * mc, true); } }   // Doble: el Reflejo repite el cargado
   let cd = ch.cd;
   p.cd = Math.max(p.cd, 0.25);
   if (S.plans.has('recoil') && !moves) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
@@ -490,6 +518,10 @@ function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
+  if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
+  { const mp = lv('mirror_passive'); if (mp) explode(p.x, p.y, 64, p.dmg * mp, { col: GODS.mirror.color }); }   // Azogue
+  if (has('q_break')) p.broke = true;
+  if (!mastery('forge')) p.temper = Math.floor(p.temper / 2);
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;

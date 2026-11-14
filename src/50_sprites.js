@@ -254,6 +254,19 @@ const ART = {
     'occCCccccccCCcco',
     'ocooooCccCooooco',
     '.o....oooo....o.' ] },
+  // Sabueso: perro de presa de pelo rojizo
+  hound: { pal: { c: '#b5652a', C: '#7a3f18', e: '#ffe08a' }, legs: 2, rows: [
+    '.........oo.o.',
+    'o.......occoco',
+    'oo..ooooocceco',
+    'ocooccccccccnk',
+    '.occccccccCoo.',
+    '.occCCcccCo...',
+    '.oCooCooCoCo..',
+    '.oo.oo.oo.oo..' ],
+    alt: [
+    '..oCooCooCo...',
+    '..oo.oo.oo....' ] },
   // Sombra alzada: la silueta de quien cayó, con dos ojos encendidos
   shade: { pal: { c: '#8e7bd0', C: '#4f4288', e: '#ffffff' }, legs: 0, rows: [
     '....oooo....',

@@ -87,6 +87,23 @@ function update(dt) {
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
+  // Reflejos: se colocan al otro lado del objetivo (el segundo, a un lado)
+  { const n = mirrorN(); while (S.mirrors.length < n) S.mirrors.push({ x: p.x, y: p.y }); S.mirrors.length = n;
+    S.mirrors.forEach((m, i) => { const tg = target; let wx, wy;
+      if (tg) { const dx = tg.x - p.x, dy = tg.y - p.y, d = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx) + (i ? Math.PI / 2 : 0), r = Math.min(70, d); wx = tg.x + Math.cos(a) * r; wy = tg.y + Math.sin(a) * r; }
+      else { wx = p.x - Math.cos(p.face) * 30 * (i ? -1 : 1); wy = p.y - Math.sin(p.face) * 30; }
+      const at = unstick(clamp(wx, 12, T.room.w - 12), clamp(wy, 12, T.room.h - 12)); m.x += (at.x - m.x) * Math.min(1, dt * 9); m.y += (at.y - m.y) * Math.min(1, dt * 9); }); }
+  // Sabuesos: van a por la presa (quien disparas) y muerden
+  { const n = petN(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5, prey: null, dir: 0 }); S.pets.length = n;
+    const lb = lv('beast_basic'), k = lb ? 0.6 * lb : 0.3;
+    for (const pt of S.pets) {
+      if (!pt.prey || !active(pt.prey)) { pt.prey = null; let bd = 170; for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd) { bd = d; pt.prey = e; } } }
+      const goal = pt.prey || { x: p.x + 14, y: p.y + 10, r: 0 }, dx = goal.x - pt.x, dy = goal.y - pt.y, d = Math.hypot(dx, dy) || 1, reach = (goal.r || 0) + 8;
+      if (d > reach) { const sp = Math.min(d - reach + 1, 150 * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; pt.dir = dx; }
+      if (dist(pt, p) > 300) { pt.x = p.x; pt.y = p.y; }
+      pt.cd -= dt * (duoOn('warhound') && furyFull() ? 2 : 1);
+      if (pt.prey && d <= reach + 4 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pt.prey, k); }
+    } }
   for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
     w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
     for (const e of S.enemies.slice()) {

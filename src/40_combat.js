@@ -16,9 +16,9 @@ const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
-const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
-const gunRate = () => ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
-const gunDmg = () => ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
+const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
+const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunDmg = () => (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
 const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
@@ -127,6 +127,10 @@ function hit(e, dmg, ux, uy, big, col) {
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    { const fb3 = lv('forge_basic'), bp3 = lv('beast_passive');
+      if (fb3 || p.temper > 0) dmg *= 1 + 0.03 * temperNow();                                   // Temple
+      if (bp3 && e.hp / e.maxHp < 0.3) dmg *= 1 + 0.25 * bp3;                                   // Olfato
+      if (has('g_whet')) dmg *= 1.08; }
     { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
       if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
       if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
@@ -197,6 +201,19 @@ function explode(x, y, r, dmg, o) {
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
+// Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
+const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
+const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const temperMax = () => (mastery('forge') ? 15 : 10);
+const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
+function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
+function bite(pet, e, k) {
+  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1; S.stat.bite++;
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 4, t: 0, life: 0.1, col: GODS.beast.color });
+  onHit(e, p.dmg * k, (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
+  if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
+  if (!active(e) && has('a_feral')) heal(2);
+}
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
 const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
