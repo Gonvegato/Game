@@ -8,8 +8,8 @@ const HINTS = {
 };
 function renderOverlay() {
   const m = S.mode;
-  ov.hidden = m === 'play';
-  if (m === 'play') { ovBody.innerHTML = ''; return; }
+  ov.hidden = m === 'play' || m === 'town';
+  if (m === 'play' || m === 'town') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
     h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
@@ -28,11 +28,11 @@ function renderOverlay() {
   else if (m === 'dead') {
     h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
       <p class="lead">${S.failTxt || 'Caíste'} · ${whereNow()}, con ${S.kills} bajas. Te llevas ${lootTxt()} a la forja. El encargo sigue en pie: puedes volver a intentarlo.</p>
-      <button id="ovBtn" class="primary">A la forja</button>`;
+      <button id="ovBtn" class="primary">A la plaza</button>`;
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
       <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
-      <button id="ovBtn" class="primary">A la forja</button>`;
+      <button id="ovBtn" class="primary">A la plaza</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
@@ -91,6 +91,7 @@ function frame(now) {
   if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
+  else if (m === 'town') townUpdate(dt);
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
@@ -106,5 +107,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { place: openPlace, town: openTown, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

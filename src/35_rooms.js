@@ -3,12 +3,19 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [44, 32] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
 const fillRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (g[j] && i >= 0 && i < g[j].length) g[j][i] = 1; };
 const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+// Exteriores: en la rejilla, 1 es un obstáculo (roca, árbol, casa: para el paso y las balas) y 2 es agua (para el paso, no las balas).
+// El generador deja en OUT qué es cada obstáculo, para dibujarlo con el paquete de biomas.
+let OUT = null;
+const ob = (g, x, y, w, h, kind, extra) => { fillRect(g, x, y, w, h); OUT.obs.push(Object.assign({ x, y, w, h, kind }, extra)); };
+const outBorder = (g, c, r) => { fillRect(g, 0, 0, c, 2); fillRect(g, 0, r - 2, c, 2); fillRect(g, 0, 0, 2, r); fillRect(g, c - 2, 0, 2, r); };
+const pond = (g, cx, cy, rx, ry) => { for (let y = 0; y < g.length; y++) for (let x = 0; x < g[0].length; x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 && g[y][x] === 0) g[y][x] = 2; };
+const areaFree = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (!g[j] || g[j][i] !== 0) return false; return true; };
 const ROOM_GEN = {
   // Sala de columnas: pilares cuadrados en retícula
   columnas(g, c, r) {
@@ -97,6 +104,53 @@ const ROOM_GEN = {
     fillRect(g, (c >> 1) - 9, (r >> 1) - 1, 2, 2); fillRect(g, (c >> 1) + 7, (r >> 1) - 1, 2, 2);
     return [c >> 1, (r >> 1) + 4];
   },
+  // Pradera: un claro entre árboles, con rocas, árboles sueltos y charcas que cortan el paso pero no las balas
+  pradera(g, c, r) {
+    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    outBorder(g, c, r);
+    const sx = c >> 1, sy = r - 6;
+    for (let i = 0, t = 0; i < (c > 60 ? 3 : 2) && t < 60; t++) {
+      const rx = ri(3, 5), ry = ri(2, 3), cx = ri(7 + rx, c - 8 - rx), cy = ri(6 + ry, r - 7 - ry);
+      if (Math.hypot(cx - sx, cy - sy) < 9 || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
+      pond(g, cx, cy, rx + 0.4, ry + 0.4); i++;
+    }
+    for (let i = 0, t = 0; i < Math.floor(c * r / 110) && t < 400; t++) {
+      const x = ri(5, c - 7), y = ri(5, r - 7);
+      if (Math.hypot(x - sx, y - sy) < 5 || !areaFree(g, x - 3, y - 3, 8, 8)) continue;
+      ob(g, x, y, 2, 2, Math.random() < 0.5 ? 'rock' : 'tree', { v: ri(0, 7) }); i++;
+    }
+    return [sx, sy];
+  },
+  // Aldea al aire libre: cuatro casas alrededor de la campana, un pozo y barriles
+  aldea_ext(g, c, r) {
+    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    outBorder(g, c, r);
+    const cx = c >> 1, cy = r >> 1;
+    [[0.22, 0.26], [0.78, 0.26], [0.22, 0.74], [0.78, 0.74]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 2, Math.floor(r * fy) - 1, 5, 3, 'house', { v: i }));
+    ob(g, cx - 10, cy, 2, 1, 'well'); ob(g, cx + 8, cy - 1, 1, 1, 'barrel', { v: 0 }); ob(g, cx + 9, cy - 1, 1, 1, 'barrel', { v: 1 }); ob(g, cx + 8, cy, 1, 1, 'barrel', { v: 2 });
+    for (const [x, y] of [[cx - 8, 5], [cx + 6, r - 7], [5, cy - 6], [c - 7, cy + 4]]) ob(g, x, y, 2, 2, 'tree', { v: ri(0, 7) });
+    OUT.paths.push([[cx, 4], [cx, r - 4]], [[4, cy], [c - 4, cy]]);
+    return [cx, cy + 4];
+  },
+  // La plaza del reino: el castillo arriba, la forja y la posada a los lados, el patio de armas, el tablón y el pozo
+  plaza(g, c, r) {
+    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    outBorder(g, c, r);
+    const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL });
+    ob(g, cx - 11, 0, 22, 5, 'castle');
+    ob(g, 5, 9, 6, 4, 'house', { v: 0, big: true }); ob(g, c - 11, 9, 6, 4, 'house', { v: 1, big: true });
+    ob(g, cx - 1, 15, 2, 1, 'well'); ob(g, cx + 6, 13, 2, 1, 'board');
+    ob(g, 11, 13, 1, 1, 'npc'); ob(g, c - 12, 13, 1, 1, 'npc');
+    for (const [x, y] of [[6, 19], [9, 18], [7, 22]]) ob(g, x, y, 1, 1, 'npc');
+    ob(g, 12, 21, 1, 1, 'barrel', { v: 0 }); ob(g, 12, 9, 1, 1, 'barrel', { v: 1 }); ob(g, c - 13, 9, 1, 1, 'barrel', { v: 2 }); ob(g, c - 5, 17, 2, 2, 'tree', { v: 2 }); ob(g, 16, 22, 2, 2, 'tree', { v: 4 }); ob(g, c - 14, 20, 2, 2, 'rock', { v: 1 });
+    for (let y = r - 8; y < r - 5; y++) for (let x = 2; x < c - 2; x++) if (x !== cx) g[y][x] = 2;   // el arroyo, con su puente
+    OUT.bridges.push({ x: cx, y: r - 8, h: 3 });
+    OUT.npcs.push({ key: 'smith', x: 11.5, y: 14 }, { key: 'keeper', x: c - 11.5, y: 14, flip: true }, { key: 'decoy', x: 6.5, y: 20 }, { key: 'post', x: 9.5, y: 19 }, { key: 'turret', x: 7.5, y: 23 }, { key: 'trainer', x: 10.5, y: 22 });
+    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(8, 13.7), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 8, 13.7), { id: 'inn', label: 'La posada' }),
+      Object.assign(P(8.5, 21), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 14.7), { id: 'board', label: 'El tablón de encargos' }));
+    OUT.paths.push([[cx, 7], [cx, 14]], [[cx, 17], [cx, r - 9]], [[9, 14.5], [cx - 2, 14.5]], [[cx + 2, 14.5], [c - 9, 14.5]], [[cx, r - 4.5], [cx, r - 3]]);
+    return [cx, 11];
+  },
   // Arena de jefe: abierta, con pilares cuadrados contra los que estrellarlo
   arena(g, c, r) {
     for (const [fx, fy] of [[0.22, 0.3], [0.78, 0.3], [0.22, 0.72], [0.78, 0.72], [0.5, 0.52]]) fillRect(g, Math.floor(c * fx) - 1, Math.floor(r * fy) - 1, 3, 3);
@@ -104,7 +158,7 @@ const ROOM_GEN = {
   },
 };
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => k !== 'arena' && k !== 'aldea');
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza'].includes(k));
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
 function buildRoom(boss, kindF, sizeF) {
@@ -112,22 +166,27 @@ function buildRoom(boss, kindF, sizeF) {
     const kind = boss ? 'arena' : kindF && attempt < 8 ? kindF : ROOM_FORCE && attempt < 6 ? ROOM_FORCE : attempt > 8 ? 'columnas' : ROOM_KINDS[Math.floor(Math.random() * ROOM_KINDS.length)];
     const [c, r] = ROOM_SIZES[boss ? 'boss' : sizeF || ['small', 'mid', 'mid', 'big'][ri(0, 3)]];
     const g = Array.from({ length: r }, () => new Array(c).fill(0));
-    const [sx, sy] = ROOM_GEN[kind](g, c, r);
+    OUT = null;
+    const [sx, sy] = ROOM_GEN[kind](g, c, r), out = OUT;
     for (let j = sy - 1; j <= sy + 1; j++) for (let i = sx - 1; i <= sx + 1; i++) if (g[j] && i >= 0 && i < c) g[j][i] = 0;   // el punto de entrada, despejado
     // Alcance desde la entrada: lo que no se pueda pisar pasa a ser muro, para que no queden bolsas inaccesibles
     const seen = Array.from({ length: r }, () => new Array(c).fill(0)), q = [[sx, sy]]; seen[sy][sx] = 1; let open = 1;
     while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= c || ny >= r || g[ny][nx] || seen[ny][nx]) continue; seen[ny][nx] = 1; open++; q.push([nx, ny]); } }
-    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) if (!seen[y][x]) g[y][x] = 1;
-    if (open < c * r * 0.55) continue;                 // demasiado cerrada: otra
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) if (!seen[y][x] && !g[y][x]) g[y][x] = 1;
+    if (open < c * r * (out ? 0.3 : 0.55)) continue;                 // demasiado cerrada: otra
     // Fundir casillas de muro en rectángulos: tiras horizontales que se alargan hacia abajo si coinciden
-    const walls = [], used = Array.from({ length: r }, () => new Array(c).fill(0));
-    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
-      if (!g[y][x] || used[y][x]) continue;
-      let w = 1; while (x + w < c && g[y][x + w] && !used[y][x + w]) w++;
-      let h = 1; outer: while (y + h < r) { for (let i = x; i < x + w; i++) if (!g[y + h][i] || used[y + h][i]) break outer; h++; }
-      for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) used[j][i] = 1;
-      walls.push({ x: x * CELL, y: y * CELL, w: w * CELL, h: h * CELL });
-    }
+    const merge = v => {
+      const list = [], used = Array.from({ length: r }, () => new Array(c).fill(0));
+      for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
+        if (g[y][x] !== v || used[y][x]) continue;
+        let w = 1; while (x + w < c && g[y][x + w] === v && !used[y][x + w]) w++;
+        let h = 1; outer: while (y + h < r) { for (let i = x; i < x + w; i++) if (g[y + h][i] !== v || used[y + h][i]) break outer; h++; }
+        for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) used[j][i] = 1;
+        list.push({ x: x * CELL, y: y * CELL, w: w * CELL, h: h * CELL });
+      }
+      return list;
+    };
+    const walls = merge(1), pools = merge(2);
     NAV.cols = c; NAV.rows = r; NAV.wall = new Uint8Array(c * r); NAV.dist = new Int16Array(c * r).fill(-1); NAV.t = 0; NAV.pc = -1;
     for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) NAV.wall[y * c + x] = g[y][x];
     // Trampas de pinchos: placas de 2×2 en suelo libre, lejos de la entrada
@@ -138,9 +197,11 @@ function buildRoom(boss, kindF, sizeF) {
       if (traps.some(t => Math.abs(t.x / CELL - x) < 4 && Math.abs(t.y / CELL - y) < 4)) continue;
       traps.push({ x: x * CELL, y: y * CELL, w: CELL * 2, h: CELL * 2, off: Math.random() * 3.4, state: 0, acc: 0, hitP: false }); i++;
     }
-    return { traps, w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
+    return { traps: out ? [] : traps, pools, out, w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
   }
 }
+// ¿Se puede estar de pie aquí? (ni muro ni agua)
+const isBlockedAt = (x, y) => { const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL); return cx < 0 || cy < 0 || cx >= NAV.cols || cy >= NAV.rows || NAV.wall[cy * NAV.cols + cx] !== 0; };
 const isWallAt = (x, y) => { const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL); return cx < 0 || cy < 0 || cx >= NAV.cols || cy >= NAV.rows || NAV.wall[cy * NAV.cols + cx] === 1; };
 // Un punto libre al azar, alcanzable, a cierta distancia de otro. Para colocar enemigos.
 function freeSpot(from, minD) {
@@ -156,7 +217,7 @@ function freeSpot(from, minD) {
 }
 // Si un punto cae dentro de un muro, la casilla libre más cercana
 function unstick(x, y) {
-  if (!isWallAt(x, y)) return { x, y };
+  if (!isBlockedAt(x, y)) return { x, y };
   const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL);
   for (let rad = 1; rad < 8; rad++) for (let j = cy - rad; j <= cy + rad; j++) for (let i = cx - rad; i <= cx + rad; i++) {
     if (i < 0 || j < 0 || i >= NAV.cols || j >= NAV.rows || NAV.wall[j * NAV.cols + i]) continue;
@@ -166,9 +227,9 @@ function unstick(x, y) {
 }
 
 // Hasta dónde llega un rayo antes de chocar con un muro
-function rayClip(x, y, ux, uy, len) {
+function rayClip(x, y, ux, uy, len, rects) {
   let best = len;
-  for (const w of S.walls) {
+  for (const w of rects || S.walls) {
     let t0 = 0, t1 = best;
     if (Math.abs(ux) < 1e-9) { if (x < w.x || x > w.x + w.w) continue; }
     else { let a = (w.x - x) / ux, b = (w.x + w.w - x) / ux; if (a > b) { const t = a; a = b; b = t; } t0 = Math.max(t0, a); t1 = Math.min(t1, b); if (t0 > t1) continue; }
@@ -190,7 +251,8 @@ function blocked(a, b) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx
 // Empujar fuera de los muros a un círculo. Devuelve el muro tocado, si lo hay.
 function collide(o, r) {
   let hitW = null;
-  for (let pass = 0; pass < 2; pass++) for (const w of S.walls) {
+  const list = S.solids && !(o.type && o.type.fly) ? S.solids : S.walls;   // el agua corta el paso a quien va a pie
+  for (let pass = 0; pass < 2; pass++) for (const w of list) {
     const cx = clamp(o.x, w.x, w.x + w.w), cy = clamp(o.y, w.y, w.y + w.h), dx = o.x - cx, dy = o.y - cy, d2 = dx * dx + dy * dy;
     if (d2 >= r * r) continue;
     hitW = w;
@@ -224,7 +286,8 @@ function navUpdate(dt) {
 // Hacia dónde debe andar un enemigo para llegar al jugador: recto si lo ve, por el camino si no
 function navDir(e, ux, uy) {
   const p = S.p, d = Math.hypot(p.x - e.x, p.y - e.y) || 1, nx = -uy * e.r * 0.8, ny = ux * e.r * 0.8;
-  const clear = (ox, oy) => rayClip(e.x + ox, e.y + oy, ux, uy, d) >= d - 0.01;
+  const wet = S.pools && S.pools.length && !e.type.fly;
+  const clear = (ox, oy) => rayClip(e.x + ox, e.y + oy, ux, uy, d) >= d - 0.01 && (!wet || rayClip(e.x + ox, e.y + oy, ux, uy, d, S.pools) >= d - 0.01);
   if (clear(0, 0) && clear(nx, ny) && clear(-nx, -ny)) return [ux, uy];
   const c = NAV.cols, r = NAV.rows, cx = clamp(Math.floor(e.x / CELL), 0, c - 1), cy = clamp(Math.floor(e.y / CELL), 0, r - 1);
   let best = -1, bx = 0, by = 0;

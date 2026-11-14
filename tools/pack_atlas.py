@@ -53,6 +53,8 @@ CAST.update({
   'post': ('Dummy_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Idle', 2, 3), 'atk': ('Spinning', 8, 12)}),
   'turret': ('Dummy_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Spinning', 12, 14)}),
   'villager': ('Dwarfette_LVL1', {'idle': ('Idle', 6, 6), 'move': ('Move', 8, 10)}),
+  'smith': ('Dwarfette_LVL3', {'idle': ('Idle', 5, 5), 'move': ('Idle', 5, 5)}),
+  'trainer': ('Dwarfette_LVL4', {'idle': ('Idle', 7, 6), 'move': ('Idle', 7, 6)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
 def frames_of(folder, suffix):

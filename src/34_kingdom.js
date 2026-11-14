@@ -79,7 +79,7 @@ function fillDefWave() {
 function setupAssault() {
   const p = S.p, spots = [];
   S.postsAll = S.room >= 4 ? 4 : 3;
-  for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
+  for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
   let budget = 5 + S.lvl * 2.1; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 18) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }

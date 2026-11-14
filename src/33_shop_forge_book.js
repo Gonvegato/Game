@@ -44,15 +44,16 @@ function shopAct(act) {
 }
 
 // ───────────────────────── La forja (entre vidas) ─────────────────────────
-function openForge() { S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = 'map'; renderOverlay(); ov.scrollTop = 0; }
+const openForge = () => openTown();   // entre encargos se vuelve a la plaza; cada sitio de la plaza abre su menú (openPlace)
 // La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, el arma (un apartado cada vez), las sinergias y el árbol.
 let forgeTab = 'map', forgeSlot = 'barrel';
-const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Arma'], ['syn', 'Sinergias'], ['tree', 'Árbol']];
+const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Arma'], ['syn', 'Sinergias'], ['tree', 'Árbol'], ['room', 'Habitación'], ['king', 'Audiencia']];
+const placeTabs = () => FORGE_TABS.filter(t => PLACES[forgePlace].tabs.includes(t[0]));
 function forgeHtml() {
   const matChips = GOD_KEYS.filter(g => M.mats[g] > 0).map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`).join(' · ');
-  const head = `<p class="eyebrow">La forja de Alec · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p>
+  const head = `<p class="eyebrow">${PLACES[forgePlace].name} · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p>
     <div class="fhead"><h1>${gunName(M.gun)}</h1><p class="lead"><b>${M.souls}</b> almas · <b>${M.iron}</b> Hierro Místico${matChips ? ' · ' + matChips : ''}</p></div>
-    <div class="tabs">${FORGE_TABS.map(([id, nm]) => `<button class="fi tab${forgeTab === id ? ' on' : ''}" data-act="tab:${id}"><b>${nm}</b></button>`).join('')}</div>`;
+    <div class="tabs">${placeTabs().map(([id, nm]) => `<button class="fi tab${forgeTab === id ? ' on' : ''}" data-act="tab:${id}"><b>${nm}</b></button>`).join('')}<button class="fi tab" data-act="back"><b>Volver a la plaza</b></button></div>`;
   let body = '';
   if (forgeTab === 'map') {
     const go = M.run ? `<button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, tramo ${M.run.wave + 1}</button>` : '';
@@ -85,12 +86,14 @@ function forgeHtml() {
     body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
       return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
-  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña.</p>`;
+  if (forgeTab === 'room') body = roomHtml(); else if (forgeTab === 'king') body = kingHtml();
+  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña. B (o Shift) vuelve a la plaza.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
-  if (k === 'tab') { forgeTab = id; listSel = FORGE_TABS.findIndex(t => t[0] === id); blip(700, 0.04, 'triangle', 0.03); renderOverlay(); ov.scrollTop = 0; return; }
+  if (k === 'back') { closePlace(); return; }
+  if (k === 'tab') { forgeTab = id; listSel = placeTabs().findIndex(t => t[0] === id); blip(700, 0.04, 'triangle', 0.03); renderOverlay(); ov.scrollTop = 0; return; }
   if (k === 'slot') { forgeSlot = id; blip(700, 0.04, 'triangle', 0.03); renderOverlay(); return; }
   if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
   if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
@@ -129,7 +132,8 @@ function navPick(els, cur, dx, dy) {
   return best < 0 ? cur : best;
 }
 function listInput() {
-  if (S.mode === 'forge' && I.tabP) { const i = FORGE_TABS.findIndex(t => t[0] === forgeTab); forgeAct('tab:' + FORGE_TABS[(i + 1) % FORGE_TABS.length][0]); return; }
+  if (S.mode === 'forge' && I.dodgeP && modeT > 0.3) { closePlace(); return; }
+  if (S.mode === 'forge' && I.tabP) { const tabs = placeTabs(), i = tabs.findIndex(t => t[0] === forgeTab); if (tabs.length > 1) forgeAct('tab:' + tabs[(i + 1) % tabs.length][0]); return; }
   const els = [...ovBody.querySelectorAll('.fi')];
   if (I.navX || I.navY) {
     const n = navPick(els, listSel, I.navX, I.navY);

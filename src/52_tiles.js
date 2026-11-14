@@ -9,6 +9,7 @@ const WPAL = [
 const BG_M = 3;   // casillas de margen alrededor de la sala
 let ROOM_BG = null;
 function roomBg() {
+  if (S.out) return roomBgOut();
   if (ROOM_BG && ROOM_BG.walls === S.walls && ROOM_BG.world === S.world) return ROOM_BG;
   const c = NAV.cols, r = NAV.rows, W = WPAL[clamp((S.world || 1) - 1, 0, 3)], cvs = document.createElement('canvas'), g = cvs.getContext('2d');
   cvs.width = (c + BG_M * 2) * CELL; cvs.height = (r + BG_M * 2) * CELL;
@@ -86,8 +87,8 @@ function stain(e) {
   const bg = ROOM_BG; if (!bg || bg.walls !== S.walls) return;
   const g = bg.c.getContext('2d'), ox = BG_M * CELL, oy = BG_M * CELL, bone = ['lancer', 'sniper'].some(k => TYPES[k] === e.type), n = e.boss ? 60 : 8 + e.r * 2;
   g.globalAlpha = 0.5; g.fillStyle = bone ? '#3a3640' : tone(e.color, -0.62);
-  for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, d = Math.random() * Math.random() * (e.r + 5), x = Math.round(e.x + Math.cos(a) * d), y = Math.round(e.y + e.r * 0.6 + Math.sin(a) * d * 0.6); if (!isWallAt(x, y)) g.fillRect(ox + x, oy + y, Math.random() < 0.3 ? 2 : 1, 1); }
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, d = Math.random() * Math.random() * (e.r + 5), x = Math.round(e.x + Math.cos(a) * d), y = Math.round(e.y + e.r * 0.6 + Math.sin(a) * d * 0.6); if (!isBlockedAt(x, y)) g.fillRect(ox + x, oy + y, Math.random() < 0.3 ? 2 : 1, 1); }
   g.globalAlpha = 0.8;
-  if (bone) for (let i = 0; i < 3; i++) { const x = Math.round(e.x + rnd(-6, 6)), y = Math.round(e.y + e.r * 0.6 + rnd(-3, 3)); if (!isWallAt(x, y)) { g.fillStyle = '#a39c84'; g.fillRect(ox + x, oy + y, 3, 1); g.fillStyle = '#cfc8ae'; g.fillRect(ox + x, oy + y, 1, 1); } }
+  if (bone) for (let i = 0; i < 3; i++) { const x = Math.round(e.x + rnd(-6, 6)), y = Math.round(e.y + e.r * 0.6 + rnd(-3, 3)); if (!isBlockedAt(x, y)) { g.fillStyle = '#a39c84'; g.fillRect(ox + x, oy + y, 3, 1); g.fillStyle = '#cfc8ae'; g.fillRect(ox + x, oy + y, 1, 1); } }
   g.globalAlpha = 1;
 }

@@ -62,8 +62,8 @@ function nextWave() {
   S.windUsed = false; S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3 }));
   S.wells = []; S.yawn = 3; S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
-  const room = ms.type === 'defend' ? buildRoom(false, 'aldea', 'big') : ms.type === 'assault' ? buildRoom(false, 'escombros', 'huge') : buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' || S.lvl < 3 ? [] : room.traps;
+  const room = ms.type === 'defend' ? buildRoom(false, 'aldea_ext', 'big') : ms.type === 'assault' ? buildRoom(false, 'pradera', 'huge') : buildRoom(S.bossRoom);   // la aldea y los campamentos están al aire libre   // forma, tamaño y muros nuevos en cada sala
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.town = null; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' || S.lvl < 3 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
@@ -110,10 +110,11 @@ function spawn(typeKey, q) {
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
   }
   e.skin = skinOf(typeKey, e);
+  { const m = ATLAS[e.skin]; if (m) e.r = clamp(Math.round((m.bw + m.bh) / 4), 5, ty.boss ? 34 : 18); }   // la zona de golpe sigue al cuerpo del modelo
   if (q.raid) e.raid = true;
   if (has('z_yawn') && S.yawn > 0 && !ty.boss && !ty.post) { S.yawn--; e.sleep = 4.6; e.sleepHits = 0; }   // Bostezo
   if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }
-  S.enemies.push(e); collide(e, ty.r);
+  S.enemies.push(e); collide(e, e.r);
   if (god) say(god, 'enter');
 }
 

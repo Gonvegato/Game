@@ -60,7 +60,7 @@ function lights() {
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(vignette(lo.width, lo.height), 0, 0);
+  if (!S.out) ctx.drawImage(vignette(lo.width, lo.height), 0, 0);   // al aire libre no hay penumbra de mazmorra
 }
 function renderWorld() {
   const p = S.p, R = T.room;
@@ -298,6 +298,7 @@ function renderWorld() {
     ctx.globalAlpha = 1;
   }
 
+  if (S.town) drawTown();
   // Jugador
   const flying = p.dodgeT > 0 && p.fly, pr = flying ? p.r * 1.35 : p.r, py = flying ? p.y - 5 : p.y;
   if (flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
