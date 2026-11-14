@@ -684,7 +684,7 @@ function nextWave() {
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.traps = n === 1 ? [] : room.traps;
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = n === 1 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, world.name, C.ink, true);
@@ -704,6 +704,12 @@ function spawn(typeKey) {
     aiCd: rnd(1.2, 2.6), aimT: 0, leapT: 0, sx: 0, sy: 0, lx: 0, ly: 0,
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 5.5 * CELL, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
+  // Élites: a partir del segundo mundo, algunos enemigos corrientes llegan con un rasgo y un aura que lo avisa
+  if (!ty.boss && !ty.champ && !ty.fly && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
+    e.elite = ['fast', 'tough', 'volatile'][Math.floor(Math.random() * 3)];
+    if (e.elite === 'fast') e.speed *= 1.45;
+    if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
+  }
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
 }
@@ -1323,6 +1329,8 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
+  if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
+  if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
   stain(e); for (let i = 0; i < (e.boss ? 14 : 4); i++) S.fx.push({ k: 'smoke', x: e.x + rnd(-e.r, e.r), y: e.y + rnd(-e.r, e.r * 0.5), vx: rnd(-10, 10), vy: -rnd(8, 26), t: 0, life: rnd(0.4, 0.8) });
   blip(160, 0.12, 'sawtooth', 0.04, -90);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
@@ -1370,7 +1378,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (e.boss && e.act === 'dazed') dmg *= 2;
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
-  e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg;
+  e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
@@ -1386,7 +1394,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
-  e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg;
+  e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
   return dmg;
@@ -2000,6 +2008,11 @@ function update(dt) {
   if (S.timers.length) { const due = []; for (const tm of S.timers) { tm.t -= dt; if (tm.t <= 0) due.push(tm); } S.timers = S.timers.filter(tm => tm.t > 0); for (const tm of due) tm.fn(); }
 
   navUpdate(dt);
+  // Red de seguridad: si nadie recibe daño en 25 s y no queda nadie por llegar, los que quedan reaparecen a la vista
+  if (S.enemies.length && !S.queue.length && S.t - (S.lastHitT || 0) > 25 && S.t - (S.roomT || 0) > 25) {
+    S.lastHitT = S.t;
+    for (const e of S.enemies) { if (e.boss) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
+  }
 
   // Oleadas
   S.waveT += dt;
@@ -3010,6 +3023,12 @@ function renderWorld() {
       ctx.fillStyle = e.color; ctx.globalAlpha = 0.25 + 0.4 * (1 - k); ctx.beginPath(); ctx.ellipse(x, y, e.r + 3 + 8 * k, (e.r + 3 + 8 * k) * 0.4, 0, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 0.8; for (let i = 0; i < 4; i++) { const px = x - e.r + ((i * 7 + Math.floor(S.t * 10)) % (e.r * 2 + 1)); ctx.fillRect(px, y - Math.round((1 - k) * (e.r * 2 + 4)) - (i % 2) * 3, 1, 3 + (i % 3)); }
       ctx.globalAlpha = 1; continue;
+    }
+    if (e.elite) {   // aura de élite: veloz (dorada), recio (acero) o volátil (naranja que late)
+      const col = e.elite === 'fast' ? '#f2c14e' : e.elite === 'tough' ? '#cfd6de' : '#ff8a3c', y = Math.round(e.y + e.r), x = Math.round(e.x), rr = e.r + 3 + (e.elite === 'volatile' ? Math.floor(S.t * 6) % 2 : 0);
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.ellipse(x, y, rr, rr * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = col; ctx.globalAlpha = 0.18; ctx.fill(); ctx.globalAlpha = 1;
+      for (let i = 0; i < 2; i++) ctx.fillRect(x - rr + ((Math.floor(S.t * 14) + i * 9) % (rr * 2)), y - 3 - ((Math.floor(S.t * 10) + i * 5) % 9), 1, 2);
     }
     if (e.wind > 0) { // aviso de golpe
       const k = 1 - e.wind / e.type.wind;

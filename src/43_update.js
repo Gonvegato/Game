@@ -9,6 +9,11 @@ function update(dt) {
   if (S.timers.length) { const due = []; for (const tm of S.timers) { tm.t -= dt; if (tm.t <= 0) due.push(tm); } S.timers = S.timers.filter(tm => tm.t > 0); for (const tm of due) tm.fn(); }
 
   navUpdate(dt);
+  // Red de seguridad: si nadie recibe daño en 25 s y no queda nadie por llegar, los que quedan reaparecen a la vista
+  if (S.enemies.length && !S.queue.length && S.t - (S.lastHitT || 0) > 25 && S.t - (S.roomT || 0) > 25) {
+    S.lastHitT = S.t;
+    for (const e of S.enemies) { if (e.boss) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
+  }
 
   // Oleadas
   S.waveT += dt;

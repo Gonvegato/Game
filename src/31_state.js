@@ -59,7 +59,7 @@ function nextWave() {
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.traps = n === 1 ? [] : room.traps;
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = n === 1 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, world.name, C.ink, true);
@@ -79,6 +79,12 @@ function spawn(typeKey) {
     aiCd: rnd(1.2, 2.6), aimT: 0, leapT: 0, sx: 0, sy: 0, lx: 0, ly: 0,
     side: Math.random() < 0.5 ? 1 : -1, lungeCd: rnd(1.5, 3), lungeWind: 0, lungeT: 0, lvx: 0, lvy: 0, lungeHit: false };
   if (ty.boss) Object.assign(e, { x: T.room.w / 2, y: 5.5 * CELL, act: 'rest', at: 1.2, think: 1.2, ph: 1, last: '', hitOnce: false, castFn: null });
+  // Élites: a partir del segundo mundo, algunos enemigos corrientes llegan con un rasgo y un aura que lo avisa
+  if (!ty.boss && !ty.champ && !ty.fly && S.world >= 2 && Math.random() < 0.05 + 0.035 * S.world) {
+    e.elite = ['fast', 'tough', 'volatile'][Math.floor(Math.random() * 3)];
+    if (e.elite === 'fast') e.speed *= 1.45;
+    if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
+  }
   S.enemies.push(e); collide(e, ty.r);
   if (god) say(god, 'enter');
 }

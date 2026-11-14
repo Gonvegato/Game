@@ -183,6 +183,12 @@ function renderWorld() {
       ctx.globalAlpha = 0.8; for (let i = 0; i < 4; i++) { const px = x - e.r + ((i * 7 + Math.floor(S.t * 10)) % (e.r * 2 + 1)); ctx.fillRect(px, y - Math.round((1 - k) * (e.r * 2 + 4)) - (i % 2) * 3, 1, 3 + (i % 3)); }
       ctx.globalAlpha = 1; continue;
     }
+    if (e.elite) {   // aura de élite: veloz (dorada), recio (acero) o volátil (naranja que late)
+      const col = e.elite === 'fast' ? '#f2c14e' : e.elite === 'tough' ? '#cfd6de' : '#ff8a3c', y = Math.round(e.y + e.r), x = Math.round(e.x), rr = e.r + 3 + (e.elite === 'volatile' ? Math.floor(S.t * 6) % 2 : 0);
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.ellipse(x, y, rr, rr * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = col; ctx.globalAlpha = 0.18; ctx.fill(); ctx.globalAlpha = 1;
+      for (let i = 0; i < 2; i++) ctx.fillRect(x - rr + ((Math.floor(S.t * 14) + i * 9) % (rr * 2)), y - 3 - ((Math.floor(S.t * 10) + i * 5) % 9), 1, 2);
+    }
     if (e.wind > 0) { // aviso de golpe
       const k = 1 - e.wind / e.type.wind;
       ctx.fillStyle = C.ink; ctx.globalAlpha = 0.14 + 0.2 * k; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + e.type.reach * k + 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
