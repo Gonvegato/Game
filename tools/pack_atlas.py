@@ -28,6 +28,33 @@ CAST = {
   'nameless': ('Sorcerer_LVL4', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 12), 'atk': ('Dash_Full', 10, 12)}),
   'firstfist': ('GameMaster', {'idle': ('Idle', 12, 10), 'move': ('Idle', 12, 10), 'atk': ('ATK', 16, 14)}),
 }
+# ── Variantes: mismo papel, otro aspecto según la zona, el rasgo de élite o la deidad ──
+def gob(n, c): return (n + ' (' + c + ' Skinned)')
+for suf, n, c in (('_b', '02', 'Blue'), ('_r', '03', 'Red')):
+    CAST['stalker' + suf] = (gob('Goblin_Regular_' + n, c), CAST['stalker'][1])
+    CAST['bomber' + suf] = (gob('Goblin_Barrel_' + n, c), CAST['bomber'][1])
+    CAST['brute' + suf] = (gob('Orc_Barbare_' + n, c), CAST['brute'][1])
+    CAST['sniper' + suf] = (gob('Orc_Archer_' + n, c), CAST['sniper'][1])
+for suf, f in (('silver', '02_Silver'), ('gold', '03_Gold'), ('devil', '04_Devil'), ('orc', '05_Orc'), ('red', '06_OrcRedSkinned'), ('frozen', '07_Frozen'), ('bio', '08_Bioluminescent'), ('rad', '09_Radioactive'), ('oniric', '10_Oniric')):
+    CAST['lancer_' + suf] = ('RhinoMonster_' + f, CAST['lancer'][1])
+CAST.update({
+  'stalker_ent': ('Ent_LVL1', {'idle': ('Idle', 4, 4), 'move': ('Move', 9, 12), 'atk': ('Dash_Full', 6, 14)}),
+  'brute_ent': ('Ent_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 10), 'atk': ('Dash_Full', 10, 14)}),
+  'brute_ent3': ('Ent_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Move', 9, 10), 'atk': ('Dash_Full', 8, 12)}),
+  'champ_wood': ('Ent_LVL4', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 12), 'atk': ('Dash_Full', 11, 14)}),
+  'bat_fly': ('Monsterfly_01', {'idle': ('Idle', 4, 6), 'move': ('Move', 8, 14), 'atk': ('ATK', 6, 14)}),
+  'runner_2': ('Mimic_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 20), 'atk': ('Dash_Full', 10, 20)}),
+  'bomber_mimic': ('Mimic_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 14), 'atk': ('Dash_Begin', 2, 8)}),
+  'sniper_cyc': ('Cyclop_Archer_01', {'idle': ('Idle', 2, 3), 'move': ('Move', 8, 10), 'atk': ('Prepare', 7, 10)}),
+  'mage_2': ('Sorcerer_LVL2', {'idle': ('Idle', 4, 5), 'move': ('Move', 12, 12), 'atk': ('Dash_Full', 10, 14)}),
+  'mage_3': ('Sorcerer_LVL3', {'idle': ('Idle', 4, 5), 'move': ('Move', 12, 12), 'atk': ('Dash_Full', 8, 12)}),
+  # objetos y gente
+  'decoy': ('Dummy_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Idle', 2, 3)}),
+  'post': ('Dummy_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Idle', 2, 3), 'atk': ('Spinning', 8, 12)}),
+  'turret': ('Dummy_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Spinning', 12, 14)}),
+  'villager': ('Dwarfette_LVL1', {'idle': ('Idle', 6, 6), 'move': ('Move', 8, 10)}),
+  'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
+})
 def frames_of(folder, suffix):
     A = LIB[folder]['a']; a = A[suffix] if suffix in A else A[[n for n in A if n.endswith('_' + suffix)][0]]
     out = []

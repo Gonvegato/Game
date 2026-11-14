@@ -74,6 +74,23 @@ function nextWave() {
   saveRun();
 }
 
+// Aspecto de cada enemigo: mismo papel, otra criatura según la zona (verdes al principio, criaturas del bosque en el Nido,
+// pieles azules y cíclopes en las Minas, pieles rojas en el Umbral), su rasgo de élite o la deidad de su elegido.
+function skinOf(k, e) {
+  const w = S.world || 1, alt = Math.random() < 0.5, pick = (a, b) => (alt ? a : b);
+  if (e.champ) return e.god === 'wood' ? 'champ_wood' : 'champ';
+  if (k === 'lancer') return e.elite ? { fast: 'lancer_gold', tough: 'lancer_silver', volatile: 'lancer_rad' }[e.elite]
+    : w === 2 ? pick('lancer_orc', 'lancer_oniric') : w === 3 ? pick('lancer_frozen', 'lancer_bio') : w === 4 ? pick('lancer_devil', 'lancer_red') : 'lancer';
+  const suf = w === 3 ? '_b' : w === 4 ? '_r' : '';
+  if (k === 'stalker') return w === 2 ? 'stalker_ent' : k + suf;
+  if (k === 'brute') return w === 2 ? (e.elite ? 'brute_ent3' : 'brute_ent') : k + suf;
+  if (k === 'bat') return w === 2 ? 'bat_fly' : k;
+  if (k === 'runner') return w >= 3 ? 'runner_2' : k;
+  if (k === 'sniper') return w === 3 ? pick('sniper_cyc', 'sniper_b') : k + suf;
+  if (k === 'bomber') return e.elite && w >= 3 ? 'bomber_mimic' : k + suf;   // el barrilero de élite es un cañón con patas
+  if (k === 'mage') return w === 3 ? 'mage_2' : w === 4 ? 'mage_3' : k;
+  return k;
+}
 function spawn(typeKey, q) {
   const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
@@ -92,6 +109,7 @@ function spawn(typeKey, q) {
     if (e.elite === 'fast') e.speed *= 1.45;
     if (e.elite === 'tough') { e.hp = e.maxHp = Math.round(hp * 2.4); e.dmg *= 1.25; }
   }
+  e.skin = skinOf(typeKey, e);
   if (q.raid) e.raid = true;
   if (has('z_yawn') && S.yawn > 0 && !ty.boss && !ty.post) { S.yawn--; e.sleep = 4.6; e.sleepHits = 0; }   // Bostezo
   if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }

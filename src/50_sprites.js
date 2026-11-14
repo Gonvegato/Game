@@ -514,7 +514,7 @@ function drawGun(x, y, ang, kick) {
 }
 
 // ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
-const charKey = e => (e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
+const charKey = e => (e.skin && ATLAS[e.skin] ? e.skin : e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
 function drawChar(key, anim, time, x, yFeet, flip, flash) {
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
   const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1], im = flash ? IMG.charsF : IMG.chars;

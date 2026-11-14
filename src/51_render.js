@@ -179,10 +179,13 @@ function renderWorld() {
   }
   for (const tu of S.turrets) {
     ctx.strokeStyle = slotColor('basic'); ctx.globalAlpha = Math.min(1, tu.life); ctx.lineWidth = 1.5;
-    ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8); ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
+    if (!drawChar('turret', 'move', S.t + tu.x * 0.01, tu.x, tu.y + 9, false, false)) ctx.strokeRect(tu.x - 4, tu.y - 4, 8, 8);
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tu.life / 3); ctx.stroke(); ctx.globalAlpha = 1;
   }
 
   if (S.keep) {                      // la campana de la aldea
+    // los aldeanos se refugian junto a la campana; cuantos menos golpes le quedan, menos aguantan en pie
+    { const kp = S.keep, n = Math.max(1, Math.ceil(4 * kp.hp / kp.maxHp)); for (let i = 0; i < n; i++) { const an = i * Math.PI / 2 + 0.7, vx = kp.x + Math.cos(an) * 26, vy = kp.y + Math.sin(an) * 15 + 12; ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.ellipse(vx, vy, 6, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawChar('villager', 'idle', S.t + i * 0.37, vx, vy, vx > kp.x, false); } }
     const k = S.keep; ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(k.x, k.y + 14, 15, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
@@ -289,7 +292,7 @@ function renderWorld() {
   // Efectos bajo el jugador
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
-    if (f.k === 'ghost') { ctx.fillStyle = C.ember; ctx.globalAlpha = 0.35 * k; ctx.beginPath(); ctx.arc(f.x, f.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+    if (f.k === 'ghost') { ctx.globalAlpha = 0.75 * k; if (!drawChar('decoy', 'idle', S.t, f.x, f.y + p.r + 2, false, false)) { ctx.fillStyle = C.ember; ctx.globalAlpha = 0.35 * k; ctx.beginPath(); ctx.arc(f.x, f.y, p.r, 0, Math.PI * 2); ctx.fill(); } }
     else if (f.k === 'clock') { ctx.strokeStyle = GODS.time.color; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke(); }
     else if (f.k === 'cone') { ctx.fillStyle = f.col; ctx.globalAlpha = 0.45 * k; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.r * (1 - 0.3 * k), f.a - f.half, f.a + f.half); ctx.closePath(); ctx.fill(); }
     ctx.globalAlpha = 1;

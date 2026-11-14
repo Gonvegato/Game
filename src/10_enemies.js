@@ -23,7 +23,7 @@ const TYPES = {
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe
 const WORLDS = [
   { name: 'Las Criptas',           floor: '#1a1e29', tile: '#1f2431', pool: ['stalker', 'runner', 'mage', 'brute', 'bat'],                                         boss: 'guardian' },
-  { name: 'El Nido',               floor: '#1b2420', tile: '#202b25', pool: ['stalker', 'runner', 'leaper', 'bomber', 'brute', 'bat'],                             boss: 'matriarch' },
+  { name: 'El Nido',               floor: '#1b2420', tile: '#202b25', pool: ['stalker', 'runner', 'leaper', 'bomber', 'brute', 'bat', 'lancer'],                             boss: 'matriarch' },
   { name: 'Las Minas de Cristal',  floor: '#1a2030', tile: '#212a40', pool: ['runner', 'mage', 'sniper', 'shaman', 'brute', 'leaper', 'lancer'],                      boss: 'colossus' },
   { name: 'El Umbral',             floor: '#241a22', tile: '#2c2029', pool: ['stalker', 'runner', 'mage', 'brute', 'bomber', 'leaper', 'sniper', 'shaman', 'lancer', 'bat'], boss: 'nameless' },
 ];
