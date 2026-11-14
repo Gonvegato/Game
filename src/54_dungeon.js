@@ -1,6 +1,7 @@
 // ───────────────────────── Mazmorras con el arte de Pixel Crawler (Anokolisa, itch.io) ─────────────────────────
 // Cada zona toma de un paquete su suelo, la cara de sus muros (tres franjas: remate, sillares y zócalo) y el borde de piedra
 // que rodea la parte de arriba. Lo que no se ve desde abajo es la oscuridad de dentro del muro, como en el propio paquete.
+loadImg('decor', 'assets/decor.png');
 for (const k of ['castle', 'cave', 'forge', 'rock', 'floors', 'dungeon']) loadImg('pc_' + k, 'assets/pc_' + k + '.png');
 const DPAL = [
   { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 240, 272, 48, 48] },   // Las Criptas
@@ -11,7 +12,7 @@ const DPAL = [
 const HALL = { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 192, 272, 48, 48] };
 function roomBgDungeon(Dover) {
   const D = Dover || DPAL[clamp((S.world || 1) - 1, 0, 3)], im = IMG[D.img], fim = IMG[D.floor[0]];
-  if (!im || !fim) return null;
+  if (!im || !fim || (!Dover && !IMG.decor)) return null;
   if (ROOM_BG && ROOM_BG.pc && ROOM_BG.walls === S.walls && ROOM_BG.world === S.world && !Dover) return ROOM_BG;
   const c = NAV.cols, r = NAV.rows, cvs = document.createElement('canvas'), g = cvs.getContext('2d');
   cvs.width = (c + BG_M * 2) * CELL; cvs.height = (r + BG_M * 2) * CELL; g.imageSmoothingEnabled = false;
@@ -28,6 +29,13 @@ function roomBgDungeon(Dover) {
     for (let j = 0; j < CELL;) { const sy = (oy + j) % fh, hh = Math.min(CELL - j, fh - sy);
       for (let i = 0; i < CELL;) { const sx = (ox + i) % fw, ww = Math.min(CELL - i, fw - sx); g.drawImage(fim, fx + sx, fy + sy, ww, hh, X + i, Y + j, ww, hh); i += ww; }
       j += hh; }
+  }
+  // Manchas de humedad y desgaste, para que el suelo no sea un dibujo repetido sin más
+  for (let i = 0; i < Math.floor(c * r / 18); i++) {
+    const bx = Math.floor(hash(i, 1, 71) * c * CELL), by = Math.floor(hash(i, 2, 72) * r * CELL), bw = 10 + Math.floor(hash(i, 3, 73) * 40), bh = 6 + Math.floor(hash(i, 4, 74) * 22), dark = hash(i, 5, 75) < 0.7;
+    g.fillStyle = dark ? 'rgba(0,0,0,0.13)' : 'rgba(255,255,255,0.04)';
+    g.beginPath(); g.ellipse(bx, by, bw / 2, bh / 2, 0, 0, Math.PI * 2); g.fill();
+    if (dark && hash(i, 6, 76) < 0.5) { g.beginPath(); g.ellipse(bx + bw * 0.3, by + bh * 0.2, bw / 3, bh / 3, 0, 0, Math.PI * 2); g.fill(); }
   }
   // Muros: la cara (hasta tres franjas por encima del suelo) y, encima, la oscuridad con su borde
   const torches = [];
@@ -51,6 +59,26 @@ function roomBgDungeon(Dover) {
     if (edge(0, -1)) blit(im, D.rimT, X, Y, 16, D.rimT[3]);
     if (edge(-1, 0) || faceBelow(-1, 0)) blit(im, D.rimL, X, Y, D.rimL[2], 16);
     if (edge(1, 0) || faceBelow(1, 0)) blit(im, D.rimR, X + CELL - D.rimR[2], Y, D.rimR[2], 16);
+  }
+  // Decorado de la zona: contra la base de los muros (lápidas, setas, barriles...) y algo suelto por el suelo
+  const DZ = !Dover && DECOR[String(clamp(S.world || 1, 1, 4))], dim = IMG.decor;
+  if (DZ && dim) {
+    const used = new Uint8Array(c * r), start = S.p ? { x: Math.floor(S.p.x / CELL), y: Math.floor(S.p.y / CELL) } : null;
+    const onTrap = (x, y) => (S.traps || []).some(t => x * CELL >= t.x - 8 && x * CELL < t.x + t.w + 8 && y * CELL >= t.y - 8 && y * CELL < t.y + t.h + 8);
+    const items = [];
+    for (let y = 1; y < r - 1; y++) for (let x = 1; x < c - 1; x++) {
+      if (wallAt(x, y) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
+      const byWall = wallAt(x, y - 1), h = hash(x, y, 61);
+      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.06)) continue;
+      const it = list[Math.floor(hash(x, y, 62) * list.length)];
+      for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (y + j >= 0 && y + j < r && x + i >= 0 && x + i < c) used[(y + j) * c + x + i] = 1;
+      items.push({ it, x: x * CELL + 8 + (hash(x, y, 63) - 0.5) * 4, y: byWall ? y * CELL + Math.min(14, it[3] - 2) : y * CELL + 12 });
+    }
+    items.sort((a, b) => a.y - b.y);
+    for (const { it, x, y } of items) {
+      g.fillStyle = 'rgba(0,0,0,0.28)'; g.beginPath(); g.ellipse(x, y, Math.min(10, it[2] / 2.2), 2.5, 0, 0, Math.PI * 2); g.fill();
+      g.drawImage(dim, it[0], it[1], it[2], it[3], Math.round(x - it[2] / 2), Math.round(y + 1 - it[3]), it[2], it[3]);
+    }
   }
   return (ROOM_BG = { c: cvs, walls: S.walls, world: S.world, torches, pc: true });
 }

@@ -89,8 +89,14 @@ function roomBgOut() {
     for (let i = 0; i <= n; i++) { const x = (ax + (bx - ax) * i / n) * 16, y = (ay + (by - ay) * i / n) * 16; spr(BIO.cobble, x - 17 + (hash(i, k, 3) - 0.5) * 6, y - 15 + (hash(i, k, 4) - 0.5) * 6); }
   }
   for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
-    if (dry(x, y) && hash(x, y, 7) < 0.09) { const d = BIO.deco[Math.floor(hash(x, y, 8) * BIO.deco.length)]; spr(d, x * CELL + hash(x, y, 9) * (16 - d[2]), y * CELL + hash(x, y, 10) * (16 - Math.min(16, d[3]))); }
+    if (dry(x, y) && hash(x, y, 7) < 0.16) { const d = BIO.deco[Math.floor(hash(x, y, 8) * BIO.deco.length)]; spr(d, x * CELL + hash(x, y, 9) * (16 - d[2]), y * CELL + hash(x, y, 10) * (16 - Math.min(16, d[3]))); }
     if (at(x, y) === 2 && at(x - 1, y) === 2 && at(x + 1, y) === 2 && at(x, y - 1) === 2 && at(x, y + 1) === 2 && hash(x, y, 11) < 0.07) spr(BIO.lily[hash(x, y, 12) < 0.5 ? 0 : 1], x * CELL, y * CELL + 2);
+  }
+  // Matorrales y flores de Pixel Crawler sueltos por la hierba (no estorban: son de adorno)
+  if (tw) for (let y = 3; y < r - 3; y++) for (let x = 3; x < c - 3; x++) {
+    if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.022) continue;
+    const k = ['bush1', 'bush4', 'flower1', 'flower2', 'flower1', 'bush1'][Math.floor(hash(x, y, 82) * 6)], t = TOWN[k];
+    if (t) g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(x * CELL + 8 - t[2] / 2), Math.round(y * CELL + 14 - t[3]), t[2], t[3]);
   }
   for (const b of O.bridges) spr(BIO.vbridge, b.x * CELL + 8 - 12, b.y * CELL + (b.h * CELL - 44) / 2);
   // Obstáculos: lo que el generador dejó apuntado, y bosque en todo lo demás que no se puede pisar

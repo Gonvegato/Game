@@ -114,7 +114,7 @@ const ROOM_GEN = {
       if (Math.hypot(cx - sx, cy - sy) < 9 || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
       pond(g, cx, cy, rx + 0.4, ry + 0.4); i++;
     }
-    for (let i = 0, t = 0; i < Math.floor(c * r / 110) && t < 400; t++) {
+    for (let i = 0, t = 0; i < Math.floor(c * r / 70) && t < 600; t++) {
       const x = ri(5, c - 7), y = ri(5, r - 7);
       if (Math.hypot(x - sx, y - sy) < 5 || !areaFree(g, x - 3, y - 3, 8, 8)) continue;
       ob(g, x, y, 2, 2, ['rock', 'tree', 'tree', 'ruin'][ri(0, 3)], { v: ri(0, 13) }); i++;
