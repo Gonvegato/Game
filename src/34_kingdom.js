@@ -67,7 +67,7 @@ const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
 
 // ── Defensa de una aldea: cada oleada es un tramo; parte de los enemigos va a por la campana en vez de a por ti ──
 function fillDefWave() {
-  const w = S.room; let budget = 8 + S.lvl * 1.5; const list = [], pool = WORLDS[S.world - 1].pool;
+  const w = S.room; let budget = 4.5 + S.lvl * 1.8; const list = [], pool = WORLDS[S.world - 1].pool;
   while (budget > 0.5 && list.length < 26) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
   list.sort(() => Math.random() - 0.5);
   if (w % 3 === 0) list.splice(Math.ceil(list.length / 2), 0, 'champ');   // cada tres oleadas llega un elegido con los asaltantes
@@ -81,7 +81,7 @@ function setupAssault() {
   S.postsAll = S.room >= 4 ? 4 : 3;
   for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isWallAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
-  let budget = 7 + S.lvl * 1.4; const pool = WORLDS[S.world - 1].pool, list = [];
+  let budget = 4 + S.lvl * 1.7; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 14) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
   S.postsDown = 0;

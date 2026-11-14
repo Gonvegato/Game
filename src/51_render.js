@@ -251,6 +251,8 @@ function renderWorld() {
     else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
     if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
     if (e.doom) { const k = clamp(e.doom.t / 5, 0, 1); ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(e.x) - 5, Math.round(e.y - e.r - 15), 10, 3); ctx.fillStyle = GODS.end.color; ctx.fillRect(Math.round(e.x) - 4, Math.round(e.y - e.r - 14), Math.round(8 * k), 1); }
+    if (e.traced > 0) { ctx.strokeStyle = C.energy; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(Math.round(e.x), Math.round(e.y - 1), e.r + 3, 0, Math.PI * 2); ctx.stroke(); }
+    if (e.nails > 0) { ctx.fillStyle = PAL.i; for (let i = 0; i < e.nails; i++) ctx.fillRect(Math.round(e.x - 4 + i * 3), Math.round(e.y - e.r - 5), 1, 3); }
     if (e.mark > 0) { ctx.strokeStyle = GODS.shade.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e.x - 3, e.y + e.r + 4); ctx.lineTo(e.x + 3, e.y + e.r + 4); ctx.moveTo(e.x, e.y + e.r + 2); ctx.lineTo(e.x, e.y + e.r + 8); ctx.stroke(); }
     if (e.slowT > 0) { ctx.strokeStyle = GODS.time.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 7, 0, Math.PI * 2 * (1 - e.slowF)); ctx.stroke(); }
     if (e.stun > 0) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.setLineDash([1.5, 2.5]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, S.t * 6, S.t * 6 + Math.PI * 1.6); ctx.stroke(); ctx.setLineDash([]); }

@@ -18,10 +18,20 @@ const PARTS = [
   { id: 'b_flame',   slot: 'barrel',  name: 'Sifón de fuego',       tag: 'Chorro en cono',     desc: 'No dispara balas: escupe un chorro corto que quema a todos los enemigos que tengas delante a la vez (la mitad del daño a cada uno) y les clava una Ascua. Dispara un 40% más rápido, pero llega muy cerca.', cost: { iron: 2, dragon: 3 } },
   { id: 'b_back',    slot: 'barrel',  name: 'Cañón de dos bocas',   tag: 'Cubre tu espalda',   desc: 'Una boca mira adelante y otra atrás: cada disparo da a tu objetivo y, a la vez, al enemigo más cercano que tengas a la espalda, los dos con todo el daño.', cost: { iron: 2, shade: 2 } },
   { id: 'b_flail',   slot: 'barrel',  name: 'Mangual',              tag: 'Bola que te rodea',  desc: 'Una bola de hierro gira a tu alrededor y golpea a todo lo que toca (70% del daño). Al disparar la lanzas contra tu objetivo (150%) y tarda un segundo en volver.', cost: { iron: 2, orc: 3 } },
+  { id: 'b_boom',    slot: 'barrel',  name: 'Hoz arrojadiza',       tag: 'Va y vuelve',        desc: 'Lanzas una hoz que vuela hasta tu objetivo y vuelve a tu mano: daña a todo lo que cruza a la ida y otra vez a la vuelta (70% cada pasada).', cost: { iron: 2, wood: 2 } },
+  { id: 'b_nail',    slot: 'barrel',  name: 'Clavera',              tag: 'Al cuarto, revienta', desc: 'Dispara clavos que se quedan clavados. El cuarto clavo en un mismo enemigo los revienta todos: el triple de daño de golpe. +20% de cadencia.', cost: { iron: 1, storm: 2 } },
+  { id: 'b_arc',     slot: 'barrel',  name: 'Cañón de eslabones',   tag: 'Salta entre cuatro', desc: 'La bala no para en el primero: salta de enemigo en enemigo hasta dar a cuatro, perdiendo un 20% de daño en cada salto.', cost: { iron: 2, storm: 3 } },
+  { id: 'b_far',     slot: 'barrel',  name: 'Largavista',           tag: 'De lejos, el doble', desc: 'Hace el doble de daño a los enemigos que están lejos (más de dos tercios de tu alcance) y solo la mitad a los que tienes encima. +25% de alcance.', cost: { iron: 1, light: 2 } },
+  { id: 'b_swarm',   slot: 'barrel',  name: 'Avispero',             tag: 'Tres dardos sueltos', desc: 'Cada disparo suelta tres dardos que buscan cada uno a un enemigo distinto al azar dentro de tu alcance (45% del daño cada uno).', cost: { iron: 1, beast: 2 } },
   { id: 'a_fuse',    slot: 'action',  name: 'Mecha lenta',          tag: 'Sale con retraso',   desc: 'Pulsas y sigues corriendo: el disparo sale solo medio segundo después, sin frenarte, y hace un 45% más de daño.', cost: { iron: 1, wood: 2 } },
   { id: 'a_auto',    slot: 'action',  name: 'Gatillo de pelo',      tag: 'Dispara sola',       desc: 'El arma dispara sola en cuanto tienes un enemigo a tiro: no hace falta pulsar. Cada bala hace un 20% menos de daño y te frena igual.', cost: { iron: 1, luck: 2 } },
   { id: 'a_pend',    slot: 'action',  name: 'Llave de péndulo',     tag: 'Compás que crece',   desc: 'Cada ¡Compás! seguido suma un 15% de daño al siguiente, hasta +90%. Si un disparo no sale a compás, vuelves a empezar.', cost: { iron: 2, time: 3 } },
   { id: 'a_hold',    slot: 'action',  name: 'Llave de retén',       tag: 'Guarda y suelta',    desc: 'Mantén pulsado para guardar balas, hasta tres. Al soltar salen todas seguidas, cada una con todo el daño.', cost: { iron: 2, feast: 2 } },
+  { id: 'a_spring',  slot: 'action',  name: 'Llave de resorte',     tag: 'Esperar pega más',   desc: 'Cuanto más esperas con el arma lista sin disparar, más pega el siguiente disparo: +50% por cada segundo, hasta el triple.', cost: { iron: 1, end: 2 } },
+  { id: 'a_alt',     slot: 'action',  name: 'Llave alterna',        tag: 'Uno flojo, uno fuerte', desc: 'Alterna dos disparos: uno rápido que casi no te frena (60% de daño) y uno fuerte con el doble de frenazo (180%).', cost: { iron: 1, mirror: 2 } },
+  { id: 'a_combo',   slot: 'action',  name: 'Llave de insistencia', tag: 'Mismo blanco, más rápido', desc: 'Cada disparo seguido al mismo enemigo sale un 8% más rápido, hasta +64%. Al cambiar de objetivo vuelves a empezar.', cost: { iron: 2, beast: 2 } },
+  { id: 'a_rider',   slot: 'action',  name: 'Llave de jinete',      tag: 'Dispara al esquivar', desc: 'Cada vez que esquivas, el arma dispara sola al enemigo más cercano con un 30% más de daño, sin gastar tu disparo.', cost: { iron: 1, void: 2 } },
+  { id: 'a_kick',    slot: 'action',  name: 'Llave de trueno',      tag: 'El tercero, cañonazo', desc: 'Cada tercer disparo es un cañonazo: más del doble de daño y lanza al enemigo hacia atrás.', cost: { iron: 2, forge: 2 } },
   { id: 'a_bolt',    slot: 'action',  name: 'Llave de mecha',       tag: 'Compás',             desc: 'Cada pulsación es un disparo, y cada disparo te frena un instante. Si pulsas justo cuando el anillo que te rodea se llena, sale un ¡Compás!: +50% de daño.', base: true },
   { id: 'a_semi',    slot: 'action',  name: 'Llave de chispa',      tag: 'Carrerilla',         desc: 'Disparar no te frena: te mueves a toda velocidad. Mientras no te pares, disparas cada vez más rápido (hasta +40% tras 3 segundos corriendo). Cada bala hace un 25% menos de daño.', cost: { iron: 1, time: 2 } },
   { id: 'a_burst',   slot: 'action',  name: 'Llave de salvas',      tag: 'Tres seguidos',      desc: 'Cada pulsación suelta tres balas seguidas, cada una con el 45% del daño y con tus efectos. La tercera aturde un instante. Entre salvas tarda algo más.', cost: { iron: 1, venom: 2 } },
@@ -38,6 +48,16 @@ const PARTS = [
   { id: 'm_blood',   slot: 'mag',     name: 'Bala de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo te cuesta 1 de vida y hace un 40% más de daño. Cada enemigo que matas te devuelve 3.', cost: { iron: 1, feast: 2 } },
   { id: 'm_last',    slot: 'mag',     name: 'Última bala',          tag: 'La sexta, triple',   desc: 'Un cargador de seis: las cinco primeras son normales y la sexta hace el triple de daño. Después recargas durante algo más de un segundo.', cost: { iron: 1, luck: 2 } },
   { id: 'm_ice',     slot: 'mag',     name: 'Bala de escarcha',     tag: 'Frena y congela',    desc: 'Cada bala frena al enemigo un 30% durante un segundo y medio. Si le das mientras ya está frenado, se congela: queda aturdido casi un segundo (una vez cada 3 s por enemigo).', cost: { iron: 1, tide: 2 } },
+  { id: 'm_fire',    slot: 'mag',     name: 'Bala incendiaria',     tag: 'Deja fuego',         desc: 'Cada bala deja una llama en el suelo bajo el enemigo durante dos segundos, que clava Ascuas a quien la pise.', cost: { iron: 1, dragon: 2 } },
+  { id: 'm_gold',    slot: 'mag',     name: 'Bala de oro',          tag: 'Disparas monedas',   desc: 'Cada disparo gasta 1 de oro y hace un 35% más de daño. Sin oro, hace un 20% menos. Cada baja te da 1 de oro.', cost: { iron: 1, luck: 2 } },
+  { id: 'm_split',   slot: 'mag',     name: 'Bala partida',         tag: 'Se abre en dos',     desc: 'Al dar en el blanco, la bala se parte en dos trozos que salen en diagonal y dan a lo primero que encuentren (35% cada uno).', cost: { iron: 1, mirror: 2 } },
+  { id: 'm_mark',    slot: 'mag',     name: 'Bala trazadora',       tag: 'Tres, y marcado',    desc: 'La tercera bala en un mismo enemigo lo deja marcado 5 segundos: recibe un 30% más de daño de todo.', cost: { iron: 1, light: 2 } },
+  { id: 'm_big',     slot: 'mag',     name: 'Bala de calibre',      tag: 'Salpica',            desc: 'Balas enormes: +20% de daño, y los enemigos pegados al blanco reciben la mitad.', cost: { iron: 2, forge: 2 } },
+  { id: 's_roll',    slot: 'stock',   name: 'Culata de volatinero', tag: 'Dos esquives cortos', desc: 'Llevas un esquive más, pero cada uno llega un 35% menos lejos.', cost: { iron: 1, dream: 2 } },
+  { id: 's_anchor',  slot: 'stock',   name: 'Culata de ancla',      tag: 'Cargando, aguantas', desc: 'Mientras mantienes el disparo cargado recibes la mitad de daño.', cost: { iron: 1, tide: 2 } },
+  { id: 's_sprint',  slot: 'stock',   name: 'Culata de corredor',   tag: 'Sin disparar, corres', desc: 'Si llevas dos segundos sin disparar, corres un 35% más rápido hasta que vuelvas a hacerlo.', cost: { iron: 1, frost: 2 } },
+  { id: 's_venge',   slot: 'stock',   name: 'Culata de rencor',     tag: 'Te pegan, pegas',    desc: 'Cuando te golpean, tus tres siguientes disparos hacen el doble de daño.', cost: { iron: 1, blood: 2 } },
+  { id: 's_gasp',    slot: 'stock',   name: 'Culata del último aliento', tag: 'Casi muerto, vuelas', desc: 'Por debajo de un cuarto de vida te mueves un 30% más rápido y el esquive se recarga el doble de deprisa.', cost: { iron: 1, end: 2 } },
   { id: 's_spring',  slot: 'stock',   name: 'Culata de muelle',     tag: 'Salto tras disparar', desc: 'Después de cada disparo das un salto corto en la dirección en que te estés moviendo. Kitear es casi automático.', cost: { iron: 1, wood: 2 } },
   { id: 's_shield',  slot: 'stock',   name: 'Culata con rodela',    tag: 'Para un golpe',      desc: 'Un pequeño escudo para el primer golpe que recibas, entero. Se recupera a los 6 segundos; lo ves girar a tu lado cuando está listo.', cost: { iron: 2, stone: 2 } },
   { id: 's_scope',   slot: 'stock',   name: 'Culata de catalejo',   tag: 'Primer tiro',        desc: 'El primer disparo que le das a cada enemigo hace un 80% más de daño. +15% de alcance.', cost: { iron: 1, storm: 2 } },
@@ -58,6 +78,11 @@ const PARTS = [
   { id: 'c_nova',    slot: 'chamber', name: 'Recámara de anillo',   tag: 'Onda que aparta',    desc: 'El disparo cargado suelta una onda a tu alrededor que daña y lanza lejos a todos los enemigos cercanos. Los que chocan contra un muro reciben el golpe extra.', cost: { iron: 2, tide: 2 } },
   { id: 'c_turret',  slot: 'chamber', name: 'Recámara de centinela', tag: 'Deja un arma fija', desc: 'El disparo cargado clava en el suelo una copia de tu arma que dispara sola durante 6 segundos, a tu ritmo y con tus efectos, al 80% del daño.', cost: { iron: 2, time: 2 } },
   { id: 'c_snipe',   slot: 'chamber', name: 'Recámara de verdugo',  tag: 'Un tiro al más fuerte', desc: 'El disparo cargado es un único tiro al enemigo con más vida que tengas a la vista: el doble de daño que un cargado normal. Si lo mata, el cargado vuelve al instante.', cost: { iron: 2, luck: 3 } },
+  { id: 'c_meteor',  slot: 'chamber', name: 'Recámara de meteoro',  tag: 'Cae del cielo',      desc: 'El disparo cargado llama un proyectil enorme que cae un segundo después donde apuntas: muchísimo daño en un área grande.', cost: { iron: 2, void: 2 } },
+  { id: 'c_chain',   slot: 'chamber', name: 'Recámara de cadena',   tag: 'Salta entre seis',   desc: 'El disparo cargado es un rayo que salta de enemigo en enemigo, hasta seis, sin perder fuerza.', cost: { iron: 2, storm: 2 } },
+  { id: 'c_balm',    slot: 'chamber', name: 'Recámara de bálsamo',  tag: 'Te cura',            desc: 'El disparo cargado no hace daño: te cura el 10% de tu vida y aparta a los enemigos que tengas encima.', cost: { iron: 2, feast: 3 } },
+  { id: 'c_bounce',  slot: 'chamber', name: 'Recámara de carambola', tag: 'Rebota cinco veces', desc: 'El disparo cargado es una bala que rebota en los muros hasta cinco veces, dañando a todo lo que cruza en cada tramo.', cost: { iron: 2, mirror: 2 } },
+  { id: 'c_volley',  slot: 'chamber', name: 'Recámara de salva',    tag: 'Ocho disparos',      desc: 'El disparo cargado suelta ocho disparos seguidos contra tu objetivo, cada uno con tus efectos de disparo.', cost: { iron: 2, beast: 2 } },
 ];
 const PART = Object.fromEntries(PARTS.map(x => [x.id, x]));
 const BASE_GUN = { barrel: 'b_long', action: 'a_bolt', mag: 'm_std', stock: 's_std', chamber: 'c_beam' };
@@ -74,7 +99,7 @@ const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id
 // El nombre del arma sale de lo que lleva montado
 function gunName(g) {
   { const L = legOf(g); if (L) return L.name; }
-  const B = g.barrel, A = g.action, suf = { a_semi: ' de chispa', a_burst: ' de salvas', a_fuse: ' de mecha lenta', a_auto: ' de gatillo fino', a_pend: ' de péndulo', a_hold: ' de retén' }[A] || '';
+  const B = g.barrel, A = g.action, suf = { a_semi: ' de chispa', a_burst: ' de salvas', a_fuse: ' de mecha lenta', a_auto: ' de gatillo fino', a_pend: ' de péndulo', a_hold: ' de retén', a_spring: ' de resorte', a_alt: ' alterno', a_combo: ' de insistencia', a_rider: ' de jinete', a_kick: ' de trueno' }[A] || '';
   if (B === 'b_spike') return A === 'a_rotary' ? 'Berbiquí de guerra' : A === 'a_draw' ? 'Pica de carga' : A === 'a_burst' ? 'Tridente' : A === 'a_semi' ? 'Estoque' : 'Lanza';
   if (A === 'a_draw') return B === 'b_pierce' ? 'Ballesta de asedio' : B === 'b_twin' ? 'Ballesta doble' : B === 'b_scatter' ? 'Ballesta de virotes' : B === 'b_short' ? 'Ballesta de mano' : B === 'b_bomb' ? 'Onagro' : 'Ballesta';
   if (A === 'a_rotary') return B === 'b_scatter' ? 'Órgano de metralla' : B === 'b_twin' ? 'Ribadoquines gemelos' : B === 'b_short' ? 'Ribadoquín ligero' : B === 'b_pierce' ? 'Órgano de culebrinas' : B === 'b_bomb' ? 'Batería de bombardas' : 'Ribadoquín';
@@ -83,6 +108,11 @@ function gunName(g) {
   if (B === 'b_short') return 'Pistolete' + suf;
   if (B === 'b_pierce') return 'Culebrina' + suf;
   if (B === 'b_bomb') return A === 'a_semi' ? 'Mortero de mano' : 'Bombarda' + suf;
+  if (B === 'b_boom') return 'Hoz arrojadiza';
+  if (B === 'b_nail') return 'Clavera' + suf;
+  if (B === 'b_arc') return 'Cañón de eslabones' + suf;
+  if (B === 'b_far') return 'Largavista' + suf;
+  if (B === 'b_swarm') return 'Avispero' + suf;
   if (B === 'b_fork') return 'Espingarda triple' + suf;
   if (B === 'b_harpoon') return 'Arpón' + suf;
   if (B === 'b_flame') return 'Sifón de fuego';

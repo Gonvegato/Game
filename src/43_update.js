@@ -82,6 +82,7 @@ function update(dt) {
   if (p.over > 0) p.over -= dt;
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
+  if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
   if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
     p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2;
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
@@ -162,7 +163,7 @@ function update(dt) {
     const period = periodOf();
     p.crit = (A === 'a_bolt' || A === 'a_pend' || S.plans.has('tempo')) && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
-    p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
+    p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
     if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) fireBasic(tg); } }); }   // Mecha lenta: sale sola medio segundo después
@@ -182,6 +183,8 @@ function update(dt) {
   else if (p.windup > 0) mult = free || A === 'a_semi' ? 1 : P.windupSlow;
   else if (I.atk && A === 'a_rotary') mult = free ? 1 : p.over > 0 ? 0.8 : 0.3 + 0.35 * (1 - p.spin);
   else if (I.atk && target) mult = free || A === 'a_semi' ? 1 : P.holdSlow;
+  if (g.stock === 's_sprint' && (p.idle || 0) > 2) mult *= 1.35;                // Culata de corredor
+  if (g.stock === 's_gasp' && p.hp < p.maxHp * 0.25) mult *= 1.3;              // Culata del último aliento
   p.still = Math.hypot(I.mx, I.my) < 0.2 && p.dodgeT <= 0 ? p.still + dt : 0;   // para el Bípode
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
@@ -280,6 +283,7 @@ function update(dt) {
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
     if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
     if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
+    e.traced = Math.max(0, (e.traced || 0) - dt);
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
