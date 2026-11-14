@@ -66,12 +66,13 @@ const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
 function fillDefWave() {
   const w = S.defWave; let budget = 7 + S.lvl * 1.3 + w * 3; const list = [], pool = WORLDS[S.world - 1].pool;
   while (budget > 0.5 && list.length < 22) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
-  S.queue = list.map((type, i) => ({ type, at: S.waveT + 1 + i * 0.4, raid: i % 2 === 0 && !TYPES[type].fly }));
-  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de 4', C.blood, true); sayRaw('[Oleada ' + w + ' de 4. La mitad va a por la campana: no la dejes sola.]', C.blood);
+  S.queue = list.map((type, i) => ({ type, at: S.waveT + 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly }));
+  note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de 4', C.blood, true); sayRaw('[Oleada ' + w + ' de 4. Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
 }
 function defendCleared() {
   const p = S.p;
   if (S.defWave >= 4) { missionWin(); return; }
+  S.keep.hp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.15);   // entre oleadas los aldeanos la apuntalan un poco
   S.defWave += 1; p.hp = Math.min(p.maxHp, p.hp + 8 + 4 * tk('mend')); addGold(12 + 2 * S.lvl);
   pickQueue = [pieceScreen(lootGod(), 'Oleada rechazada · entre los caídos hay un arma bendecida')]; S.rerolls = tk('reroll');
   afterPicks = () => { resumePlay(); fillDefWave(); };

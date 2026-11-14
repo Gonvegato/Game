@@ -67,7 +67,7 @@ function nextWave() {
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
-  if (ms.type === 'defend') { S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: 260 + 70 * ms.z, maxHp: 260 + 70 * ms.z, flash: 0 }; S.defWave = 1; fillDefWave(); }
+  if (ms.type === 'defend') { S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: 520 + 120 * ms.z, maxHp: 520 + 120 * ms.z, flash: 0 }; S.defWave = 1; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
   saveRun();
 }
