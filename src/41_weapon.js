@@ -27,7 +27,17 @@ function shot(e, dmg, ux, uy, big, col) {
   const p = S.p, ox = p.x, oy = p.y, cc = critChance();
   let crit = false;
   if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
+  if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= 1.8; big = true; S.stat.first++; }       // Culata de catalejo: primer tiro
+  if (G('m_ice') && active(e)) {                                                               // Bala de escarcha
+    if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
+    slow(e, 1.5, 0.7); e.iceT = 1.5;
+  }
   onHit(e, dmg, ux, uy, big, col, 'player');
+  if (G('m_frag') && !active(e) && !S._frag) {                                                 // Bala de metralla: estalla al matar
+    S._frag = true; S.stat.frag++;
+    for (const o of others(e, 90, 5)) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: C.ink }); onHit(o, dmg * 0.3, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'frag'); }
+    S._frag = false;
+  }
   if (crit) onCrit(e);
   const tb = lv('time_basic'), sp = lv('stone_passive');
   if (tb) {
@@ -65,6 +75,10 @@ function fireBasic(target) {
   p.shotN += 1; p.trig += 1;
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
+  if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Llave de péndulo (sustituye el 1,5 del Compás por la racha)
+  if (g.mag === 'm_blood') p.hp = Math.max(1, p.hp - 1);                       // Bala de sangre
+  let lastB = false;
+  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
   let onetwo = false;
   if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
@@ -72,7 +86,7 @@ function fireBasic(target) {
   if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
   if (draw) mult *= 0.6 + 1.6 * p.drawPow;
   if (res('furnace')) mult *= 1 + 0.4 * p.heat;                              // resonancia Fragua viva
-  const big = p.crit || imb || p.quickBig || onetwo || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
+  const big = p.crit || imb || p.quickBig || onetwo || lastB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
   if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // pólvora negra: fogonazo y humo en la boca del arma
@@ -95,6 +109,12 @@ function fireBasic(target) {
     if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); }
   }
   p.feastShot = false;
+  if (lastB) p.cd = Math.max(p.cd, 1.2);
+  if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Culata de muelle: saltito tras disparar
+    const m = Math.hypot(I.mx, I.my); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
+    p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r);
+    S.fx.push({ k: 'ghost', x: p.x - I.mx / m * 24, y: p.y - I.my / m * 24, t: 0, life: 0.18 });
+  }
   // Cargador
   if (g.mag === 'm_drum') {              // dos disparos y a recargar
     p.shells -= 1;
@@ -152,6 +172,26 @@ function barrelFire(target, m, big, col, reach) {
     S.shake = Math.max(S.shake, 4);
     if (leg('dragon')) { S.zones.push({ x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * (reach + 10), y2: p.y + uy * (reach + 10), life: 2, acc: 0.4, ember: 1, col: GODS.dragon.color }); S.fx.push({ k: 'cone', x: p.x, y: p.y, a: ang, r: reach + 10, half: 0.4, t: 0, life: 0.2, col: GODS.dragon.color }); }
     if (res('dragonbreath')) S.zones.push({ x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * (reach + 10), y2: p.y + uy * (reach + 10), life: 2.2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // resonancia Aliento de dragón
+  } else if (B === 'b_fork') {           // tres bocas: centro al objetivo, dos a los lados a lo primero que pillen
+    for (const off of [0, -0.34, 0.34]) {
+      const a = ang + off, rx = Math.cos(a), ry = Math.sin(a); let bestE = off === 0 ? target : null, ba = off === 0 ? dist(p, target) : rayClip(p.x, p.y, rx, ry, reach + 20);
+      if (off !== 0) for (const e of S.enemies) { if (!active(e) || e === target) continue; const ex = e.x - p.x, ey = e.y - p.y, al = ex * rx + ey * ry; if (al >= 0 && al - e.r < ba && Math.abs(ex * ry - ey * rx) <= e.r + 9) { ba = Math.max(0, al - e.r); bestE = e; } }
+      S.fx.push({ k: 'tracer', x1: p.x + rx * 12, y1: p.y + ry * 12, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col, w: big ? 2 : 1 });
+      if (bestE && active(bestE)) { if (off !== 0) S.stat.fork++; shot(bestE, p.dmg * m * 0.6, rx, ry, big, col); }
+    }
+  } else if (B === 'b_harpoon') {        // arpón: engancha y arrastra hacia ti
+    tracer(target.x, target.y, 1.6); shot(target, p.dmg * m, ux, uy, big, col);
+    if (active(target) && !target.boss) { const d = dist(p, target); if (d > 46) { target.kx = -ux * Math.min(420, d * 3.2); target.ky = -uy * Math.min(420, d * 3.2); target.slamCd = 0.5; S.stat.hook++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.3, col: PAL.b, w: 1 }); } }
+  } else if (B === 'b_flame') {          // chorro en cono: todos los de delante
+    S.fx.push({ k: 'cone', x: p.x, y: p.y, a: ang, r: reach + 8, half: 0.5, t: 0, life: 0.16, col: GODS.dragon.color });
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(p, e); if (d - e.r > reach + 8 || Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), ang)) > 0.55 || blocked(p, e)) continue; S.stat.flame++; shot(e, p.dmg * m * 0.5, (e.x - p.x) / (d || 1), (e.y - p.y) / (d || 1), big, GODS.dragon.color); addEmber(e, 1); }
+  } else if (B === 'b_back') {           // dos bocas: delante y detrás
+    tracer(target.x, target.y); shot(target, p.dmg * m, ux, uy, big, col);
+    const rear = S.enemies.filter(e => e !== target && active(e) && dist(p, e) - e.r <= reach && !blocked(p, e) && (e.x - p.x) * ux + (e.y - p.y) * uy < 0).sort((a, b) => dist(p, a) - dist(p, b))[0];
+    if (rear) { const d = dist(p, rear) || 1; S.stat.rear++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: rear.x, y2: rear.y, t: 0, life: 0.1, col }); shot(rear, p.dmg * m, (rear.x - p.x) / d, (rear.y - p.y) / d, big, col); }
+  } else if (B === 'b_flail') {          // mangual: lanzas la bola y tarda en volver
+    S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.25, col: PAL.I, w: 2 }); p.orbAway = 1; S.stat.flail++;
+    shot(target, p.dmg * m * 1.5, ux, uy, true, col);
   } else if (B === 'b_bomb') {           // bomba en arco: pasa por encima de los muros y revienta en área
     const tx = target.x, ty = target.y, fl = 0.2 + dist(p, target) / 520, dm = p.dmg * m * 0.8;
     S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
@@ -235,6 +275,7 @@ function endDodge() {
 // Lo que pasa al atravesar a un enemigo con el esquive
 function dashThrough(e) {
   const p = S.p, od = lv('orc_dodge'), fd = lv('feast_dodge'), rd = lv('storm_dodge');
+  if (G('s_spikes') && active(e)) { S.stat.spk++; hit(e, p.dmg * 1.5, p.dvx, p.dvy, true, C.ink); stun(e, 0.5); }   // Culata de púas
   if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
   if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
   if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
@@ -310,6 +351,16 @@ function castCharged(snap, mult, echo) {
       if (echo) hit(e, dmg * 0.09, dx / d, dy / d, false, col); else shot(e, dmg * 0.09, dx / d, dy / d, false, col);
       if (i % 9 === 0) chargePayoff(e);
     } });
+  } else if (CH === 'c_mine') {          // tres minas a tu alrededor
+    for (let i = 0; i < 3; i++) { const a = snap.dir + Math.PI + (i - 1) * 1.1, at = unstick(clamp(o.x + Math.cos(a) * 34, 10, T.room.w - 10), clamp(o.y + Math.sin(a) * 34, 10, T.room.h - 10)); S.mines.push({ x: at.x, y: at.y, life: 12, dmg: dmg * 0.9, col }); }
+  } else if (CH === 'c_nova') {          // onda que aparta
+    S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 120, t: 0, life: 0.35, col }); S.shake = Math.max(S.shake, 7);
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); }
+  } else if (CH === 'c_turret') {        // centinela: una copia del arma clavada en el suelo
+    S.turrets.push({ x: o.x, y: o.y, life: 6, cd: 0.2, k: 0.8, sentry: true });
+  } else if (CH === 'c_snipe') {         // verdugo: un tiro al más fuerte a la vista
+    const tg = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < 420).sort((a, b) => b.hp - a.hp)[0];
+    if (tg) { const d = dist(o, tg) || 1; S.fx.push({ k: 'beam', x1: o.x, y1: o.y, x2: tg.x, y2: tg.y, t: 0, life: 0.25, w: 4, col }); S.shake = Math.max(S.shake, 8); strike(tg, dmg * 2, (tg.x - o.x) / d, (tg.y - o.y) / d); if (!active(tg) && !echo) { p.snipeRefund = true; note(o.x, o.y - 18, '¡Otra vez!', C.ember, true); } }
   } else if (CH === 'c_dash') {          // embestida larga que atraviesa (el eco no se mueve)
     if (!echo) { lunge(snap.dir, 240); p.lanceDmg = dmg * 0.6; }
   } else if (lv('dragon_charge')) {      // Aliento: el rayo se abre en cono (crece con la Furia en el dúo Rugido)
@@ -396,6 +447,7 @@ function fireCharged(am) {
   if (S.plans.has('recoil') && !moves) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
   else if (!moves) { p.x -= ux * 6; p.y -= uy * 6; }
   p.chargeCdMax = p.chargeCd = cd;
+  if (p.snipeRefund) { p.snipeRefund = false; p.chargeCd = 0.15; }   // Recámara de verdugo
   S.shake = Math.max(S.shake, 4 + 4 * ratio);
   blip(300, 0.3, 'sawtooth', 0.06, -220);
 }
@@ -404,6 +456,7 @@ function hurtPlayer(dmg) {
   if (S.p.inv <= 0) S.p.streak = 0;   // Racha: se pierde al recibir un golpe
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
+  if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);

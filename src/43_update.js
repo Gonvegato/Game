@@ -76,9 +76,20 @@ function update(dt) {
 
   // Disparo básico: cada disparo es un gesto corto que te frena
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
-  const want = p.buffer > 0 || I.atk, g = S.gun, A = g.action;
+  const g = S.gun, A = g.action, want = p.buffer > 0 || I.atk || A === 'a_auto';
   if (p.over > 0) p.over -= dt;
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
+  p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
+  if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
+    p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2;
+    if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
+      for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
+  }
+  for (const mn of S.mines) {     // minas de la Recámara de minas
+    mn.life -= dt;
+    if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
+  }
+  S.mines = S.mines.filter(mn => mn.life > 0);
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
   if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
@@ -90,7 +101,13 @@ function update(dt) {
   }
   p.heatT -= dt; if (p.heatT <= 0) p.heat = Math.max(0, p.heat - dt * 0.45);
   const canFire = p.over <= 0 && !p.charging && p.dodgeT <= 0;
-  if (A === 'a_draw') {   // De tensado: mantener para tensar, soltar para disparar
+  if (A === 'a_hold') {   // Llave de retén: guardar hasta tres balas y soltarlas
+    if (I.atk && canFire && p.cd <= 0) { p.drawing = true; p.draw = Math.min(1, p.draw + dt / (periodOf() * 2.2)); if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x); }
+    else if (p.drawing) {
+      p.drawing = false; const n = 1 + Math.floor(p.draw * 2 + 0.001); p.draw = 0; p.cd = periodOf() * 0.5; S.stat.hold = (S.stat.hold || 0) + n;
+      for (let i = 0; i < n; i++) S.timers.push({ t: 0.09 * i, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) fireBasic(t2); } });
+    }
+  } else if (A === 'a_draw') {   // De tensado: mantener para tensar, soltar para disparar
     if (I.atk && !p.drawing && p.cd <= 0 && canFire) { p.drawing = true; p.draw = 0; }
     if (p.drawing) {
       const before = p.draw; p.draw = Math.min(1, p.draw + dt / (periodOf() * 0.85));
@@ -110,11 +127,12 @@ function update(dt) {
     } else { p.spin = Math.max(0, p.spin - dt * 2.5); p.gat = 0; }
   } else if (want && target && canFire && p.windup <= 0 && p.cd <= 0) {   // Cerrojo, semiautomático y ráfaga: a pulsaciones
     const period = periodOf();
-    p.crit = (A === 'a_bolt' || S.plans.has('tempo')) && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
+    p.crit = (A === 'a_bolt' || A === 'a_pend' || S.plans.has('tempo')) && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
+    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) fireBasic(tg); } }); }   // Mecha lenta: sale sola medio segundo después
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -158,7 +176,7 @@ function update(dt) {
     if (!bestE) { tu.cd = 0.1; continue; }
     const dx = bestE.x - tu.x, dy = bestE.y - tu.y, d = Math.hypot(dx, dy) || 1, col = slotColor('basic');
     S.fx.push({ k: 'tracer', x1: tu.x, y1: tu.y, x2: bestE.x, y2: bestE.y, t: 0, life: 0.09, col });
-    onHit(bestE, p.dmg * 0.5, dx / d, dy / d, false, col, 'turret');
+    onHit(bestE, p.dmg * (tu.k || 0.5), dx / d, dy / d, false, col, 'turret');
     tu.cd = periodOf();
   }
   S.turrets = S.turrets.filter(tu => tu.life > 0);
