@@ -313,40 +313,51 @@ const GSLOTS = { barrel: 'Cañón', action: 'Llave', mag: 'Munición', stock: 'C
 const GSLOT_KEYS = Object.keys(GSLOTS), GSLOT_WHAT = { barrel: 'a quién le das', action: 'cómo se dispara', mag: 'qué sale por la boca', stock: 'cómo te mueves', chamber: 'qué hace el disparo cargado' };
 // tag: lo que esa pieza tiene de especial, en tres palabras. Se enseña en la forja y al encontrarla.
 const PARTS = [
-  { id: 'b_long',    slot: 'barrel',  name: 'Cañón de arcabuz',     tag: 'Remata y sigue',     desc: 'Una bala a un enemigo. +40% de daño a los que están lejos. Si la bala mata, sigue hasta el enemigo más cercano con todo su daño, hasta tres veces.', base: true },
-  { id: 'b_short',   slot: 'barrel',  name: 'Pistolete',            tag: 'Desenfundar',        desc: '+25% de cadencia y un 30% menos de alcance. Al salir de un esquive, el siguiente disparo sale al instante y hace el doble.', cost: { iron: 1, orc: 2 } },
-  { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Cada disparo va a dos enemigos distintos a la vez, al 55% de daño cada uno. Un 25% menos de alcance.', cost: { iron: 1, storm: 2 } },
-  { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Seis postas en abanico: de cerca entran todas en el mismo enemigo y lo mandan hacia atrás. Si choca contra un muro, se lleva el golpe y queda aturdido. La mitad de alcance.', cost: { iron: 2, feast: 2 } },
-  { id: 'b_pierce',  slot: 'barrel',  name: 'Culebrina',            tag: 'Atraviesa y rebota', desc: 'La bala atraviesa a todos los enemigos en línea y rebota una vez en los muros: bien colocado, das dos veces. +30% de alcance y un 10% menos de daño.', cost: { iron: 2, stone: 2 } },
-  { id: 'b_bomb',    slot: 'barrel',  name: 'Bombarda',             tag: 'Bombas por encima',  desc: 'Lanza una bomba en arco que pasa por encima de los muros y revienta en área: todo lo que pille recibe la bala con tus efectos. Un 35% menos de cadencia.', cost: { iron: 2, dragon: 2 } },
-  { id: 'b_spike',   slot: 'barrel',  name: 'Asta',                 tag: 'Estocada que atraviesa', desc: 'No dispara: cada ataque es una estocada que te lanza a través del enemigo, invulnerable, y cuenta como atravesarlo con el esquive. +80% de daño, alcance corto. Si mata, atacas otra vez al instante.', cost: { iron: 2, shade: 2 } },
-  { id: 'a_bolt',    slot: 'action',  name: 'Llave de mecha',       tag: 'Compás',             desc: 'Un disparo por pulsación, con su frenazo. Si pulsas justo cuando el anillo se llena es un ¡Compás!: +50% de daño.', base: true },
-  { id: 'a_semi',    slot: 'action',  name: 'Llave de chispa',      tag: 'Sin frenazo',        desc: 'No te frena al disparar: te mueves a toda velocidad. +20% de cadencia y un 25% menos de daño.', cost: { iron: 1, time: 2 } },
-  { id: 'a_burst',   slot: 'action',  name: 'Llave de salvas',      tag: 'Tres seguidos',      desc: 'Cada disparo son tres seguidos al 45% de daño, y cada uno aplica tus efectos. Algo más lento.', cost: { iron: 1, venom: 2 } },
-  { id: 'a_rotary',  slot: 'action',  name: 'Manivela de ribadoquín', tag: 'Chorro continuo',  desc: 'Mantén pulsado: tarda medio segundo en girar y después dispara siete veces por segundo, al 30% de daño. Te mueves despacio mientras dispara.', cost: { iron: 2, stone: 2 } },
-  { id: 'a_draw',    slot: 'action',  name: 'Torno de ballesta',    tag: 'Tensar y soltar',    desc: 'Mantén pulsado para tensar y suelta: del 60% de daño en un toque al 220% a tope, con más alcance cuanto más tenses. Más lento.', cost: { iron: 2, dragon: 2 } },
-  { id: 'm_std',     slot: 'mag',     name: 'Balas de plomo',       tag: 'Sin sorpresas',      desc: 'Sin sorpresas.', base: true },
-  { id: 'm_drum',    slot: 'mag',     name: 'Doble carga',          tag: 'Dos y recarga',      desc: 'Dos disparos casi seguidos y a recargar. +35% de daño.', cost: { iron: 1, orc: 2 } },
-  { id: 'm_belt',    slot: 'mag',     name: 'Pólvora viva',         tag: 'Se calienta',        desc: '+30% de cadencia, pero el arma se calienta al disparar y, si se llena, se bloquea un momento.', cost: { iron: 1, dragon: 2 } },
-  { id: 'm_charged', slot: 'mag',     name: 'Bala bendita',         tag: 'La quinta revienta', desc: 'Uno de cada cinco disparos sale bendito: 250% de daño y revienta en área alrededor del blanco.', cost: { iron: 1, storm: 2 } },
-  { id: 'm_heavy',   slot: 'mag',     name: 'Bala de cañón',        tag: 'Empuja',             desc: '+30% de daño y un 20% menos de cadencia. Cada impacto empuja al enemigo: contra un muro, se lleva el golpe y queda aturdido.', cost: { iron: 1, stone: 2 } },
-  { id: 'm_chain',   slot: 'mag',     name: 'Bala enramada',        tag: 'Salta a otro',       desc: 'Dos balas unidas por una cadena: tras dar en el blanco salta al enemigo más cercano con el 50% del daño y tus efectos.', cost: { iron: 1, venom: 2 } },
-  { id: 's_std',     slot: 'stock',   name: 'Culata de nogal',      tag: 'Sin sorpresas',      desc: 'Sin sorpresas.', base: true },
-  { id: 's_light',   slot: 'stock',   name: 'Culata de fresno',     tag: 'Esquivar recarga',   desc: 'El esquive llega más lejos, se recarga un 35% antes y deja el arma lista: puedes disparar nada más salir. Un 10% menos de daño.', cost: { iron: 1, time: 2 } },
-  { id: 's_heavy',   slot: 'stock',   name: 'Culata herrada',       tag: 'Culatazo',           desc: '+25% de daño y un frenazo un 30% más largo. Si un enemigo se te pega, le das un culatazo: sale despedido y queda aturdido (cada 2,5 s).', cost: { iron: 1, orc: 2 } },
-  { id: 's_recoil',  slot: 'stock',   name: 'Culata de coz',        tag: 'Te aparta sola',     desc: 'Cada disparo te empuja un paso hacia atrás, lejos del enemigo.', cost: { iron: 1, feast: 2 } },
-  { id: 's_brace',   slot: 'stock',   name: 'Horquilla',            tag: 'Quieto pega más',    desc: 'Si llevas medio segundo quieto: +40% de daño y +20% de alcance.', cost: { iron: 1, shade: 2 } },
-  { id: 'c_beam',    slot: 'chamber', name: 'Recámara de rayo',     tag: 'Rayo en línea',      desc: 'El cargado es un rayo que atraviesa a todos en línea.', base: true },
-  { id: 'c_fan',     slot: 'chamber', name: 'Recámara de metralla', tag: 'Abanico de nueve',   desc: 'El cargado vacía el arma en un abanico de nueve balas.', cost: { iron: 1, storm: 2 } },
-  { id: 'c_rain',    slot: 'chamber', name: 'Recámara de aluvión',  tag: 'Lluvia sobre zona',  desc: 'El cargado es una lluvia de proyectiles sobre una zona, en tres oleadas.', cost: { iron: 1, venom: 2 } },
-  { id: 'c_supp',    slot: 'chamber', name: 'Recámara de torbellino', tag: 'Dispara sola 3 s', desc: 'El cargado dispara solo en todas direcciones durante tres segundos.', cost: { iron: 2, stone: 2 } },
-  { id: 'c_dash',    slot: 'chamber', name: 'Recámara de embestida', tag: 'Carga que atraviesa', desc: 'El cargado es una carga larga que atraviesa a todos los que pilla.', cost: { iron: 2, shade: 2 } },
-  { id: 'c_blast',   slot: 'chamber', name: 'Recámara de trueno',   tag: 'Andanada y salto atrás', desc: 'El cargado es una andanada de quince postas que empuja y aturde, y el retroceso te lanza hacia atrás.', cost: { iron: 2, feast: 2 } },
+  { id: 'b_long',    slot: 'barrel',  name: 'Cañón de arcabuz',     tag: 'Remata y sigue',     desc: 'Dispara una bala al enemigo más cercano. Si está lejos (más de la mitad de tu alcance) hace +40% de daño. Si lo mata, la misma bala sigue hasta otro enemigo cercano, hasta tres veces seguidas.', base: true },
+  { id: 'b_short',   slot: 'barrel',  name: 'Pistolete',            tag: 'Desenfundar',        desc: 'Dispara un 25% más rápido, pero alcanza un 30% menos. Justo después de esquivar, tu siguiente disparo sale al instante y hace el doble de daño.', cost: { iron: 1, orc: 2 } },
+  { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Un arma en cada mano: cada disparo da a dos enemigos distintos a la vez, con el 55% del daño a cada uno. Alcanza un 25% menos.', cost: { iron: 1, storm: 2 } },
+  { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Suelta seis postas en abanico. De cerca entran todas en el mismo enemigo y lo empujan hacia atrás; si choca contra un muro recibe un golpe extra y queda aturdido. Solo llega a la mitad de distancia.', cost: { iron: 2, feast: 2 } },
+  { id: 'b_pierce',  slot: 'barrel',  name: 'Culebrina',            tag: 'Atraviesa y rebota', desc: 'La bala atraviesa a todos los enemigos que estén en línea y, al llegar a un muro, rebota una vez y sigue. Si te colocas bien, da dos veces. Alcanza un 30% más y hace un 10% menos de daño.', cost: { iron: 2, stone: 2 } },
+  { id: 'b_bomb',    slot: 'barrel',  name: 'Bombarda',             tag: 'Bombas por encima',  desc: 'En vez de balas lanza bombas en arco, que pasan por encima de los muros. Donde caen revientan y dañan a todos los que estén cerca, con tus efectos de disparo. Dispara un 35% más despacio.', cost: { iron: 2, dragon: 2 } },
+  { id: 'b_spike',   slot: 'barrel',  name: 'Asta',                 tag: 'Estocada que atraviesa', desc: 'No dispara: cada ataque es una estocada que te lanza a través del enemigo sin que puedan hacerte daño (cuenta como un esquive que lo atraviesa). +80% de daño, pero hay que estar cerca. Si la estocada mata, puedes atacar otra vez al instante.', cost: { iron: 2, shade: 2 } },
+  { id: 'a_bolt',    slot: 'action',  name: 'Llave de mecha',       tag: 'Compás',             desc: 'Cada pulsación es un disparo, y cada disparo te frena un instante. Si pulsas justo cuando el anillo que te rodea se llena, sale un ¡Compás!: +50% de daño.', base: true },
+  { id: 'a_semi',    slot: 'action',  name: 'Llave de chispa',      tag: 'Carrerilla',         desc: 'Disparar no te frena: te mueves a toda velocidad. Mientras no te pares, disparas cada vez más rápido (hasta +40% tras 3 segundos corriendo). Cada bala hace un 25% menos de daño.', cost: { iron: 1, time: 2 } },
+  { id: 'a_burst',   slot: 'action',  name: 'Llave de salvas',      tag: 'Tres seguidos',      desc: 'Cada pulsación suelta tres balas seguidas, cada una con el 45% del daño y con tus efectos. La tercera aturde un instante. Entre salvas tarda algo más.', cost: { iron: 1, venom: 2 } },
+  { id: 'a_rotary',  slot: 'action',  name: 'Manivela de ribadoquín', tag: 'Chorro continuo',  desc: 'Mantén pulsado el disparo: tarda medio segundo en arrancar y después escupe siete balas por segundo, cada una con el 30% del daño. Mientras dispara, andas despacio.', cost: { iron: 2, stone: 2 } },
+  { id: 'a_draw',    slot: 'action',  name: 'Torno de ballesta',    tag: 'Tensar y soltar',    desc: 'Mantén pulsado para tensar y suelta para disparar. Un toque rápido hace el 60% del daño; tensado a tope, el 220% y llega más lejos.', cost: { iron: 2, dragon: 2 } },
+  { id: 'm_std',     slot: 'mag',     name: 'Balas de plomo',       tag: 'Básica',             desc: 'La munición básica. Ni ventajas ni pegas.', base: true },
+  { id: 'm_drum',    slot: 'mag',     name: 'Doble carga',          tag: 'Uno-dos',            desc: 'Disparas dos veces casi seguidas y luego recargas un poco más de tiempo. +35% de daño. Si las dos balas dan al mismo enemigo, la segunda hace un 60% más.', cost: { iron: 1, orc: 2 } },
+  { id: 'm_belt',    slot: 'mag',     name: 'Pólvora viva',         tag: 'Se calienta',        desc: 'Disparas un 30% más rápido, pero el arma se calienta con cada disparo (el arco rojo a tu alrededor). Si se llena, se bloquea un segundo y medio. Deja de disparar un momento para que se enfríe.', cost: { iron: 1, dragon: 2 } },
+  { id: 'm_charged', slot: 'mag',     name: 'Bala bendita',         tag: 'La quinta revienta', desc: 'Uno de cada cinco disparos sale bendito: hace el 250% del daño y revienta, dañando también a los que estén alrededor del blanco.', cost: { iron: 1, storm: 2 } },
+  { id: 'm_heavy',   slot: 'mag',     name: 'Bala de cañón',        tag: 'Empuja',             desc: '+30% de daño y un 20% menos de cadencia. Cada bala empuja al enemigo hacia atrás; si choca contra un muro recibe un golpe extra y queda aturdido.', cost: { iron: 1, stone: 2 } },
+  { id: 'm_chain',   slot: 'mag',     name: 'Bala enramada',        tag: 'Salta a otro',       desc: 'Dos balas unidas por una cadena: después de dar en el blanco, salta al enemigo más cercano y le hace la mitad del daño, también con tus efectos.', cost: { iron: 1, venom: 2 } },
+  { id: 's_std',     slot: 'stock',   name: 'Culata de nogal',      tag: 'Básica',             desc: 'La culata básica. Ni ventajas ni pegas.', base: true },
+  { id: 's_light',   slot: 'stock',   name: 'Culata de fresno',     tag: 'Esquivar recarga',   desc: 'El esquive llega más lejos y vuelve un 35% antes. Además, al salir del esquive el arma ya está lista para disparar. A cambio, un 10% menos de daño.', cost: { iron: 1, time: 2 } },
+  { id: 's_heavy',   slot: 'stock',   name: 'Culata herrada',       tag: 'Culatazo',           desc: '+25% de daño, pero cada disparo te frena un 30% más de tiempo. Si un enemigo se te pega, le das un culatazo automático: sale despedido y queda aturdido. Se repite cada 2,5 segundos.', cost: { iron: 1, orc: 2 } },
+  { id: 's_recoil',  slot: 'stock',   name: 'Culata de coz',        tag: 'Te aparta sola',     desc: 'Cada disparo te empuja un paso hacia atrás, alejándote del enemigo al que disparas. Kiteas sin mover el stick.', cost: { iron: 1, feast: 2 } },
+  { id: 's_brace',   slot: 'stock',   name: 'Horquilla',            tag: 'Quieto pega más',    desc: 'Si llevas medio segundo sin moverte: +40% de daño y +20% de alcance. En cuanto te mueves, se pierde.', cost: { iron: 1, shade: 2 } },
+  { id: 'c_beam',    slot: 'chamber', name: 'Recámara de rayo',     tag: 'Rayo en línea',      desc: 'El disparo cargado es un rayo recto que atraviesa a todos los enemigos en línea. Los muros lo paran.', base: true },
+  { id: 'c_fan',     slot: 'chamber', name: 'Recámara de metralla', tag: 'Abanico de nueve',   desc: 'El disparo cargado suelta nueve balas en abanico delante de ti. Cada bala aplica tus efectos de disparo.', cost: { iron: 1, storm: 2 } },
+  { id: 'c_rain',    slot: 'chamber', name: 'Recámara de aluvión',  tag: 'Lluvia sobre zona',  desc: 'El disparo cargado hace llover proyectiles sobre una zona redonda, tres veces seguidas. Cae sobre tu objetivo, o donde apuntes.', cost: { iron: 1, venom: 2 } },
+  { id: 'c_supp',    slot: 'chamber', name: 'Recámara de torbellino', tag: 'Dispara sola 3 s', desc: 'El disparo cargado hace que el arma dispare sola durante tres segundos a todos los enemigos que tengas a tiro, mientras tú te mueves.', cost: { iron: 2, stone: 2 } },
+  { id: 'c_dash',    slot: 'chamber', name: 'Recámara de embestida', tag: 'Carga que atraviesa', desc: 'El disparo cargado te lanza en una carga larga en la dirección que apuntes: atraviesas y dañas a todos los que pilles, sin que puedan golpearte.', cost: { iron: 2, shade: 2 } },
+  { id: 'c_blast',   slot: 'chamber', name: 'Recámara de trueno',   tag: 'Andanada y salto atrás', desc: 'El disparo cargado es una andanada de quince postas a corta distancia que empuja y aturde. El retroceso te lanza a ti hacia atrás.', cost: { iron: 2, feast: 2 } },
 ];
 const PART = Object.fromEntries(PARTS.map(x => [x.id, x]));
 const BASE_GUN = { barrel: 'b_long', action: 'a_bolt', mag: 'm_std', stock: 's_std', chamber: 'c_beam' };
+// Armas legendarias: tres piezas concretas montadas a la vez forman un arma con nombre propio y un poder que ninguna pieza tiene sola.
+// Las cuatro primeras llevan el nombre de armas reales; la última es de este mundo. El plan es que haya muchas más.
+const LEGENDS = [
+  { id: 'monsmeg',  name: 'Mons Meg',            parts: ['b_bomb', 'm_heavy', 's_brace'],   lore: 'Una bombarda de asedio del siglo XV, de las mayores que se forjaron.', desc: 'Tus bombas son enormes: revientan en un área un 60% más grande y aturden a todo lo que alcanzan.' },
+  { id: 'zhuge',    name: 'Zhuge Nu',            parts: ['a_draw', 'm_drum', 's_light'],    lore: 'La ballesta de repetición china: poco golpe, muchos virotes, a veces envenenados.', desc: 'Cada vez que sueltas la ballesta salen tres virotes seguidos en vez de uno, y cada uno aplica 2 de Veneno.' },
+  { id: 'organ',    name: 'Órgano de Leonardo',  parts: ['a_rotary', 'b_twin', 'm_belt'],   lore: 'Treinta y tres cañones en tres filas: una dispara, otra recarga, otra se enfría.', desc: 'El arma ya no se bloquea al recalentarse: cuando el calor se llena suelta una salva de once balas a los enemigos cercanos y se enfría sola.' },
+  { id: 'dragon',   name: 'Dragón',              parts: ['b_scatter', 'a_semi', 's_light'], lore: 'El trabuco corto llamado dragón; según la explicación más repetida, de él tomaron su nombre los dragones de caballería.', desc: 'Cada andanada escupe fuego: clava 2 Ascuas a todo lo que toca y deja llamas en el suelo delante de ti.' },
+  { id: 'breaker',  name: 'La Rompemuros',       parts: ['b_pierce', 'm_heavy', 's_heavy'], lore: 'Dicen que el herrero la forjó en una vida anterior y que aún recuerda cada muro.', desc: 'La bala de la culebrina rebota hasta cuatro veces en vez de una, y cada rebote hace un 25% más de daño.' },
+];
+const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id)) || null;
 // El nombre del arma sale de lo que lleva montado
 function gunName(g) {
+  { const L = legOf(g); if (L) return L.name; }
   const B = g.barrel, A = g.action, suf = A === 'a_semi' ? ' de chispa' : A === 'a_burst' ? ' de salvas' : '';
   if (B === 'b_spike') return A === 'a_rotary' ? 'Berbiquí de guerra' : A === 'a_draw' ? 'Pica de carga' : A === 'a_burst' ? 'Tridente' : A === 'a_semi' ? 'Estoque' : 'Lanza';
   if (A === 'a_draw') return B === 'b_pierce' ? 'Ballesta de asedio' : B === 'b_twin' ? 'Ballesta doble' : B === 'b_scatter' ? 'Ballesta de virotes' : B === 'b_short' ? 'Ballesta de mano' : B === 'b_bomb' ? 'Onagro' : 'Ballesta';
@@ -418,6 +429,33 @@ const C = {
   ink: '#efe6d0', dim: '#a89c8a', ember: '#ff8a3c', energy: '#f2c14e', blood: '#d8434f', arcane: '#b68cff',
 };
 
+
+// Glosario: cada palabra propia del juego, explicada en una línea. Se añade sola debajo de cualquier texto que la use.
+const GLOSS = [
+  [/Ascuas?/, 'Ascuas', 'brasas clavadas en el enemigo. Cada una le quema un poco cada segundo; se apagan a los 4 s si no clavas más.'],
+  [/Venenos?\b|envenenad/, 'Veneno', 'puntos que hacen daño poco a poco y no se van nunca. Cuantos más puntos, más daño.'],
+  [/Cristal(es)?/, 'Cristales', 'se quedan clavados en el suelo unos segundos. Solos no hacen nada: otras técnicas los usan.'],
+  [/Reserva/, 'Reserva', 'un escudo que se llena con la vida que te sobra al curarte. Se gasta antes que tu vida.'],
+  [/Furia/, 'Furia', 'una barra que sube al golpear y al recibir golpes, y baja sola si dejas de pelear.'],
+  [/\becos?\b/, 'Eco', 'una repetición del golpe que llega sola un momento después.'],
+  [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y pelean a tu lado unos segundos.'],
+  [/Agujas?|descarg/, 'Agujas', 'se clavan sin hacer daño. Al descargarlas, cada una hace daño y suelta un rayo a otro enemigo.'],
+  [/Empapad|empapa/, 'Empapado', 'mojado durante unos segundos. Solo no hace nada: otras técnicas de Mareas lo aprovechan.'],
+  [/Semillas?/, 'Semillas', 'se plantan en el enemigo; al juntar varias brotan en Raíces.'],
+  [/Raíces|enraíza|enraizad/, 'Raíces', 'el enemigo no puede moverse del sitio, aunque sí atacar.'],
+  [/crític/, 'Crítico', 'un golpe de suerte que hace el 250% del daño.'],
+  [/aturd/, 'Aturdido', 'no se mueve ni ataca durante un momento.'],
+  [/Compás/, 'Compás', 'pulsar el disparo justo cuando el anillo que te rodea se llena.'],
+  [/frenazo|te frena/, 'Frenazo', 'el instante que te quedas clavado al disparar.'],
+  [/esquive que lo atraviesa|[Aa]travesar a un enemigo con el esquive|[Ee]mbestir a un enemigo/, 'Atravesar', 'esquivar pasando por encima de un enemigo.'],
+  [/zarzal|zarzas/, 'Zarzal', 'una mancha de espinas en el suelo que frena y daña a quien la pisa.'],
+  [/contra (un|el) muro/, 'Golpe contra el muro', 'un enemigo empujado con fuerza que choca con un muro recibe daño y queda aturdido.'],
+];
+function gloss(txt, max) {
+  const out = [];
+  for (const [re, name, what] of GLOSS) { if (re.test(txt)) out.push(`<q><b>${name}:</b> ${what}</q>`); if (out.length >= (max || 3)) break; }
+  return out.length ? `<small class="gloss">${out.join('')}</small>` : '';
+}
 // ───────────────────────── Utilidades ─────────────────────────
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -634,14 +672,14 @@ function newGame() {
     t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
-      face: 0, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
+      face: 0, runUp: 0, drumT: null, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
       fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, heatT: 0, over: 0, gat: 0, shells: 2, trig: 0, still: 0, feastShot: false,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    traps: [], stat: { spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    traps: [], stat: { onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -915,7 +953,7 @@ function forgeHtml() {
   for (const k of GSLOT_KEYS) {
     const known = PARTS.filter(x => x.slot === k && M.parts[x.id]), hidden = PARTS.filter(x => x.slot === k && !M.parts[x.id]).length;
     arms += `<h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3>` + known.map(x => { const on = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span><i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       (hidden ? `<p class="fine">${hidden === 1 ? 'Queda 1 pieza' : 'Quedan ' + hidden + ' piezas'} por descubrir.</p>` : '');
   }
   const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
@@ -931,7 +969,7 @@ function forgeHtml() {
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
     <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. Las piezas de arma se descubren dentro: las sueltan los jefes, las vetas de Hierro Místico y la tienda. Forjarlas cuesta hierro y material de alguna deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
-    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -1020,6 +1058,19 @@ function bookHtml() {
 function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
+
+// Armas legendarias en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuál llevas montada
+function legendsHtml(g) {
+  const cur = legOf(g);
+  return `<h3>Armas legendarias · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
+    const known = (M.legends || {})[L.id] || L.parts.every(id => M.parts[id]);
+    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montada' : 'Legendaria'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
+}
+// En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
+function legHint(id) {
+  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p]));
+  return L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '';
+}
 // ───────────────────────── Salas: muros, formas y caminos ─────────────────────────
 // Cada sala es una rejilla de casillas de CELL unidades. Un generador decide qué casillas son muro;
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
@@ -1276,10 +1327,13 @@ const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
 const gunRange = () => ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1);
-const gunRate = () => ({ b_short: 1.25, b_bomb: 0.65 }[S.gun.barrel] || 1) * ({ a_semi: 1.2, a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunRate = () => ({ b_short: 1.25, b_bomb: 0.65 }[S.gun.barrel] || 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
 const gunDmg = () => ({ a_semi: 0.75, a_rotary: 0.3 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3 }[S.gun.mag] || 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
-function checkRes() { for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
+const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
+function checkRes() {
+  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Arma legendaria: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
+ for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
 const dodgeMax = () => 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
 const dodgeCdOf = () => T.dodge.cd * (G('s_light') ? 0.65 : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
 const furyFull = () => S.p.fury >= 100;
@@ -1590,11 +1644,13 @@ function fireBasic(target) {
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  let onetwo = false;
+  if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
   if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
   if (draw) mult *= 0.6 + 1.6 * p.drawPow;
   if (res('furnace')) mult *= 1 + 0.4 * p.heat;                              // resonancia Fragua viva
-  const big = p.crit || imb || p.quickBig || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
+  const big = p.crit || imb || p.quickBig || onetwo || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
   if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // pólvora negra: fogonazo y humo en la boca del arma
@@ -1605,8 +1661,10 @@ function fireBasic(target) {
   blip(1250, 0.07, 'square', 0.035, -700);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos
     barrelFire(target, mult * 0.45, big, col, reach);
-    for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1250, 0.05, 'square', 0.03, -700); barrelFire(t2, mult * 0.45, big, col, reach); } } });
+    for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1250, 0.05, 'square', 0.03, -700); barrelFire(t2, mult * 0.45, big, col, reach); if (d > 0.1 && active(t2)) stun(t2, 0.4); } } });
   } else barrelFire(target, mult, big, col, reach);
+  if (leg('zhuge') && draw) for (const d of [0.08, 0.16]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.04, 'square', 0.03, -500); barrelFire(t2, mult * 0.7, false, col, reach); addVenom(t2, 2); } } });
+  if (leg('zhuge') && draw && target && active(target)) addVenom(target, 2);
   if (imb && target && active(target)) { S.stat.blessed++; explode(target.x, target.y, 40, p.dmg * 1.2, { col: '#ffffff' }); }   // Bala bendita
   if (res('leadstorm') && p.trig % 10 === 0 && target && active(target)) discharge(target, 1, null);        // resonancia Tormenta de plomo
   if (res('firingline')) for (const sh of S.shades) {                        // resonancia Línea de tiro
@@ -1623,7 +1681,8 @@ function fireBasic(target) {
   }
   if (g.mag === 'm_belt') {              // la cinta calienta el arma
     p.heat = Math.min(1, p.heat + (g.action === 'a_rotary' ? 0.045 : 0.13)); p.heatT = 0.7;
-    if (p.heat >= 1) { p.over = 1.6; p.spin = 0; p.drawing = false; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); blip(120, 0.4, 'sawtooth', 0.06, -60); if (res('furnace')) explode(p.x, p.y, 70, p.dmg * 2.5, { push: 200, col: GODS.orc.color }); }
+    if (p.heat >= 1 && leg('organ')) { p.heat = 0; S.shake = Math.max(S.shake, 5); note(p.x, p.y - 16, '¡Salva!', C.ember, true); const near = S.enemies.filter(e => active(e) && dist(p, e) < rangeOf() + 40 && !blocked(p, e)); for (let i = 0; i < 11 && near.length; i++) { const e = near[i % near.length], d = dist(p, e) || 1; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: e.x, y2: e.y, t: 0, life: 0.12, col: C.ember, w: 1.5 }); if (active(e)) shot(e, p.dmg * 0.6, (e.x - p.x) / d, (e.y - p.y) / d, false, col); } }
+    else if (p.heat >= 1) { p.over = 1.6; p.spin = 0; p.drawing = false; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); blip(120, 0.4, 'sawtooth', 0.06, -60); if (res('furnace')) explode(p.x, p.y, 70, p.dmg * 2.5, { push: 200, col: GODS.orc.color }); }
   }
   // Culata de retroceso: cada disparo te aparta del enemigo
   if (g.stock === 's_recoil' && target && g.barrel !== 'b_spike' && p.dodgeT <= 0) { const d = dist(p, target) || 1; p.x -= (target.x - p.x) / d * 9; p.y -= (target.y - p.y) / d * 9; p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r); }
@@ -1639,10 +1698,16 @@ function barrelFire(target, m, big, col, reach) {
     tracer(p.x + ux * h.len, p.y + uy * h.len, big ? 3 : 1.6);
     const along = (ox, oy, vx, vy, len) => S.enemies.filter(e => { if (!active(e)) return false; const ex = e.x - ox, ey = e.y - oy, al = ex * vx + ey * vy; return al >= 0 && al <= len + e.r && Math.abs(ex * vy - ey * vx) <= 5 + e.r; }).sort((a, b) => Math.hypot(a.x - ox, a.y - oy) - Math.hypot(b.x - ox, b.y - oy));
     for (const e of along(p.x, p.y, ux, uy, h.len)) { shot(e, p.dmg * m, ux, uy, big, col); if (res('quarry') && left-- > 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // resonancia Barreno
-    if (h.side) {                        // rebote: el resto del recorrido, y un tramo de regalo
-      const bx = p.x + ux * (h.len - 1), by = p.y + uy * (h.len - 1), vx = h.side === 'x' ? -ux : ux, vy = h.side === 'y' ? -uy : uy, l2 = rayHit(bx, by, vx, vy, total - h.len + 70).len;
-      S.fx.push({ k: 'ring', x: bx, y: by, r: 6, t: 0, life: 0.12, col }); S.fx.push({ k: 'tracer', x1: bx, y1: by, x2: bx + vx * l2, y2: by + vy * l2, t: 0, life: big ? 0.2 : 0.13, col, w: big ? 2.4 : 1.4 });
-      for (const e of along(bx, by, vx, vy, l2)) { S.stat.bounce++; shot(e, p.dmg * m, vx, vy, big, col); if (res('pinball') && active(e)) discharge(e, 1, null); }   // resonancia Carambola
+    {                                    // rebotes: uno, o hasta cuatro con La Rompemuros (cada uno pega más)
+      let hh = h, ox = p.x, oy = p.y, vx = ux, vy = uy, left2 = total - h.len + 70, mul = 1;
+      for (let b = 0; b < (leg('breaker') ? 4 : 1) && hh.side; b++) {
+        const bx = ox + vx * (hh.len - 1), by = oy + vy * (hh.len - 1); if (hh.side === 'x') vx = -vx; else vy = -vy;
+        if (leg('breaker')) { mul *= 1.25; left2 = Math.max(left2, 150); }
+        const nh = rayHit(bx, by, vx, vy, left2);
+        S.fx.push({ k: 'ring', x: bx, y: by, r: 6, t: 0, life: 0.12, col }); S.fx.push({ k: 'tracer', x1: bx, y1: by, x2: bx + vx * nh.len, y2: by + vy * nh.len, t: 0, life: big ? 0.2 : 0.13, col, w: big ? 2.4 : 1.4 });
+        for (const e of along(bx, by, vx, vy, nh.len)) { S.stat.bounce++; shot(e, p.dmg * m * mul, vx, vy, big, col); if (res('pinball') && active(e)) discharge(e, 1, null); }   // resonancia Carambola
+        left2 -= nh.len; ox = bx; oy = by; hh = nh; if (left2 <= 8) break;
+      }
     }
     if (big) S.shake = Math.max(S.shake, 3);
   } else if (!target) tracer(p.x + ux * reach, p.y + uy * reach);   // tensado soltado al aire
@@ -1651,6 +1716,7 @@ function barrelFire(target, m, big, col, reach) {
     tracer(target.x, target.y); shot(target, p.dmg * m * 0.55, ux, uy, big, col);
     S.timers.push({ t: 0.05, fn: () => { const t2 = active(second) ? second : active(target) ? target : null; if (!t2) return; const d = dist(p, t2) || 1; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: t2.x, y2: t2.y, t: 0, life: 0.09, col }); shot(t2, p.dmg * m * 0.55, (t2.x - p.x) / d, (t2.y - p.y) / d, big, col); } });
   } else if (B === 'b_scatter') {        // seis perdigones en abanico, con empujón
+    const burnt = new Set();
     for (const off of [-0.36, -0.22, -0.07, 0.07, 0.22, 0.36]) {
       const a = ang + off, rx = Math.cos(a), ry = Math.sin(a); let bestE = null, ba = rayClip(p.x, p.y, rx, ry, reach + 20);
       for (const e of S.enemies) {
@@ -1659,18 +1725,19 @@ function barrelFire(target, m, big, col, reach) {
         if (al >= 0 && al - e.r < ba && Math.abs(ex * ry - ey * rx) <= e.r + 3) { ba = Math.max(0, al - e.r); bestE = e; }
       }
       S.fx.push({ k: 'tracer', x1: p.x + rx * 12, y1: p.y + ry * 12, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col });
-      if (bestE) { shot(bestE, p.dmg * m * 0.36, rx, ry, false, col); if (active(bestE) && !bestE.boss) { bestE.kx += rx * 110; bestE.ky += ry * 110; } }
+      if (bestE) { shot(bestE, p.dmg * m * 0.36, rx, ry, false, col); if (leg('dragon') && !burnt.has(bestE)) { burnt.add(bestE); addEmber(bestE, 2); } if (active(bestE) && !bestE.boss) { bestE.kx += rx * 110; bestE.ky += ry * 110; } }
     }
     S.shake = Math.max(S.shake, 4);
+    if (leg('dragon')) { S.zones.push({ x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * (reach + 10), y2: p.y + uy * (reach + 10), life: 2, acc: 0.4, ember: 1, col: GODS.dragon.color }); S.fx.push({ k: 'cone', x: p.x, y: p.y, a: ang, r: reach + 10, half: 0.4, t: 0, life: 0.2, col: GODS.dragon.color }); }
     if (res('dragonbreath')) S.zones.push({ x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * (reach + 10), y2: p.y + uy * (reach + 10), life: 2.2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // resonancia Aliento de dragón
   } else if (B === 'b_bomb') {           // bomba en arco: pasa por encima de los muros y revienta en área
     const tx = target.x, ty = target.y, fl = 0.2 + dist(p, target) / 520, dm = p.dmg * m * 0.8;
     S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
     S.fx.push({ k: 'ring', x: tx, y: ty, r: 16, t: 0, life: fl, col: C.ember });
     S.timers.push({ t: fl, fn: () => {
-      S.fx.push({ k: 'ring', x: tx, y: ty, r: 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); blip(140, 0.18, 'sawtooth', 0.05, -80);
+      S.fx.push({ k: 'ring', x: tx, y: ty, r: leg('monsmeg') ? 68 : 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); blip(140, 0.18, 'sawtooth', 0.05, -80);
       let n = 0;
-      for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = Math.hypot(e.x - tx, e.y - ty); if (d > 40 + e.r) continue; n++; shot(e, dm, (e.x - tx) / (d || 1), (e.y - ty) / (d || 1), big, col); }
+      for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = Math.hypot(e.x - tx, e.y - ty); if (d > (leg('monsmeg') ? 64 : 40) + e.r) continue; n++; if (leg('monsmeg')) stun(e, 0.6); shot(e, dm, (e.x - tx) / (d || 1), (e.y - ty) / (d || 1), big, col); }
       S.stat.bombHits += n; S.stat.bombs++;
       if (res('firerain')) S.zones.push({ x: tx, y: ty, r: 36, life: 2.5, acc: 0.4, ember: 1, col: GODS.dragon.color });   // resonancia Lluvia de brasas
     } });
@@ -2077,6 +2144,7 @@ function update(dt) {
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
   const want = p.buffer > 0 || I.atk, g = S.gun, A = g.action;
   if (p.over > 0) p.over -= dt;
+  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
   if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
@@ -2397,33 +2465,38 @@ const PAL = {
   f: '#ff9a3c', F: '#ffe08a',          // fuego
 };
 const ART = {
-  // El herrero: pañuelo rojo, barba, mandil de cuero sobre camisa de lino
-  player: { pal: {}, legs: 4, rows: [
-    '....oooooo......',
-    '...orrrrrro.....',
-    '..orrrrrrrro....',
-    '..oRRRRRRRRoo...',
-    '..osssssssoRo...',
-    '..ossksskso.o...',
-    '..oBsssssBo.....',
-    '..oBBBsBBBo.....',
-    '...oBBBBBo......',
-    '..ootbbbbtoo....',
-    '.osttbbbbttso...',
-    '.ostTbbbbTtso...',
-    '.ossobGGboss....',
-    '..oo.bbbbooo....',
-    '....obbbbo......',
-    '....oBbbBo......',
-    '....oIIoIIo.....',
-    '....oIIoIIo.....',
-    '...oBBooBBBo....',
-    '...ooo..oooo....' ],
+  // El protagonista: pelo de ceniza, un ojo encendido, bufanda roja al viento y abrigo largo con ribete de brasa.
+  // El martillo de forja asoma a la espalda.
+  player: { pal: { g: '#ff8a3c', h: '#eef2f5', H: '#a9b4c0', c: '#3b4160', C: '#242840', x: '#565d85', e: '#ffb347', m: '#6b7380' }, legs: 4, rows: [
+    '.......oooooo.......',
+    '.....oohhhhhhoo.....',
+    '....ohhhhhhhhhho....',
+    '.om.ohHhhhhhhhhho...',
+    'ommoohHHhhhHhhhho...',
+    'ommoohHHHssHHhho....',
+    '.obooHHsssssHso.....',
+    '..oboHsskssesso.....',
+    '..oboosssssssso.....',
+    'orrrorrrrrrrroo.....',
+    'oRrrrrRRrrrrro......',
+    '.oooRoxccccccxoo....',
+    '...ooxccgccccxsso...',
+    '....occcgcccCooo....',
+    '....occcgcccCo......',
+    '....occcgccCCo......',
+    '...oxcccgccCCCo.....',
+    '...occcggcCCCCo.....',
+    '...oCcCooCCCCCo.....',
+    '....oooIIoIIooo.....',
+    '.....oIIooIIo.......',
+    '.....oIIooIIo.......',
+    '....oBBBooBBBo......',
+    '....oooo..oooo......' ],
     alt: [
-    '....oIIoIIo.....',
-    '...oBBooIIo.....',
-    '...ooo.oBBBo....',
-    '.......oooo.....' ] },
+    '.....oIIooIIo.......',
+    '....oBBBooIIo.......',
+    '....oooo.oBBBo......',
+    '.........oooo.......' ] },
   // Necrófago: cadáver encorvado de piel cenicienta, harapos y garras
   stalker: { pal: { c: '#8fa58c', C: '#56705a', e: '#ffe08a', h: '#6e2f3a', H: '#431c26' }, legs: 3, rows: [
     '.....ooooo....',
@@ -3279,7 +3352,7 @@ function renderOverlay() {
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Izquierda y derecha para elegir, disparar para confirmar. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;

@@ -45,7 +45,7 @@ function forgeHtml() {
   for (const k of GSLOT_KEYS) {
     const known = PARTS.filter(x => x.slot === k && M.parts[x.id]), hidden = PARTS.filter(x => x.slot === k && !M.parts[x.id]).length;
     arms += `<h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3>` + known.map(x => { const on = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span><i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       (hidden ? `<p class="fine">${hidden === 1 ? 'Queda 1 pieza' : 'Quedan ' + hidden + ' piezas'} por descubrir.</p>` : '');
   }
   const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
@@ -61,7 +61,7 @@ function forgeHtml() {
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
     <p class="fine">${past} Las almas solo se consiguen en las salas de almas y sirven para tu árbol. Las piezas de arma se descubren dentro: las sueltan los jefes, las vetas de Hierro Místico y la tienda. Forjarlas cuesta hierro y material de alguna deidad. Lo que robes a los dioses no sale de la mazmorra.</p>
-    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    ${go}<div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -150,3 +150,16 @@ function bookHtml() {
 function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
+
+// Armas legendarias en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuál llevas montada
+function legendsHtml(g) {
+  const cur = legOf(g);
+  return `<h3>Armas legendarias · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
+    const known = (M.legends || {})[L.id] || L.parts.every(id => M.parts[id]);
+    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montada' : 'Legendaria'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
+}
+// En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
+function legHint(id) {
+  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p]));
+  return L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '';
+}

@@ -78,6 +78,7 @@ function update(dt) {
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
   const want = p.buffer > 0 || I.atk, g = S.gun, A = g.action;
   if (p.over > 0) p.over -= dt;
+  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
   if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
