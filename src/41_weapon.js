@@ -11,6 +11,11 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   { const wb = lv('tide_basic');
     if (wb && active(e)) { soak(e, 4); push(e, ux, uy, 150 * (duoOn('ram') && furyFull() ? 2 : 1)); }   // Oleaje (y dúo Ariete)
     if (lv('wood_basic') && active(e)) addSeed(e, 1); }                                        // Semilla
+  { const fb2 = lv('frost_basic'), bb = lv('blood_basic');
+    if (fb2) addFrost(e, fb2);                                                                 // Aliento helado
+    if (bb) addBleed(e, bb);                                                                   // Herida abierta
+    if (lv('end_basic') && src !== 'turret') addDoom(e);                                       // Sentencia
+    if (src === 'echo' && duoOn('deadline') && e.doom) e.doom.acc += dmg; }                    // dúo Plazo vencido
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
@@ -18,6 +23,8 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('r_spark') && p.shotN % 5 === 0) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);
     if (has('w_brine') && p.shotN % 4 === 0) push(e, ux, uy, 170);
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
+    if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
+    if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
@@ -76,7 +83,7 @@ function fireBasic(target) {
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
   if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Llave de péndulo (sustituye el 1,5 del Compás por la racha)
-  if (g.mag === 'm_blood') p.hp = Math.max(1, p.hp - 1);                       // Bala de sangre
+  if (g.mag === 'm_blood') payLife(1);                       // Bala de sangre
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
@@ -245,6 +252,7 @@ function startDodge(a, free) {
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
   if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
+  { const ed = lv('end_dodge'); if (ed) for (const e of S.enemies) if (active(e) && e.doom && dist(p, e) < 130) { e.doom.t -= 2; heal(ed); } }   // Pasar página
   const ld = lv('luck_dodge');
   if (ld && !free) {                                                        // Cara o cruz
     if (duoOn('toss')) heal(5);                                             // dúo Propina
@@ -266,7 +274,8 @@ function endDodge() {
   }
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
-    if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+    if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const fd = lv('frost_dodge'); if (fd && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 40, life: 4, acc: 0.4, frost: fd, col: GODS.frost.color }); }   // Paso de hielo
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
   if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Culata de fresno / Pistolete: sales del esquive con el arma lista
@@ -279,6 +288,7 @@ function dashThrough(e) {
   if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
   if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
   if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
+  { const bd2 = lv('blood_dodge'); if (bd2 && active(e)) { hit(e, p.dmg * 0.6 * bd2, p.dvx, p.dvy, false, GODS.blood.color); heal(4 * bd2); } }   // Transfusión
   if (od && active(e)) {                                                    // Embestida
     const up = duoOn('uproot') && e.root > 0;                               // dúo Descuaje
     hit(e, p.dmg * od * (up ? 3 : 1), p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
@@ -304,6 +314,12 @@ function chargePayoff(e) {
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
+  const fc = lv('frost_charge'), ec = lv('end_charge');
+  if (fc && active(e)) {                                                    // Quebrar
+    if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }
+    else addFrost(e, 3);
+  }
+  if (ec && active(e) && e.doom) { if (duoOn('autodafe')) addEmber(e, 3); fulfil(e, 1 + 0.3 * ec); }   // Punto final (y dúo Auto de fe)
 }
 // snap: desde dónde y con qué fuerza se lanzó. echo: repetición de Rebobinar (no gasta nada ni tiene recarga).
 function castCharged(snap, mult, echo) {
@@ -388,6 +404,7 @@ function castCharged(snap, mult, echo) {
       S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 150, t: 0, life: 0.4, col: GODS.tide.color });
       for (const e of S.enemies.slice()) {
         if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 150 + e.r) continue;
+        if (duoOn('iceberg') && e.wet > 0) freeze(e);                         // dúo Témpano
         soak(e, 5); hit(e, p.dmg * 0.5 * wc * mult, (e.x - o.x) / d, (e.y - o.y) / d, false, GODS.tide.color);
         if (!active(e)) continue;
         push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320); if (strong) stun(e, 1);
@@ -429,6 +446,7 @@ function fireCharged(am) {
   const snap = { x: p.x, y: p.y, dir: p.chargeDir, ratio, fury: p.fury, bonus: 1,
     tx: clamp(tg ? tg.x : p.x + ux * reach, 0, T.room.w), ty: clamp(tg ? tg.y : p.y + uy * reach, 0, T.room.h) };
   if (fl) { snap.bonus = 1 + 0.04 * fl * p.reserve; p.reserve = 0; S.banquet = S.t + 0.6; }   // Banquete
+  { const bc2 = lv('blood_charge'); if (bc2) { payLife(Math.floor(p.hp * 0.1)); snap.bonus *= 1 + 0.6 * bc2; S.bloodT = S.t + 0.7; } }   // Sangría
   const lc = lv('luck_charge');
   if (lc) {                                                                 // Todo al rojo: el mejor de lc dados
     let die = 1; for (let i = 0; i < lc; i++) die = Math.max(die, 1 + Math.floor(Math.random() * 6));
@@ -459,7 +477,8 @@ function hurtPlayer(dmg) {
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
-  p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);
+  p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
+  if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata S.shake = Math.max(S.shake, 6);
   gainFury(15);
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento

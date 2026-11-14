@@ -247,6 +247,14 @@ function update(dt) {
     e.flash = Math.max(0, e.flash - dt);
     { const far = e.wet > 0 && lv('tide_passive') ? 1.5 : 1; e.x += e.kx * dt * far; e.y += e.ky * dt * far; }   // Marea alta: los Empapados salen más lejos
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
+    e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
+    if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
+      e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
+      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
+      if (e.bleedT <= 0) e.bleed = 0;
+      if (e.hp <= 0) continue;
+    }
+    if (e.doom) { e.doom.t -= dt; if (e.doom.t <= 0) { fulfil(e); if (e.hp <= 0) continue; } }
     e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
     let reef = null;
     if (duoOn('reef') && Math.hypot(e.kx, e.ky) > 170) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
@@ -342,9 +350,10 @@ function update(dt) {
     z.acc = 0;
     const touch = e => {
       if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom);
+      if (z.frost) addFrost(e, z.frost);
       if (z.slow) slow(e, 0.6, z.slow); if (z.bram) e.bram = 0.6; if (z.dmg) dot(e, z.dmg, z.col);
       if (z.flow && active(e)) { soak(e, 3); push(e, z.flow.ux, z.flow.uy, z.flow.f); }
-      if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
+      if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); if (z.frost1) addFrost(e, z.frost1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
     };
     if (z.r) { for (const e of S.enemies) if (active(e) && Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) touch(e); continue; }
     const zx = z.x2 - z.x1, zy = z.y2 - z.y1, L = Math.hypot(zx, zy) || 1, ux = zx / L, uy = zy / L;

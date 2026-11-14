@@ -119,6 +119,21 @@ const GODS = {
     enter: ['hace crecer musgo en tus botas.', 'deja que su elegido eche raíces en esta sala.'],
     champ: ['lo cubre de hojas. Mañana será un árbol.', 'no llora: abona.'],
     take:  ['te llama mala hierba, con cariño.', 'siente cómo podas lo que era suyo.'], master: ['florece en pleno invierno, solo por verte.'] } },
+  frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Punzón de la Dama', mat: 'Carámbano', color: '#bfe9ff',
+    key: 'Escarcha: se acumula y frena. A la quinta, el enemigo queda Congelado, y lo que está congelado se puede romper.', lines: {
+    enter: ['no se mueve. Nunca se ha movido.', 'baja la temperatura de la sala. Ves tu aliento.'],
+    champ: ['no parpadea. Guarda al muerto bajo el hielo, intacto.', 'deja que nieve sobre su elegido.'],
+    take:  ['te mira hacerlo. Solo te mira.', 'tiene todo el tiempo del mundo para cobrártelo.'], master: ['da un paso. El primero en mil inviernos.'] } },
+  blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Lanceta del Acreedor', mat: 'Coágulo', color: '#d6334a',
+    key: 'Heridas: el enemigo sangra más cuanto más herido estés tú. Y pagos: das vida para pegar más, y la cobras matando.', lines: {
+    enter: ['abre su libro de cuentas por tu nombre.', 'te presta a su elegido. Con intereses.'],
+    champ: ['apunta la pérdida. Te la cobrará.', 'lame la pluma y tacha una línea.'],
+    take:  ['sonríe: ahora tú también le debes.', 'te fía. Eso es peor.'], master: ['cierra el libro: ya eres su mejor cliente.'] } },
+  end: { title: 'La Última Página', theme: 'Final', weapon: 'Pluma de la Última Página', mat: 'Tinta', color: '#9fb0c8',
+    key: 'Sentencias: marcas a un enemigo y, al cumplirse el plazo, recibe de golpe parte de todo el daño que le hiciste mientras tanto.', lines: {
+    enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
+    champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
+    take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -182,9 +197,24 @@ const PIECES = [
   { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `El cargado deja 5 s un zarzal donde apuntas: ralentiza a la mitad y hace ${20 * l}% de daño por pulso a quien esté dentro.` },
   { id: 'wood_dodge',     god: 'wood',   slot: 'dodge',   name: 'Enredadera',       desc: l => `El esquive deja 4 s una enredadera: el primer paso de cada enemigo por ella lo enraíza 1 s y le hace ${60 * l}% de daño.` },
   { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o entre zarzas reciben un ${20 * l}% más de daño, y te curan ${l} al morir.` },
+  // Hielo
+  { id: 'frost_basic',    god: 'frost',  slot: 'basic',   name: 'Aliento helado',   desc: l => `Cada bala pone ${l} de Escarcha. Cada punto frena un 12%; al llegar a 5, el enemigo queda Congelado 1,5 s.` },
+  { id: 'frost_charge',   god: 'frost',  slot: 'charge',  name: 'Quebrar',          desc: l => `El cargado rompe a los Congelados: ${150 * l}% de daño extra y esquirlas en área. A los que no lo están les pone 3 de Escarcha.` },
+  { id: 'frost_dodge',    god: 'frost',  slot: 'dodge',   name: 'Paso de hielo',    desc: l => `El esquive deja 4 s una placa de hielo donde estabas: pone ${l} de Escarcha por pulso a quien la pise.` },
+  { id: 'frost_passive',  god: 'frost',  slot: 'passive', name: 'Cero absoluto',    desc: l => `Los Congelados reciben un ${25 * l}% más de daño. Si mueren congelados, ponen 2 de Escarcha a los enemigos cercanos.` },
+  // Sangre
+  { id: 'blood_basic',    god: 'blood',  slot: 'basic',   name: 'Herida abierta',   desc: l => `Cada bala abre ${pl(l, 'Herida')} (hasta 6). Las Heridas sangran cada medio segundo, y sangran hasta el triple cuanta menos vida tengas tú.` },
+  { id: 'blood_charge',   god: 'blood',  slot: 'charge',  name: 'Sangría',          desc: l => `El cargado te cuesta el 10% de la vida que tengas y hace un ${60 * l}% más de daño. Cada enemigo que mata te devuelve 5.` },
+  { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Atravesar a un enemigo con el esquive le hace ${60 * l}% de daño y te cura ${4 * l}.` },
+  { id: 'blood_passive',  god: 'blood',  slot: 'passive', name: 'Deuda',            desc: l => `Por debajo de la mitad de vida haces un ${20 * l}% más de daño. Y el primer golpe mortal de cada sala te deja con 1 de vida en vez de matarte.` },
+  // Final
+  { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Tu bala pone una Sentencia de 5 s. Al cumplirse, el enemigo recibe de golpe el ${30 + 10 * l}% de todo el daño que le hayas hecho en ese tiempo.` },
+  { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `El cargado cumple al instante las Sentencias de los enemigos que alcanza, con un ${30 * l}% más.` },
+  { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s, y te curas ${l} por cada una.` },
+  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere con la Sentencia sin cumplir, pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
-// te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Uno por cada pareja de deidades.
+// te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
 const DUOS = [
   // Disparo
   { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Bala de obsidiana',  desc: 'Los Cristales arden: queman a quien tengan cerca y, al apagarse, estallan en fuego.' },
@@ -248,6 +278,22 @@ const DUOS = [
   { id: 'mangrove',  slot: 'dodge',   a: 'tide_dodge',    b: 'wood_dodge',   name: 'Manglar',            desc: 'La enredadera empapa, y las Raíces duran el doble en los Empapados.' },
   { id: 'amber',     slot: 'passive', a: 'stone_passive', b: 'wood_passive', name: 'Ámbar',              desc: 'Un enemigo que muere enraizado o entre zarzas deja un Cristal.' },
   { id: 'orchard',   slot: 'passive', a: 'feast_passive', b: 'wood_passive', name: 'Huerto',             desc: 'Cada golpe a un enemigo enraizado te cura 1.' },
+  // Hielo (afines: Mareas, Tiempo, Minerales, Tormenta, Bosque)
+  { id: 'glacier',   slot: 'basic',   a: 'stone_basic',   b: 'frost_basic',   name: 'Glaciar',           desc: 'Cada enemigo que se congela deja un Cristal a su lado.' },
+  { id: 'hail',      slot: 'basic',   a: 'storm_basic',   b: 'frost_basic',   name: 'Granizo',           desc: 'Cuando un enemigo se congela, se descargan todas sus Agujas.' },
+  { id: 'iceberg',   slot: 'charge',  a: 'tide_charge',   b: 'frost_charge',  name: 'Témpano',           desc: 'El Maremoto congela al instante a los enemigos que ya estaban Empapados.' },
+  { id: 'stillness', slot: 'passive', a: 'time_passive',  b: 'frost_passive', name: 'Quietud',           desc: 'Los enemigos quedan Congelados un segundo y medio más.' },
+  { id: 'frostthorn', slot: 'dodge',  a: 'wood_dodge',    b: 'frost_dodge',   name: 'Zarza de escarcha', desc: 'La enredadera pone además 3 de Escarcha a quien enraíza.' },
+  // Sangre (afines: Manjares, Orcos, Veneno, Sombras)
+  { id: 'warwound',  slot: 'basic',   a: 'orc_basic',     b: 'blood_basic',   name: 'Herida de guerra',  desc: 'Cada Herida que abres te da 3 de Furia, y con la Furia llena las Heridas sangran el doble.' },
+  { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Los enemigos envenenados sangran el doble por sus Heridas.' },
+  { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Toda la vida que pagas (Sangría, Bala de sangre) vuelve como Reserva.' },
+  { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Cada enemigo que mata la Sangría se levanta como Sombra.' },
+  // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
+  { id: 'deadline',  slot: 'basic',   a: 'time_basic',    b: 'end_basic',     name: 'Plazo vencido',     desc: 'El daño de los ecos cuenta doble para la Sentencia.' },
+  { id: 'verdict',   slot: 'basic',   a: 'luck_basic',    b: 'end_basic',     name: 'Veredicto',         desc: 'Un crítico cumple la Sentencia del enemigo al instante.' },
+  { id: 'autodafe',  slot: 'charge',  a: 'dragon_charge', b: 'end_charge',    name: 'Auto de fe',        desc: 'Al cumplir una Sentencia con el cargado, el enemigo recibe además 3 Ascuas.' },
+  { id: 'obituary',  slot: 'passive', a: 'shade_passive', b: 'end_passive',   name: 'Obituario',         desc: 'Quien muere al cumplirse su Sentencia se levanta como Sombra.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -281,6 +327,12 @@ const TECHS = [
   { id: 'l_jack',    god: 'luck',   rar: 3, name: 'Premio gordo',      desc: 'Un crítico que mata revienta al enemigo: 150% de daño en área y 3 monedas.', req: ['luck_basic'] },
   { id: 'b_thorn',   god: 'wood',   rar: 1, name: 'Espina',            desc: 'Una de cada cinco balas enraíza al enemigo 0,8 s.' },
   { id: 'b_bloom',   god: 'wood',   rar: 2, name: 'Floración',         desc: 'Un enemigo que muere enraizado deja un zarzal 3 s.' },
+  { id: 'i_rime',    god: 'frost',  rar: 1, name: 'Rocío helado',      desc: 'Una de cada cuatro balas pone 1 de Escarcha.' },
+  { id: 'i_shatter', god: 'frost',  rar: 2, name: 'Astillas',          desc: 'Un enemigo que muere Congelado lanza cuatro esquirlas a los cercanos (40% de daño cada una).' },
+  { id: 'h_warm',    god: 'blood',  rar: 1, name: 'Sangre caliente',   desc: 'Por debajo de la mitad de vida, cada baja te cura 2.' },
+  { id: 'h_frenzy',  god: 'blood',  rar: 3, name: 'Marea roja',        desc: 'Por debajo del 30% de vida disparas un 40% más rápido.' },
+  { id: 'e_ink',     god: 'end',    rar: 1, name: 'Tinta fresca',      desc: 'Una de cada cuatro balas pone una Sentencia al enemigo (40% del daño acumulado en 5 s).' },
+  { id: 'e_seal',    god: 'end',    rar: 2, name: 'Sello',             desc: 'Cuando se cumple una Sentencia, el enemigo queda aturdido medio segundo.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -296,6 +348,9 @@ const MASTERY = {
   tide:   { name: 'Señor del abismo',      desc: 'Cada golpe contra el muro suelta una ola: 150% de daño en área, y empapa.' },
   luck:   { name: 'La casa siempre gana',  desc: 'Tus críticos hacen el 400% del daño en vez del 250%.' },
   wood:   { name: 'Corazón del bosque',    desc: 'Las Raíces duran el doble y, al brotar, el enemigo se queda con dos Semillas ya plantadas.' },
+  frost:  { name: 'Invierno eterno',       desc: 'Los enemigos quedan Congelados el doble de tiempo.' },
+  blood:  { name: 'Cobro final',           desc: 'Cada enemigo que muere sangrando te cura 2.' },
+  end:    { name: 'Letra pequeña',         desc: 'Las Sentencias se cumplen en 3 s en vez de 5.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
@@ -474,6 +529,9 @@ const GLOSS = [
   [/Empapad|empapa/, 'Empapado', 'mojado durante unos segundos. Solo no hace nada: otras técnicas de Mareas lo aprovechan.'],
   [/Semillas?/, 'Semillas', 'se plantan en el enemigo; al juntar varias brotan en Raíces.'],
   [/Raíces|enraíza|enraizad/, 'Raíces', 'el enemigo no puede moverse del sitio, aunque sí atacar.'],
+  [/Escarcha|Congelad|congela/, 'Escarcha', 'cada punto frena al enemigo; al quinto queda Congelado: no se mueve ni ataca, y puede romperse.'],
+  [/Heridas?\b|sangra/, 'Heridas', 'el enemigo pierde vida cada medio segundo; más cuanto más herido estés tú.'],
+  [/Sentencias?/, 'Sentencia', 'una cuenta atrás sobre el enemigo: al acabar recibe de golpe parte del daño que le hiciste mientras tanto.'],
   [/crític/, 'Crítico', 'un golpe de suerte que hace el 250% del daño.'],
   [/aturd/, 'Aturdido', 'no se mueve ni ataca durante un momento.'],
   [/Compás/, 'Compás', 'pulsar el disparo justo cuando el anillo que te rodea se llena.'],
@@ -709,7 +767,7 @@ function newGame() {
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    mines: [], traps: [], stat: { fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    mines: [], traps: [], stat: { frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -751,7 +809,7 @@ function nextWave() {
     list.sort(() => Math.random() - 0.5);
     if (S.roomType === 'god') list.splice(Math.ceil(list.length / 2), 0, 'champ');   // el elegido de la deidad
   }
-  S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
+  S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.36 }));
   S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
   const room = ms.type === 'defend' ? buildRoom(false, 'aldea', 'big') : ms.type === 'assault' ? buildRoom(false, 'escombros', 'huge') : buildRoom(S.bossRoom);   // forma, tamaño y muros nuevos en cada sala
@@ -919,7 +977,7 @@ function pieceCard(pc) {
   return o;
 }
 // Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
-const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'd_blood', 'v_vapors', 'f_carve'];
+const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'd_blood', 'v_vapors', 'f_carve'];
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
 function pieceOptions(god) {
@@ -1472,7 +1530,7 @@ const isSlow = e => e.slowT > 0 || e.stun > 0;
 const rangeOf = () => S.p.range * gunRange() * (1 + 0.05 * tk('eye'));
 const periodOf = () => {
   const p = S.p, bl = lv('orc_passive');
-  return 1 / (p.as * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
+  return 1 / (p.as * (has('h_frenzy') && p.hp < p.maxHp * 0.3 ? 1.4 : 1) * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
 function nearestInRange() {
@@ -1512,6 +1570,12 @@ function kill(e) {
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de 3]', C.ink); if (S.postsDown < 3) S.pendingLoot = true; }
+  if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
+  if (has('i_shatter') && e.frozen > 0) for (const o of others(e, 100, 4)) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: GODS.frost.color }); hit(o, p.dmg * 0.4, 0, 0, false, GODS.frost.color); }   // Astillas
+  if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
+  if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
+  if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
+  { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (G('m_blood')) heal(3);                                                                  // Bala de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
@@ -1558,6 +1622,9 @@ function hit(e, dmg, ux, uy, big, col) {
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
+      if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
+      if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
     if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Bala de plata
@@ -1565,6 +1632,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
+  if (e.doom && !S._doom) e.doom.acc += dmg;                                                   // Sentencia: va sumando
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
   for (let i = 0; i < (big ? 7 : 3); i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: ux * rnd(40, 140) + rnd(-50, 50), vy: uy * rnd(40, 140) + rnd(-50, 50), t: 0, life: rnd(0.15, 0.3), col: col || C.energy });
@@ -1617,6 +1685,30 @@ function explode(x, y, r, dmg, o) {
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); }   // (dúo Salmuera)
+// Hielo: la Escarcha se acumula; a la quinta, Congelado
+function freeze(e) {
+  if (!active(e)) return;
+  const dur = (1.5 + (duoOn('stillness') ? 1.5 : 0)) * (mastery('frost') ? 2 : 1);
+  e.frost = 0; e.frozen = e.boss ? dur * 0.5 : dur; S.stat.frozen++;
+  if (e.boss) slow(e, dur, 0.4); else stun(e, dur);
+  note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); blip(1500, 0.12, 'sine', 0.04, -600);
+  if (duoOn('glacier')) addCrystal(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Glaciar
+  if (duoOn('hail') && e.needles > 0) discharge(e, 0.8, null);                        // dúo Granizo
+}
+function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.frost = (e.frost || 0) + n; e.frostT = 4; if (e.frost >= 5) freeze(e); else slow(e, 2, 1 - 0.12 * e.frost); }
+// Sangre: Heridas que sangran según la vida que te falta
+function addBleed(e, n) { if (!active(e) || n <= 0) return; e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
+function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
+// Final: Sentencias que devuelven de golpe parte del daño acumulado
+const doomK = () => 0.3 + 0.1 * Math.max(1, lv('end_basic'));
+function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
+function fulfil(e, bonus) {
+  const d = e.doom; if (!d || !active(e)) return;
+  e.doom = null; S.stat.doom++;
+  if (d.acc > 0) { S._doom = true; note(e.x, e.y - e.r - 12, '¡Sentencia!', GODS.end.color, true); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 10, t: 0, life: 0.2, col: GODS.end.color }); hit(e, d.acc * doomK() * (bonus || 1), 0, 0, true, GODS.end.color); S._doom = false; }
+  if (has('e_seal') && active(e)) stun(e, 0.5);
+  if (duoOn('obituary') && !active(e) && !e.boss) raiseShade(e.x, e.y);               // dúo Obituario
+}
 // Mareas: empapar y empujar. Bosque: semillas que brotan en raíces. Fortuna: críticos.
 function soak(e, t) { if (active(e)) e.wet = Math.max(e.wet || 0, t); }
 function push(e, ux, uy, f) { if (!active(e) || e.boss) return; e.kx += ux * f; e.ky += uy * f; }
@@ -1645,6 +1737,7 @@ function onCrit(e) {
   if (duoOn('facet')) addCrystal(e.x + rnd(-14, 14), e.y + rnd(-14, 14));             // dúo Faceta
   if (duoOn('snakeeyes') && e.venom > 0) e.venom = Math.min(30, e.venom * 2);         // dúo Ojos de serpiente
   if (duoOn('clover') && active(e) && e.seed > 0) sprout(e);                          // dúo Trébol
+  if (duoOn('verdict') && active(e) && e.doom) fulfil(e);                             // dúo Veredicto
   if (has('l_jack') && !active(e)) { explode(e.x, e.y, 48, p.dmg * 1.5, { col: GODS.luck.color }); addGold(3); }   // Premio gordo
 }
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
@@ -1721,6 +1814,11 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   { const wb = lv('tide_basic');
     if (wb && active(e)) { soak(e, 4); push(e, ux, uy, 150 * (duoOn('ram') && furyFull() ? 2 : 1)); }   // Oleaje (y dúo Ariete)
     if (lv('wood_basic') && active(e)) addSeed(e, 1); }                                        // Semilla
+  { const fb2 = lv('frost_basic'), bb = lv('blood_basic');
+    if (fb2) addFrost(e, fb2);                                                                 // Aliento helado
+    if (bb) addBleed(e, bb);                                                                   // Herida abierta
+    if (lv('end_basic') && src !== 'turret') addDoom(e);                                       // Sentencia
+    if (src === 'echo' && duoOn('deadline') && e.doom) e.doom.acc += dmg; }                    // dúo Plazo vencido
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
@@ -1728,6 +1826,8 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('r_spark') && p.shotN % 5 === 0) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);
     if (has('w_brine') && p.shotN % 4 === 0) push(e, ux, uy, 170);
     if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
+    if (has('i_rime') && p.shotN % 4 === 0) addFrost(e, 1);
+    if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
@@ -1786,7 +1886,7 @@ function fireBasic(target) {
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
   if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Llave de péndulo (sustituye el 1,5 del Compás por la racha)
-  if (g.mag === 'm_blood') p.hp = Math.max(1, p.hp - 1);                       // Bala de sangre
+  if (g.mag === 'm_blood') payLife(1);                       // Bala de sangre
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
@@ -1955,6 +2055,7 @@ function startDodge(a, free) {
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
   if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
+  { const ed = lv('end_dodge'); if (ed) for (const e of S.enemies) if (active(e) && e.doom && dist(p, e) < 130) { e.doom.t -= 2; heal(ed); } }   // Pasar página
   const ld = lv('luck_dodge');
   if (ld && !free) {                                                        // Cara o cruz
     if (duoOn('toss')) heal(5);                                             // dúo Propina
@@ -1976,7 +2077,8 @@ function endDodge() {
   }
   { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
     if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
-    if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+    if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, frost1: duoOn('frostthorn') ? 3 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
+  { const fd = lv('frost_dodge'); if (fd && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 40, life: 4, acc: 0.4, frost: fd, col: GODS.frost.color }); }   // Paso de hielo
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
   if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Culata de fresno / Pistolete: sales del esquive con el arma lista
@@ -1989,6 +2091,7 @@ function dashThrough(e) {
   if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
   if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
   if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
+  { const bd2 = lv('blood_dodge'); if (bd2 && active(e)) { hit(e, p.dmg * 0.6 * bd2, p.dvx, p.dvy, false, GODS.blood.color); heal(4 * bd2); } }   // Transfusión
   if (od && active(e)) {                                                    // Embestida
     const up = duoOn('uproot') && e.root > 0;                               // dúo Descuaje
     hit(e, p.dmg * od * (up ? 3 : 1), p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
@@ -2014,6 +2117,12 @@ function chargePayoff(e) {
     hit(e, p.dmg * 0.15 * vc * st, 0, 0, true, GODS.venom.color);
   }
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
+  const fc = lv('frost_charge'), ec = lv('end_charge');
+  if (fc && active(e)) {                                                    // Quebrar
+    if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }
+    else addFrost(e, 3);
+  }
+  if (ec && active(e) && e.doom) { if (duoOn('autodafe')) addEmber(e, 3); fulfil(e, 1 + 0.3 * ec); }   // Punto final (y dúo Auto de fe)
 }
 // snap: desde dónde y con qué fuerza se lanzó. echo: repetición de Rebobinar (no gasta nada ni tiene recarga).
 function castCharged(snap, mult, echo) {
@@ -2098,6 +2207,7 @@ function castCharged(snap, mult, echo) {
       S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 150, t: 0, life: 0.4, col: GODS.tide.color });
       for (const e of S.enemies.slice()) {
         if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 150 + e.r) continue;
+        if (duoOn('iceberg') && e.wet > 0) freeze(e);                         // dúo Témpano
         soak(e, 5); hit(e, p.dmg * 0.5 * wc * mult, (e.x - o.x) / d, (e.y - o.y) / d, false, GODS.tide.color);
         if (!active(e)) continue;
         push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320); if (strong) stun(e, 1);
@@ -2139,6 +2249,7 @@ function fireCharged(am) {
   const snap = { x: p.x, y: p.y, dir: p.chargeDir, ratio, fury: p.fury, bonus: 1,
     tx: clamp(tg ? tg.x : p.x + ux * reach, 0, T.room.w), ty: clamp(tg ? tg.y : p.y + uy * reach, 0, T.room.h) };
   if (fl) { snap.bonus = 1 + 0.04 * fl * p.reserve; p.reserve = 0; S.banquet = S.t + 0.6; }   // Banquete
+  { const bc2 = lv('blood_charge'); if (bc2) { payLife(Math.floor(p.hp * 0.1)); snap.bonus *= 1 + 0.6 * bc2; S.bloodT = S.t + 0.7; } }   // Sangría
   const lc = lv('luck_charge');
   if (lc) {                                                                 // Todo al rojo: el mejor de lc dados
     let die = 1; for (let i = 0; i < lc; i++) die = Math.max(die, 1 + Math.floor(Math.random() * 6));
@@ -2169,7 +2280,8 @@ function hurtPlayer(dmg) {
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
-  p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35; S.shake = Math.max(S.shake, 6);
+  p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
+  if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata S.shake = Math.max(S.shake, 6);
   gainFury(15);
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento
@@ -2498,6 +2610,14 @@ function update(dt) {
     e.flash = Math.max(0, e.flash - dt);
     { const far = e.wet > 0 && lv('tide_passive') ? 1.5 : 1; e.x += e.kx * dt * far; e.y += e.ky * dt * far; }   // Marea alta: los Empapados salen más lejos
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
+    e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
+    if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
+      e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
+      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
+      if (e.bleedT <= 0) e.bleed = 0;
+      if (e.hp <= 0) continue;
+    }
+    if (e.doom) { e.doom.t -= dt; if (e.doom.t <= 0) { fulfil(e); if (e.hp <= 0) continue; } }
     e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
     let reef = null;
     if (duoOn('reef') && Math.hypot(e.kx, e.ky) > 170) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
@@ -2593,9 +2713,10 @@ function update(dt) {
     z.acc = 0;
     const touch = e => {
       if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom);
+      if (z.frost) addFrost(e, z.frost);
       if (z.slow) slow(e, 0.6, z.slow); if (z.bram) e.bram = 0.6; if (z.dmg) dot(e, z.dmg, z.col);
       if (z.flow && active(e)) { soak(e, 3); push(e, z.flow.ux, z.flow.uy, z.flow.f); }
-      if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
+      if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); if (z.frost1) addFrost(e, z.frost1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
     };
     if (z.r) { for (const e of S.enemies) if (active(e) && Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) touch(e); continue; }
     const zx = z.x2 - z.x1, zy = z.y2 - z.y1, L = Math.hypot(zx, zy) || 1, ux = zx / L, uy = zy / L;
@@ -3401,6 +3522,10 @@ function renderWorld() {
     if (e.wet > 0) { ctx.fillStyle = GODS.tide.color; for (let i = 0; i < 3; i++) { const a = S.t * 3 + i * 2.1; ctx.fillRect(Math.round(e.x + Math.cos(a) * (e.r + 2)), Math.round(e.y + e.r - 2 + ((S.t * 9 + i * 3) % 5)), 1, 2); } }
     if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
     if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
+    if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
+    else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
+    if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
+    if (e.doom) { const k = clamp(e.doom.t / 5, 0, 1); ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(e.x) - 5, Math.round(e.y - e.r - 15), 10, 3); ctx.fillStyle = GODS.end.color; ctx.fillRect(Math.round(e.x) - 4, Math.round(e.y - e.r - 14), Math.round(8 * k), 1); }
     if (e.mark > 0) { ctx.strokeStyle = GODS.shade.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e.x - 3, e.y + e.r + 4); ctx.lineTo(e.x + 3, e.y + e.r + 4); ctx.moveTo(e.x, e.y + e.r + 2); ctx.lineTo(e.x, e.y + e.r + 8); ctx.stroke(); }
     if (e.slowT > 0) { ctx.strokeStyle = GODS.time.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 7, 0, Math.PI * 2 * (1 - e.slowF)); ctx.stroke(); }
     if (e.stun > 0) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.setLineDash([1.5, 2.5]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, S.t * 6, S.t * 6 + Math.PI * 1.6); ctx.stroke(); ctx.setLineDash([]); }
