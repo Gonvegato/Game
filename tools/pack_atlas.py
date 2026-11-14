@@ -63,10 +63,29 @@ CAST.update({
   'cit_peasant': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Peasant_A", {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Walk/Walk-Sheet.png', 6, 9)}),
   'cit_tavern_a': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_A", {'idle': ('Idle_Hold/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Hold/Walk_Side-Sheet.png', 6, 9)}),
   'cit_tavern_b': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_B", {'idle': ('Idle/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk/Walk_Side-Sheet.png', 6, 9)}),
+  'adv_archer': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Archer', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('ATK_Full', 6, 12)}),
+  'adv_dwarf': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Dwarf', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Attack', 11, 16)}),
+  'adv_knight': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Knight', {'idle': ('Idle', 1, 1), 'move': ('Run', 8, 12), 'atk': ('Attack', 11, 16)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
+# ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
+def pcmob(key, d, sub):
+    i, r = ('Idle/Idle-Sheet.png', 'Run/Run-Sheet.png') if sub else ('Idle-Sheet.png', 'Run-Sheet.png')
+    dd = 'Death/Death-Sheet.png' if sub else 'Death-Sheet.png'
+    CAST[key] = ('@' + d, {'idle': (i, 4, 5), 'move': (r, 6, 10), 'die': (dd, 8, 12)})
+FP = "Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Mobs/"
+for k, d, sub in [('pc_skel', FP + 'Skeleton Crew/Skeleton - Base', 1), ('pc_skel_mage', FP + 'Skeleton Crew/Skeleton - Mage', 1), ('pc_skel_rogue', FP + 'Skeleton Crew/Skeleton - Rogue', 1), ('pc_skel_war', FP + 'Skeleton Crew/Skeleton - Warrior', 1),
+                  ('pc_zombie', 'Pixel_Crawler_-_Cemetery_0.4/Entities/Mobs/Zombie - Base', 0), ('pc_zombie_fat', 'Pixel_Crawler_-_Cemetery_0.4/Entities/Mobs/Zombie - Overweight', 0), ('pc_zombie_mus', 'Pixel_Crawler_-_Cemetery_0.4/Entities/Mobs/Zombie - Muscle', 0), ('pc_banshee', 'Pixel_Crawler_-_Cemetery_0.4/Entities/Mobs/Zombie - Banshee', 0),
+                  ('pc_fungus', 'Pixel_Crawler_-_Cave/Enemies/Immature Fungus', 0), ('pc_fungus_long', 'Pixel_Crawler_-_Cave/Enemies/Long Fungus', 0), ('pc_fungus_heavy', 'Pixel_Crawler_-_Cave/Enemies/Heavy Fungus', 0), ('pc_fungus_old', 'Pixel_Crawler_-_Cave/Enemies/Old Fungus', 0),
+                  ('pc_rat', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Base', 1), ('pc_rat_rogue', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Rogue', 1), ('pc_rat_mage', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Mage', 1), ('pc_rat_war', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Warrior', 1),
+                  ('pc_stone', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Base', 1), ('pc_stone_broken', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Broken', 1), ('pc_stone_lava', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Lava', 1), ('pc_golem', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Golem', 1)]:
+    pcmob(k, d, sub)
 PC = 'assets/library/packs/'
 def frames_of(folder, suffix):
+    if folder.startswith('%'):   # tiras «Nombre_Nx1.png» del RPG HEROES & ENEMIES de overboy
+        import glob as _g
+        f = _g.glob(PC + folder[1:] + '_' + suffix + '_*x1.png')[0]; n = int(f.rsplit('_', 1)[1].split('x')[0]); im = Image.open(f).convert('RGBA'); w = im.width // n
+        return [im.crop((i * w, 0, (i + 1) * w, im.height)) for i in range(n)]
     if folder.startswith('#'):   # hoja en rejilla: «ruta|ancho|alto», sufijo = fila; cuenta los fotogramas no vacíos
         path, fw, fh = folder[1:].split('|'); fw, fh = int(fw), int(fh); im = Image.open(PC + path).convert('RGBA'); row = int(suffix)
         out = [im.crop((i * fw, row * fh, (i + 1) * fw, (row + 1) * fh)) for i in range(im.width // fw)]

@@ -81,6 +81,14 @@ function skinOf(k, e) {
   if (e.champ) return e.god === 'wood' ? 'champ_wood' : 'champ';
   if (k === 'lancer') return e.elite ? { fast: 'lancer_gold', tough: 'lancer_silver', volatile: 'lancer_rad' }[e.elite]
     : w === 2 ? pick('lancer_orc', 'lancer_oniric') : w === 3 ? pick('lancer_frozen', 'lancer_bio') : w === 4 ? pick('lancer_devil', 'lancer_red') : 'lancer';
+  // Monstruos de Pixel Crawler, mitad y mitad con los de siempre: muertos en las Criptas, hongos en el Nido, ratas en las Minas, piedra viva en el Umbral
+  const PCM = {
+    1: { stalker: ['pc_skel', 'pc_zombie'], runner: ['pc_skel_rogue'], mage: ['pc_skel_mage'], brute: ['pc_zombie_fat', 'pc_zombie_mus'], shaman: ['pc_banshee'], sniper: ['pc_skel_war'] },
+    2: { stalker: ['pc_fungus_long'], runner: ['pc_fungus'], brute: ['pc_fungus_heavy'], shaman: ['pc_fungus_old'] },
+    3: { stalker: ['pc_rat'], runner: ['pc_rat_rogue'], mage: ['pc_rat_mage'], brute: ['pc_rat_war'] },
+    4: { stalker: ['pc_stone_broken'], brute: ['pc_stone_lava', 'pc_golem'], mage: ['pc_stone'] },
+  }[w];
+  if (PCM && PCM[k] && !e.elite && Math.random() < 0.5) { const l = PCM[k]; return l[Math.floor(Math.random() * l.length)]; }
   const suf = w === 3 ? '_b' : w === 4 ? '_r' : '';
   if (k === 'stalker') return w === 2 ? 'stalker_ent' : k + suf;
   if (k === 'brute') return w === 2 ? (e.elite ? 'brute_ent3' : 'brute_ent') : k + suf;

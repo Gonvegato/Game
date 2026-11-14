@@ -77,6 +77,16 @@ function renderWorld() {
 
   // Trampas de pinchos
   for (const tr of S.traps) {
+    if (IMG.pc_dungeon) {   // pinchos de Pixel Crawler: agujeros, puntas que asoman y pinchos fuera
+      const im = IMG.pc_dungeon, warn = tr.state === 1 && Math.floor(S.t * 10) % 2 === 0;
+      for (let y = tr.y; y < tr.y + tr.h; y += 16) for (let x = tr.x; x < tr.x + tr.w; x += 16) {
+        ctx.drawImage(im, 64, 160, 16, 16, x, y, 16, 16);
+        if (tr.state === 2) ctx.drawImage(im, 64, 112, 16, 32, x, y - 16, 16, 32);
+        else if (warn) ctx.drawImage(im, 64, 144, 16, 16, x, y, 16, 16);
+      }
+      if (tr.state === 1) { ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.6; ctx.lineWidth = 1; ctx.strokeRect(tr.x + 0.5, tr.y + 0.5, tr.w - 1, tr.h - 1); ctx.globalAlpha = 1; }
+      continue;
+    }
     ctx.fillStyle = '#16101a'; ctx.fillRect(tr.x + 1, tr.y + 1, tr.w - 2, tr.h - 2);
     ctx.fillStyle = '#3a3540'; ctx.fillRect(tr.x + 2, tr.y + 2, tr.w - 4, tr.h - 4); ctx.fillStyle = '#4a4552'; ctx.fillRect(tr.x + 2, tr.y + 2, tr.w - 4, 1); ctx.fillRect(tr.x + 2, tr.y + 2, 1, tr.h - 4);
     ctx.fillStyle = '#2c2832'; ctx.fillRect(tr.x + 2, tr.y + tr.h / 2, tr.w - 4, 1); ctx.fillRect(tr.x + tr.w / 2, tr.y + 2, 1, tr.h - 4);
@@ -292,6 +302,13 @@ function renderWorld() {
   // Efectos bajo el jugador
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
+    if (f.k === 'corpse') {   // animación de muerte: corre una vez, se queda en el último fotograma y se desvanece
+      const m = ATLAS[f.key], a = m.a.die, i = Math.min(a.f.length - 1, Math.floor(f.t * a.fps)), fr = a.f[i];
+      ctx.globalAlpha = Math.min(1, (f.life - f.t) / 0.5);
+      if (f.flip) { ctx.save(); ctx.translate(Math.round(f.x), 0); ctx.scale(-1, 1); ctx.drawImage(IMG.chars, fr[0], fr[1], m.w, m.h, -m.ax, Math.round(f.y - m.gy), m.w, m.h); ctx.restore(); }
+      else ctx.drawImage(IMG.chars, fr[0], fr[1], m.w, m.h, Math.round(f.x - m.ax), Math.round(f.y - m.gy), m.w, m.h);
+      ctx.globalAlpha = 1; continue;
+    }
     if (f.k === 'ghost') { ctx.globalAlpha = 0.75 * k; if (!drawChar('decoy', 'idle', S.t, f.x, f.y + p.r + 2, false, false)) { ctx.fillStyle = C.ember; ctx.globalAlpha = 0.35 * k; ctx.beginPath(); ctx.arc(f.x, f.y, p.r, 0, Math.PI * 2); ctx.fill(); } }
     else if (f.k === 'clock') { ctx.strokeStyle = GODS.time.color; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke(); }
     else if (f.k === 'cone') { ctx.fillStyle = f.col; ctx.globalAlpha = 0.45 * k; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.r * (1 - 0.3 * k), f.a - f.half, f.a + f.half); ctx.closePath(); ctx.fill(); }

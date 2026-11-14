@@ -1,7 +1,7 @@
 // ───────────────────────── Mazmorras con el arte de Pixel Crawler (Anokolisa, itch.io) ─────────────────────────
 // Cada zona toma de un paquete su suelo, la cara de sus muros (tres franjas: remate, sillares y zócalo) y el borde de piedra
 // que rodea la parte de arriba. Lo que no se ve desde abajo es la oscuridad de dentro del muro, como en el propio paquete.
-for (const k of ['castle', 'cave', 'forge', 'rock', 'floors']) loadImg('pc_' + k, 'assets/pc_' + k + '.png');
+for (const k of ['castle', 'cave', 'forge', 'rock', 'floors', 'dungeon']) loadImg('pc_' + k, 'assets/pc_' + k + '.png');
 const DPAL = [
   { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 240, 272, 48, 48] },   // Las Criptas
   { img: 'pc_rock', top: '#2a1f17', face: [[32, 96], [32, 112], [32, 112]], rimT: [32, 0, 16, 8], rimL: [0, 40, 8, 16], rimR: [88, 40, 8, 16], floor: ['pc_cave', 112, 224, 48, 32] },            // El Nido

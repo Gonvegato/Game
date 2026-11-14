@@ -161,7 +161,7 @@ const ROOM_GEN = {
     OUT.bridges.push({ x: cx - 1, y: r - 6, h: 3 }, { x: cx, y: r - 6, h: 3 });
     OUT.npcs.push({ key: 'smith', x: 6.5, y: 17 }, { key: 'keeper', x: c - 6.5, y: 14, flip: true }, { key: 'decoy', x: 7, y: 28 }, { key: 'post', x: 10.5, y: 27 }, { key: 'turret', x: 8.5, y: 29.6 }, { key: 'trainer', x: 11.5, y: 29.2 },
       { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'cit_tavern_a', x: c - 8, y: 17.2 }, { key: 'villager', x: 17, y: 21 }, { key: 'villager', x: c - 19, y: 21, flip: true });
-    OUT.wander.push({ key: 'cit_peasant', area: [14, 9, c - 28, 9] }, { key: 'cit_tavern_b', area: [14, 9, c - 28, 9] }, { key: 'cit_peasant', area: [cx - 2, 23, 4, 7] }, { key: 'villager', area: [14, 12, c - 28, 6] }, { key: 'cit_tavern_b', area: [c - 12, 13, 8, 4] });
+    OUT.wander.push({ key: 'adv_knight', area: [14, 9, c - 28, 12] }, { key: 'cit_peasant', area: [14, 9, c - 28, 9] }, { key: 'cit_tavern_b', area: [14, 9, c - 28, 9] }, { key: 'cit_peasant', area: [cx - 2, 23, 4, 7] }, { key: 'villager', area: [14, 12, c - 28, 6] }, { key: 'cit_tavern_b', area: [c - 12, 13, 8, 4] });
     OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(7, 12.6), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 7, 12.6), { id: 'inn', label: 'La posada' }),
       Object.assign(P(9, 25.6), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 12.7), { id: 'board', label: 'El tablón de encargos' }));
     return [cx, 12];
@@ -201,7 +201,7 @@ function interiorRoom(g, c, r, kind) {
     put('castle', [144, 203, 32, 57], cx, 4.6, 0, 0);
     for (const [x, y] of [[5.5, 8], [c - 5.5, 8], [5.5, 12], [c - 5.5, 12]]) { put('castle', [368, 10, 48, 36], x, y, 3, 1); put('castle', [304, 11, 32, 11], x, y + 1.1, 0, 0); }
     put('castle', [320, 44, 48, 20], cx, 7.4, 3, 1); put('bio', 'barrel0', c - 3.4, 6, 1, 1); put('bio', 'barrel2', c - 3.4, 7, 1, 1); put('castle', [336, 1, 32, 26], 3.6, 6, 2, 1);
-    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'cit_tavern_a', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
+    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'adv_dwarf', x: 4.4, y: 12.4 }, { key: 'adv_archer', x: c - 4.2, y: 9.4, flip: true }, { key: 'cit_tavern_a', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
     OUT.spots.push({ x: cx * CELL, y: 8.6 * CELL, id: 'inn', label: 'Pedir la habitación' });
   }
   OUT.spots.push({ x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
