@@ -8,26 +8,35 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
   if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática
+  { const wb = lv('tide_basic');
+    if (wb && active(e)) { soak(e, 4); push(e, ux, uy, 150 * (duoOn('ram') && furyFull() ? 2 : 1)); }   // Oleaje (y dúo Ariete)
+    if (lv('wood_basic') && active(e)) addSeed(e, 1); }                                        // Semilla
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
     if (has('v_slow') && p.shotN % 3 === 0) addVenom(e, 1);
     if (has('r_spark') && p.shotN % 5 === 0) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);
+    if (has('w_brine') && p.shotN % 4 === 0) push(e, ux, uy, 170);
+    if (has('b_thorn') && p.shotN % 5 === 0) root(e, 0.8);
   }
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
 }
 // Una bala tuya: además del impacto, deja eco (Segundero), la repiten los Cristales (Veta) y puede soltar un rayo
 function shot(e, dmg, ux, uy, big, col) {
-  const p = S.p, ox = p.x, oy = p.y;
+  const p = S.p, ox = p.x, oy = p.y, cc = critChance();
+  let crit = false;
+  if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
   onHit(e, dmg, ux, uy, big, col, 'player');
+  if (crit) onCrit(e);
   const tb = lv('time_basic'), sp = lv('stone_passive');
   if (tb) {
     const m = mastery('time') ? 1 : 0.5 + 0.15 * (tb - 1);
     const echo = (d, gen, extra) => S.timers.push({ t: echoDelay(1.5) + (extra || 0), fn: () => {
       if (!active(e)) return;
       S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: e.x, y2: e.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 });
-      onHit(e, d, ux, uy, false, GODS.time.color, 'echo');
+      const lucky = duoOn('loaded') && Math.random() < critChance();                             // dúo Dado trucado
+      onHit(e, d * (lucky ? critMult() : 1), ux, uy, lucky, GODS.time.color, 'echo'); if (lucky) onCrit(e);
       if (has('t_paradox') && gen < 2) echo(d * 0.6, gen + 1);                                 // Paradoja
     } });
     echo(dmg * m, 1);
@@ -178,6 +187,16 @@ function startDodge(a, free) {
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
   if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
+  const ld = lv('luck_dodge');
+  if (ld && !free) {                                                        // Cara o cruz
+    if (duoOn('toss')) heal(5);                                             // dúo Propina
+    if (Math.random() < 0.5) { p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); S.stat.heads++; note(p.x, p.y - 18, 'Cara', GODS.luck.color, true); }
+    else {
+      const x = p.x, y = p.y; S.stat.tails++; note(x, y - 18, 'Cruz', GODS.luck.color);
+      S.fx.push({ k: 'ring', x, y, r: 10, t: 0, life: 0.55, col: GODS.luck.color });
+      S.timers.push({ t: 0.55, fn: () => explode(x, y, 52, p.dmg * 1.2 * ld, { col: GODS.luck.color, zap: duoOn('fork') }) });   // (dúo Rayo caprichoso)
+    }
+  }
 }
 function endDodge() {
   const p = S.p, vd = lv('venom_dodge'), dd = lv('dragon_dodge'), from = p.dodgeFrom;
@@ -187,6 +206,9 @@ function endDodge() {
     S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 5, acc: 0.4, venom: vd, col: GODS.venom.color });
     if (duoOn('stalagm')) for (const k of [0.2, 0.5, 0.8]) addCrystal(from.x + (p.x - from.x) * k, from.y + (p.y - from.y) * k);   // dúo Estela de cristal
   }
+  { const wd = lv('tide_dodge'), bd = lv('wood_dodge'), dx = p.x - from.x, dy = p.y - from.y, L = Math.hypot(dx, dy) || 1;
+    if (wd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: (3 + wd) * (duoOn('whirl') ? 2 : 1), acc: 0.4, flow: { ux: dx / L, uy: dy / L, f: 210 }, slow: duoOn('whirl') ? 0.6 : 0, col: GODS.tide.color });   // Corriente (y dúo Remolino)
+    if (bd && !p.isLunge) S.zones.push({ x1: from.x, y1: from.y, x2: p.x, y2: p.y, life: 4, acc: 0.4, rootOnce: new Set(), dmg1: p.dmg * 0.6 * bd, wet: duoOn('mangrove'), venom1: duoOn('nettle') ? 4 : 0, col: GODS.wood.color }); }   // Enredadera (y dúos Manglar, Ortiga)
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
   if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
   if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Culata de fresno / Pistolete: sales del esquive con el arma lista
@@ -199,7 +221,9 @@ function dashThrough(e) {
   if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
   if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
   if (od && active(e)) {                                                    // Embestida
-    hit(e, p.dmg * od, p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
+    const up = duoOn('uproot') && e.root > 0;                               // dúo Descuaje
+    hit(e, p.dmg * od * (up ? 3 : 1), p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
+    if (up && active(e)) { e.root = 0; e.slowT = 0; push(e, p.dvx, p.dvy, 320); }
     if (duoOn('horde')) for (const s of S.shades) { S.fx.push({ k: 'tracer', x1: s.x, y1: s.y, x2: e.x, y2: e.y, t: 0, life: 0.15, col: GODS.shade.color, w: 1.5 }); s.x = e.x + rnd(-10, 10); s.y = e.y + rnd(-10, 10); hit(e, p.dmg, p.dvx, p.dvy, false, GODS.shade.color); }   // dúo Carga de la horda
     if (active(e)) { e.kx += p.dvx * 200; e.ky += p.dvy * 200; stun(e, 0.35); if (duoOn('avalanche') && !e.boss) { e.fling = e.champ ? 0.22 : 0.4; e.fvx = p.dvx * 430; e.fvy = p.dvy * 430; } }   // dúo Avalancha
   }
@@ -289,6 +313,20 @@ function castCharged(snap, mult, echo) {
     }
     S.fx.push({ k: 'beam', x1: o.x + ux * 14, y1: o.y + uy * 14, x2: o.x + ux * len, y2: o.y + uy * len, t: 0, life: 0.22, w: 3 + 5 * snap.ratio, col });
   }
+  { const wc = lv('tide_charge'), bc = lv('wood_charge');
+    if (wc) {                                                               // Maremoto
+      const strong = duoOn('wager') && snap.die >= 5;                       // dúo Mar gruesa
+      S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 150, t: 0, life: 0.4, col: GODS.tide.color });
+      for (const e of S.enemies.slice()) {
+        if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 150 + e.r) continue;
+        soak(e, 5); hit(e, p.dmg * 0.5 * wc * mult, (e.x - o.x) / d, (e.y - o.y) / d, false, GODS.tide.color);
+        if (!active(e)) continue;
+        push(e, (e.x - o.x) / d, (e.y - o.y) / d, strong ? 640 : 320); if (strong) stun(e, 1);
+        if (duoOn('winetide')) addReserve(3);                                // dúo Marea de vino
+        if (duoOn('tsunami') && e.needles > 0) discharge(e, 0.8, null);      // dúo Agua y rayo
+      }
+    }
+    if (bc) S.zones.push({ x: snap.tx, y: snap.ty, r: 46, life: 5 * (duoOn('perennial') ? 2 : 1), acc: 0.4, slow: duoOn('perennial') ? 0.2 : 0.5, dmg: p.dmg * 0.2 * bc, ember: duoOn('wildfire') ? 1 : 0, bram: true, col: GODS.wood.color }); }   // Zarzal (y dúos Perenne, Incendio)
   const sc = lv('stone_charge'), oc = lv('orc_charge'), hc = lv('shade_charge');
   if (sc) for (const c of S.crystals) {  // Prisma: cada Cristal dispara su propio rayo, con los efectos del cargado
     let tg = null, td = 210;
@@ -322,6 +360,13 @@ function fireCharged(am) {
   const snap = { x: p.x, y: p.y, dir: p.chargeDir, ratio, fury: p.fury, bonus: 1,
     tx: clamp(tg ? tg.x : p.x + ux * reach, 0, T.room.w), ty: clamp(tg ? tg.y : p.y + uy * reach, 0, T.room.h) };
   if (fl) { snap.bonus = 1 + 0.04 * fl * p.reserve; p.reserve = 0; S.banquet = S.t + 0.6; }   // Banquete
+  const lc = lv('luck_charge');
+  if (lc) {                                                                 // Todo al rojo: el mejor de lc dados
+    let die = 1; for (let i = 0; i < lc; i++) die = Math.max(die, 1 + Math.floor(Math.random() * 6));
+    if (duoOn('allin')) die = Math.min(6, die + Math.floor(p.fury / 34));     // dúo Órdago
+    snap.die = die; snap.bonus *= [0, 0.6, 0.8, 1, 1.3, 1.7, 3][die]; S.stat.dice++;
+    note(p.x, p.y - 20, 'Dado: ' + die, die >= 5 ? RAR[3].color : GODS.luck.color, true); blip(600 + die * 200, 0.12, 'square', 0.05);
+  }
   castCharged(snap, 1, false);
   if (tc) {                              // Rebobinar: se repite desde el mismo sitio
     const m = mastery('time') ? 1 : 0.6 + 0.15 * (tc - 1), d = echoDelay(2);
@@ -338,6 +383,7 @@ function fireCharged(am) {
 }
 
 function hurtPlayer(dmg) {
+  if (S.p.inv <= 0) S.p.streak = 0;   // Racha: se pierde al recibir un golpe
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));

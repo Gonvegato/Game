@@ -74,6 +74,11 @@ function kill(e) {
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
   if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
   if (S.t < S.banquet) heal(4);
+  { const bp = lv('wood_passive'), held = e.root > 0 || e.bram > 0;
+    if (bp && held) heal(bp);                                                                  // Savia
+    if (duoOn('amber') && held) addCrystal(e.x, e.y);                                          // dúo Ámbar
+    if (has('b_bloom') && e.root > 0) S.zones.push({ x: e.x, y: e.y, r: 34, life: 3, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.2, bram: true, col: GODS.wood.color });   // Floración
+    if (duoOn('drowned') && e.wet > 0 && !e.boss) raiseShade(e.x, e.y); }                      // dúo Ahogados
   if (has('f_appet')) heal(1);                                                                 // Buen apetito
   if (has('s_last') && !S.firstKill && !e.boss) { S.firstKill = true; raiseShade(e.x, e.y); }  // Último servicio                                                                 // Banquete
   const tl = lv('dragon_passive');
@@ -102,6 +107,11 @@ function hit(e, dmg, ux, uy, big, col) {
   if (gl) dmg *= 1 + 0.01 * gl * (p.reserve + (duoOn('hoardfeast') ? p.gold / 10 : 0));          // Glotón
   if (sl) dmg *= 1 + 0.08 * sl * S.shades.length;                                              // Séquito
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
+  { const wp = lv('tide_passive'), bp = lv('wood_passive'), lp = lv('luck_passive');
+    if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
+    if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
+    if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
+    if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.boss && e.act === 'dazed') dmg *= 2;
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
@@ -158,7 +168,37 @@ function explode(x, y, r, dmg, o) {
 
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min(mastery('dragon') ? 20 : 8, e.ember + n); e.emberT = 4; }
-function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n); }
+function addVenom(e, n) { if (active(e) && n > 0) e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); }   // (dúo Salmuera)
+// Mareas: empapar y empujar. Bosque: semillas que brotan en raíces. Fortuna: críticos.
+function soak(e, t) { if (active(e)) e.wet = Math.max(e.wet || 0, t); }
+function push(e, ux, uy, f) { if (!active(e) || e.boss) return; e.kx += ux * f; e.ky += uy * f; }
+function root(e, t) {
+  if (!active(e)) return;
+  t *= (mastery('wood') ? 2 : 1) * (duoOn('mangrove') && e.wet > 0 ? 2 : 1) * (e.boss ? 0.35 : 1);
+  e.root = Math.max(e.root || 0, t); slow(e, t, 0.02);
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 6, t: 0, life: 0.2, col: GODS.wood.color });
+}
+function sprout(e) {
+  const p = S.p, wb = Math.max(1, lv('wood_basic'));
+  e.seed = mastery('wood') ? 2 : 0; S.stat.sprout++;
+  note(e.x, e.y - e.r - 10, '¡Brota!', GODS.wood.color);
+  root(e, 1.5); hit(e, p.dmg * 0.8 * wb, 0, 0, true, GODS.wood.color);
+  if (duoOn('graveroot')) raiseShade(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Raíz de tumba
+  if (duoOn('thornrod') && active(e) && e.needles > 0) discharge(e, 0.8, null);       // dúo Espina de cobre
+}
+function addSeed(e, n) { if (!active(e)) return; e.seed = (e.seed || 0) + n; if (e.seed >= (lv('wood_basic') >= 2 ? 2 : 3)) sprout(e); }
+const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 * lb + S.p.pity : 0) + (has('l_coin') ? 0.08 : 0) + (duoOn('bones') ? 0.05 * S.shades.length : 0); };
+const critMult = () => (mastery('luck') ? 4 : 2.5);
+function onCrit(e) {
+  const p = S.p;
+  S.stat.crit++; p.pity = 0; note(e.x, e.y - e.r - 12, '¡Crítico!', GODS.luck.color, true); blip(2100, 0.06, 'square', 0.04, 300);
+  if (lv('luck_passive')) p.streak = Math.min(5, p.streak + 1);                       // Racha
+  if (duoOn('jackpot')) addGold(1);                                                   // dúo Tesoro maldito
+  if (duoOn('facet')) addCrystal(e.x + rnd(-14, 14), e.y + rnd(-14, 14));             // dúo Faceta
+  if (duoOn('snakeeyes') && e.venom > 0) e.venom = Math.min(30, e.venom * 2);         // dúo Ojos de serpiente
+  if (duoOn('clover') && active(e) && e.seed > 0) sprout(e);                          // dúo Trébol
+  if (has('l_jack') && !active(e)) { explode(e.x, e.y, 48, p.dmg * 1.5, { col: GODS.luck.color }); addGold(3); }   // Premio gordo
+}
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
 function slow(e, t, f) { if (e.boss) f = 1 - (1 - f) * 0.4; e.slowT = Math.max(e.slowT, t); e.slowF = Math.min(e.slowF, f); }
 function addCrystal(x, y) {

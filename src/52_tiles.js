@@ -44,7 +44,7 @@ function roomBg() {
     if (!wallAt(x, y)) continue;
     const X = x * CELL, Y = y * CELL, face = inside(x, y + 1) && !wallAt(x, y + 1) && y + 1 < r;
     const deep = wallAt(x - 1, y) && wallAt(x + 1, y) && wallAt(x, y - 1) && wallAt(x, y + 1) && wallAt(x - 1, y - 1) && wallAt(x + 1, y - 1) && wallAt(x - 1, y + 1) && wallAt(x + 1, y + 1);
-    if (deep) { px(X, Y, x < 0 || y < 0 || x >= c || y >= r ? '#0b080d' : W.capLo, CELL, CELL); continue; }   // interior macizo
+    if (deep && (x < -1 || y < -1 || x > c || y > r)) { px(X, Y, '#0b080d', CELL, CELL); continue; }   // muy fuera de la sala: negro
     px(X, Y, W.cap, CELL, CELL);
     for (let i = 0; i < 4; i++) px(X + 1 + Math.floor(hash(x, y, i) * 14), Y + 1 + Math.floor(hash(x, y, i + 4) * (face ? 3 : 14)), i % 2 ? W.capLo : W.capHi);
     if (hash(x, y, 9) < 0.5) px(X + (hash(x, y, 10) < 0.5 ? 0 : 8), Y, W.capLo, 1, face ? 5 : CELL);   // junta entre losas de la coronación

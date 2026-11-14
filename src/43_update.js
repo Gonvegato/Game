@@ -219,12 +219,20 @@ function update(dt) {
     if (e.hp <= 0) continue;
     if (e.spawn > 0) { e.spawn -= dt; continue; }
     e.flash = Math.max(0, e.flash - dt);
-    e.x += e.kx * dt; e.y += e.ky * dt;
+    { const far = e.wet > 0 && lv('tide_passive') ? 1.5 : 1; e.x += e.kx * dt * far; e.y += e.ky * dt * far; }   // Marea alta: los Empapados salen más lejos
+    e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
     e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
-    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > 70 && (touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
+    let reef = null;
+    if (duoOn('reef') && Math.hypot(e.kx, e.ky) > 170) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
+    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > 170 && (reef || touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
       e.slamCd = 0.9; S.stat.slam++; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
       S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
-      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9, kx / kl, ky / kl, true, C.ink); stun(e, 0.7);
+      if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
+      if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
+      if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
+      if (has('w_deep')) addGold(1);                                         // Mar de fondo
+      if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
+      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
       if (e.hp <= 0) continue;
     }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
@@ -295,7 +303,12 @@ function update(dt) {
     z.life -= dt; z.acc += dt;
     if (z.acc < 0.4) continue;
     z.acc = 0;
-    const touch = e => { if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom); };
+    const touch = e => {
+      if (z.ember) addEmber(e, z.ember); if (z.venom) addVenom(e, z.venom);
+      if (z.slow) slow(e, 0.6, z.slow); if (z.bram) e.bram = 0.6; if (z.dmg) dot(e, z.dmg, z.col);
+      if (z.flow && active(e)) { soak(e, 3); push(e, z.flow.ux, z.flow.uy, z.flow.f); }
+      if (z.rootOnce && active(e) && !z.rootOnce.has(e)) { z.rootOnce.add(e); if (z.wet) soak(e, 4); if (z.venom1) addVenom(e, z.venom1); root(e, 1); hit(e, z.dmg1, 0, 0, false, z.col); }
+    };
     if (z.r) { for (const e of S.enemies) if (active(e) && Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) touch(e); continue; }
     const zx = z.x2 - z.x1, zy = z.y2 - z.y1, L = Math.hypot(zx, zy) || 1, ux = zx / L, uy = zy / L;
     for (const e of S.enemies) {

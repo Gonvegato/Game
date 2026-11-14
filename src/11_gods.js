@@ -42,6 +42,21 @@ const GODS = {
     enter: ['truena a lo lejos. Su elegido ya está aquí.', 'carga el aire. Se te eriza el pelo.'],
     champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
     take:  ['te avisa: los rayos no tienen dueño.', 'ríe. Le gusta el ruido que haces.'], master: ['grita tu nombre, y se oye en los cuatro mundos.'] } },
+  tide: { title: 'El Ahogado Bajo la Ola', theme: 'Mareas', weapon: 'Ancla del Ahogado', mat: 'Sal', color: '#4fb4d8',
+    key: 'Empujones: mandas a los enemigos contra los muros, y lo que choca se rompe. Los Empapados lo sufren más.', lines: {
+    enter: ['sube un palmo el agua de la sala.', 'arrastra algo pesado por el fondo. Viene hacia aquí.'],
+    champ: ['suelta una burbuja. Tarda en llegar arriba.', 'se lleva a su elegido mar adentro, sin prisa.'],
+    take:  ['te deja sal en los labios.', 'dice que todo lo que flota acaba volviendo.'], master: ['retira el mar entero para mirarte.'] } },
+  luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Estoque de la Dama', mat: 'Taba', color: '#f2ead0',
+    key: 'Críticos y azar: dados, monedas y rachas. Cuando sale bien, sale muy bien.', lines: {
+    enter: ['apuesta por su elegido. Paga poco: lo ve claro.', 'baraja sin mirar las cartas.'],
+    champ: ['pierde la apuesta y sonríe igual.', 'paga su deuda con una moneda de dos caras.'],
+    take:  ['te guiña un ojo. O le ha entrado algo.', 'sube la apuesta.'], master: ['te ofrece los dados. Están calientes.'] } },
+  wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Hoz de la Madre', mat: 'Semilla', color: '#3fbf73',
+    key: 'Semillas y Raíces: lo que plantas en un enemigo brota y lo deja clavado en el sitio. Y zarzas que cierran el paso.', lines: {
+    enter: ['hace crecer musgo en tus botas.', 'deja que su elegido eche raíces en esta sala.'],
+    champ: ['lo cubre de hojas. Mañana será un árbol.', 'no llora: abona.'],
+    take:  ['te llama mala hierba, con cariño.', 'siente cómo podas lo que era suyo.'], master: ['florece en pleno invierno, solo por verte.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
@@ -90,6 +105,21 @@ const PIECES = [
   { id: 'storm_charge',   god: 'storm',  slot: 'charge',  name: 'Sobretensión',     desc: l => `El cargado descarga las Agujas de quien alcanza: cada una hace ${70 + 20 * (l - 1)}% de daño y suelta un rayo a otro enemigo.` },
   { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Atravesar a un enemigo con el esquive descarga sus Agujas (${80 + 20 * (l - 1)}% cada una). Si no tiene, le clavas 2.` },
   { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a quien alcanzan.` },
+  // Mareas
+  { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada bala empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro hacen un ${50 * l}% más de daño.` },
+  { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `El cargado suelta además una ola a tu alrededor: ${50 * l}% de daño, empapa y lanza a todos lejos de ti. Contra un muro, se rompen.` },
+  { id: 'tide_dodge',     god: 'tide',   slot: 'dodge',   name: 'Corriente',        desc: l => `El esquive deja ${3 + l} s una corriente que arrastra a los enemigos en la dirección en que esquivaste y los empapa.` },
+  { id: 'tide_passive',   god: 'tide',   slot: 'passive', name: 'Marea alta',       desc: l => `Los Empapados reciben un ${15 * l}% más de daño de todo, y tus empujones los mandan un 50% más lejos.` },
+  // Fortuna
+  { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada bala tiene un ${10 + 10 * l}% de ser crítica: 250% de daño. Cada bala que no lo es sube la probabilidad un 5% hasta que sale.` },
+  { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `El cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}: con un 1 hace el 60% del daño; con un 6, el triple.` },
+  { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara: el esquive no se gasta. Cruz: la moneda se queda donde estabas y revienta (${120 * l}% en área).` },
+  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño cada una. Si te golpean, la pierdes.` },
+  // Bosque
+  { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada bala planta una Semilla. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan: Raíces que lo clavan en el sitio 1,5 s y ${80 * l}% de daño.` },
+  { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `El cargado deja 5 s un zarzal donde apuntas: ralentiza a la mitad y hace ${20 * l}% de daño por pulso a quien esté dentro.` },
+  { id: 'wood_dodge',     god: 'wood',   slot: 'dodge',   name: 'Enredadera',       desc: l => `El esquive deja 4 s una enredadera: el primer paso de cada enemigo por ella lo enraíza 1 s y le hace ${60 * l}% de daño.` },
+  { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o entre zarzas reciben un ${20 * l}% más de daño, y te curan ${l} al morir.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Uno por cada pareja de deidades.
@@ -126,6 +156,36 @@ const DUOS = [
   { id: 'longlunch', slot: 'passive', a: 'feast_passive', b: 'time_passive',  name: 'Sobremesa larga',    desc: 'La Reserva no se pierde con el tiempo, y ralentiza a los enemigos cercanos un 2% por punto, hasta un 60%.' },
   { id: 'warthunder', slot: 'passive', a: 'orc_passive',  b: 'storm_passive', name: 'Trueno de guerra',   desc: 'Con la Furia llena, cada bala tuya suelta además un rayo a otro enemigo.' },
   { id: 'chargedshade', slot: 'passive', a: 'shade_passive', b: 'storm_passive', name: 'Sombras cargadas', desc: 'Tus Sombras clavan una Aguja al golpear y, al desvanecerse, descargan a los enemigos de alrededor.' },
+  // Mareas
+  { id: 'steam',     slot: 'basic',   a: 'dragon_basic',  b: 'tide_basic',   name: 'Vapor',              desc: 'Un enemigo que choca contra un muro revienta todas sus Ascuas en área: 35% por Ascua.' },
+  { id: 'ram',       slot: 'basic',   a: 'orc_basic',     b: 'tide_basic',   name: 'Ariete',             desc: 'Cada golpe contra el muro te da 20 de Furia, y con la Furia llena tus balas empujan el doble.' },
+  { id: 'reef',      slot: 'dodge',   a: 'stone_dodge',   b: 'tide_dodge',   name: 'Arrecife',           desc: 'Los Cristales cuentan como muro para los enemigos empujados: chocan, se llevan el golpe y el Cristal estalla.' },
+  { id: 'whirl',     slot: 'dodge',   a: 'time_dodge',    b: 'tide_dodge',   name: 'Remolino',           desc: 'La corriente dura el doble y ralentiza un 40% a quien arrastra.' },
+  { id: 'brine',     slot: 'passive', a: 'venom_passive', b: 'tide_passive', name: 'Salmuera',           desc: 'Los Empapados reciben el doble de cada Veneno que se les aplique.' },
+  { id: 'drowned',   slot: 'passive', a: 'shade_passive', b: 'tide_passive', name: 'Ahogados',           desc: 'Quien muere Empapado se levanta como Sombra.' },
+  { id: 'winetide',  slot: 'charge',  a: 'feast_charge',  b: 'tide_charge',  name: 'Marea de vino',      desc: 'El Maremoto te da 3 de Reserva por cada enemigo que alcanza.' },
+  { id: 'tsunami',   slot: 'charge',  a: 'storm_charge',  b: 'tide_charge',  name: 'Agua y rayo',        desc: 'El Maremoto descarga las Agujas de todos los que alcanza.' },
+  // Fortuna
+  { id: 'jackpot',   slot: 'passive', a: 'dragon_passive', b: 'luck_passive', name: 'Tesoro maldito',    desc: 'Cada crítico suelta una moneda.' },
+  { id: 'bones',     slot: 'passive', a: 'shade_passive', b: 'luck_passive', name: 'Tabas',              desc: 'Cada Sombra viva te da un 5% más de crítico.' },
+  { id: 'facet',     slot: 'basic',   a: 'stone_basic',   b: 'luck_basic',   name: 'Faceta',             desc: 'Cada crítico deja un Cristal junto al enemigo.' },
+  { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Un crítico duplica el Veneno del enemigo.' },
+  { id: 'loaded',    slot: 'basic',   a: 'time_basic',    b: 'luck_basic',   name: 'Dado trucado',       desc: 'Cada eco tira su propio dado: puede ser crítico por su cuenta.' },
+  { id: 'toss',      slot: 'dodge',   a: 'feast_dodge',   b: 'luck_dodge',   name: 'Propina',            desc: 'Salga cara o cruz, lanzar la moneda te cura 5.' },
+  { id: 'fork',      slot: 'dodge',   a: 'storm_dodge',   b: 'luck_dodge',   name: 'Rayo caprichoso',    desc: 'Si sale cruz, la moneda cae como un rayo: descarga a todos los que alcanza y les clava 2 Agujas.' },
+  { id: 'allin',     slot: 'charge',  a: 'orc_charge',    b: 'luck_charge',  name: 'Órdago',             desc: 'El dado del cargado suma 1 por cada 34 de Furia.' },
+  { id: 'wager',     slot: 'charge',  a: 'tide_charge',   b: 'luck_charge',  name: 'Mar gruesa',         desc: 'Con un 5 o un 6 en el dado, el Maremoto empuja el doble y aturde 1 s.' },
+  // Bosque
+  { id: 'graveroot', slot: 'basic',   a: 'shade_basic',   b: 'wood_basic',   name: 'Raíz de tumba',      desc: 'Cuando las Semillas brotan en un enemigo, de la tierra sale una Sombra a su lado.' },
+  { id: 'thornrod',  slot: 'basic',   a: 'storm_basic',   b: 'wood_basic',   name: 'Espina de cobre',    desc: 'Cuando las Semillas brotan, se descargan todas las Agujas del enemigo.' },
+  { id: 'clover',    slot: 'basic',   a: 'luck_basic',    b: 'wood_basic',   name: 'Trébol',             desc: 'Un crítico hace brotar al instante las Semillas del enemigo, tenga las que tenga.' },
+  { id: 'wildfire',  slot: 'charge',  a: 'dragon_charge', b: 'wood_charge',  name: 'Incendio',           desc: 'El zarzal arde: clava una Ascua por pulso a quien esté dentro.' },
+  { id: 'perennial', slot: 'charge',  a: 'time_charge',   b: 'wood_charge',  name: 'Perenne',            desc: 'El zarzal dura el doble y ralentiza un 80%.' },
+  { id: 'nettle',    slot: 'dodge',   a: 'venom_dodge',   b: 'wood_dodge',   name: 'Ortiga',             desc: 'La enredadera aplica además 4 de Veneno a quien enraíza.' },
+  { id: 'uproot',    slot: 'dodge',   a: 'orc_dodge',     b: 'wood_dodge',   name: 'Descuaje',           desc: 'Embestir a un enemigo enraizado le hace el triple de daño y lo arranca del suelo, lanzándolo lejos.' },
+  { id: 'mangrove',  slot: 'dodge',   a: 'tide_dodge',    b: 'wood_dodge',   name: 'Manglar',            desc: 'La enredadera empapa, y las Raíces duran el doble en los Empapados.' },
+  { id: 'amber',     slot: 'passive', a: 'stone_passive', b: 'wood_passive', name: 'Ámbar',              desc: 'Un enemigo que muere enraizado o entre zarzas deja un Cristal.' },
+  { id: 'orchard',   slot: 'passive', a: 'feast_passive', b: 'wood_passive', name: 'Huerto',             desc: 'Cada golpe a un enemigo enraizado te cura 1.' },
 ];
 // Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
 const TECHS = [
@@ -153,6 +213,12 @@ const TECHS = [
   { id: 't_second',  god: 'time',   rar: 1, name: 'Un segundo más',    desc: 'El esquive se recarga un 20% antes.' },
   { id: 's_last',    god: 'shade',  rar: 1, name: 'Último servicio',   desc: 'El primer enemigo que mates en cada sala se levanta como Sombra.' },
   { id: 'r_spark',   god: 'storm',  rar: 1, name: 'Chispa',            desc: 'Una de cada cinco balas suelta un rayo a otro enemigo.' },
+  { id: 'w_brine',   god: 'tide',   rar: 1, name: 'Salitre',           desc: 'Una de cada cuatro balas empuja al enemigo con fuerza.' },
+  { id: 'w_deep',    god: 'tide',   rar: 2, name: 'Mar de fondo',      desc: 'Los golpes contra el muro aturden el doble de tiempo y sueltan una moneda.' },
+  { id: 'l_coin',    god: 'luck',   rar: 1, name: 'Moneda de la suerte', desc: 'Todas tus balas tienen un 8% más de crítico (250% de daño).' },
+  { id: 'l_jack',    god: 'luck',   rar: 3, name: 'Premio gordo',      desc: 'Un crítico que mata revienta al enemigo: 150% de daño en área y 3 monedas.', req: ['luck_basic'] },
+  { id: 'b_thorn',   god: 'wood',   rar: 1, name: 'Espina',            desc: 'Una de cada cinco balas enraíza al enemigo 0,8 s.' },
+  { id: 'b_bloom',   god: 'wood',   rar: 2, name: 'Floración',         desc: 'Un enemigo que muere enraizado deja un zarzal 3 s.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada descarga llama un rayo del cielo sobre el enemigo: 300% de daño en área.' },
 ];
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
@@ -165,6 +231,9 @@ const MASTERY = {
   orc:    { name: 'Caudillo',              desc: 'La Furia nunca baja de 50.' },
   time:   { name: 'Dueño de la hora',      desc: 'Tus ecos hacen el 100% del daño original.' },
   shade:  { name: 'Reina de los muertos',  desc: 'Tus Sombras hacen un 50% más de daño y duran un 50% más.' },
+  tide:   { name: 'Señor del abismo',      desc: 'Cada golpe contra el muro suelta una ola: 150% de daño en área, y empapa.' },
+  luck:   { name: 'La casa siempre gana',  desc: 'Tus críticos hacen el 400% del daño en vez del 250%.' },
+  wood:   { name: 'Corazón del bosque',    desc: 'Las Raíces duran el doble y, al brotar, el enemigo se queda con dos Semillas ya plantadas.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Un rayo de descarga que alcanza a un enemigo con Agujas también las descarga, en cadena.' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
