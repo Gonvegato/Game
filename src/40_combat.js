@@ -16,9 +16,9 @@ const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
-const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9, b_far: 1.25, b_boom: 0.85 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
-const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ a_drum: 1 }[S.gun.action] && furyFull() ? 1.25 : 1) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8, b_nail: 1.2, b_boom: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65, a_combo: 1 + 0.08 * Math.min(8, S.p.comboN || 0) }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
-const gunDmg = () => (G('b_blow') ? 0.85 : 1) * (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4, m_big: 1.2 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
+const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twin: 0.75, b_scatter: 0.5, b_pierce: 1.3, b_spike: 0.5, b_bomb: 1.1, b_flame: 0.42, b_fork: 0.9, b_far: 1.25, b_boom: 0.85, b_horn: 0.55 }[S.gun.barrel] || 1) * (braced() ? 1.2 : 1) * (G('s_scope') ? 1.15 : 1);
+const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ a_drum: 1 }[S.gun.action] && furyFull() ? 1.25 : 1) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8, b_nail: 1.2, b_boom: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65, a_combo: 1 + 0.08 * Math.min(8, S.p.comboN || 0), a_fly: 1 + 0.6 * (S.p.fly2 || 0), a_firm: S.p.still > 0.3 ? 1.5 : 0.8 }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
+const gunDmg = () => (G('b_blow') || G('b_ghost') ? 0.85 : 1) * (G('s_tower') ? 1.25 : 1) * (G('s_sapper') && touchesWall(S.p, S.p.r + 10) ? 1.3 : 1) * (G('m_grow') ? 1 + 0.02 * (S.p.grow || 0) : 1) * (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4, m_big: 1.2 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
 // Cuántas piezas montadas son afines a una deidad de la que llevas alguna técnica
 const th = god => godCount(god) >= 1;   // ¿llevas alguna técnica de esa deidad? Las piezas temáticas van a más
@@ -48,7 +48,7 @@ function nearestInRange() {
   for (const e of S.enemies) {
     if (!active(e)) continue;
     const d = dist(p, e) - e.r;
-    if (d <= rng && d < bd && !blocked(p, e)) { bd = d; bestE = e; }
+    if (d <= rng && d < bd && (G('b_ghost') || !blocked(p, e))) { bd = d; bestE = e; }
   }
   return bestE;
 }
@@ -71,7 +71,7 @@ function heal(n) {
   if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
   if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
 }
-function addGold(n) { const p = S.p; p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
 
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {

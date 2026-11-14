@@ -46,11 +46,13 @@ function roomCleared() {
 function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }
 // Puertas: cada una enseña qué da la sala siguiente
 function doorScreen() {
-  const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), gods = GOD_KEYS.slice().sort(() => Math.random() - 0.5), kinds = [];
+  const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), kinds = [];
+  // Las deidades de las que ya llevas alguna técnica salen un poco más (peso 1,3 frente a 1): lo justo para que una build pueda cerrarse
+  const gods = GOD_KEYS.map(g => [Math.pow(Math.random(), 1 / (godCount(g) > 0 ? 1.3 : 1)), g]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
   const bag = ['souls', 'souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
   const res = () => { const k = bag.find(x => !kinds.some(d => d.type === x)); return { type: k || 'gold' }; };
-  kinds.push(n === 1 && Math.random() < 0.4 ? res() : { type: 'god', god: gods.pop() });
-  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.45 ? { type: 'god', god: gods.pop() } : res());
+  kinds.push(Math.random() < (n === 1 ? 0.5 : 0.3) ? res() : { type: 'god', god: gods.pop() });
+  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.22 ? { type: 'god', god: gods.pop() } : res());
   kinds.sort(() => Math.random() - 0.5);
   return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);

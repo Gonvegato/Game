@@ -28,6 +28,11 @@ const PARTS = [
   { id: 'b_wyrm',    slot: 'barrel',  name: 'Boca de sierpe',       tag: 'Clava Ascuas',       desc: 'Un cañón con forma de cabeza de dragón: cada disparo clava 1 Ascua por sí solo. Si llevas alguna técnica de Dragones, los enemigos aguantan 4 Ascuas más antes de llegar al tope.', cost: { iron: 1, dragon: 3 }, theme: 'dragon' },
   { id: 'b_rod',     slot: 'barrel',  name: 'Vara de cobre',        tag: 'Clava Agujas',       desc: 'Cada disparo clava 1 Aguja por sí solo, y cuando un enemigo junta 6 se descargan solas. Si llevas alguna técnica de Tormenta, clava 2.', cost: { iron: 1, storm: 3 }, theme: 'storm' },
   { id: 'b_icicle',  slot: 'barrel',  name: 'Carámbano',            tag: 'Pone Escarcha',      desc: 'Dispara esquirlas de hielo: cada una pone 1 de Escarcha por sí sola, y hacen un 30% más de daño a los Congelados. Si llevas alguna técnica de Hielo, pone 2.', cost: { iron: 1, frost: 3 }, theme: 'frost' },
+  { id: 'b_horn',    slot: 'barrel',  name: 'Bocina de trueno',     tag: 'Aturde en cono',     desc: 'No dispara balas: suelta un bramido que golpea a todos los enemigos que tengas delante (40% del daño) y los deja aturdidos un instante. Llega poco.', cost: { iron: 1, dream: 2 } },
+  { id: 'b_drill',   slot: 'barrel',  name: 'Berbiquí',             tag: 'Insistir pega más',  desc: 'Cada disparo seguido al mismo enemigo hace un 15% más de daño que el anterior, hasta +150%. Al cambiar de objetivo vuelves a empezar.', cost: { iron: 2, forge: 2 } },
+  { id: 'b_ghost',   slot: 'barrel',  name: 'Cañón fantasma',       tag: 'Atraviesa muros',    desc: 'Las balas atraviesan los muros: puedes apuntar y dar a enemigos que no ves. Un 15% menos de daño.', cost: { iron: 2, shade: 3 } },
+  { id: 'b_net',     slot: 'barrel',  name: 'Lanzarredes',          tag: 'Atrapa',             desc: 'Cada disparo lanza una red que deja al enemigo clavado en el sitio casi un segundo (una vez cada 3 s por enemigo). Hace el 65% del daño.', cost: { iron: 1, beast: 2 } },
+  { id: 'b_ends',    slot: 'barrel',  name: 'Cañón de dos distancias', tag: 'Cerca y lejos',   desc: 'Cada disparo da a la vez al enemigo más cercano y al más lejano que tengas a tiro, con el 80% del daño a cada uno.', cost: { iron: 2, light: 2 } },
   { id: 'a_fuse',    slot: 'action',  name: 'Mecha lenta',          tag: 'Sale con retraso',   desc: 'Pulsas y sigues corriendo: el disparo sale solo medio segundo después, sin frenarte, y hace un 45% más de daño.', cost: { iron: 1, wood: 2 } },
   { id: 'a_auto',    slot: 'action',  name: 'Gatillo de pelo',      tag: 'Dispara sola',       desc: 'El arma dispara sola en cuanto tienes un enemigo a tiro: no hace falta pulsar. Cada bala hace un 20% menos de daño y te frena igual.', cost: { iron: 1, luck: 2 } },
   { id: 'a_pend',    slot: 'action',  name: 'Llave de péndulo',     tag: 'Compás que crece',   desc: 'Cada ¡Compás! seguido suma un 15% de daño al siguiente, hasta +90%. Si un disparo no sale a compás, vuelves a empezar.', cost: { iron: 2, time: 3 } },
@@ -41,6 +46,11 @@ const PARTS = [
   { id: 'a_glass',   slot: 'action',  name: 'Llave de clepsidra',   tag: 'Deja ecos',          desc: 'Uno de cada tres disparos deja un eco por sí solo: se repite un segundo después al 60%. Si llevas alguna técnica de Tiempo, lo deja uno de cada dos.', cost: { iron: 1, time: 3 }, theme: 'time' },
   { id: 'a_dice',    slot: 'action',  name: 'Llave de tahúr',       tag: 'Críticos propios',   desc: 'Cada disparo tiene un 15% de ser crítico por sí solo (250% de daño). Si llevas alguna técnica de Fortuna, un 25%.', cost: { iron: 1, luck: 3 }, theme: 'luck' },
   { id: 'a_nana',    slot: 'action',  name: 'Llave de nana',        tag: 'Duerme',             desc: 'Uno de cada seis disparos Duerme al enemigo 2 segundos por sí solo. Si llevas alguna técnica de Sueño, uno de cada cuatro.', cost: { iron: 1, dream: 3 }, theme: 'dream' },
+  { id: 'a_fly',     slot: 'action',  name: 'Llave de volante',     tag: 'Coge inercia',       desc: 'Mientras no dejes de disparar, el arma va cogiendo inercia: hasta un 60% más de cadencia a los cinco segundos. Un segundo sin disparar y se pierde.', cost: { iron: 1, void: 2 } },
+  { id: 'a_fin',     slot: 'action',  name: 'Llave de remate',      tag: 'Remata sin frenar',  desc: 'Disparar a un enemigo que tiene menos de un cuarto de vida no te frena ni gasta recarga: puedes rematar al instante.', cost: { iron: 1, end: 2 } },
+  { id: 'a_firm',    slot: 'action',  name: 'Llave de pie firme',   tag: 'Quieto, más rápido', desc: 'Parado disparas un 50% más rápido; en movimiento, un 20% más despacio.', cost: { iron: 1, frost: 2 } },
+  { id: 'a_rota',    slot: 'action',  name: 'Llave de ronda',       tag: 'Reparte los tiros',  desc: 'Cada disparo va a un enemigo distinto del anterior, y hace un 30% más de daño.', cost: { iron: 1, mirror: 2 } },
+  { id: 'a_over',    slot: 'action',  name: 'Llave de sobrecarga',  tag: 'Uno enorme cada 10 s', desc: 'Cada diez segundos el arma se sobrecarga: tu siguiente disparo hace el cuádruple de daño.', cost: { iron: 2, blood: 2 } },
   { id: 'a_bolt',    slot: 'action',  name: 'Llave de mecha',       tag: 'Compás',             desc: 'Cada pulsación es un disparo, y cada disparo te frena un instante. Si pulsas justo cuando el anillo que te rodea se llena, sale un ¡Compás!: +50% de daño.', base: true },
   { id: 'a_semi',    slot: 'action',  name: 'Llave de chispa',      tag: 'Carrerilla',         desc: 'Disparar no te frena: te mueves a toda velocidad. Mientras no te pares, disparas cada vez más rápido (hasta +40% tras 3 segundos corriendo). Cada bala hace un 25% menos de daño.', cost: { iron: 1, time: 2 } },
   { id: 'a_burst',   slot: 'action',  name: 'Llave de salvas',      tag: 'Tres seguidos',      desc: 'Cada pulsación suelta tres balas seguidas, cada una con el 45% del daño y con tus efectos. La tercera aturde un instante. Entre salvas tarda algo más.', cost: { iron: 1, venom: 2 } },
@@ -76,6 +86,16 @@ const PARTS = [
   { id: 's_wine',    slot: 'stock',   name: 'Culata de bota de vino', tag: 'Cura y Reserva',   desc: 'Cada baja te cura 1 por sí sola, y con la vida llena se guarda como Reserva. Si llevas alguna técnica de Manjares, cura 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
   { id: 's_kennel',  slot: 'stock',   name: 'Culata de perrera',    tag: 'Trae un cachorro',   desc: 'Un cachorro te acompaña y muerde a quien disparas (30% de daño). Si llevas alguna técnica de Bestias, tienes un sabueso más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
   { id: 's_geode',   slot: 'stock',   name: 'Culata de geoda',      tag: 'Deja Cristales',     desc: 'Al esquivar dejas un Cristal por sí sola, y cada vez que disparas tus Cristales lanzan una esquirla a tu objetivo (20% de daño). Si llevas alguna técnica de Minerales, un 40%.', cost: { iron: 1, stone: 3 }, theme: 'stone' },
+  { id: 'm_blunt',   slot: 'mag',     name: 'Bala roma',            tag: 'La quinta aturde',   desc: 'Una de cada cinco balas deja al enemigo aturdido algo más de medio segundo.', cost: { iron: 1, dream: 2 } },
+  { id: 'm_grow',    slot: 'mag',     name: 'Bala voraz',           tag: 'Crece matando',      desc: 'Cada enemigo que matas con una bala sube un 2% el daño de tus balas durante toda la misión, hasta +60%.', cost: { iron: 2, blood: 2 } },
+  { id: 'm_awl',     slot: 'mag',     name: 'Bala de punzón',       tag: 'Da al de detrás',    desc: 'La bala atraviesa al blanco y da también al enemigo que tenga justo detrás, con el 60% del daño.', cost: { iron: 1, end: 2 } },
+  { id: 'm_timed',   slot: 'mag',     name: 'Bala de mecha',        tag: 'Explota después',    desc: 'La bala se queda clavada y explota un segundo después, dañando en área pequeña (la mitad del daño).', cost: { iron: 1, void: 2 } },
+  { id: 'm_leech',   slot: 'mag',     name: 'Bala sanguijuela',     tag: 'Cura cada ocho',     desc: 'Cada ocho impactos te curas 2 de vida.', cost: { iron: 1, frost: 2 } },
+  { id: 's_sapper',  slot: 'stock',   name: 'Culata de zapador',    tag: 'Pegado al muro',     desc: 'Mientras estás pegado a un muro haces un 30% más de daño.', cost: { iron: 1, dream: 2 } },
+  { id: 's_dance',   slot: 'stock',   name: 'Culata de bailarín',   tag: 'Atravesar recarga',  desc: 'Si tu esquive atraviesa a un enemigo, recuperas el esquive al momento (una vez por esquive).', cost: { iron: 1, mirror: 2 } },
+  { id: 's_tower',   slot: 'stock',   name: 'Culata de torre',      tag: 'Sin esquive',        desc: 'No puedes esquivar. A cambio recibes un 30% menos de daño y haces un 25% más.', cost: { iron: 2, forge: 2 } },
+  { id: 's_loot',    slot: 'stock',   name: 'Culata de saqueador',  tag: 'Más oro',            desc: 'Todo el oro que consigues aumenta un 50%.', cost: { iron: 1, light: 2 } },
+  { id: 's_wind',    slot: 'stock',   name: 'Culata de segundo aire', tag: 'Te levanta una vez', desc: 'Una vez por sala, si bajas del 30% de vida recuperas un 20% de golpe.', cost: { iron: 1, void: 2 } },
   { id: 's_spring',  slot: 'stock',   name: 'Culata de muelle',     tag: 'Salto tras disparar', desc: 'Después de cada disparo das un salto corto en la dirección en que te estés moviendo. Kitear es casi automático.', cost: { iron: 1, wood: 2 } },
   { id: 's_shield',  slot: 'stock',   name: 'Culata con rodela',    tag: 'Para un golpe',      desc: 'Un pequeño escudo para el primer golpe que recibas, entero. Se recupera a los 6 segundos; lo ves girar a tu lado cuando está listo.', cost: { iron: 2, stone: 2 } },
   { id: 's_scope',   slot: 'stock',   name: 'Culata de catalejo',   tag: 'Primer tiro',        desc: 'El primer disparo que le das a cada enemigo hace un 80% más de daño. +15% de alcance.', cost: { iron: 1, storm: 2 } },
@@ -104,6 +124,11 @@ const PARTS = [
   { id: 'c_sima',    slot: 'chamber', name: 'Recámara de sima',     tag: 'Abre un pozo',       desc: 'El disparo cargado abre un pozo por sí solo donde apuntas: arrastra a los enemigos dos segundos, los daña y al cerrarse estalla. Si llevas alguna técnica de Vacío, dura el doble.', cost: { iron: 2, void: 3 }, theme: 'void' },
   { id: 'c_doom',    slot: 'chamber', name: 'Recámara de sentencia', tag: 'Pone Sentencias',   desc: 'El disparo cargado es un rayo que pone una Sentencia a todos los que atraviesa: a los 5 segundos reciben de golpe parte del daño que les hayas hecho. Si llevas alguna técnica de Final, devuelven un 50% más.', cost: { iron: 2, end: 3 }, theme: 'end' },
   { id: 'c_anvil',   slot: 'chamber', name: 'Recámara de yunque',   tag: 'Da Temple',          desc: 'El disparo cargado es un martillazo a tu alrededor que aturde, y cada enemigo golpeado te da 1 de Temple por sí solo (+3% de daño cada punto). Si llevas alguna técnica de Forja, da 2.', cost: { iron: 2, forge: 3 }, theme: 'forge' },
+  { id: 'c_ward',    slot: 'chamber', name: 'Recámara de baluarte', tag: 'Dos segundos intocable', desc: 'El disparo cargado no ataca: te hace invulnerable dos segundos y aparta a los enemigos que tengas encima.', cost: { iron: 2, frost: 2 } },
+  { id: 'c_blink',   slot: 'chamber', name: 'Recámara de salto',    tag: 'Te lleva allí',      desc: 'El disparo cargado te traslada de golpe a donde apuntas (o junto a tu objetivo) y revienta al llegar.', cost: { iron: 2, mirror: 2 } },
+  { id: 'c_drain',   slot: 'chamber', name: 'Recámara de sanguijuela', tag: 'Rayo que cura',   desc: 'El disparo cargado es un rayo en línea que te devuelve como vida el 30% del daño que hace.', cost: { iron: 2, blood: 2 } },
+  { id: 'c_brand',   slot: 'chamber', name: 'Recámara de condena',  tag: 'Marca a todos',      desc: 'El disparo cargado marca a todos los enemigos que tengas a la vista: durante 6 segundos reciben un 30% más de daño de todo.', cost: { iron: 2, light: 2 } },
+  { id: 'c_quake',   slot: 'chamber', name: 'Recámara de terremoto', tag: 'Aturde la sala',    desc: 'El disparo cargado sacude la sala entera: todos los enemigos reciben un tercio del daño de un cargado y quedan aturdidos un segundo.', cost: { iron: 2, beast: 2 } },
 ];
 const PART = Object.fromEntries(PARTS.map(x => [x.id, x]));
 const BASE_GUN = { barrel: 'b_long', action: 'a_bolt', mag: 'm_std', stock: 's_std', chamber: 'c_beam' };
@@ -128,7 +153,7 @@ const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id
 // El nombre del arma sale de lo que lleva montado
 function gunName(g) {
   { const L = legOf(g); if (L) return L.name; }
-  const B = g.barrel, A = g.action, suf = { a_semi: ' de chispa', a_burst: ' de salvas', a_fuse: ' de mecha lenta', a_auto: ' de gatillo fino', a_pend: ' de péndulo', a_hold: ' de retén', a_spring: ' de resorte', a_alt: ' alterno', a_combo: ' de insistencia', a_drum: ' de tambor', a_glass: ' de clepsidra', a_dice: ' de tahúr', a_nana: ' de nana', a_rider: ' de jinete', a_kick: ' de trueno' }[A] || '';
+  const B = g.barrel, A = g.action, suf = { a_semi: ' de chispa', a_burst: ' de salvas', a_fuse: ' de mecha lenta', a_auto: ' de gatillo fino', a_pend: ' de péndulo', a_hold: ' de retén', a_spring: ' de resorte', a_alt: ' alterno', a_combo: ' de insistencia', a_drum: ' de tambor', a_fly: ' de volante', a_fin: ' de remate', a_firm: ' de pie firme', a_rota: ' de ronda', a_over: ' de sobrecarga', a_glass: ' de clepsidra', a_dice: ' de tahúr', a_nana: ' de nana', a_rider: ' de jinete', a_kick: ' de trueno' }[A] || '';
   if (B === 'b_spike') return A === 'a_rotary' ? 'Berbiquí de guerra' : A === 'a_draw' ? 'Pica de carga' : A === 'a_burst' ? 'Tridente' : A === 'a_semi' ? 'Estoque' : 'Lanza';
   if (A === 'a_draw') return B === 'b_pierce' ? 'Ballesta de asedio' : B === 'b_twin' ? 'Ballesta doble' : B === 'b_scatter' ? 'Ballesta de virotes' : B === 'b_short' ? 'Ballesta de mano' : B === 'b_bomb' ? 'Onagro' : 'Ballesta';
   if (A === 'a_rotary') return B === 'b_scatter' ? 'Órgano de metralla' : B === 'b_twin' ? 'Ribadoquines gemelos' : B === 'b_short' ? 'Ribadoquín ligero' : B === 'b_pierce' ? 'Órgano de culebrinas' : B === 'b_bomb' ? 'Batería de bombardas' : 'Ribadoquín';
@@ -137,6 +162,11 @@ function gunName(g) {
   if (B === 'b_short') return 'Pistolete' + suf;
   if (B === 'b_pierce') return 'Culebrina' + suf;
   if (B === 'b_bomb') return A === 'a_semi' ? 'Mortero de mano' : 'Bombarda' + suf;
+  if (B === 'b_horn') return 'Bocina de trueno';
+  if (B === 'b_drill') return 'Berbiquí' + suf;
+  if (B === 'b_ghost') return 'Arcabuz fantasma' + suf;
+  if (B === 'b_net') return 'Lanzarredes' + suf;
+  if (B === 'b_ends') return 'Arcabuz de dos distancias' + suf;
   if (B === 'b_blow') return 'Cerbatana' + suf;
   if (B === 'b_wyrm') return 'Boca de sierpe' + suf;
   if (B === 'b_rod') return 'Vara de cobre' + suf;

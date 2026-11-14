@@ -41,7 +41,8 @@ function update(dt) {
   // Esquive (por cargas)
   const dMax = dodgeMax();
   if (p.dodgeN < dMax) { p.dodgeCd -= dt; if (p.dodgeCd <= 0) { p.dodgeN += 1; p.dodgeCd = dodgeCdOf(); } } else p.dodgeCd = dodgeCdOf();
-  if (I.dodgeP && p.dodgeN > 0 && p.dodgeT <= 0) startDodge(Math.hypot(I.mx, I.my) > 0.2 ? Math.atan2(I.my, I.mx) : p.face, false);
+  if (I.dodgeP && G('s_tower')) note(p.x, p.y - 16, 'Sin esquive', C.dim);
+  if (I.dodgeP && p.dodgeN > 0 && p.dodgeT <= 0 && !G('s_tower')) startDodge(Math.hypot(I.mx, I.my) > 0.2 ? Math.atan2(I.my, I.mx) : p.face, false);
 
   // Objetivo
   if (I.clearP) S.lock = null;
@@ -82,6 +83,8 @@ function update(dt) {
   if (p.over > 0) p.over -= dt;
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
+  p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Llave de volante
+  if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); blip(1400, 0.1, 'sine', 0.04, 300); } }
   if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
   if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
     p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
@@ -164,7 +167,8 @@ function update(dt) {
     p.crit = (A === 'a_bolt' || A === 'a_pend' || S.plans.has('tempo')) && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
-    if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
+    if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;
+    if (A === 'a_fin' && target.hp / target.maxHp < 0.25) p.windupTotal = p.windup = 0.03;   // Llave de remate: sin frenazo   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
     if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Mecha lenta: sale sola medio segundo después
   }
@@ -334,7 +338,7 @@ function update(dt) {
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
       e.x = e.px; e.y = e.py; e.kx = e.ky = 0; e.stun = 0; e.aiCd -= dt;
-      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 15) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); blip(300, 0.2, 'sawtooth', 0.04, 200); } }
+      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); blip(300, 0.2, 'sawtooth', 0.04, 200); } }
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
