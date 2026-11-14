@@ -34,12 +34,12 @@ const keys = new Set(), tapped = new Set();   // tapped: pulsaciones más cortas
 const down = c => keys.has(c) || tapped.has(c);
 const touch = { joyId: null, ox: 0, oy: 0, x: 0, y: 0, atk: false, dodge: false, chg: false };
 let lastDev = 'none', padName = '', padBlocked = false;
-const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false, navX: 0, navY: 0 };
+const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false, navX: 0, navY: 0, tabP: false };
 const navRep = { x: 0, y: 0, at: 0 };
-const prev = { atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
+const prev = { tab: false, atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
 
 addEventListener('keydown', e => {
-  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+  if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   keys.add(e.code); tapped.add(e.code); lastDev = 'kb'; audioInit();
 });
 addEventListener('keyup', e => keys.delete(e.code));
@@ -55,7 +55,7 @@ function readPad() {
 const dz = v => (Math.abs(v || 0) < 0.2 ? 0 : v);
 
 function pollInput() {
-  let mx = 0, my = 0, ax = 0, ay = 0, atk = false, dodge = false, chg = false, start = false, clear = false, nav = 0;
+  let mx = 0, my = 0, ax = 0, ay = 0, atk = false, dodge = false, chg = false, start = false, clear = false, nav = 0, tab = down('KeyQ') || down('Tab');
 
   // Teclado
   if (down('KeyA') || down('ArrowLeft')) mx -= 1;
@@ -81,7 +81,7 @@ function pollInput() {
     dodge = dodge || b(1) || b(5);
     chg = chg || b(2) || b(6);
     start = start || b(9);
-    clear = clear || b(11);
+    clear = clear || b(11); tab = tab || b(4);
   } else padName = '';
 
   // Táctil
@@ -107,6 +107,7 @@ function pollInput() {
   I.startP = start && !prev.start;
   I.clearP = clear && !prev.clear;
   I.chgP = chg && !prev.chg; prev.chg = chg;
+  I.tabP = tab && !prev.tab; prev.tab = tab;
   I.navL = nav === -1 && prev.nav !== -1;
   I.navR = nav === 1 && prev.nav !== 1;
   prev.atk = atk; prev.dodge = dodge; prev.start = start; prev.clear = clear; prev.nav = nav;

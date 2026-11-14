@@ -45,12 +45,12 @@ function mapHtml() {
   const zones = K.zones.map((Z, z) => {
     const W = WPAL[z], open = zoneOpen(K, z), boss = TYPES[WORLDS[z].boss].name;
     return `<section class="zone" style="--zf:${W.f[1]};--zc:${W.capHi}"><h3>${Z.name}</h3>` +
-      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name + ' · ' + MTYPES[MKINDS[i]].desc, false)).join('') +
-      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona · ' + MTYPES.boss.desc : 'Completa las tres misiones de la zona para llegar hasta él.', !open) + '</section>';
+      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name, false)).join('') +
+      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona' : 'Guardián · completa antes las tres misiones', !open) + '</section>';
   }).join('');
   const g = godOpen(K), G = TYPES[K.god];
-  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><div class="kmap">${zones}</div>` +
-    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino · ' + MTYPES.god.desc : 'Derrota a los cuatro guardianes y saldrá a buscarte.', !g)}</section>`;
+  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><ul class="legend">${['doors', 'defend', 'assault', 'boss', 'god'].map(t => `<li><b>${MTYPES[t].name}:</b> ${MTYPES[t].desc}</li>`).join('')}</ul><div class="kmap">${zones}</div>` +
+    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino' : 'El dios · derrota antes a los cuatro guardianes', !g)}</section>`;
 }
 
 // Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado

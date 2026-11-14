@@ -788,12 +788,12 @@ const keys = new Set(), tapped = new Set();   // tapped: pulsaciones más cortas
 const down = c => keys.has(c) || tapped.has(c);
 const touch = { joyId: null, ox: 0, oy: 0, x: 0, y: 0, atk: false, dodge: false, chg: false };
 let lastDev = 'none', padName = '', padBlocked = false;
-const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false, navX: 0, navY: 0 };
+const I = { mx: 0, my: 0, ax: 0, ay: 0, atk: false, atkP: false, dodgeP: false, chg: false, startP: false, clearP: false, chgP: false, navL: false, navR: false, navX: 0, navY: 0, tabP: false };
 const navRep = { x: 0, y: 0, at: 0 };
-const prev = { atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
+const prev = { tab: false, atk: false, dodge: false, start: false, clear: false, chg: false, nav: 0 };
 
 addEventListener('keydown', e => {
-  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+  if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   keys.add(e.code); tapped.add(e.code); lastDev = 'kb'; audioInit();
 });
 addEventListener('keyup', e => keys.delete(e.code));
@@ -809,7 +809,7 @@ function readPad() {
 const dz = v => (Math.abs(v || 0) < 0.2 ? 0 : v);
 
 function pollInput() {
-  let mx = 0, my = 0, ax = 0, ay = 0, atk = false, dodge = false, chg = false, start = false, clear = false, nav = 0;
+  let mx = 0, my = 0, ax = 0, ay = 0, atk = false, dodge = false, chg = false, start = false, clear = false, nav = 0, tab = down('KeyQ') || down('Tab');
 
   // Teclado
   if (down('KeyA') || down('ArrowLeft')) mx -= 1;
@@ -835,7 +835,7 @@ function pollInput() {
     dodge = dodge || b(1) || b(5);
     chg = chg || b(2) || b(6);
     start = start || b(9);
-    clear = clear || b(11);
+    clear = clear || b(11); tab = tab || b(4);
   } else padName = '';
 
   // Táctil
@@ -861,6 +861,7 @@ function pollInput() {
   I.startP = start && !prev.start;
   I.clearP = clear && !prev.clear;
   I.chgP = chg && !prev.chg; prev.chg = chg;
+  I.tabP = tab && !prev.tab; prev.tab = tab;
   I.navL = nav === -1 && prev.nav !== -1;
   I.navR = nav === 1 && prev.nav !== 1;
   prev.atk = atk; prev.dodge = dodge; prev.start = start; prev.clear = clear; prev.nav = nav;
@@ -1254,33 +1255,54 @@ function shopAct(act) {
 }
 
 // ───────────────────────── La forja (entre vidas) ─────────────────────────
-function openForge() { S.mode = 'forge'; modeT = 0; listSel = -1; renderOverlay(); ov.scrollTop = 0; }
+function openForge() { S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = 'map'; renderOverlay(); ov.scrollTop = 0; }
+// La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, el arma (un apartado cada vez), las sinergias y el árbol.
+let forgeTab = 'map', forgeSlot = 'barrel';
+const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Arma'], ['syn', 'Sinergias'], ['tree', 'Árbol']];
 function forgeHtml() {
-  const mats = [`<span>${M.iron} Hierro Místico</span>`].concat(GOD_KEYS.map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`)).join(' · ');
-  let arms = `<p class="fine">Ahora mismo es: <b>${gunName(M.gun)}</b>. Cada pieza decide una cosa; cámbialas y el arma cambia. Las que descubras en la mazmorra aparecen aquí: fórjalas una vez y podrás empezar con ellas.</p>`;
-  for (const k of GSLOT_KEYS) {
-    const known = PARTS.filter(x => x.slot === k && M.parts[x.id]), hidden = PARTS.filter(x => x.slot === k && !M.parts[x.id]).length;
-    arms += `<h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3>` + known.map(x => { const on = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${affHint(x.id)}${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
-      (hidden ? `<p class="fine">${hidden === 1 ? 'Queda 1 pieza' : 'Quedan ' + hidden + ' piezas'} por descubrir.</p>` : '');
+  const matChips = GOD_KEYS.filter(g => M.mats[g] > 0).map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`).join(' · ');
+  const head = `<p class="eyebrow">La forja de Alec · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p>
+    <div class="fhead"><h1>${gunName(M.gun)}</h1><p class="lead"><b>${M.souls}</b> almas · <b>${M.iron}</b> Hierro Místico${matChips ? ' · ' + matChips : ''}</p></div>
+    <div class="tabs">${FORGE_TABS.map(([id, nm]) => `<button class="fi tab${forgeTab === id ? ' on' : ''}" data-act="tab:${id}"><b>${nm}</b></button>`).join('')}</div>`;
+  let body = '';
+  if (forgeTab === 'map') {
+    const go = M.run ? `<button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, tramo ${M.run.wave + 1}</button>` : '';
+    body = `${go}<div class="kingdom">${mapHtml()}</div><p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>`;
+  } else if (forgeTab === 'gun') {
+    const k = forgeSlot, all = PARTS.filter(x => x.slot === k), known = all.filter(x => M.parts[x.id]);
+    const rank = x => (M.gun[k] === x.id ? 0 : M.parts[x.id] === 2 ? 1 : canPay(x.cost) ? 2 : 3);
+    known.sort((a, b) => rank(a) - rank(b));
+    const on = ensOf(M.gun), L = legOf(M.gun);
+    body = `<p class="fine">Cada apartado decide una cosa. Elige un apartado y debajo salen sus piezas: las que descubras en las misiones aparecen aquí, y forjarlas una vez te deja empezar con ellas.${L ? ` <b class="gold">Arma legendaria: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
+      <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
+        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
+      <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
+      known.map(x => { const mounted = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
+        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+      `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
+  } else if (forgeTab === 'syn') {
+    const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
+    const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tu arma no lleva ninguna pieza afín a una deidad.</span></li>';
+    const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
+      return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
+    body = `<p class="fine">Cuatro formas de que tu arma haga más que la suma de sus piezas. Lo que aún no has descubierto sale como «???».</p>
+      <div class="forge"><section><h3>Afinidades de tu arma · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
+      <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
+  } else {
+    const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
+    const hm = h => (h >= 1 ? Math.floor(h) + ' h ' : '') + Math.round((h % 1) * 60) + ' min';
+    const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
+    const pace = `${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo jugado: ${hm(hrs)}.` + (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : '');
+    body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
+      return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
-  const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
-    return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('')).join('');
-  const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
-  const hm = h => (h >= 1 ? Math.floor(h) + ' h ' : '') + Math.round((h % 1) * 60) + ' min';
-  const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
-  const pace = `Árbol: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo en la mazmorra: ${hm(hrs)}.` +
-    (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : ' El ritmo de almas por hora aparecerá cuando lleves un rato jugado.');
-  const go = M.run ? `<div class="btns"><button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, sala ${M.run.wave + 1}</button></div>` : '';
-  return `<p class="eyebrow">La forja de Alec · ${M.runs} ${M.runs === 1 ? 'encargo' : 'encargos'} a la espalda</p><h1>${M.runs ? 'Entre encargo y encargo' : 'El primer contrato'}</h1>
-    <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
-    <p class="fine">${pace}</p>
-    <p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>
-    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${ensHtml(M.gun)}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+  return head + body + `<p class="fine keyhint">Muévete con el stick o la cruceta. LB (o Q) cambia de pestaña.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
+  if (k === 'tab') { forgeTab = id; listSel = FORGE_TABS.findIndex(t => t[0] === id); blip(700, 0.04, 'triangle', 0.03); renderOverlay(); ov.scrollTop = 0; return; }
+  if (k === 'slot') { forgeSlot = id; blip(700, 0.04, 'triangle', 0.03); renderOverlay(); return; }
   if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
   if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
   if (k === 'resume') { resumeRun(); return; }
@@ -1318,6 +1340,7 @@ function navPick(els, cur, dx, dy) {
   return best < 0 ? cur : best;
 }
 function listInput() {
+  if (S.mode === 'forge' && I.tabP) { const i = FORGE_TABS.findIndex(t => t[0] === forgeTab); forgeAct('tab:' + FORGE_TABS[(i + 1) % FORGE_TABS.length][0]); return; }
   const els = [...ovBody.querySelectorAll('.fi')];
   if (I.navX || I.navY) {
     const n = navPick(els, listSel, I.navX, I.navY);
@@ -1328,6 +1351,12 @@ function listInput() {
 
 // ───────────────────────── Lo que llevas y el recetario ─────────────────────────
 function buildHtml(full) {
+  if (!full) {   // en partida: una sola línea con las cuatro acciones, y un recuento de lo demás. El detalle está en la pausa.
+    const short = { basic: 'Disp', charge: 'Carg', dodge: 'Esq', passive: 'Pas' }, bits = [];
+    for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id]; bits.push(`<span><em>${short[k]}</em> <b style="color:${D ? RAR[3].color : GODS[PIECE[cur.id].god].color}">${(D ? D.name : PIECE[cur.id].name)} ${ROMAN[cur.lvl]}</b></span>`); }
+    const extra = [S.techs.size ? S.techs.size + (S.techs.size === 1 ? ' técnica' : ' técnicas') : '', S.plans.size ? S.plans.size + (S.plans.size === 1 ? ' plano' : ' planos') : '', GOD_KEYS.filter(mastery).length ? 'maestría' : ''].filter(Boolean).join(' · ');
+    return bits.length || extra ? `<li class="line">${bits.join('')}${extra ? `<span class="more">+ ${extra}</span>` : ''}</li>` : '';
+  }
   const rows = [];
   const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>` : ''}</li>`);
   for (const k of SLOT_KEYS) {
@@ -1438,12 +1467,12 @@ function mapHtml() {
   const zones = K.zones.map((Z, z) => {
     const W = WPAL[z], open = zoneOpen(K, z), boss = TYPES[WORLDS[z].boss].name;
     return `<section class="zone" style="--zf:${W.f[1]};--zc:${W.capHi}"><h3>${Z.name}</h3>` +
-      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name + ' · ' + MTYPES[MKINDS[i]].desc, false)).join('') +
-      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona · ' + MTYPES.boss.desc : 'Completa las tres misiones de la zona para llegar hasta él.', !open) + '</section>';
+      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name, false)).join('') +
+      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona' : 'Guardián · completa antes las tres misiones', !open) + '</section>';
   }).join('');
   const g = godOpen(K), G = TYPES[K.god];
-  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><div class="kmap">${zones}</div>` +
-    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino · ' + MTYPES.god.desc : 'Derrota a los cuatro guardianes y saldrá a buscarte.', !g)}</section>`;
+  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><ul class="legend">${['doors', 'defend', 'assault', 'boss', 'god'].map(t => `<li><b>${MTYPES[t].name}:</b> ${MTYPES[t].desc}</li>`).join('')}</ul><div class="kmap">${zones}</div>` +
+    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino' : 'El dios · derrota antes a los cuatro guardianes', !g)}</section>`;
 }
 
 // Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado
@@ -4245,7 +4274,7 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">Empezar</button>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>`;
   } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><ul class="build full">${buildHtml(true)}</ul><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por bala · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
     h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
@@ -4291,7 +4320,7 @@ function renderHud() {
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
   const ms = S.mission;
   $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left : ms.type === 'assault' ? 'Asalto · campamento ' + S.room + ' de ' + roomsOf(ms) + ' · estandartes ' + (S.postsDown || 0) + ' de ' + (S.postsAll || 3) : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
-  $('stats').textContent = inRun ? gunName(S.gun) + ' · ' + (1 / periodOf()).toFixed(2) + ' disparos/s · ' + Math.round(p.dmg) + ' daño · ' + Math.round(rangeOf()) + ' alcance' : '';
+  $('stats').textContent = inRun ? gunName(S.gun) : '';
   $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') || G('a_drum') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
   $('build').innerHTML = inRun ? buildHtml(false) : '';
   $('boss').hidden = (!bo && !S.keep) || S.mode !== 'play';
