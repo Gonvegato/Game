@@ -54,6 +54,25 @@ function roomBgDungeon(Dover) {
   }
   return (ROOM_BG = { c: cvs, walls: S.walls, world: S.world, torches, pc: true });
 }
+// La forja y la posada: el fondo de mazmorra con su suelo y sus muros, y los muebles ordenados de arriba abajo
+const INTERIOR = {
+  forge: { img: 'pc_forge', top: '#21111a', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 144, 272, 48, 48] },
+  inn: { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 96, 288, 48, 32] },
+};
+function roomBgInterior() {
+  const O = S.out; if (ROOM_BG && ROOM_BG.inner && ROOM_BG.walls === S.walls) return ROOM_BG;
+  if (!IMG.town || !IMG.biome) return null;
+  const base = roomBgDungeon(INTERIOR[O.interior]); if (!base) return null;
+  const g = base.c.getContext('2d'); g.setTransform(1, 0, 0, 1, BG_M * CELL, BG_M * CELL); g.imageSmoothingEnabled = false;
+  for (const p of O.props.slice().sort((a, b) => a.y - b.y)) {
+    const im = p.src === 'town' ? IMG.town : p.src === 'bio' ? IMG.biome : IMG.pc_castle, s = p.src === 'town' ? TOWN[p.s] : p.src === 'bio' ? BIO.barrel[+p.s.slice(-1)] : p.s;
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(p.x, p.y - 1, Math.min(18, s[2] / 2.2), 3, 0, 0, Math.PI * 2); g.fill();
+    g.drawImage(im, s[0], s[1], s[2], s[3], Math.round(p.x - s[2] / 2), Math.round(p.y + 2 - s[3]), s[2], s[3]);
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (O.interior === 'inn') base.torches = base.torches.filter(t => Math.abs(t.x - (NAV.cols >> 1) * CELL) > 30);
+  base.inner = true; return base;
+}
 // El salón del trono: el fondo de mazmorra con el castillo, y encima alfombra, vidriera, trono, estandartes y macetas del paquete
 function roomBgHall() {
   if (ROOM_BG && ROOM_BG.hall && ROOM_BG.walls === S.walls) return ROOM_BG;

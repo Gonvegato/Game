@@ -1593,7 +1593,7 @@ function setupAssault() {
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -1768,14 +1768,37 @@ const ROOM_GEN = {
     OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Audiencia con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
+  // La forja y la posada por dentro: muros alrededor, la puerta abajo, muebles del paquete y quien atiende
+  forgeroom(g, c, r) { return interiorRoom(g, c, r, 'forge'); },
+  innroom(g, c, r) { return interiorRoom(g, c, r, 'inn'); },
   // Arena de jefe: abierta, con pilares cuadrados contra los que estrellarlo
   arena(g, c, r) {
     for (const [fx, fy] of [[0.22, 0.3], [0.78, 0.3], [0.22, 0.72], [0.78, 0.72], [0.5, 0.52]]) fillRect(g, Math.floor(c * fx) - 1, Math.floor(r * fy) - 1, 3, 3);
     return [c >> 1, r - 5];
   },
 };
+function interiorRoom(g, c, r, kind) {
+  OUT = { interior: kind, obs: [], spots: [], npcs: [], paths: [], bridges: [], props: [] };
+  fillRect(g, 0, 0, c, 4); fillRect(g, 0, r - 2, c, 2); fillRect(g, 0, 0, 2, r); fillRect(g, c - 2, 0, 2, r);
+  const cx = c >> 1; for (let y = r - 2; y < r; y++) for (const x of [cx - 1, cx]) g[y][x] = 0;
+  const put = (src, s, x, y, w, h) => { if (w) fillRect(g, Math.floor(x - w / 2), Math.floor(y - h), w, h); OUT.props.push({ src, s, x: x * CELL, y: y * CELL }); };
+  if (kind === 'forge') {
+    put('town', 'furnace', 5, 6, 2, 1); put('town', 'furnace', 8.5, 6, 2, 1); put('town', 'anvil', cx + 1, 9, 4, 1); put('town', 'workbench', c - 5.5, 6, 4, 1);
+    put('castle', [336, 1, 32, 26], c - 4, 12, 2, 1); put('bio', 'barrel0', 3.6, 13, 1, 1); put('bio', 'barrel1', 4.6, 13.2, 1, 1);
+    OUT.npcs.push({ key: 'smith', x: cx - 1.6, y: 9.4 });
+    OUT.spots.push({ x: (cx + 1) * CELL, y: 10.4 * CELL, id: 'forge', label: 'Trabajar en el yunque' });
+  } else {
+    put('castle', [144, 203, 32, 57], cx, 4.6, 0, 0);
+    for (const [x, y] of [[5.5, 8], [c - 5.5, 8], [5.5, 12], [c - 5.5, 12]]) { put('castle', [368, 10, 48, 36], x, y, 3, 1); put('castle', [304, 11, 32, 11], x, y + 1.1, 0, 0); }
+    put('castle', [320, 44, 48, 20], cx, 7.4, 3, 1); put('bio', 'barrel0', c - 3.4, 6, 1, 1); put('bio', 'barrel2', c - 3.4, 7, 1, 1); put('castle', [336, 1, 32, 26], 3.6, 6, 2, 1);
+    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'cit_tavern_a', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
+    OUT.spots.push({ x: cx * CELL, y: 8.6 * CELL, id: 'inn', label: 'Pedir la habitación' });
+  }
+  OUT.spots.push({ x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+  return [cx, r - 4];
+}
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall'].includes(k));
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall', 'forgeroom', 'innroom'].includes(k));
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
 function buildRoom(boss, kindF, sizeF) {
@@ -1933,15 +1956,19 @@ const PLACES = {
 let forgePlace = 'board';
 function openTown(from) {
   newGame();
-  const room = buildRoom(false, from === 'hall' ? 'hall' : 'plaza', from === 'hall' ? 'hall' : 'plaza');
+  const IN = { hall: ['hall', 'hall'], forge: ['forgeroom', 'shop'], inn: ['innroom', 'shop'] }, kind = IN[from] || ['plaza', 'plaza'];
+  const room = buildRoom(false, kind[0], kind[1]);
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = [];
   S.town = { spots: room.out.spots, npcs: room.out.npcs.slice(), near: null };
   for (const w of room.out.wander || []) { const [ax, ay, aw, ah] = w.area, n = { key: w.key, x: ax + Math.random() * aw, y: ay + Math.random() * ah, area: w.area, tx: 0, ty: 0, wait: Math.random() * 2, walking: false }; n.tx = n.x; n.ty = n.y; S.town.npcs.push(n); }
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
-  if (from === 'castle') { const k = room.out.spots.find(s => s.id === 'king'); S.p.x = k.x; S.p.y = k.y + 20; S.p.face = Math.PI / 2; }
+  const back = { castle: 'king', forgeOut: 'forge', innOut: 'inn' }[from];
+  if (back) { const k = room.out.spots.find(s => s.id === back); S.p.x = k.x; S.p.y = k.y + 22; S.p.face = Math.PI / 2; }
   S.mode = 'town'; modeT = 0; renderOverlay();
   if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
-  else if (!M.metKing && from !== 'castle') sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
+  else if (from === 'forge') sayRaw('[La forja. Huele a hierro y a carbón.]', C.energy);
+  else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
+  else if (!M.metKing && !back) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
 }
 function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; blip(520, 0.06, 'triangle', 0.04, 200); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
@@ -1962,7 +1989,7 @@ function townUpdate(dt) {
     if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
     const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
   }
-  if (near && I.atkP && modeT > 0.3) { if (near.id === 'exit') openTown('castle'); else if (near.id === 'king' && S.out && !S.out.interior) { openTown('hall'); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
+  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {
@@ -4501,7 +4528,7 @@ const WPAL = [
 const BG_M = 3;   // casillas de margen alrededor de la sala
 let ROOM_BG = null;
 function roomBg() {
-  if (S.out && S.out.interior) { const h = roomBgHall(); if (h) return h; }
+  if (S.out && S.out.interior) { const h = S.out.interior === 'throne' ? roomBgHall() : roomBgInterior(); if (h) return h; }
   if (S.out) return roomBgOut();
   { const pc = roomBgDungeon(); if (pc) return pc; }
   if (ROOM_BG && ROOM_BG.walls === S.walls && ROOM_BG.world === S.world) return ROOM_BG;
@@ -4803,6 +4830,25 @@ function roomBgDungeon(Dover) {
     if (edge(1, 0) || faceBelow(1, 0)) blit(im, D.rimR, X + CELL - D.rimR[2], Y, D.rimR[2], 16);
   }
   return (ROOM_BG = { c: cvs, walls: S.walls, world: S.world, torches, pc: true });
+}
+// La forja y la posada: el fondo de mazmorra con su suelo y sus muros, y los muebles ordenados de arriba abajo
+const INTERIOR = {
+  forge: { img: 'pc_forge', top: '#21111a', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 144, 272, 48, 48] },
+  inn: { img: 'pc_castle', top: '#1b1828', face: [[32, 64], [32, 80], [32, 96]], rimT: [32, 0, 16, 6], rimL: [0, 24, 6, 16], rimR: [74, 24, 6, 16], floor: ['pc_castle', 96, 288, 48, 32] },
+};
+function roomBgInterior() {
+  const O = S.out; if (ROOM_BG && ROOM_BG.inner && ROOM_BG.walls === S.walls) return ROOM_BG;
+  if (!IMG.town || !IMG.biome) return null;
+  const base = roomBgDungeon(INTERIOR[O.interior]); if (!base) return null;
+  const g = base.c.getContext('2d'); g.setTransform(1, 0, 0, 1, BG_M * CELL, BG_M * CELL); g.imageSmoothingEnabled = false;
+  for (const p of O.props.slice().sort((a, b) => a.y - b.y)) {
+    const im = p.src === 'town' ? IMG.town : p.src === 'bio' ? IMG.biome : IMG.pc_castle, s = p.src === 'town' ? TOWN[p.s] : p.src === 'bio' ? BIO.barrel[+p.s.slice(-1)] : p.s;
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(p.x, p.y - 1, Math.min(18, s[2] / 2.2), 3, 0, 0, Math.PI * 2); g.fill();
+    g.drawImage(im, s[0], s[1], s[2], s[3], Math.round(p.x - s[2] / 2), Math.round(p.y + 2 - s[3]), s[2], s[3]);
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (O.interior === 'inn') base.torches = base.torches.filter(t => Math.abs(t.x - (NAV.cols >> 1) * CELL) > 30);
+  base.inner = true; return base;
 }
 // El salón del trono: el fondo de mazmorra con el castillo, y encima alfombra, vidriera, trono, estandartes y macetas del paquete
 function roomBgHall() {

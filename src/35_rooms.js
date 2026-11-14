@@ -3,7 +3,7 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -178,14 +178,37 @@ const ROOM_GEN = {
     OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Audiencia con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
+  // La forja y la posada por dentro: muros alrededor, la puerta abajo, muebles del paquete y quien atiende
+  forgeroom(g, c, r) { return interiorRoom(g, c, r, 'forge'); },
+  innroom(g, c, r) { return interiorRoom(g, c, r, 'inn'); },
   // Arena de jefe: abierta, con pilares cuadrados contra los que estrellarlo
   arena(g, c, r) {
     for (const [fx, fy] of [[0.22, 0.3], [0.78, 0.3], [0.22, 0.72], [0.78, 0.72], [0.5, 0.52]]) fillRect(g, Math.floor(c * fx) - 1, Math.floor(r * fy) - 1, 3, 3);
     return [c >> 1, r - 5];
   },
 };
+function interiorRoom(g, c, r, kind) {
+  OUT = { interior: kind, obs: [], spots: [], npcs: [], paths: [], bridges: [], props: [] };
+  fillRect(g, 0, 0, c, 4); fillRect(g, 0, r - 2, c, 2); fillRect(g, 0, 0, 2, r); fillRect(g, c - 2, 0, 2, r);
+  const cx = c >> 1; for (let y = r - 2; y < r; y++) for (const x of [cx - 1, cx]) g[y][x] = 0;
+  const put = (src, s, x, y, w, h) => { if (w) fillRect(g, Math.floor(x - w / 2), Math.floor(y - h), w, h); OUT.props.push({ src, s, x: x * CELL, y: y * CELL }); };
+  if (kind === 'forge') {
+    put('town', 'furnace', 5, 6, 2, 1); put('town', 'furnace', 8.5, 6, 2, 1); put('town', 'anvil', cx + 1, 9, 4, 1); put('town', 'workbench', c - 5.5, 6, 4, 1);
+    put('castle', [336, 1, 32, 26], c - 4, 12, 2, 1); put('bio', 'barrel0', 3.6, 13, 1, 1); put('bio', 'barrel1', 4.6, 13.2, 1, 1);
+    OUT.npcs.push({ key: 'smith', x: cx - 1.6, y: 9.4 });
+    OUT.spots.push({ x: (cx + 1) * CELL, y: 10.4 * CELL, id: 'forge', label: 'Trabajar en el yunque' });
+  } else {
+    put('castle', [144, 203, 32, 57], cx, 4.6, 0, 0);
+    for (const [x, y] of [[5.5, 8], [c - 5.5, 8], [5.5, 12], [c - 5.5, 12]]) { put('castle', [368, 10, 48, 36], x, y, 3, 1); put('castle', [304, 11, 32, 11], x, y + 1.1, 0, 0); }
+    put('castle', [320, 44, 48, 20], cx, 7.4, 3, 1); put('bio', 'barrel0', c - 3.4, 6, 1, 1); put('bio', 'barrel2', c - 3.4, 7, 1, 1); put('castle', [336, 1, 32, 26], 3.6, 6, 2, 1);
+    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'cit_tavern_a', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
+    OUT.spots.push({ x: cx * CELL, y: 8.6 * CELL, id: 'inn', label: 'Pedir la habitación' });
+  }
+  OUT.spots.push({ x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+  return [cx, r - 4];
+}
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall'].includes(k));
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall', 'forgeroom', 'innroom'].includes(k));
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
 function buildRoom(boss, kindF, sizeF) {

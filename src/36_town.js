@@ -10,15 +10,19 @@ const PLACES = {
 let forgePlace = 'board';
 function openTown(from) {
   newGame();
-  const room = buildRoom(false, from === 'hall' ? 'hall' : 'plaza', from === 'hall' ? 'hall' : 'plaza');
+  const IN = { hall: ['hall', 'hall'], forge: ['forgeroom', 'shop'], inn: ['innroom', 'shop'] }, kind = IN[from] || ['plaza', 'plaza'];
+  const room = buildRoom(false, kind[0], kind[1]);
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = [];
   S.town = { spots: room.out.spots, npcs: room.out.npcs.slice(), near: null };
   for (const w of room.out.wander || []) { const [ax, ay, aw, ah] = w.area, n = { key: w.key, x: ax + Math.random() * aw, y: ay + Math.random() * ah, area: w.area, tx: 0, ty: 0, wait: Math.random() * 2, walking: false }; n.tx = n.x; n.ty = n.y; S.town.npcs.push(n); }
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
-  if (from === 'castle') { const k = room.out.spots.find(s => s.id === 'king'); S.p.x = k.x; S.p.y = k.y + 20; S.p.face = Math.PI / 2; }
+  const back = { castle: 'king', forgeOut: 'forge', innOut: 'inn' }[from];
+  if (back) { const k = room.out.spots.find(s => s.id === back); S.p.x = k.x; S.p.y = k.y + 22; S.p.face = Math.PI / 2; }
   S.mode = 'town'; modeT = 0; renderOverlay();
   if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
-  else if (!M.metKing && from !== 'castle') sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
+  else if (from === 'forge') sayRaw('[La forja. Huele a hierro y a carbón.]', C.energy);
+  else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
+  else if (!M.metKing && !back) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
 }
 function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; blip(520, 0.06, 'triangle', 0.04, 200); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
@@ -39,7 +43,7 @@ function townUpdate(dt) {
     if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
     const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
   }
-  if (near && I.atkP && modeT > 0.3) { if (near.id === 'exit') openTown('castle'); else if (near.id === 'king' && S.out && !S.out.interior) { openTown('hall'); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
+  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); blip(420, 0.08, 'triangle', 0.04, 160); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {

@@ -9,7 +9,7 @@ const WPAL = [
 const BG_M = 3;   // casillas de margen alrededor de la sala
 let ROOM_BG = null;
 function roomBg() {
-  if (S.out && S.out.interior) { const h = roomBgHall(); if (h) return h; }
+  if (S.out && S.out.interior) { const h = S.out.interior === 'throne' ? roomBgHall() : roomBgInterior(); if (h) return h; }
   if (S.out) return roomBgOut();
   { const pc = roomBgDungeon(); if (pc) return pc; }
   if (ROOM_BG && ROOM_BG.walls === S.walls && ROOM_BG.world === S.world) return ROOM_BG;
