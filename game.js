@@ -237,25 +237,25 @@ const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
 // ───────────────────────── Lo permanente: armas y árbol ─────────────────────────
 // stat/mult: mejoras genéricas (range, as, dmg, ccd). Las demás tienen efecto propio por índice.
 const WEAPONS = {
-  rifle: { name: 'Rifle', desc: 'Un disparo por pulsación, con su frenazo. El cargado es un rayo que atraviesa.', cost: null, ups: [
+  rifle: { name: 'Rifle', desc: 'El arma de precisión. Un disparo por pulsación, con su frenazo: hay que kitear a ritmo. Hace un 40% más de daño a los enemigos que están lejos, en la mitad exterior de tu alcance. El cargado es un rayo que atraviesa.', cost: null, ups: [
     { name: 'Cañón estriado',  desc: '+15% de alcance', cost: { iron: 1, stone: 3 }, stat: 'range', mult: 1.15 },
     { name: 'Culata de hueso', desc: 'El frenazo de cada disparo dura un 25% menos', cost: { iron: 1, orc: 3 } },
     { name: 'Cámara doble',    desc: 'El cargado se recupera un 30% antes', cost: { iron: 2, dragon: 3 }, stat: 'ccd', mult: 0.7 } ] },
-  pistols: { name: 'Pistolas dobles', desc: 'Dos balas por pulsación, más cadencia, y un esquive más largo que se recupera antes. Menos daño por bala y menos alcance. El cargado vacía los cargadores en abanico.', cost: { iron: 2, stone: 3, orc: 3 }, ups: [
+  pistols: { name: 'Pistolas dobles', desc: 'El arma de correr. No te frenan al disparar: te mueves a toda velocidad mientras disparas. Cada pulsación dispara a dos enemigos distintos a la vez, y al esquivar sueltan una ráfaga solas. A cambio: alcance corto y poco daño por bala. El cargado vacía los cargadores en abanico.', cost: { iron: 2, stone: 3, orc: 3 }, ups: [
     { name: 'Gatillos de pelo', desc: '+15% de cadencia', cost: { iron: 1, feast: 3 }, stat: 'as', mult: 1.15 },
     { name: 'Fundas rápidas',   desc: 'El esquive se recupera otro 20% antes', cost: { iron: 1, venom: 3 } },
     { name: 'Tambor ampliado',  desc: 'El abanico dispara 13 balas en vez de 9', cost: { iron: 2, storm: 3 } } ] },
-  bow: { name: 'Arco', desc: 'Mantén pulsado para tensar y suelta para disparar: cuanto más aguantas, más daño y alcance. Más lento, pero la flecha atraviesa a todos en línea. El cargado es un aluvión de flechas sobre una zona.', cost: { iron: 2, dragon: 3, venom: 3 }, ups: [
+  bow: { name: 'Arco', desc: 'El arma de paciencia. Mantén pulsado para tensar y suelta para disparar: de un toque flojo a una flecha que hace casi cuatro veces más. La flecha atraviesa a todos los enemigos en línea y llega más lejos que nada. El cargado es un aluvión de flechas sobre una zona.', cost: { iron: 2, dragon: 3, venom: 3 }, ups: [
     { name: 'Cuerda de tendón',  desc: '+20% de daño', cost: { iron: 1, orc: 3 }, stat: 'dmg', mult: 1.2 },
     { name: 'Puntas de cristal', desc: 'La flecha hace un 50% más a partir del segundo enemigo que atraviesa', cost: { iron: 1, stone: 3 } },
     { name: 'Carcaj hondo',      desc: 'El aluvión tiene una oleada más', cost: { iron: 2, time: 3 } } ] },
-  shotgun: { name: 'Escopeta', desc: 'Alcance corto y un abanico de cinco perdigones: de cerca pueden entrar todos en el mismo enemigo. El cargado es una andanada de quince.', cost: { iron: 3, orc: 3, feast: 3 }, ups: [
+  shotgun: { name: 'Escopeta', desc: 'El arma de meterse dentro. Dos cartuchos seguidos y a recargar. Cada cartucho son seis perdigones que de cerca entran todos en el mismo enemigo y lo mandan volando hacia atrás. Alcance muy corto. El cargado dispara los dos cañones a la vez y el retroceso te lanza hacia atrás.', cost: { iron: 3, orc: 3, feast: 3 }, ups: [
     { name: 'Cañones largos', desc: '+20% de alcance', cost: { iron: 1, stone: 3 }, stat: 'range', mult: 1.2 },
     { name: 'Pólvora negra',  desc: '+15% de daño', cost: { iron: 2, dragon: 3 }, stat: 'dmg', mult: 1.15 } ] },
-  gatling: { name: 'Ametralladora', desc: 'No se dispara a golpes: mantén pulsado, los cañones tardan medio segundo en girar y después escupe siete balas por segundo, repartidas entre los enemigos que tengas delante. Poco daño por bala, te mueves despacio mientras dispara y, si no sueltas, se recalienta y se bloquea. El cargado es fuego de supresión: tres segundos disparando sola en todas direcciones.', cost: { iron: 3, stone: 3, storm: 3 }, ups: [
+  gatling: { name: 'Ametralladora', desc: 'El arma de plantarse. Mantén pulsado: los cañones tardan medio segundo en girar y después escupe siete balas por segundo, repartidas entre los enemigos que tengas delante. Te mueves despacio mientras dispara y, si no sueltas, se recalienta y se bloquea. El cargado es fuego de supresión: tres segundos disparando sola en todas direcciones.', cost: { iron: 3, stone: 3, storm: 3 }, ups: [
     { name: 'Cinta larga',   desc: '+12% de cadencia', cost: { iron: 1, time: 3 }, stat: 'as', mult: 1.12 },
     { name: 'Balas pesadas', desc: '+15% de daño', cost: { iron: 2, orc: 3 }, stat: 'dmg', mult: 1.15 } ] },
-  lance: { name: 'Lanza', desc: 'No disparas: cada ataque es una estocada que te lanza a través del enemigo, invulnerable, y cuenta como atravesarlo con el esquive. El cargado es una carga larga que atraviesa a todos.', cost: { iron: 3, shade: 3, dragon: 3 }, ups: [
+  lance: { name: 'Lanza', desc: 'El arma de atravesar. No disparas: cada ataque es una estocada que te lanza a través del enemigo, invulnerable, y cuenta como atravesarlo con el esquive. Si la estocada mata, puedes volver a atacar al instante. El cargado es una carga larga que atraviesa a todos.', cost: { iron: 3, shade: 3, dragon: 3 }, ups: [
     { name: 'Punta templada', desc: '+20% de daño', cost: { iron: 1, stone: 3 }, stat: 'dmg', mult: 1.2 },
     { name: 'Asta ligera',    desc: '+12% de cadencia', cost: { iron: 2, feast: 3 }, stat: 'as', mult: 1.12 } ] },
 };
@@ -496,7 +496,7 @@ function newGame() {
       face: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
-      fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, over: 0, gat: 0,
+      fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, over: 0, gat: 0, shells: 2, reload: 0,
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
@@ -857,7 +857,7 @@ const resMax = () => 30 * (has('f_cellar') ? 2 : 1);
 const shadeCap = () => 2 + lv('shade_basic') + (has('s_legion') ? 3 : 0);
 const echoDelay = t => t * (has('t_overtime') ? 0.5 : 1);
 const isSlow = e => e.slowT > 0 || e.stun > 0;
-const WRANGE = { pistols: 0.8, bow: 1.4, shotgun: 0.5, lance: 0.5 }, WRATE = { pistols: 1.25, bow: 0.65 };
+const WRANGE = { pistols: 0.72, bow: 1.5, shotgun: 0.45, lance: 0.5 }, WRATE = { pistols: 1.45, bow: 0.65, lance: 1.15 };
 const rangeOf = () => S.p.range * (WRANGE[S.weapon] || 1) * wstat('range') * (1 + 0.05 * tk('eye'));
 const periodOf = () => {
   const p = S.p, bl = lv('orc_passive');
@@ -1121,7 +1121,7 @@ function fireBasic(target) {
   p.shotN += 1;
   let mult = wstat('dmg');
   if (p.crit) { mult *= 2; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
-  if (W === 'gatling') mult *= 0.3;
+  if (W === 'gatling') mult *= 0.42;
   const big = p.crit, col = slotColor('basic');
   p.crit = false;
   const aim = t => { const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1; p.face = Math.atan2(dy, dx); return [dx / d, dy / d]; };
@@ -1137,11 +1137,13 @@ function fireBasic(target) {
     line.forEach((e, i) => shot(e, p.dmg * m * (i > 0 && wup(1) ? 1.5 : 1), ux, uy, dr >= 1, col));
     if (dr >= 1) S.shake = Math.max(S.shake, 3);
   } else if (W === 'pistols') {          // Pistolas: dos balas por pulsación
-    bullet(target, mult * 0.55);
-    S.timers.push({ t: 0.08, fn: () => { const t2 = active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.55); } } });
+    const pool = S.enemies.filter(e => e !== target && active(e) && dist(p, e) - e.r <= rng && !blocked(p, e)).sort((a, b) => dist(p, a) - dist(p, b));
+    const second = pool[0] || target, face = p.face;
+    bullet(target, mult * 0.5);
+    S.timers.push({ t: 0.05, fn: () => { const t2 = active(second) ? second : active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.05, 'square', 0.03, -700); bullet(t2, mult * 0.5); if (active(target)) p.face = Math.atan2(target.y - p.y, target.x - p.x); } } });
   } else if (W === 'shotgun') {          // Escopeta: abanico de perdigones
     const [ux0, uy0] = aim(target), base = Math.atan2(uy0, ux0);
-    for (const off of [-0.34, -0.17, 0, 0.17, 0.34]) {
+    for (const off of [-0.36, -0.22, -0.07, 0.07, 0.22, 0.36]) {
       const a = base + off, ux = Math.cos(a), uy = Math.sin(a); let bestE = null, ba = rayClip(p.x, p.y, ux, uy, rng + 20);
       for (const e of S.enemies) {
         if (!active(e)) continue;
@@ -1149,12 +1151,15 @@ function fireBasic(target) {
         if (al >= 0 && al - e.r < ba && Math.abs(ex * uy - ey * ux) <= e.r + 3) { ba = Math.max(0, al - e.r); bestE = e; }
       }
       S.fx.push({ k: 'tracer', x1: p.x + ux * 12, y1: p.y + uy * 12, x2: p.x + ux * ba, y2: p.y + uy * ba, t: 0, life: 0.1, col });
-      if (bestE) shot(bestE, p.dmg * mult * 0.6, ux, uy, false, col);
+      if (bestE) { shot(bestE, p.dmg * mult * 0.75, ux, uy, false, col); if (active(bestE) && !bestE.boss) { bestE.kx += ux * 130; bestE.ky += uy * 130; } }
     }
-    S.shake = Math.max(S.shake, 3);
+    S.shake = Math.max(S.shake, 4);
+    p.shells -= 1;                         // dos cartuchos y a recargar
+    if (p.shells <= 0) { p.shells = 2; p.cd = periodOf() * 1.25; p.reload = p.cd; } else p.cd = periodOf() * 0.22;
   } else if (W === 'lance') {            // Lanza: estocada que te lanza a través del objetivo
     const [ux, uy] = aim(target), d = dist(p, target);
     shot(target, p.dmg * mult * 1.8, ux, uy, true, col);
+    if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     lunge(Math.atan2(uy, ux), d + target.r + 22);
   } else if (W === 'gatling') {          // Ametralladora: riega a los que estén en un cono hacia el objetivo
     const [ux, uy] = aim(target), base = Math.atan2(uy, ux);
@@ -1163,7 +1168,11 @@ function fireBasic(target) {
     const dx = t2.x - p.x, dy = t2.y - p.y, d = Math.hypot(dx, dy) || 1;
     S.fx.push({ k: 'tracer', x1: p.x + ux * 14, y1: p.y + uy * 14, x2: t2.x + rnd(-3, 3), y2: t2.y + rnd(-3, 3), t: 0, life: 0.06, col });
     shot(t2, p.dmg * mult, dx / d, dy / d, false, col);
-  } else bullet(target, mult);           // Rifle
+  } else {                               // Rifle: más daño a los que están lejos
+    const far = dist(p, target) - target.r > rng * 0.5;
+    if (far) { S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 9, t: 0, life: 0.15, col: C.ink }); }
+    const [ux, uy] = aim(target); tracer(target.x, target.y, far ? 1.8 : 1); shot(target, p.dmg * mult * (far ? 1.4 : 1), ux, uy, far || big, col);
+  }
 }
 // Estocada: un esquive corto que atraviesa
 function lunge(a, d) {
@@ -1182,6 +1191,7 @@ function startDodge(a, free) {
   p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
+  if (S.weapon === 'pistols' && !free) for (const t of [0.04, 0.11]) S.timers.push({ t, fn: () => { const tg = nearestInRange(); if (tg) fireBasic(tg); } });   // las pistolas disparan solas al esquivar
   if (lv('stone_dodge')) addCrystal(p.x, p.y);                              // Geoda
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
@@ -1250,6 +1260,10 @@ function castCharged(snap, mult, echo) {
       if (bestE) { if (echo) hit(bestE, dmg * 0.22, rx, ry, false, col); else shot(bestE, dmg * 0.22, rx, ry, false, col); seen.add(bestE); }
     }
     for (const e of seen) if (active(e)) chargePayoff(e);
+    if (W === 'shotgun') {                // los dos cañones: empuja y aturde a todos, y el retroceso te lanza hacia atrás
+      for (const e of seen) if (active(e) && !e.boss) { const d = dist(o, e) || 1; e.kx += (e.x - o.x) / d * 320; e.ky += (e.y - o.y) / d * 320; stun(e, 0.5); }
+      if (!echo) { lunge(snap.dir + Math.PI, 105); p.shells = 2; S.shake = Math.max(S.shake, 8); }
+    }
   } else if (W === 'bow') {              // aluvión de flechas sobre una zona
     const tx = snap.tx, ty = snap.ty, R = 62, waves = wup(2) ? 4 : 3;
     for (let w = 0; w < waves; w++) S.timers.push({ t: 0.15 + w * 0.22, fn: () => {
@@ -1521,7 +1535,7 @@ function update(dt) {
     const period = periodOf();
     p.crit = S.plans.has('tempo') && p.buffer > 0 && !p.spoil && S.t - p.readyT <= 0.13;   // Compás: pulsación justa
     p.spoil = false;
-    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.7 : W === 'rifle' && wup(1) ? 0.75 : 1) * (1 - 0.08 * tk('brake'));
+    p.windupTotal = p.windup = period * P.windupFrac * (W === 'pistols' ? 0.5 : W === 'shotgun' ? 0.6 : W === 'lance' ? 0.6 : W === 'rifle' && wup(1) ? 0.75 : 1) * (1 - 0.08 * tk('brake'));
     p.windupTarget = target; p.cd = period; p.buffer = 0;
   }
   if (p.windup > 0) {
@@ -1536,9 +1550,9 @@ function update(dt) {
   let mult = 1;
   if (p.charging) mult = T.charge.slow;
   else if (p.drawing) mult = free ? 1 : 0.4;
-  else if (p.windup > 0) mult = free ? 1 : P.windupSlow;
+  else if (p.windup > 0) mult = free || W === 'pistols' ? 1 : W === 'shotgun' ? 0.5 : P.windupSlow;
   else if (I.atk && W === 'gatling') mult = free ? 1 : p.over > 0 ? 0.8 : 0.3 + 0.35 * (1 - p.spin);
-  else if (I.atk && target) mult = free ? 1 : P.holdSlow;
+  else if (I.atk && target) mult = free || W === 'pistols' ? 1 : W === 'shotgun' ? 0.8 : P.holdSlow;
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
     p.x += p.dvx * p.speed * T.dodge.mult * dt; p.y += p.dvy * p.speed * T.dodge.mult * dt;
@@ -1980,6 +1994,7 @@ function render() {
   else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
   else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * clamp(1 - p.cd / period, 0, 1)); ctx.stroke(); ctx.globalAlpha = 1; }
   else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
+  if (S.weapon === 'shotgun') for (let i = 0; i < 2; i++) { ctx.fillStyle = i < p.shells && !(p.cd > 0.3 && p.shells === 2) ? C.ember : C.edge; ctx.fillRect(p.x - 5 + i * 6, p.y - p.r - 12, 4, 5); }
   const dm = dodgeMax();
   if (dm > 1) for (let i = 0; i < dm; i++) { ctx.fillStyle = i < p.dodgeN ? C.ink : C.edge; ctx.fillRect(p.x - dm * 2.5 + i * 5, p.y + p.r + 10, 3, 3); }
   if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 11, a0, a0 + Math.PI * 2 * Math.min(1, p.reserve / resMax())); ctx.stroke(); }
