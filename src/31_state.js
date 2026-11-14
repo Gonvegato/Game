@@ -70,6 +70,7 @@ function nextWave() {
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
+  checkRes();   // lo que tu arma y tus técnicas despiertan juntas se anuncia al entrar
   saveRun();
 }
 

@@ -84,7 +84,7 @@ function update(dt) {
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
   if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
-    p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2;
+    p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
@@ -121,7 +121,7 @@ function update(dt) {
   if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
   for (const mn of S.mines) {     // minas de la Recámara de minas
     mn.life -= dt;
-    if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
+    if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; if (res('thornmine')) S.zones.push({ x: mn.x, y: mn.y, r: 40, life: 4, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.25, bram: true, col: GODS.wood.color }); explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
   }
   S.mines = S.mines.filter(mn => mn.life > 0);
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
@@ -166,7 +166,7 @@ function update(dt) {
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) fireBasic(tg); } }); }   // Mecha lenta: sale sola medio segundo después
+    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Mecha lenta: sale sola medio segundo después
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -273,7 +273,7 @@ function update(dt) {
   S.crystals = S.crystals.filter(c => c.life > 0);
 
   // Enemigos
-  const boil = duoOn('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = mastery('dragon') ? 1.5 : 1;
+  const boil = duoOn('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = (mastery('dragon') ? 1.5 : 1) * (1 + 0.12 * aff('dragon')), venMul = 1 + 0.1 * aff('venom'), bleedMul = 1 + 0.12 * aff('blood');
   const lunch = duoOn('longlunch') ? 1 - Math.min(0.6, 0.02 * p.reserve) : 1;
   for (const e of S.enemies) {
     if (e.hp <= 0) continue;
@@ -287,7 +287,7 @@ function update(dt) {
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
-      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
+      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * bleedMul * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
       if (e.bleedT <= 0) e.bleed = 0;
       if (e.hp <= 0) continue;
     }
@@ -303,7 +303,7 @@ function update(dt) {
       if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
       if (has('w_deep')) addGold(1);                                         // Mar de fondo
       if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
-      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
       if (e.hp <= 0) continue;
     }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
@@ -329,7 +329,7 @@ function update(dt) {
     }
     if (e.venom > 0) {
       e.venAcc += dt;
-      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
+      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035 * venMul, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
       if (e.hp <= 0) continue;
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos

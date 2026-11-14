@@ -608,9 +608,47 @@ const RESO = [
   { id: 'firerain',     name: 'Lluvia de brasas',    parts: ['b_bomb'],    techs: ['dragon_charge'], desc: 'Cada bomba deja un charco de fuego donde revienta.' },
   { id: 'pinball',      name: 'Carambola',           parts: ['b_pierce'],  techs: ['storm_basic'],  desc: 'El rebote de la culebrina descarga las Agujas de todo lo que toca.' },
   { id: 'cavalry',      name: 'Carga de caballería', parts: ['c_dash'],    techs: ['dragon_dodge'], desc: 'La carga deja un rastro de fuego y explota al terminar.' },
+  { id: 'coldiron',     name: 'Hierro frío',         parts: ['m_ice'],     techs: ['frost_basic'],  desc: 'La Bala de escarcha pone además 1 de Escarcha.' },
+  { id: 'packhunt',     name: 'Montería',            parts: ['b_swarm'],   techs: ['beast_basic'],  desc: 'El sabueso salta y muerde al primer enemigo que alcanza cada andanada del Avispero.' },
+  { id: 'deathclock',   name: 'Hora señalada',       parts: ['a_spring'],  techs: ['end_basic'],    desc: 'Un disparo de resorte cargado al máximo cumple la Sentencia al instante.' },
+  { id: 'mirrorhall',   name: 'Galería de espejos',  parts: ['m_split'],   techs: ['mirror_basic'], desc: 'Los trozos de la Bala partida hacen el doble.' },
+  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'La Sangría ya no te cuesta vida.' },
+  { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'El meteoro cae sobre la Singularidad y arrastra a todos hacia el impacto antes de caer.' },
+  { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Un disparo lejano de la Largavista Ilumina también a los enemigos de alrededor del blanco.' },
+  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'La bala de la Mecha lenta siempre Duerme al enemigo.' },
+  { id: 'anvilsong',    name: 'Canto del yunque',    parts: ['a_kick'],    techs: ['forge_basic'],  desc: 'Cada cañonazo de la Llave de trueno te da 2 de Temple.' },
+  { id: 'tidalhook',    name: 'Resaca',              parts: ['b_harpoon'], techs: ['tide_basic'],   desc: 'El enemigo que arrastra el Arpón llega Empapado y aturdido.' },
+  { id: 'thornmine',    name: 'Semillero',           parts: ['c_mine'],    techs: ['wood_charge'],  desc: 'Cada mina deja un zarzal al estallar.' },
   { id: 'crossfire',    name: 'Fuego cruzado',       parts: ['a_semi'],    techs: ['stone_passive'], desc: 'Los Cristales repiten tus balas al doble de daño.' },
 ];
 const RES = Object.fromEntries(RESO.map(x => [x.id, x]));
+// Afinidad: cada pieza se forja con el material de una deidad. Si llevas alguna técnica de esa deidad, la pieza la potencia.
+// El efecto se suma por cada pieza afín que lleves montada.
+const AFFIN = {
+  dragon: 'las Ascuas queman un 12% más', stone: 'los Cristales duran un 20% más', venom: 'el Veneno hace un 10% más de daño', feast: 'te curas un 10% más',
+  orc: 'ganas un 15% más de Furia', time: 'tus ecos hacen un 8% más de daño', shade: '+2% de daño por cada Sombra viva', storm: 'las descargas hacen un 10% más',
+  tide: 'los golpes contra el muro hacen un 20% más', luck: '+3% de crítico', wood: 'las Raíces duran un 15% más', frost: 'los Congelados lo están 0,3 s más',
+  blood: 'las Heridas sangran un 12% más', end: 'las Sentencias devuelven 6 puntos más', light: 'los Iluminados se reparten 4 puntos más de daño', dream: 'los enemigos duermen 0,4 s más',
+  void: 'tus pozos son un 10% más grandes', mirror: 'el Reflejo hace un 10% más de daño', beast: 'el sabueso muerde un 12% más fuerte', forge: 'el Temple máximo sube en 1',
+};
+const affGod = id => { const c = PART[id] && PART[id].cost; return c ? Object.keys(c).find(k => k !== 'iron') : null; };
+// Ensambles: dos piezas concretas que se potencian entre sí (un arma legendaria pide tres; esto es el escalón de antes)
+const ENSEMBLES = [
+  { id: 'ram',      name: 'Ariete',            parts: ['b_scatter', 'm_heavy'],  desc: 'Los golpes contra el muro hacen un 60% más de daño.' },
+  { id: 'splinter', name: 'Astillas',          parts: ['b_pierce', 'm_split'],   desc: 'Los trozos de la Bala partida hacen el doble.' },
+  { id: 'trail',    name: 'Reguero',           parts: ['a_rotary', 'm_fire'],    desc: 'Las llamas de la Bala incendiaria duran el triple.' },
+  { id: 'cluster',  name: 'Racimo',            parts: ['b_bomb', 'm_frag'],      desc: 'La metralla suelta ocho esquirlas en vez de cinco y llegan más lejos.' },
+  { id: 'siege',    name: 'Tiro de asedio',    parts: ['a_draw', 's_brace'],     desc: 'Un disparo tensado a tope estando quieto hace un 60% más.' },
+  { id: 'hare',     name: 'Liebre',            parts: ['s_spring', 'a_semi'],    desc: 'El salto de la Culata de muelle llega el doble de lejos.' },
+  { id: 'mill',     name: 'Molino',            parts: ['b_flail', 's_spikes'],   desc: 'Durante dos segundos tras esquivar, la bola del Mangual gira el triple de rápido.' },
+  { id: 'rivet',    name: 'Remaches',          parts: ['b_nail', 'm_big'],       desc: 'Cuando los clavos revientan, los enemigos de alrededor reciben el mismo golpe.' },
+  { id: 'watch',    name: 'Guardia',           parts: ['c_turret', 'a_auto'],    desc: 'La centinela dura el doble.' },
+  { id: 'bastion',  name: 'Bastión',           parts: ['s_shield', 'c_balm'],    desc: 'Usar el bálsamo recarga la rodela al instante.' },
+  { id: 'marksman', name: 'Tirador',           parts: ['b_long', 's_scope'],     desc: 'El primer tiro a cada enemigo hace el triple en vez de +80%.' },
+  { id: 'gambler',  name: 'Tahúr',             parts: ['m_gold', 'a_kick'], desc: 'El cañonazo de la Llave de trueno te devuelve 3 de oro.' },
+];
+const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] === id));
+
 // Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
 // Está pensado para unas 30 horas de juego hasta completarlo: los primeros rangos son baratos y los últimos, caros.
 const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));
@@ -965,6 +1003,7 @@ function nextWave() {
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
+  checkRes();   // lo que tu arma y tus técnicas despiertan juntas se anuncia al entrar
   saveRun();
 }
 
@@ -1016,7 +1055,7 @@ const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tu arma como está. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tu arma como está.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tu ' + gunName(S.gun).toLowerCase(), opts };
@@ -1197,7 +1236,7 @@ function forgeHtml() {
   for (const k of GSLOT_KEYS) {
     const known = PARTS.filter(x => x.slot === k && M.parts[x.id]), hidden = PARTS.filter(x => x.slot === k && !M.parts[x.id]).length;
     arms += `<h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3>` + known.map(x => { const on = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${affHint(x.id)}${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       (hidden ? `<p class="fine">${hidden === 1 ? 'Queda 1 pieza' : 'Quedan ' + hidden + ' piezas'} por descubrir.</p>` : '');
   }
   const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
@@ -1212,7 +1251,7 @@ function forgeHtml() {
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
     <p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>
-    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${ensHtml(M.gun)}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -1275,6 +1314,8 @@ function buildHtml(full) {
   }
   for (const g of GOD_KEYS) if (mastery(g)) row('Maestría', GODS[g].color, MASTERY[g].name, full ? MASTERY[g].desc : '');
   for (const R of RESO) if (res(R.id)) row('Resonancia', RAR[3].color, R.name, full ? R.desc : '');
+  for (const E of ensOf(S.gun)) row('Ensamble', C.energy, E.name, full ? E.desc : '');
+  for (const g of GOD_KEYS) { const a = aff(g); if (a) row('Afinidad', GODS[g].color, GODS[g].theme + ' ×' + a, full ? AFFIN[g] + (a > 1 ? ', por cada una de tus ' + a + ' piezas afines' : '') + '.' : ''); }
   if (full) for (const k of GSLOT_KEYS) { const x = PART[S.gun[k]]; row(GSLOTS[k], C.energy, x.name, x.desc); }
   const techs = TECHS.filter(t => S.techs.has(t.id)), plans = PLANS.filter(x => S.plans.has(x.id));
   if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
@@ -1312,8 +1353,18 @@ function legendsHtml(g) {
 }
 // En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
 function legHint(id) {
-  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p]));
-  return L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '';
+  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p])), E = ENSEMBLES.filter(E => E.parts.includes(id) && E.parts.every(p => M.parts[p]));
+  return (L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '') + (E.length ? `<span class="leg">Ensambla con: ${E.map(x => PART[x.parts.find(p => p !== id)].name + ' (' + x.name + ')').join(', ')}</span>` : '');
+}
+
+// Afinidad de una pieza: con qué deidad casa y qué gana si llevas una técnica suya
+function affHint(id) { const g = affGod(id); return g ? `<span class="aff" style="color:${GODS[g].color}">Afín a ${GODS[g].theme}: con una técnica suya, ${AFFIN[g]}.</span>` : ''; }
+// Ensambles en la forja: parejas de piezas que se potencian
+function ensHtml(g) {
+  const on = ensOf(g);
+  return `<h3>Ensambles · dos piezas que se potencian</h3><ul class="build full legends">` + ENSEMBLES.map(E => {
+    const known = E.parts.every(id => M.parts[id]);
+    return `<li class="${on.includes(E) ? 'own' : ''}"><em>${on.includes(E) ? 'Activo' : 'Ensamble'}</em><b>${known ? E.name : '???'}</b><span>${E.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + E.desc : ''}</span></li>`; }).join('') + '</ul>';
 }
 // ───────────────────────── Reinos, zonas y misiones ─────────────────────────
 // Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
@@ -1671,8 +1722,13 @@ const gunRange = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 0.7, b_twi
 const gunRate = () => (1 + 0.05 * lv('forge_passive')) * ({ b_short: 1.25, b_bomb: 0.65, b_flame: 1.4, b_flail: 0.8, b_nail: 1.2, b_boom: 0.8 }[S.gun.barrel] || 1) * (G('s_bone') ? 1 + 0.5 * clamp((1 - S.p.hp / S.p.maxHp - 0.25) / 0.5, 0, 1) : 1) * ({ a_semi: 1.2 * (1 + 0.4 * (S.p.runUp || 0)), a_burst: 0.85, a_draw: 0.65, a_combo: 1 + 0.08 * Math.min(8, S.p.comboN || 0) }[S.gun.action] || 1) * ({ m_belt: 1.3, m_heavy: 0.8 }[S.gun.mag] || 1);
 const gunDmg = () => (1 + 0.05 * lv('forge_passive')) * ({ a_semi: 0.75, a_rotary: 0.3, a_fuse: 1.45, a_auto: 0.8 }[S.gun.action] || 1) * ({ m_drum: 1.35, m_heavy: 1.3, m_blood: 1.4, m_big: 1.2 }[S.gun.mag] || 1) * (G('b_harpoon') ? 1.15 : 1) * ({ s_light: 0.9, s_heavy: 1.25 }[S.gun.stock] || 1) * (G('b_pierce') ? 0.9 : 1) * (braced() ? 1.4 : 1);
 // Avisar cuando despierta una resonancia nueva en esta partida
+// Cuántas piezas montadas son afines a una deidad de la que llevas alguna técnica
+const aff = god => (godCount(god) >= 1 ? GSLOT_KEYS.reduce((n, k) => n + (affGod(S.gun[k]) === god ? 1 : 0), 0) : 0);
+const ens = id => ENSEMBLES.some(E => E.id === id && E.parts.every(p => S.gun[PART[p].slot] === p));
 const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
+  for (const E of ensOf(S.gun)) if (!S.resSeen.has('ens_' + E.id)) { S.resSeen.add('ens_' + E.id); sayRaw('[Ensamble: ' + E.name + '. ' + E.desc + ']', C.energy); blip(760, 0.3, 'triangle', 0.05, 500); }
+  for (const g of GOD_KEYS) { const a = aff(g); if (a > 0 && (S.affSeen || (S.affSeen = {}))[g] !== a) { S.affSeen[g] = a; sayRaw('[Afinidad con ' + GODS[g].theme + ' ×' + a + ': ' + AFFIN[g] + (a > 1 ? ', por cada pieza' : '') + ']', GODS[g].color); } }
   { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Arma legendaria: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
  for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
 const dodgeMax = () => (G('s_roll') ? 1 : 0) + 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
@@ -1706,12 +1762,12 @@ function others(e, r, max) {
 const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: big ? 1.2 : 0.7, txt, col, big });
 
 // ───────────────────────── Recursos del jugador ─────────────────────────
-function gainFury(n) { const p = S.p; if (!godCount('orc')) return; p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+function gainFury(n) { const p = S.p; if (!godCount('orc')) return; n *= 1 + 0.15 * aff('orc'); p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
 function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
 function heal(n) {
   const p = S.p;
   if (n <= 0) return;
-  n *= mastery('feast') ? 1.5 : 1;
+  n *= (mastery('feast') ? 1.5 : 1) * (1 + 0.1 * aff('feast'));
   p.hp += n;
   if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
   if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
@@ -1773,7 +1829,8 @@ function hit(e, dmg, ux, uy, big, col) {
   if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                                                  // Tambor de guerra
   if (tl) dmg *= 1 + Math.min((30 + 10 * tl) / 100, 0.01 * tl * Math.floor(p.gold / 10));     // Tesoro
   if (gl) dmg *= 1 + 0.01 * gl * (p.reserve + (duoOn('hoardfeast') ? p.gold / 10 : 0));          // Glotón
-  if (sl) dmg *= 1 + 0.08 * sl * S.shades.length;                                              // Séquito
+  if (sl) dmg *= 1 + 0.08 * sl * S.shades.length;
+  { const as = aff('shade'); if (as) dmg *= 1 + 0.02 * as * S.shades.length; }                                              // Séquito
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;                                                    // Reloj de arena
   { const wp = lv('tide_passive'), bp = lv('wood_passive'), lp = lv('luck_passive');
     if (wp && e.wet > 0) dmg *= 1 + 0.15 * wp;                                                 // Marea alta
@@ -1799,7 +1856,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
   e.hp -= dmg; e.flash = 0.1; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   if (e.doom && !S._doom) e.doom.acc += dmg;                                                   // Sentencia: va sumando
-  if (e.lit > 0 && !S._share) { const lb = lv('light_basic'); if (lb) { S._share = true; for (const o of S.enemies.slice()) if (o !== e && active(o) && o.lit > 0) { S.stat.share++; hit(o, dmg * (0.2 + 0.1 * lb), 0, 0, false, GODS.light.color); } S._share = false; } }   // Señalar: reparto entre Iluminados
+  if (e.lit > 0 && !S._share) { const lb = lv('light_basic'); if (lb) { S._share = true; for (const o of S.enemies.slice()) if (o !== e && active(o) && o.lit > 0) { S.stat.share++; hit(o, dmg * shareK(), 0, 0, false, GODS.light.color); } S._share = false; } }   // Señalar: reparto entre Iluminados
   if (has('u_glint') && !e.glinted) { e.glinted = true; light(e); }                            // Primer rayo
   const kb = (big ? 150 : 60) * (e.boss ? 0.06 : 1); e.kx += ux * kb; e.ky += uy * kb;
   S.fx.push({ k: 'num', x: e.x + rnd(-4, 4), y: e.y - e.r - 2, t: 0, life: 0.55, txt: String(Math.round(dmg)), big });
@@ -1857,34 +1914,35 @@ function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom
 // Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
 const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
-const temperMax = () => (mastery('forge') ? 15 : 10);
+const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge');
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
 function bite(pet, e, k) {
   if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1; S.stat.bite++;
   S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 4, t: 0, life: 0.1, col: GODS.beast.color });
-  onHit(e, p.dmg * k, (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
+  onHit(e, p.dmg * k * (1 + 0.12 * aff('beast')), (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
   if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
   if (!active(e) && has('a_feral')) heal(2);
 }
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
+const shareK = () => 0.2 + 0.1 * lv('light_basic') + 0.04 * aff('light');
 function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
 const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
 function sleep(e, t) {
   if (!active(e) || (e.sleepCd || 0) > S.t) return;
-  t *= duoOn('siesta') ? 2 : 1;
+  t = (t + 0.4 * aff('dream')) * (duoOn('siesta') ? 2 : 1);
   if (e.boss) { slow(e, t * 0.5, 0.5); e.sleepCd = S.t + 6; return; }
   e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
   note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
 }
 function wake(e) { e.sleep = 0; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
 function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
-function addWell(x, y, r, life, pulse, end, o) { const k = mastery('void') ? 1.4 : 1; S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
+function addWell(x, y, r, life, pulse, end, o) { const k = (mastery('void') ? 1.4 : 1) * (1 + 0.1 * aff('void')); S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
 const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
 // Hielo: la Escarcha se acumula; a la quinta, Congelado
 function freeze(e) {
   if (!active(e)) return;
-  const dur = (1.5 + (duoOn('stillness') ? 1.5 : 0)) * (mastery('frost') ? 2 : 1);
+  const dur = (1.5 + 0.3 * aff('frost') + (duoOn('stillness') ? 1.5 : 0)) * (mastery('frost') ? 2 : 1);
   e.frost = 0; e.frozen = e.boss ? dur * 0.5 : dur; S.stat.frozen++;
   if (e.boss) slow(e, dur, 0.4); else stun(e, dur);
   note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); blip(1500, 0.12, 'sine', 0.04, -600);
@@ -1897,7 +1955,7 @@ function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.fr
 function addBleed(e, n) { if (!active(e) || n <= 0) return; e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
-const doomK = () => 0.3 + 0.1 * Math.max(1, lv('end_basic'));
+const doomK = () => 0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end');
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
 function fulfil(e, bonus) {
   const d = e.doom; if (!d || !active(e)) return;
@@ -1911,7 +1969,7 @@ function soak(e, t) { if (active(e)) e.wet = Math.max(e.wet || 0, t); }
 function push(e, ux, uy, f) { if (!active(e) || e.boss) return; e.kx += ux * f; e.ky += uy * f; }
 function root(e, t) {
   if (!active(e)) return;
-  t *= (mastery('wood') ? 2 : 1) * (duoOn('mangrove') && e.wet > 0 ? 2 : 1) * (e.boss ? 0.35 : 1);
+  t *= (1 + 0.15 * aff('wood')) * (mastery('wood') ? 2 : 1) * (duoOn('mangrove') && e.wet > 0 ? 2 : 1) * (e.boss ? 0.35 : 1);
   e.root = Math.max(e.root || 0, t); slow(e, t, 0.02);
   S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 6, t: 0, life: 0.2, col: GODS.wood.color });
 }
@@ -1924,7 +1982,7 @@ function sprout(e) {
   if (duoOn('thornrod') && active(e) && e.needles > 0) discharge(e, 0.8, null);       // dúo Espina de cobre
 }
 function addSeed(e, n) { if (!active(e)) return; e.seed = (e.seed || 0) + n; if (e.seed >= (lv('wood_basic') >= 2 ? 2 : 3)) sprout(e); }
-const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 * lb + S.p.pity : 0) + (has('l_coin') ? 0.08 : 0) + (duoOn('bones') ? 0.05 * S.shades.length : 0); };
+const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 * lb + S.p.pity : 0) + (has('l_coin') ? 0.08 : 0) + 0.03 * aff('luck') + (duoOn('bones') ? 0.05 * S.shades.length : 0); };
 const critMult = () => (mastery('luck') ? 4 : 2.5);
 function onCrit(e) {
   const p = S.p;
@@ -1941,7 +1999,7 @@ function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun
 function slow(e, t, f) { if (e.boss) f = 1 - (1 - f) * 0.4; e.slowT = Math.max(e.slowT, t); e.slowF = Math.min(e.slowF, f); }
 function addCrystal(x, y) {
   const at = unstick(clamp(x, 12, T.room.w - 12), clamp(y, 12, T.room.h - 12));
-  S.crystals.push({ x: at.x, y: at.y, life: has('m_quartz') ? 18 : 9, acc: 0 });
+  S.crystals.push({ x: at.x, y: at.y, life: (has('m_quartz') ? 18 : 9) * (1 + 0.2 * aff('stone')), acc: 0 });
   const max = mastery('stone') ? 12 : 6;
   while (S.crystals.length > max) S.crystals.shift();
 }
@@ -1967,6 +2025,7 @@ function bolt(from, to, dmg, cas) {
 function discharge(e, mult, cas) {
   const n = e.needles;
   if (!n || !active(e)) return 0;
+  mult *= 1 + 0.1 * aff('storm');
   cas = cas || { seen: new Set(), mult, venom: 0 };
   cas.seen.add(e); e.needles = 0;
   if (duoOn('syringe')) cas.venom = Math.max(cas.venom, e.venom);
@@ -2045,13 +2104,13 @@ function shot(e, dmg, ux, uy, big, col) {
   const p = S.p, ox = p.x, oy = p.y, cc = critChance();
   let crit = false;
   if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
-  if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= 1.8; big = true; S.stat.first++; }       // Culata de catalejo: primer tiro
+  if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Culata de catalejo: primer tiro
   if (G('m_ice') && active(e)) {                                                               // Bala de escarcha
     if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
-    slow(e, 1.5, 0.7); e.iceT = 1.5;
+    slow(e, 1.5, 0.7); e.iceT = 1.5; if (res('coldiron')) addFrost(e, 1);                       // resonancia Hierro frío
   }
   onHit(e, dmg, ux, uy, big, col, 'player');
-  if (G('m_fire')) S.zones.push({ x: e.x, y: e.y, r: 16, life: 2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // Bala incendiaria
+  if (G('m_fire')) S.zones.push({ x: e.x, y: e.y, r: 16, life: ens('trail') ? 6 : 2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // Bala incendiaria
   if (G('m_mark') && active(e)) { e.traceN = (e.traceN || 0) + 1; if (e.traceN >= 3) { e.traceN = 0; e.traced = 5; S.stat.traced++; note(e.x, e.y - e.r - 10, '¡Marcado!', C.energy); } }   // Bala trazadora
   if (G('m_big') && !S._big) { S._big = true; for (const o of others(e, e.r + 22, 4)) { S.stat.splash++; hit(o, dmg * 0.5, ux, uy, false, col); } S._big = false; }   // Bala de calibre
   if (G('m_split') && !S._split) {                                                             // Bala partida
@@ -2059,18 +2118,18 @@ function shot(e, dmg, ux, uy, big, col) {
     for (const sg of [-1, 1]) { const a = Math.atan2(uy, ux) + sg * 0.75, rx = Math.cos(a), ry = Math.sin(a); let bestE = null, ba = rayClip(e.x, e.y, rx, ry, 110);
       for (const o of S.enemies) { if (!active(o) || o === e) continue; const ex = o.x - e.x, ey = o.y - e.y, al = ex * rx + ey * ry; if (al >= 0 && al - o.r < ba && Math.abs(ex * ry - ey * rx) <= o.r + 6) { ba = Math.max(0, al - o.r); bestE = o; } }
       S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: e.x + rx * ba, y2: e.y + ry * ba, t: 0, life: 0.1, col });
-      if (bestE) { S.stat.split++; onHit(bestE, dmg * 0.35, rx, ry, false, col, 'player'); } }
+      if (bestE) { S.stat.split++; onHit(bestE, dmg * 0.35 * (ens('splinter') ? 2 : 1) * (res('mirrorhall') ? 2 : 1), rx, ry, false, col, 'player'); } }
     S._split = false;
   }
   if (G('m_frag') && !active(e) && !S._frag) {                                                 // Bala de metralla: estalla al matar
     S._frag = true; S.stat.frag++;
-    for (const o of others(e, 90, 5)) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: C.ink }); onHit(o, dmg * 0.3, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'frag'); }
+    for (const o of others(e, ens('cluster') ? 130 : 90, ens('cluster') ? 8 : 5)) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: C.ink }); onHit(o, dmg * 0.3, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'frag'); }
     S._frag = false;
   }
   if (crit) onCrit(e);
   const tb = lv('time_basic'), sp = lv('stone_passive');
   if (tb) {
-    const m = mastery('time') ? 1 : 0.5 + 0.15 * (tb - 1);
+    const m = (mastery('time') ? 1 : 0.5 + 0.15 * (tb - 1)) * (1 + 0.08 * aff('time'));
     const echo = (d, gen, extra) => S.timers.push({ t: echoDelay(1.5) + (extra || 0), fn: () => {
       if (!active(e)) return;
       S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: e.x, y2: e.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 });
@@ -2107,12 +2166,13 @@ function fireBasic(target) {
   if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Llave de péndulo (sustituye el 1,5 del Compás por la racha)
   if (g.mag === 'm_blood') payLife(1);
   if (g.mag === 'm_gold') { if (p.gold >= 1) { p.gold -= 1; mult *= 1.35; } else mult *= 0.8; }           // Bala de oro
+  if (g.action === 'a_spring' && res('deathclock') && (p.idle || 0) >= 4 && target && target.doom) fulfil(target);   // resonancia Hora señalada
   if (g.action === 'a_spring') { const k = 1 + Math.min(2, 0.5 * (p.idle || 0)); if (k > 1.4) { S.stat.spring++; note(p.x, p.y - 14, 'x' + k.toFixed(1), C.ember); } mult *= k; }   // Llave de resorte
   let heavyAlt = false;
   if (g.action === 'a_alt') { heavyAlt = p.alt; mult *= p.alt ? 1.8 : 0.6; p.alt = !p.alt; }               // Llave alterna
   if (g.action === 'a_combo') { if (target && target === p.comboT) p.comboN = Math.min(8, (p.comboN || 0) + 1); else p.comboN = 0; p.comboT = target; }   // Llave de insistencia
   let kick = false;
-  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
+  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
   if (p.venge > 0) { p.venge -= 1; mult *= 2; }                                                             // Culata de rencor
   p.idle = 0;                       // Bala de sangre
   let lastB = false;
@@ -2124,7 +2184,7 @@ function fireBasic(target) {
   if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
   if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
-  if (draw) mult *= 0.6 + 1.6 * p.drawPow;
+  if (draw) mult *= (0.6 + 1.6 * p.drawPow) * (ens('siege') && p.drawPow >= 1 && braced() ? 1.6 : 1);
   if (res('furnace')) mult *= 1 + 0.4 * p.heat;                              // resonancia Fragua viva
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
@@ -2153,7 +2213,7 @@ function fireBasic(target) {
     if (mb && target && active(target)) for (const m of S.mirrors) {          // Reflejo: dispara contigo desde el otro lado
       const d = Math.hypot(target.x - m.x, target.y - m.y) || 1; S.stat.mirror++;
       S.fx.push({ k: 'tracer', x1: m.x, y1: m.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.mirror.color });
-      onHit(target, p.dmg * mult * 0.3 * mb * (duoOn('prismatic') && target.lit > 0 ? 2 : 1), (target.x - m.x) / d, (target.y - m.y) / d, false, GODS.mirror.color, 'mirror');
+      onHit(target, p.dmg * mult * 0.3 * mb * (1 + 0.1 * aff('mirror')) * (duoOn('prismatic') && target.lit > 0 ? 2 : 1), (target.x - m.x) / d, (target.y - m.y) / d, false, GODS.mirror.color, 'mirror');
       if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
     }
     if (fb3 && p.shotN % Math.max(3, 9 - fb3 * 2) === 0) addTemper(1);         // Temple
@@ -2162,7 +2222,7 @@ function fireBasic(target) {
   if (lastB) p.cd = Math.max(p.cd, 1.2);
   if (kick && target && active(target)) push(target, Math.cos(p.face), Math.sin(p.face), 300);
   if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Culata de muelle: saltito tras disparar
-    const m = Math.hypot(I.mx, I.my); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
+    const hopL = ens('hare') ? 48 : 24, m = Math.hypot(I.mx, I.my) / (hopL / 24); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
     p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r);
     S.fx.push({ k: 'ghost', x: p.x - I.mx / m * 24, y: p.y - I.my / m * 24, t: 0, life: 0.18 });
   }
@@ -2230,17 +2290,19 @@ function barrelFire(target, m, big, col, reach) {
     S.timers.push({ t: 0.28, fn: () => { S.fx.push({ k: 'tracer', x1: ex, y1: ey, x2: S.p.x, y2: S.p.y, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass(); } });
   } else if (B === 'b_nail') {           // clavos: al cuarto en el mismo enemigo, revientan
     tracer(target.x, target.y); shot(target, p.dmg * m * 0.75, ux, uy, big, col);
-    if (active(target)) { target.nails = (target.nails || 0) + 1; if (target.nails >= 4) { target.nails = 0; S.stat.nail++; note(target.x, target.y - target.r - 10, '¡Revienta!', C.ember); S.fx.push({ k: 'ring', x: target.x, y: target.y, r: target.r + 10, t: 0, life: 0.18, col: C.ember }); hit(target, p.dmg * m * 3, ux, uy, true, col); } }
+    if (active(target)) { target.nails = (target.nails || 0) + 1; if (target.nails >= 4) { target.nails = 0; S.stat.nail++; if (ens('rivet')) for (const o of others(target, 60, 6)) hit(o, p.dmg * m * 3, ux, uy, true, col); note(target.x, target.y - target.r - 10, '¡Revienta!', C.ember); S.fx.push({ k: 'ring', x: target.x, y: target.y, r: target.r + 10, t: 0, life: 0.18, col: C.ember }); hit(target, p.dmg * m * 3, ux, uy, true, col); } }
   } else if (B === 'b_arc') {            // salta entre cuatro
     let from = p, cur = target, k = 1; const seen = new Set();
     for (let i = 0; i < 4 && cur; i++) { const d = dist(from, cur) || 1; seen.add(cur); if (i) S.stat.arc++;
       S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: cur.x, y2: cur.y, t: 0, life: 0.12, col, w: 1.5 }); shot(cur, p.dmg * m * k, (cur.x - from.x) / d, (cur.y - from.y) / d, big && !i, col);
       from = cur; k *= 0.8; cur = S.enemies.filter(e => active(e) && !seen.has(e) && dist(from, e) < 100).sort((a, b) => dist(from, a) - dist(from, b))[0]; }
   } else if (B === 'b_far') {            // de lejos el doble, de cerca la mitad
-    const d = dist(p, target) - target.r, k = d > reach * 0.66 ? 2 : d < reach * 0.3 ? 0.5 : 1; if (k > 1) { S.stat.far++; S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 10, t: 0, life: 0.15, col: C.ink }); }
+    const d = dist(p, target) - target.r, k = d > reach * 0.66 ? 2 : d < reach * 0.3 ? 0.5 : 1; if (k > 1 && res('sunbeam')) for (const o of others(target, 70, 6)) light(o);   // resonancia Rayo de sol
+    if (k > 1) { S.stat.far++; S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 10, t: 0, life: 0.15, col: C.ink }); }
     tracer(target.x, target.y, k > 1 ? 2 : 0); shot(target, p.dmg * m * k, ux, uy, big || k > 1, col);
   } else if (B === 'b_swarm') {          // tres dardos a tres enemigos al azar
     const pool = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort(() => Math.random() - 0.5).slice(0, 3); while (pool.length < 3) pool.push(target);
+    if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6); }   // resonancia Montería
     pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: S.p.x, y1: S.p.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
   } else if (B === 'b_fork') {           // tres bocas: centro al objetivo, dos a los lados a lo primero que pillen
     for (const off of [0, -0.34, 0.34]) {
@@ -2251,6 +2313,7 @@ function barrelFire(target, m, big, col, reach) {
     }
   } else if (B === 'b_harpoon') {        // arpón: engancha y arrastra hacia ti
     tracer(target.x, target.y, 1.6); shot(target, p.dmg * m, ux, uy, big, col);
+    if (res('tidalhook') && active(target)) { soak(target, 5); stun(target, 0.6); }   // resonancia Resaca
     if (active(target) && !target.boss) { const d = dist(p, target); if (d > 46) { target.kx = -ux * Math.min(420, d * 3.2); target.ky = -uy * Math.min(420, d * 3.2); target.slamCd = 0.5; S.stat.hook++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.3, col: PAL.b, w: 1 }); } }
   } else if (B === 'b_flame') {          // chorro en cono: todos los de delante
     S.fx.push({ k: 'cone', x: p.x, y: p.y, a: ang, r: reach + 8, half: 0.5, t: 0, life: 0.16, col: GODS.dragon.color });
@@ -2308,7 +2371,7 @@ function startDodge(a, free) {
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.fly = lv('dragon_dodge') > 0;                                           // Vuelo: salto largo por encima de las columnas
   p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (G('s_light') ? 1.3 : 1) * (G('s_roll') ? 0.65 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
-  p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
+  p.lastDodgeT = S.t; p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
   if (G('a_rider') && !free) { const tg = nearestInRange(); if (tg) { S.stat.rider++; barrelFire(tg, gunDmg() * 1.3, true, slotColor('basic'), rangeOf()); } }   // Llave de jinete
@@ -2444,7 +2507,8 @@ function castCharged(snap, mult, echo) {
       if (i % 9 === 0) chargePayoff(e);
     } });
   } else if (CH === 'c_meteor') {        // meteoro: cae un segundo después
-    const tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'ring', x: tx, y: ty, r: 70, t: 0, life: 1, col }); S.fx.push({ k: 'lob', x1: tx + 60, y1: ty - 160, x2: tx, y2: ty, t: 0, life: 1, col: '#3a3440' });
+    const tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'ring', x: tx, y: ty, r: 70, t: 0, life: 1, col });
+    if (res('eventide')) addWell(tx, ty, 100, 1, 0, 0);                    // resonancia Horizonte de sucesos S.fx.push({ k: 'lob', x1: tx + 60, y1: ty - 160, x2: tx, y2: ty, t: 0, life: 1, col: '#3a3440' });
     S.timers.push({ t: 1, fn: () => { S.shake = Math.max(S.shake, 10); S.stat.meteor++; explode(tx, ty, 70, dmg * 1.6, { col, payoff: true, stun: 0.5 }); } });
   } else if (CH === 'c_chain') {         // rayo que salta entre seis
     let from = o, cur = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < 260).sort((a, b) => Math.abs(angDiff(Math.atan2(a.y - o.y, a.x - o.x), snap.dir)) - Math.abs(angDiff(Math.atan2(b.y - o.y, b.x - o.x), snap.dir)))[0]; const seen = new Set();
@@ -2452,7 +2516,7 @@ function castCharged(snap, mult, echo) {
       S.fx.push({ k: 'beam', x1: from.x, y1: from.y, x2: cur.x, y2: cur.y, t: 0, life: 0.2, w: 3, col }); strike(cur, dmg * 0.8, (cur.x - from.x) / d, (cur.y - from.y) / d);
       from = cur; cur = S.enemies.filter(e => active(e) && !seen.has(e) && dist(from, e) < 130).sort((a, b) => dist(from, a) - dist(from, b))[0]; }
   } else if (CH === 'c_balm') {          // bálsamo: cura y aparta
-    if (!echo) { heal(p.maxHp * 0.1); S.stat.balm++; note(o.x, o.y - 18, '+' + Math.round(p.maxHp * 0.1), '#8fe08a', true); }
+    if (!echo) { heal(p.maxHp * 0.1); S.stat.balm++; if (ens('bastion')) p.wardCd = 0; note(o.x, o.y - 18, '+' + Math.round(p.maxHp * 0.1), '#8fe08a', true); }
     S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 60, t: 0, life: 0.3, col: '#8fe08a' });
     for (const e of S.enemies) if (active(e) && dist(o, e) < 60 + e.r) { const d = dist(o, e) || 1; push(e, (e.x - o.x) / d, (e.y - o.y) / d, 240); chargePayoff(e); }
   } else if (CH === 'c_bounce') {        // carambola: cinco rebotes
@@ -2473,7 +2537,7 @@ function castCharged(snap, mult, echo) {
     S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 120, t: 0, life: 0.35, col }); S.shake = Math.max(S.shake, 7);
     for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); }
   } else if (CH === 'c_turret') {        // centinela: una copia del arma clavada en el suelo
-    S.turrets.push({ x: o.x, y: o.y, life: 6, cd: 0.2, k: 0.8, sentry: true });
+    S.turrets.push({ x: o.x, y: o.y, life: ens('watch') ? 12 : 6, cd: 0.2, k: 0.8, sentry: true });
   } else if (CH === 'c_snipe') {         // verdugo: un tiro al más fuerte a la vista
     const tg = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < 420).sort((a, b) => b.hp - a.hp)[0];
     if (tg) { const d = dist(o, tg) || 1; S.fx.push({ k: 'beam', x1: o.x, y1: o.y, x2: tg.x, y2: tg.y, t: 0, life: 0.25, w: 4, col }); S.shake = Math.max(S.shake, 8); strike(tg, dmg * 2, (tg.x - o.x) / d, (tg.y - o.y) / d); if (!active(tg) && !echo) { p.snipeRefund = true; note(o.x, o.y - 18, '¡Otra vez!', C.ember, true); } }
@@ -2554,7 +2618,7 @@ function fireCharged(am) {
   const snap = { x: p.x, y: p.y, dir: p.chargeDir, ratio, fury: p.fury, bonus: 1,
     tx: clamp(tg ? tg.x : p.x + ux * reach, 0, T.room.w), ty: clamp(tg ? tg.y : p.y + uy * reach, 0, T.room.h) };
   if (fl) { snap.bonus = 1 + 0.04 * fl * p.reserve; p.reserve = 0; S.banquet = S.t + 0.6; }   // Banquete
-  { const bc2 = lv('blood_charge'); if (bc2) { payLife(Math.floor(p.hp * 0.1)); snap.bonus *= 1 + 0.6 * bc2; S.bloodT = S.t + 0.7; } }   // Sangría
+  { const bc2 = lv('blood_charge'); if (bc2) { if (!res('bloodprice')) payLife(Math.floor(p.hp * 0.1)); snap.bonus *= 1 + 0.6 * bc2; S.bloodT = S.t + 0.7; } }   // Sangría
   const lc = lv('luck_charge');
   if (lc) {                                                                 // Todo al rojo: el mejor de lc dados
     let die = 1; for (let i = 0; i < lc; i++) die = Math.max(die, 1 + Math.floor(Math.random() * 6));
@@ -2759,7 +2823,7 @@ function update(dt) {
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
   if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
-    p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2;
+    p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
   }
@@ -2796,7 +2860,7 @@ function update(dt) {
   if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
   for (const mn of S.mines) {     // minas de la Recámara de minas
     mn.life -= dt;
-    if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
+    if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; if (res('thornmine')) S.zones.push({ x: mn.x, y: mn.y, r: 40, life: 4, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.25, bram: true, col: GODS.wood.color }); explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
   }
   S.mines = S.mines.filter(mn => mn.life > 0);
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
@@ -2841,7 +2905,7 @@ function update(dt) {
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;   // Pistolete: desenfundar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) fireBasic(tg); } }); }   // Mecha lenta: sale sola medio segundo después
+    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Mecha lenta: sale sola medio segundo después
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -2948,7 +3012,7 @@ function update(dt) {
   S.crystals = S.crystals.filter(c => c.life > 0);
 
   // Enemigos
-  const boil = duoOn('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = mastery('dragon') ? 1.5 : 1;
+  const boil = duoOn('boil'), venStep = (mastery('venom') ? 0.25 : 0.5) * (boil && furyFull() ? 0.5 : 1), embMul = (mastery('dragon') ? 1.5 : 1) * (1 + 0.12 * aff('dragon')), venMul = 1 + 0.1 * aff('venom'), bleedMul = 1 + 0.12 * aff('blood');
   const lunch = duoOn('longlunch') ? 1 - Math.min(0.6, 0.02 * p.reserve) : 1;
   for (const e of S.enemies) {
     if (e.hp <= 0) continue;
@@ -2962,7 +3026,7 @@ function update(dt) {
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
-      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
+      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * bleedMul * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
       if (e.bleedT <= 0) e.bleed = 0;
       if (e.hp <= 0) continue;
     }
@@ -2978,7 +3042,7 @@ function update(dt) {
       if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
       if (has('w_deep')) addGold(1);                                         // Mar de fondo
       if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
-      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
       if (e.hp <= 0) continue;
     }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
@@ -3004,7 +3068,7 @@ function update(dt) {
     }
     if (e.venom > 0) {
       e.venAcc += dt;
-      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
+      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035 * venMul, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
       if (e.hp <= 0) continue;
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
@@ -4205,5 +4269,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

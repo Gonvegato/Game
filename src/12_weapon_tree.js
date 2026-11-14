@@ -135,9 +135,47 @@ const RESO = [
   { id: 'firerain',     name: 'Lluvia de brasas',    parts: ['b_bomb'],    techs: ['dragon_charge'], desc: 'Cada bomba deja un charco de fuego donde revienta.' },
   { id: 'pinball',      name: 'Carambola',           parts: ['b_pierce'],  techs: ['storm_basic'],  desc: 'El rebote de la culebrina descarga las Agujas de todo lo que toca.' },
   { id: 'cavalry',      name: 'Carga de caballería', parts: ['c_dash'],    techs: ['dragon_dodge'], desc: 'La carga deja un rastro de fuego y explota al terminar.' },
+  { id: 'coldiron',     name: 'Hierro frío',         parts: ['m_ice'],     techs: ['frost_basic'],  desc: 'La Bala de escarcha pone además 1 de Escarcha.' },
+  { id: 'packhunt',     name: 'Montería',            parts: ['b_swarm'],   techs: ['beast_basic'],  desc: 'El sabueso salta y muerde al primer enemigo que alcanza cada andanada del Avispero.' },
+  { id: 'deathclock',   name: 'Hora señalada',       parts: ['a_spring'],  techs: ['end_basic'],    desc: 'Un disparo de resorte cargado al máximo cumple la Sentencia al instante.' },
+  { id: 'mirrorhall',   name: 'Galería de espejos',  parts: ['m_split'],   techs: ['mirror_basic'], desc: 'Los trozos de la Bala partida hacen el doble.' },
+  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'La Sangría ya no te cuesta vida.' },
+  { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'El meteoro cae sobre la Singularidad y arrastra a todos hacia el impacto antes de caer.' },
+  { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Un disparo lejano de la Largavista Ilumina también a los enemigos de alrededor del blanco.' },
+  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'La bala de la Mecha lenta siempre Duerme al enemigo.' },
+  { id: 'anvilsong',    name: 'Canto del yunque',    parts: ['a_kick'],    techs: ['forge_basic'],  desc: 'Cada cañonazo de la Llave de trueno te da 2 de Temple.' },
+  { id: 'tidalhook',    name: 'Resaca',              parts: ['b_harpoon'], techs: ['tide_basic'],   desc: 'El enemigo que arrastra el Arpón llega Empapado y aturdido.' },
+  { id: 'thornmine',    name: 'Semillero',           parts: ['c_mine'],    techs: ['wood_charge'],  desc: 'Cada mina deja un zarzal al estallar.' },
   { id: 'crossfire',    name: 'Fuego cruzado',       parts: ['a_semi'],    techs: ['stone_passive'], desc: 'Los Cristales repiten tus balas al doble de daño.' },
 ];
 const RES = Object.fromEntries(RESO.map(x => [x.id, x]));
+// Afinidad: cada pieza se forja con el material de una deidad. Si llevas alguna técnica de esa deidad, la pieza la potencia.
+// El efecto se suma por cada pieza afín que lleves montada.
+const AFFIN = {
+  dragon: 'las Ascuas queman un 12% más', stone: 'los Cristales duran un 20% más', venom: 'el Veneno hace un 10% más de daño', feast: 'te curas un 10% más',
+  orc: 'ganas un 15% más de Furia', time: 'tus ecos hacen un 8% más de daño', shade: '+2% de daño por cada Sombra viva', storm: 'las descargas hacen un 10% más',
+  tide: 'los golpes contra el muro hacen un 20% más', luck: '+3% de crítico', wood: 'las Raíces duran un 15% más', frost: 'los Congelados lo están 0,3 s más',
+  blood: 'las Heridas sangran un 12% más', end: 'las Sentencias devuelven 6 puntos más', light: 'los Iluminados se reparten 4 puntos más de daño', dream: 'los enemigos duermen 0,4 s más',
+  void: 'tus pozos son un 10% más grandes', mirror: 'el Reflejo hace un 10% más de daño', beast: 'el sabueso muerde un 12% más fuerte', forge: 'el Temple máximo sube en 1',
+};
+const affGod = id => { const c = PART[id] && PART[id].cost; return c ? Object.keys(c).find(k => k !== 'iron') : null; };
+// Ensambles: dos piezas concretas que se potencian entre sí (un arma legendaria pide tres; esto es el escalón de antes)
+const ENSEMBLES = [
+  { id: 'ram',      name: 'Ariete',            parts: ['b_scatter', 'm_heavy'],  desc: 'Los golpes contra el muro hacen un 60% más de daño.' },
+  { id: 'splinter', name: 'Astillas',          parts: ['b_pierce', 'm_split'],   desc: 'Los trozos de la Bala partida hacen el doble.' },
+  { id: 'trail',    name: 'Reguero',           parts: ['a_rotary', 'm_fire'],    desc: 'Las llamas de la Bala incendiaria duran el triple.' },
+  { id: 'cluster',  name: 'Racimo',            parts: ['b_bomb', 'm_frag'],      desc: 'La metralla suelta ocho esquirlas en vez de cinco y llegan más lejos.' },
+  { id: 'siege',    name: 'Tiro de asedio',    parts: ['a_draw', 's_brace'],     desc: 'Un disparo tensado a tope estando quieto hace un 60% más.' },
+  { id: 'hare',     name: 'Liebre',            parts: ['s_spring', 'a_semi'],    desc: 'El salto de la Culata de muelle llega el doble de lejos.' },
+  { id: 'mill',     name: 'Molino',            parts: ['b_flail', 's_spikes'],   desc: 'Durante dos segundos tras esquivar, la bola del Mangual gira el triple de rápido.' },
+  { id: 'rivet',    name: 'Remaches',          parts: ['b_nail', 'm_big'],       desc: 'Cuando los clavos revientan, los enemigos de alrededor reciben el mismo golpe.' },
+  { id: 'watch',    name: 'Guardia',           parts: ['c_turret', 'a_auto'],    desc: 'La centinela dura el doble.' },
+  { id: 'bastion',  name: 'Bastión',           parts: ['s_shield', 'c_balm'],    desc: 'Usar el bálsamo recarga la rodela al instante.' },
+  { id: 'marksman', name: 'Tirador',           parts: ['b_long', 's_scope'],     desc: 'El primer tiro a cada enemigo hace el triple en vez de +80%.' },
+  { id: 'gambler',  name: 'Tahúr',             parts: ['m_gold', 'a_kick'], desc: 'El cañonazo de la Llave de trueno te devuelve 3 de oro.' },
+];
+const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] === id));
+
 // Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
 // Está pensado para unas 30 horas de juego hasta completarlo: los primeros rangos son baratos y los últimos, caros.
 const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));

@@ -49,7 +49,7 @@ function forgeHtml() {
   for (const k of GSLOT_KEYS) {
     const known = PARTS.filter(x => x.slot === k && M.parts[x.id]), hidden = PARTS.filter(x => x.slot === k && !M.parts[x.id]).length;
     arms += `<h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3>` + known.map(x => { const on = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+      return `<button class="fi${on ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${affHint(x.id)}${legHint(x.id)}<i>${on ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       (hidden ? `<p class="fine">${hidden === 1 ? 'Queda 1 pieza' : 'Quedan ' + hidden + ' piezas'} por descubrir.</p>` : '');
   }
   const tree = TREE.map(br => `<h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
@@ -64,7 +64,7 @@ function forgeHtml() {
     <p class="lead"><b>${M.souls}</b> almas · ${mats}</p>
     <p class="fine">${pace}</p>
     <p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>
-    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
+    ${go}<div class="kingdom">${mapHtml()}</div><div class="forge"><section><h2>Tu arma</h2>${arms}${ensHtml(M.gun)}${legendsHtml(M.gun)}</section><section><h2>Tu árbol</h2>${tree}</section></div>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -127,6 +127,8 @@ function buildHtml(full) {
   }
   for (const g of GOD_KEYS) if (mastery(g)) row('Maestría', GODS[g].color, MASTERY[g].name, full ? MASTERY[g].desc : '');
   for (const R of RESO) if (res(R.id)) row('Resonancia', RAR[3].color, R.name, full ? R.desc : '');
+  for (const E of ensOf(S.gun)) row('Ensamble', C.energy, E.name, full ? E.desc : '');
+  for (const g of GOD_KEYS) { const a = aff(g); if (a) row('Afinidad', GODS[g].color, GODS[g].theme + ' ×' + a, full ? AFFIN[g] + (a > 1 ? ', por cada una de tus ' + a + ' piezas afines' : '') + '.' : ''); }
   if (full) for (const k of GSLOT_KEYS) { const x = PART[S.gun[k]]; row(GSLOTS[k], C.energy, x.name, x.desc); }
   const techs = TECHS.filter(t => S.techs.has(t.id)), plans = PLANS.filter(x => S.plans.has(x.id));
   if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
@@ -164,6 +166,16 @@ function legendsHtml(g) {
 }
 // En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
 function legHint(id) {
-  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p]));
-  return L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '';
+  const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p])), E = ENSEMBLES.filter(E => E.parts.includes(id) && E.parts.every(p => M.parts[p]));
+  return (L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '') + (E.length ? `<span class="leg">Ensambla con: ${E.map(x => PART[x.parts.find(p => p !== id)].name + ' (' + x.name + ')').join(', ')}</span>` : '');
+}
+
+// Afinidad de una pieza: con qué deidad casa y qué gana si llevas una técnica suya
+function affHint(id) { const g = affGod(id); return g ? `<span class="aff" style="color:${GODS[g].color}">Afín a ${GODS[g].theme}: con una técnica suya, ${AFFIN[g]}.</span>` : ''; }
+// Ensambles en la forja: parejas de piezas que se potencian
+function ensHtml(g) {
+  const on = ensOf(g);
+  return `<h3>Ensambles · dos piezas que se potencian</h3><ul class="build full legends">` + ENSEMBLES.map(E => {
+    const known = E.parts.every(id => M.parts[id]);
+    return `<li class="${on.includes(E) ? 'own' : ''}"><em>${on.includes(E) ? 'Activo' : 'Ensamble'}</em><b>${known ? E.name : '???'}</b><span>${E.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + E.desc : ''}</span></li>`; }).join('') + '</ul>';
 }
