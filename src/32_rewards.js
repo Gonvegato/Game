@@ -64,7 +64,7 @@ function advancePick() {
     const scr = pickQueue.shift()();
     if (!scr || !scr.opts.length) continue;
     pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
-    setMode('pick'); return;
+    setMode('pick'); ov.scrollTop = 0; return;
   }
   if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();

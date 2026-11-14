@@ -83,7 +83,7 @@ function forgeHtml() {
     body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
       return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
-  return head + body + `<p class="fine keyhint">Muévete con el stick o la cruceta. LB (o Q) cambia de pestaña.</p>`;
+  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');

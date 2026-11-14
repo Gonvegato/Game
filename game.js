@@ -587,6 +587,14 @@ const LEGENDS = [
   { id: 'zhuge',    name: 'Zhuge Nu',            parts: ['a_draw', 'm_drum', 's_light'],    lore: 'La ballesta de repetición china: poco golpe, muchos virotes, a veces envenenados.', desc: 'Cada vez que sueltas la ballesta salen tres virotes seguidos en vez de uno, y cada uno aplica 2 de Veneno.' },
   { id: 'organ',    name: 'Órgano de Leonardo',  parts: ['a_rotary', 'b_twin', 'm_belt'],   lore: 'Treinta y tres cañones en tres filas: una dispara, otra recarga, otra se enfría.', desc: 'El arma ya no se bloquea al recalentarse: cuando el calor se llena suelta una salva de once balas a los enemigos cercanos y se enfría sola.' },
   { id: 'dragon',   name: 'Dragón',              parts: ['b_scatter', 'a_semi', 's_light'], lore: 'El trabuco corto llamado dragón; según la explicación más repetida, de él tomaron su nombre los dragones de caballería.', desc: 'Cada andanada escupe fuego: clava 2 Ascuas a todo lo que toca y deja llamas en el suelo delante de ti.' },
+  { id: 'widow',    name: 'La Viuda',            parts: ['b_blow', 'm_saw', 's_spikes'],    lore: 'Una cerbatana de hueso que nadie ha visto usar dos veces contra el mismo hombre.', desc: 'Cada Herida que abres aplica también 1 de Veneno, y a los enemigos que están envenenados y heridos a la vez las dos cosas les hacen el doble.' },
+  { id: 'winter',   name: 'Invierno del Norte',  parts: ['b_icicle', 'm_ice', 'c_nova'],    lore: 'Forjada en una fragua que se apagó sola. El hierro nunca volvió a calentarse.', desc: 'La onda del disparo cargado congela al instante a todo lo que alcanza.' },
+  { id: 'choir',    name: 'El Coro',             parts: ['a_glass', 'm_quick', 'c_volley'], lore: 'Dispara una vez y se oyen nueve. Los que la han oído dicen que canta.', desc: 'Cada uno de los ocho disparos de la salva cargada deja un eco que vuelve a impactar poco después.' },
+  { id: 'pack',     name: 'La Jauría',           parts: ['s_kennel', 'b_swarm', 'a_rider'], lore: 'El maestro de Alec decía que un arma con perros no necesita puntería.', desc: 'Dos sabuesos más pelean a tu lado.' },
+  { id: 'blacksun', name: 'Sol Negro',           parts: ['c_sima', 'm_star', 'b_far'],      lore: 'Una luz que no alumbra: solo señala dónde va a caer todo.', desc: 'Los enemigos atrapados en uno de tus pozos quedan Iluminados y reciben un 50% más de daño de todo.' },
+  { id: 'master',   name: 'Martillo del Maestro', parts: ['c_anvil', 'a_kick', 'm_big'],    lore: 'Lo último que forjó el herrero que crio a Alec. No llegó a templarlo.', desc: 'El Temple puede llegar 10 puntos más alto, y cada cañonazo de la Llave de trueno revienta en área.' },
+  { id: 'lastword', name: 'La Última Palabra',   parts: ['c_doom', 'a_spring', 'm_last'],   lore: 'Seis balas. La sexta no falla porque ya está escrito.', desc: 'La sexta bala del cargador cumple al instante todas las Sentencias que haya en la sala.' },
+  { id: 'tempest',  name: 'Tempestad',           parts: ['b_rod', 'a_rotary', 'm_chain'],   lore: 'Hay que sujetarla con guantes. Aun así, muerde.', desc: 'Los enemigos se descargan solos al juntar 3 Agujas en vez de 6.' },
   { id: 'breaker',  name: 'La Rompemuros',       parts: ['b_pierce', 'm_heavy', 's_heavy'], lore: 'Dicen que el herrero la forjó en una vida anterior y que aún recuerda cada muro.', desc: 'La bala de la culebrina rebota hasta cuatro veces en vez de una, y cada rebote hace un 25% más de daño.' },
 ];
 const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id)) || null;
@@ -975,7 +983,7 @@ function newGame() {
     },
     enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
-    mirrors: [], pets: [], wells: [], mines: [], traps: [], stat: { themed: 0, quickb: 0, grave: 0, boom: 0, nail: 0, arc: 0, far: 0, swarm: 0, spring: 0, kick: 0, rider: 0, traced: 0, splash: 0, split: 0, meteor: 0, cchain: 0, balm: 0, cbounce: 0, volley: 0, mirror: 0, mcharge: 0, bite: 0, pounce: 0, temper: 0, share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
+    mirrors: [], pets: [], wells: [], mines: [], traps: [], stat: { choir: 0, themed: 0, quickb: 0, grave: 0, boom: 0, nail: 0, arc: 0, far: 0, swarm: 0, spring: 0, kick: 0, rider: 0, traced: 0, splash: 0, split: 0, meteor: 0, cchain: 0, balm: 0, cbounce: 0, volley: 0, mirror: 0, mcharge: 0, bite: 0, pounce: 0, temper: 0, share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
@@ -1136,7 +1144,7 @@ function advancePick() {
     const scr = pickQueue.shift()();
     if (!scr || !scr.opts.length) continue;
     pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
-    setMode('pick'); return;
+    setMode('pick'); ov.scrollTop = 0; return;
   }
   if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -1296,7 +1304,7 @@ function forgeHtml() {
     body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
       return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
-  return head + body + `<p class="fine keyhint">Muévete con el stick o la cruceta. LB (o Q) cambia de pestaña.</p>`;
+  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -1906,6 +1914,7 @@ function hit(e, dmg, ux, uy, big, col) {
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
     if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
+  if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
   if (e.traced > 0) dmg *= 1.3;                                                               // Bala trazadora
   if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Bala de plata
   if (e.boss && e.act === 'dazed') dmg *= 2;
@@ -1970,8 +1979,8 @@ function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min((
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
 // Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
-const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
-const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge');
+const petN = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge') + (leg('master') ? 10 : 0);
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
 function bite(pet, e, k) {
@@ -2009,7 +2018,7 @@ function freeze(e) {
 }
 function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.frost = (e.frost || 0) + n; e.frostT = 4; if (e.frost >= 5) freeze(e); else slow(e, 2, 1 - 0.12 * e.frost); }
 // Sangre: Heridas que sangran según la vida que te falta
-function addBleed(e, n) { if (!active(e) || n <= 0) return; e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
+function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
 const doomK = () => (0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
@@ -2236,7 +2245,7 @@ function fireBasic(target) {
   if (g.action === 'a_alt') { heavyAlt = p.alt; mult *= p.alt ? 1.8 : 0.6; p.alt = !p.alt; }               // Llave alterna
   if (g.action === 'a_combo') { if (target && target === p.comboT) p.comboN = Math.min(8, (p.comboN || 0) + 1); else p.comboN = 0; p.comboT = target; }   // Llave de insistencia
   let kick = false;
-  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
+  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (leg('master') && target) explode(target.x, target.y, 44, p.dmg, { col: GODS.forge.color, skip: target }); if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
   if (p.venge > 0) { p.venge -= 1; mult *= 2; }                                                             // Culata de rencor
   if (g.action === 'a_drum') gainFury(th('orc') ? 12 : 8);                                                  // Llave de tambor
   if (g.action === 'a_glass' && p.trig % (th('time') ? 2 : 3) === 0 && target) { const tg = target, d0 = p.dmg * mult * 0.6, fx0 = Math.cos(p.face), fy0 = Math.sin(p.face), ox = p.x, oy = p.y; S.stat.themed++;
@@ -2244,7 +2253,7 @@ function fireBasic(target) {
   if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Llave de nana
   p.idle = 0;                       // Bala de sangre
   let lastB = false;
-  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
+  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
   if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
   if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
@@ -2418,7 +2427,7 @@ function barrelFire(target, m, big, col, reach) {
     if (active(target)) {                // cañones temáticos: lo suyo, aunque no lleves a esa deidad
       if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
       if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }
-      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= 6 && !has('r_over')) discharge(target, 1, null); }
+      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= (leg('tempest') ? 3 : 6) && !has('r_over')) discharge(target, 1, null); }
       if (B === 'b_icicle') { addFrost(target, th('frost') ? 2 : 1); S.stat.themed++; }
     }
     if (B === 'b_long') {                // Remate: si mata, la bala sigue
@@ -2616,12 +2625,13 @@ function castCharged(snap, mult, echo) {
   } else if (CH === 'c_volley') {        // salva de ocho disparos
     for (let i = 0; i < 8; i++) S.timers.push({ t: 0.07 * i, fn: () => { const near = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < rangeOf() + 60).sort((a, b) => dist({ x: snap.tx, y: snap.ty }, a) - dist({ x: snap.tx, y: snap.ty }, b))[0]; if (!near) return; const d = dist(o, near) || 1; S.stat.volley++;
       S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.08, col }); if (i % 2 === 0) blip(1200, 0.04, 'square', 0.03, -500);
-      if (echo) hit(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); else shot(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); if (i === 0) chargePayoff(near); } });
+      if (echo) hit(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); else shot(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); if (i === 0) chargePayoff(near);
+      if (leg('choir') && !echo) S.timers.push({ t: 0.8, fn: () => { if (!active(near)) return; S.stat.choir++; S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.12, col: GODS.time.color }); onHit(near, dmg * 0.15, (near.x - o.x) / d, (near.y - o.y) / d, false, GODS.time.color, 'echo'); } }); } });
   } else if (CH === 'c_mine') {          // tres minas a tu alrededor
     for (let i = 0; i < 3; i++) { const a = snap.dir + Math.PI + (i - 1) * 1.1, at = unstick(clamp(o.x + Math.cos(a) * 34, 10, T.room.w - 10), clamp(o.y + Math.sin(a) * 34, 10, T.room.h - 10)); S.mines.push({ x: at.x, y: at.y, life: 12, dmg: dmg * 0.9, col }); }
   } else if (CH === 'c_nova') {          // onda que aparta
     S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 120, t: 0, life: 0.35, col }); S.shake = Math.max(S.shake, 7);
-    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); }
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) { if (leg('winter')) freeze(e); push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); } }
   } else if (CH === 'c_turret') {        // centinela: una copia del arma clavada en el suelo
     S.turrets.push({ x: o.x, y: o.y, life: ens('watch') ? 12 : 6, cd: 0.2, k: 0.8, sentry: true });
   } else if (CH === 'c_snipe') {         // verdugo: un tiro al más fuerte a la vista
@@ -2934,7 +2944,7 @@ function update(dt) {
     w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
     for (const e of S.enemies.slice()) {
       if (!active(e) || e.type.post) continue; const dx = w.x - e.x, dy = w.y - e.y, d = Math.hypot(dx, dy) || 1; if (d > w.r + e.r) continue;
-      w.got.add(e);
+      w.got.add(e); e.inWell = 0.3; if (leg('blacksun')) light(e, 1);
       if (!e.boss && d > 6) { const f = Math.min(d, 130 * dt); e.x += dx / d * f; e.y += dy / d * f; }
       if (w.stunC && d < 16 && !w.got.has('s' + S.enemies.indexOf(e))) { w.got.add('s' + S.enemies.indexOf(e)); stun(e, 0.5); }
       if (pulse && w.pulse) dot(e, w.pulse * (has('o_crush') && d < 18 ? 2 : 1), GODS.void.color);
@@ -3108,11 +3118,11 @@ function update(dt) {
     e.wet = Math.max(0, (e.wet || 0) - dt); e.root = Math.max(0, (e.root || 0) - dt); e.bram = Math.max(0, (e.bram || 0) - dt);
     if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
     if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
-    e.traced = Math.max(0, (e.traced || 0) - dt);
+    e.traced = Math.max(0, (e.traced || 0) - dt); e.inWell = Math.max(0, (e.inWell || 0) - dt);
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
-      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * bleedMul * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
+      if (e.bleedAcc >= 0.5) { e.bleedAcc -= 0.5; S.stat.bleed++; dot(e, e.bleed * p.dmg * 0.05 * bleedMul * (e.venom > 0 && leg('widow') ? 2 : 1) * (1 + 2 * (1 - p.hp / p.maxHp)) * (duoOn('warwound') && furyFull() ? 2 : 1) * (duoOn('hemotoxin') && e.venom > 0 ? 2 : 1), GODS.blood.color); }
       if (e.bleedT <= 0) e.bleed = 0;
       if (e.hp <= 0) continue;
     }
@@ -3154,7 +3164,7 @@ function update(dt) {
     }
     if (e.venom > 0) {
       e.venAcc += dt;
-      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035 * venMul, GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
+      if (e.venAcc >= venStep) { e.venAcc -= venStep; const d = dot(e, e.venom * p.dmg * 0.035 * venMul * (e.bleed > 0 && leg('widow') ? 2 : 1), GODS.venom.color); if (boil) gainFury(1); if (duoOn('indigest') && d) heal(d * 0.1); }
       if (e.hp <= 0) continue;
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
@@ -4289,7 +4299,7 @@ function renderOverlay() {
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
-      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Izquierda y derecha para elegir, disparar para confirmar. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
+      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
   ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop');
@@ -4338,13 +4348,15 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
   resize(); pollInput(); modeT += dt;
   const m = S.mode;
+  if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
+  if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
     if (I.navX || I.navY) { const n = navPick([...ovBody.querySelectorAll('.card')], pickSel, I.navX, I.navY); if (n >= 0 && n !== pickSel) { pickSel = n; moved = true; } }
-    if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); blip(700, 0.03, 'triangle', 0.03); }
+    if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => { c.classList.toggle('sel', i === pickSel); if (i === pickSel) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
     if (I.dodgeP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();

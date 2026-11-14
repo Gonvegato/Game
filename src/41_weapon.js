@@ -119,7 +119,7 @@ function fireBasic(target) {
   if (g.action === 'a_alt') { heavyAlt = p.alt; mult *= p.alt ? 1.8 : 0.6; p.alt = !p.alt; }               // Llave alterna
   if (g.action === 'a_combo') { if (target && target === p.comboT) p.comboN = Math.min(8, (p.comboN || 0) + 1); else p.comboN = 0; p.comboT = target; }   // Llave de insistencia
   let kick = false;
-  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
+  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (leg('master') && target) explode(target.x, target.y, 44, p.dmg, { col: GODS.forge.color, skip: target }); if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
   if (p.venge > 0) { p.venge -= 1; mult *= 2; }                                                             // Culata de rencor
   if (g.action === 'a_drum') gainFury(th('orc') ? 12 : 8);                                                  // Llave de tambor
   if (g.action === 'a_glass' && p.trig % (th('time') ? 2 : 3) === 0 && target) { const tg = target, d0 = p.dmg * mult * 0.6, fx0 = Math.cos(p.face), fy0 = Math.sin(p.face), ox = p.x, oy = p.y; S.stat.themed++;
@@ -127,7 +127,7 @@ function fireBasic(target) {
   if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Llave de nana
   p.idle = 0;                       // Bala de sangre
   let lastB = false;
-  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
+  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
   if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
   if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
@@ -301,7 +301,7 @@ function barrelFire(target, m, big, col, reach) {
     if (active(target)) {                // cañones temáticos: lo suyo, aunque no lleves a esa deidad
       if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
       if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }
-      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= 6 && !has('r_over')) discharge(target, 1, null); }
+      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= (leg('tempest') ? 3 : 6) && !has('r_over')) discharge(target, 1, null); }
       if (B === 'b_icicle') { addFrost(target, th('frost') ? 2 : 1); S.stat.themed++; }
     }
     if (B === 'b_long') {                // Remate: si mata, la bala sigue
@@ -499,12 +499,13 @@ function castCharged(snap, mult, echo) {
   } else if (CH === 'c_volley') {        // salva de ocho disparos
     for (let i = 0; i < 8; i++) S.timers.push({ t: 0.07 * i, fn: () => { const near = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < rangeOf() + 60).sort((a, b) => dist({ x: snap.tx, y: snap.ty }, a) - dist({ x: snap.tx, y: snap.ty }, b))[0]; if (!near) return; const d = dist(o, near) || 1; S.stat.volley++;
       S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.08, col }); if (i % 2 === 0) blip(1200, 0.04, 'square', 0.03, -500);
-      if (echo) hit(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); else shot(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); if (i === 0) chargePayoff(near); } });
+      if (echo) hit(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); else shot(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); if (i === 0) chargePayoff(near);
+      if (leg('choir') && !echo) S.timers.push({ t: 0.8, fn: () => { if (!active(near)) return; S.stat.choir++; S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.12, col: GODS.time.color }); onHit(near, dmg * 0.15, (near.x - o.x) / d, (near.y - o.y) / d, false, GODS.time.color, 'echo'); } }); } });
   } else if (CH === 'c_mine') {          // tres minas a tu alrededor
     for (let i = 0; i < 3; i++) { const a = snap.dir + Math.PI + (i - 1) * 1.1, at = unstick(clamp(o.x + Math.cos(a) * 34, 10, T.room.w - 10), clamp(o.y + Math.sin(a) * 34, 10, T.room.h - 10)); S.mines.push({ x: at.x, y: at.y, life: 12, dmg: dmg * 0.9, col }); }
   } else if (CH === 'c_nova') {          // onda que aparta
     S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 120, t: 0, life: 0.35, col }); S.shake = Math.max(S.shake, 7);
-    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); }
+    for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) { if (leg('winter')) freeze(e); push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); } }
   } else if (CH === 'c_turret') {        // centinela: una copia del arma clavada en el suelo
     S.turrets.push({ x: o.x, y: o.y, life: ens('watch') ? 12 : 6, cd: 0.2, k: 0.8, sentry: true });
   } else if (CH === 'c_snipe') {         // verdugo: un tiro al más fuerte a la vista

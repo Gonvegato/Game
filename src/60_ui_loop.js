@@ -38,7 +38,7 @@ function renderOverlay() {
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
-      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Izquierda y derecha para elegir, disparar para confirmar. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
+      `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
   ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop');
@@ -87,13 +87,15 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
   resize(); pollInput(); modeT += dt;
   const m = S.mode;
+  if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
+  if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
     if (I.navX || I.navY) { const n = navPick([...ovBody.querySelectorAll('.card')], pickSel, I.navX, I.navY); if (n >= 0 && n !== pickSel) { pickSel = n; moved = true; } }
-    if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); blip(700, 0.03, 'triangle', 0.03); }
+    if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => { c.classList.toggle('sel', i === pickSel); if (i === pickSel) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
     if (I.dodgeP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();

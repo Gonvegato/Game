@@ -150,6 +150,7 @@ function hit(e, dmg, ux, uy, big, col) {
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
     if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
+  if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
   if (e.traced > 0) dmg *= 1.3;                                                               // Bala trazadora
   if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Bala de plata
   if (e.boss && e.act === 'dazed') dmg *= 2;
@@ -214,8 +215,8 @@ function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min((
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
 // Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
-const petN = () => (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
-const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge');
+const petN = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge') + (leg('master') ? 10 : 0);
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
 function bite(pet, e, k) {
@@ -253,7 +254,7 @@ function freeze(e) {
 }
 function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.frost = (e.frost || 0) + n; e.frostT = 4; if (e.frost >= 5) freeze(e); else slow(e, 2, 1 - 0.12 * e.frost); }
 // Sangre: Heridas que sangran según la vida que te falta
-function addBleed(e, n) { if (!active(e) || n <= 0) return; e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
+function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
 const doomK = () => (0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
