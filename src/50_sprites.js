@@ -512,3 +512,15 @@ function drawGun(x, y, ang, kick) {
   const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(sp.c, -3 - kick, -Math.floor(sp.h / 2)); ctx.restore(); };
   if (g.barrel === 'b_twin') { const nx = -Math.sin(ang) * 4, ny = Math.cos(ang) * 4; one(nx, ny); one(-nx, -ny); } else one(0, 0);
 }
+
+// ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
+const charKey = e => (e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
+function drawChar(key, anim, time, x, yFeet, flip, flash) {
+  const m = ATLAS[key]; if (!m || !IMG.chars) return false;
+  const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1], im = flash ? IMG.charsF : IMG.chars;
+  if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(im, sx, sy, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); ctx.restore(); }
+  else ctx.drawImage(im, sx, sy, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
+  return true;
+}
+// El aspecto de Alec crece con su poder en la misión: cuatro niveles
+const heroKey = () => 'hero' + (S.p.tier || 1);

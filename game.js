@@ -23,22 +23,22 @@ const T = {
 
 // ───────────────────────── Enemigos ─────────────────────────
 const TYPES = {
-  stalker: { name: 'Necrófago',   r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#8fa58c', cost: 1 },
-  runner:  { name: 'Trasgo',      r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#7d9a4a', cost: 1 },
-  brute:   { name: 'Ogro',        r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#8a9a55', cost: 3 },
-  mage:    { name: 'Cultista',    r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff', cost: 2 },
-  bomber:  { name: 'Alquimista',  r: 7,  hp: 28,  speed: 46,  dmg: 16, ai: 'bomb',            shape: 'square',  color: '#ffa64d', cost: 2 },
-  leaper:  { name: 'Araña',       r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#9bd36b', cost: 2 },
-  sniper:  { name: 'Ballestero',  r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
-  shaman:  { name: 'Chamán',      r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
-  lancer:  { name: 'Lancero',     r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
-  bat:     { name: 'Murciélago',  r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
+  stalker: { name: 'Trasgo',      r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#8fa58c', cost: 1 },
+  runner:  { name: 'Mímico',      r: 5,  hp: 12,  speed: 100, dmg: 7,  wind: 0.22, reach: 8,  shape: 'tri',     color: '#7d9a4a', cost: 1 },
+  brute:   { name: 'Orco',        r: 12, hp: 120, speed: 38,  dmg: 24, wind: 0.6,  reach: 14, shape: 'square',  color: '#8a9a55', cost: 3 },
+  mage:    { name: 'Hechicero',   r: 7,  hp: 24,  speed: 50,  dmg: 12, ranged: true,          shape: 'diamond', color: '#b68cff', cost: 2 },
+  bomber:  { name: 'Barrilero',   r: 7,  hp: 28,  speed: 46,  dmg: 16, ai: 'bomb',            shape: 'square',  color: '#ffa64d', cost: 2 },
+  leaper:  { name: 'Rana',        r: 6,  hp: 26,  speed: 64,  dmg: 15, ai: 'leap',            shape: 'tri',     color: '#9bd36b', cost: 2 },
+  sniper:  { name: 'Arquero',     r: 6,  hp: 20,  speed: 44,  dmg: 22, ai: 'snipe',           shape: 'diamond', color: '#ff5d7a', cost: 2.5 },
+  shaman:  { name: 'Seta bruja',  r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
+  lancer:  { name: 'Embestidor',  r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
+  bat:     { name: 'Diablillo',   r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
   champ:   { name: 'Elegido',     r: 9,  hp: 95,  speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   post:    { name: 'Estandarte',  r: 10, hp: 230, speed: 0,   dmg: 0,  shape: 'square',  color: '#c0392b', cost: 99, post: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
-  matriarch: { name: 'La Matriarca del Nido',  r: 20, hp: 1500, speed: 62, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
-  colossus:  { name: 'El Coloso de Cristal',   r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
+  matriarch: { name: 'La Matriarca del Fango', r: 20, hp: 1500, speed: 62, dmg: 30, shape: 'circle',  color: '#6f9a3a', boss: true, phases: 2, kit: ['leap', 'fan', 'pools', 'summon'],          sum: 'runner' },
+  colossus:  { name: 'El Cofre Voraz',         r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
   nameless:  { name: 'El Sin Nombre',          r: 22, hp: 3000, speed: 54, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
   // Dioses: el jefe final de un reino
   firstfist: { name: 'El Primer Puño',         r: 28, hp: 3400, speed: 50, dmg: 38, shape: 'square',  color: '#d9a066', boss: true, phases: 3, kit: ['slam', 'charge', 'leap', 'ring', 'summon'], sum: 'brute' },
@@ -806,6 +806,8 @@ const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
 const IMG = {};
 function loadImg(k, src) { const im = new Image(); im.onload = () => { IMG[k] = im; }; im.src = src; }
 loadImg('vfx', 'assets/pickups_vfx.png'); loadImg('items', 'assets/items.png');
+// Personajes animados (CHARACTER MEGAPACK de overboy): un atlas con todos los fotogramas, y su copia en blanco para el destello al recibir un golpe
+{ const im = new Image(); im.onload = () => { const f = document.createElement('canvas'); f.width = im.width; f.height = im.height; const g = f.getContext('2d'); g.drawImage(im, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#ffffff'; g.fillRect(0, 0, f.width, f.height); IMG.chars = im; IMG.charsF = f; }; im.src = 'assets/chars.png'; }
 const VFX = { coin: 0, silver: 1, ruby: 2, sapphire: 3, emerald: 4, torch: 5, voidTorch: 6, slashIce: 7, slashFire: 8, slashVoid: 9 };
 // Un fotograma de una tira de 8 (32×32), centrado en (x, y)
 function strip(row, frame, x, y) { if (!IMG.vfx) return false; ctx.drawImage(IMG.vfx, (((frame | 0) % 8) + 8) % 8 * 32, row * 32, 32, 32, Math.round(x - 16), Math.round(y - 16), 32, 32); return true; }
@@ -1016,7 +1018,7 @@ function newGame() {
     t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
-      face: 0, drillN: 0, drillT: null, fly2: 0, lastShotT: -9, overT: 0, rotaT: null, grow: 0, leechN: 0, danced: false, idle: 0, alt: false, comboN: 0, comboT: null, venge: 0, temper: 0, redhot: 0, broke: false, pend: 0, clip: 0, orbA: 0, orbAway: 0, wardCd: 0, runUp: 0, drumT: null, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
+      face: 0, tier: 1, drillN: 0, drillT: null, fly2: 0, lastShotT: -9, overT: 0, rotaT: null, grow: 0, leechN: 0, danced: false, idle: 0, alt: false, comboN: 0, comboT: null, venge: 0, temper: 0, redhot: 0, broke: false, pend: 0, clip: 0, orbA: 0, orbAway: 0, wardCd: 0, runUp: 0, drumT: null, pity: 0, streak: 0, quick: 0, quickBig: false, buttCd: 0, cd: 0, windup: 0, windupTotal: 0, windupTarget: null, buffer: 0, wasReady: true, readyT: 0, spoil: false, crit: false, spin: 0,
       dodgeT: 0, dodgeCd: T.dodge.cd, dodgeN: 1, dodgeFrom: null, dodgeHit: new Set(), isLunge: false, fly: false, dvx: 0, dvy: 0, inv: 0, lanceDmg: 0,
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
       fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, heatT: 0, over: 0, gat: 0, shells: 2, trig: 0, still: 0, feastShot: false,
@@ -3004,6 +3006,10 @@ function update(dt) {
   const g = S.gun, A = g.action, want = p.buffer > 0 || I.atk || A === 'a_auto';
   if (p.over > 0) p.over -= dt;
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
+  { // El aspecto de Alec crece con lo que lleva encima en esta misión
+    const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
+    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se arma', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
+  }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Llave de volante
   if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); blip(1400, 0.1, 'sine', 0.04, 300); } }
@@ -3384,6 +3390,9 @@ function update(dt) {
   if (S.fx.length > 500) S.fx.splice(0, S.fx.length - 500);
 }
 
+// Generado por tools/pack_atlas.py a partir del CHARACTER MEGAPACK de overboy (itch.io). No editar a mano.
+// w, h: tamaño del recorte · ax: centro del cuerpo · gy: línea del suelo · a: animaciones (fps y posición de cada fotograma)
+const ATLAS = {"hero1":{"w":25,"h":27,"ax":12,"gy":27,"bw":19,"bh":18,"a":{"idle":{"fps":3,"f":[[0,0],[26,0]]},"move":{"fps":14,"f":[[52,0],[78,0],[104,0],[130,0],[156,0],[182,0],[208,0],[234,0],[260,0],[286,0]]},"dash":{"fps":20,"f":[[312,0],[338,0],[364,0],[390,0],[416,0],[442,0],[468,0],[494,0]]}}},"hero2":{"w":47,"h":44,"ax":26,"gy":44,"bw":41,"bh":30,"a":{"idle":{"fps":3,"f":[[520,0],[568,0]]},"move":{"fps":14,"f":[[616,0],[664,0],[712,0],[760,0],[808,0],[856,0],[904,0],[952,0],[1000,0],[1048,0],[1096,0],[1144,0]]},"dash":{"fps":20,"f":[[1192,0],[1240,0],[1288,0],[1336,0],[1384,0],[1432,0],[1480,0],[1528,0],[1576,0],[1624,0]]}}},"hero3":{"w":64,"h":54,"ax":32,"gy":54,"bw":51,"bh":44,"a":{"idle":{"fps":3,"f":[[1672,0],[1737,0]]},"move":{"fps":14,"f":[[1802,0],[1867,0],[1932,0],[0,55],[65,55],[130,55],[195,55],[260,55],[325,55],[390,55],[455,55],[520,55]]},"dash":{"fps":10,"f":[[585,55],[650,55]]}}},"hero4":{"w":63,"h":79,"ax":32,"gy":79,"bw":63,"bh":66,"a":{"idle":{"fps":3,"f":[[715,55],[779,55]]},"move":{"fps":14,"f":[[843,55],[907,55],[971,55],[1035,55],[1099,55],[1163,55],[1227,55],[1291,55],[1355,55],[1419,55],[1483,55],[1547,55]]},"dash":{"fps":10,"f":[[1611,55],[1675,55]]}}},"stalker":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[1739,55]]},"move":{"fps":12,"f":[[1768,55],[1797,55],[1826,55],[1855,55],[1884,55],[1913,55],[1942,55],[1971,55],[2000,55],[0,135]]},"atk":{"fps":18,"f":[[29,135],[58,135],[87,135],[116,135],[145,135],[174,135],[203,135],[232,135],[261,135],[290,135]]}}},"runner":{"w":15,"h":24,"ax":7,"gy":24,"bw":12,"bh":12,"a":{"idle":{"fps":3,"f":[[319,135],[335,135]]},"move":{"fps":20,"f":[[351,135],[367,135],[383,135],[399,135],[415,135],[431,135],[447,135],[463,135],[479,135],[495,135],[511,135],[527,135],[543,135],[559,135]]},"atk":{"fps":24,"f":[[575,135],[591,135],[607,135],[623,135],[639,135],[655,135],[671,135],[687,135],[703,135],[719,135],[735,135],[751,135],[767,135],[783,135]]}}},"brute":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[799,135]]},"move":{"fps":7,"f":[[848,135],[897,135],[946,135],[995,135],[1044,135]]},"atk":{"fps":14,"f":[[1093,135],[1142,135],[1191,135],[1240,135],[1289,135],[1338,135],[1387,135],[1436,135],[1485,135],[1534,135],[1583,135],[1632,135]]}}},"mage":{"w":31,"h":37,"ax":10,"gy":24,"bw":21,"bh":18,"a":{"idle":{"fps":3,"f":[[1681,135],[1713,135]]},"move":{"fps":12,"f":[[1745,135],[1777,135],[1809,135],[1841,135],[1873,135],[1905,135],[1937,135],[1969,135],[2001,135],[0,189],[32,189],[64,189]]},"atk":{"fps":14,"f":[[96,189],[128,189],[160,189],[192,189],[224,189],[256,189],[288,189],[320,189],[352,189],[384,189]]}}},"bomber":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[416,189]]},"move":{"fps":12,"f":[[445,189],[474,189],[503,189],[532,189],[561,189],[590,189],[619,189],[648,189],[677,189],[706,189]]},"atk":{"fps":14,"f":[[735,189],[764,189],[793,189],[822,189],[851,189],[880,189],[909,189],[938,189],[967,189],[996,189]]}}},"leaper":{"w":35,"h":43,"ax":18,"gy":43,"bw":35,"bh":17,"a":{"idle":{"fps":3,"f":[[1025,189],[1061,189]]},"move":{"fps":4,"f":[[1097,189],[1133,189]]},"atk":{"fps":20,"f":[[1169,189],[1205,189],[1241,189],[1277,189],[1313,189],[1349,189],[1385,189],[1421,189],[1457,189],[1493,189],[1529,189],[1565,189],[1601,189],[1637,189]]}}},"sniper":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[1673,189]]},"move":{"fps":10,"f":[[1738,189],[1803,189],[1868,189],[1933,189],[0,233],[65,233]]},"atk":{"fps":12,"f":[[130,233],[195,233],[260,233],[325,233],[390,233],[455,233],[520,233],[585,233],[650,233],[715,233],[780,233]]}}},"shaman":{"w":41,"h":34,"ax":18,"gy":34,"bw":29,"bh":25,"a":{"idle":{"fps":3,"f":[[845,233],[887,233]]},"move":{"fps":4,"f":[[929,233],[971,233]]},"atk":{"fps":14,"f":[[1013,233],[1055,233],[1097,233],[1139,233],[1181,233],[1223,233],[1265,233],[1307,233],[1349,233],[1391,233],[1433,233],[1475,233],[1517,233],[1559,233]]}}},"lancer":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1601,233]]},"move":{"fps":12,"f":[[1641,233],[1681,233],[1721,233],[1761,233],[1801,233],[1841,233],[1881,233],[1921,233]]},"atk":{"fps":16,"f":[[1961,233],[2001,233],[0,270],[40,270],[80,270],[120,270]]}}},"bat":{"w":27,"h":24,"ax":12,"gy":24,"bw":17,"bh":18,"a":{"idle":{"fps":3,"f":[[160,270],[188,270]]},"move":{"fps":16,"f":[[216,270],[244,270],[272,270],[300,270],[328,270],[356,270],[384,270],[412,270],[440,270],[468,270]]},"atk":{"fps":16,"f":[[496,270],[524,270],[552,270],[580,270],[608,270],[636,270],[664,270],[692,270]]}}},"champ":{"w":32,"h":42,"ax":16,"gy":39,"bw":31,"bh":32,"a":{"idle":{"fps":3,"f":[[720,270],[753,270]]},"move":{"fps":14,"f":[[786,270],[819,270],[852,270],[885,270],[918,270],[951,270],[984,270],[1017,270],[1050,270],[1083,270]]},"atk":{"fps":16,"f":[[1116,270],[1149,270],[1182,270],[1215,270],[1248,270],[1281,270],[1314,270],[1347,270]]}}},"guardian":{"w":64,"h":72,"ax":32,"gy":72,"bw":64,"bh":68,"a":{"idle":{"fps":3,"f":[[1380,270],[1445,270]]},"move":{"fps":12,"f":[[1510,270],[1575,270],[1640,270],[1705,270],[1770,270],[1835,270],[1900,270],[1965,270],[0,343],[65,343],[130,343],[195,343]]},"atk":{"fps":14,"f":[[260,343],[325,343],[390,343],[455,343],[520,343],[585,343],[650,343],[715,343],[780,343],[845,343],[910,343],[975,343],[1040,343],[1105,343]]}}},"matriarch":{"w":86,"h":82,"ax":42,"gy":82,"bw":67,"bh":48,"a":{"idle":{"fps":3,"f":[[1170,343],[1257,343]]},"move":{"fps":12,"f":[[1344,343],[1431,343],[1518,343],[1605,343],[1692,343],[1779,343],[1866,343],[1953,343],[0,426],[87,426],[174,426]]},"atk":{"fps":8,"f":[[261,426],[348,426],[435,426],[522,426]]}}},"colossus":{"w":65,"h":64,"ax":32,"gy":64,"bw":65,"bh":63,"a":{"idle":{"fps":8,"f":[[609,426],[675,426],[741,426],[807,426],[873,426],[939,426],[1005,426],[1071,426]]},"move":{"fps":10,"f":[[1137,426],[1203,426],[1269,426],[1335,426],[1401,426],[1467,426],[1533,426],[1599,426]]},"atk":{"fps":14,"f":[[1665,426],[1731,426],[1797,426],[1863,426],[1929,426],[0,509],[66,509],[132,509],[198,509],[264,509],[330,509],[396,509],[462,509],[528,509]]}}},"nameless":{"w":57,"h":57,"ax":30,"gy":57,"bw":49,"bh":49,"a":{"idle":{"fps":3,"f":[[594,509],[652,509]]},"move":{"fps":12,"f":[[710,509],[768,509],[826,509],[884,509],[942,509],[1000,509],[1058,509],[1116,509],[1174,509],[1232,509],[1290,509],[1348,509]]},"atk":{"fps":12,"f":[[1406,509],[1464,509],[1522,509],[1580,509],[1638,509],[1696,509],[1754,509],[1812,509],[1870,509],[1928,509]]}}},"firstfist":{"w":153,"h":140,"ax":60,"gy":126,"bw":114,"bh":118,"a":{"idle":{"fps":10,"f":[[0,574],[154,574],[308,574],[462,574],[616,574],[770,574],[924,574],[1078,574],[1232,574],[1386,574],[1540,574],[1694,574]]},"move":{"fps":10,"f":[[1848,574],[0,715],[154,715],[308,715],[462,715],[616,715],[770,715],[924,715],[1078,715],[1232,715],[1386,715],[1540,715]]},"atk":{"fps":14,"f":[[1694,715],[1848,715],[0,856],[154,856],[308,856],[462,856],[616,856],[770,856],[924,856],[1078,856],[1232,856],[1386,856],[1540,856],[1694,856],[1848,856],[0,997]]}}}};
 // ───────────────────────── Sprites (pixel art dibujado por código) ─────────────────────────
 // Todo se dibuja a tamaño real: 1 píxel del sprite = 1 unidad de mundo. Las figuras miran a la derecha y se voltean.
 // Las pequeñas son rejillas de texto (cada letra, un color). Las grandes se pintan con formas y sombreado automático.
@@ -3898,6 +3907,18 @@ function drawGun(x, y, ang, kick) {
   const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(sp.c, -3 - kick, -Math.floor(sp.h / 2)); ctx.restore(); };
   if (g.barrel === 'b_twin') { const nx = -Math.sin(ang) * 4, ny = Math.cos(ang) * 4; one(nx, ny); one(-nx, -ny); } else one(0, 0);
 }
+
+// ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
+const charKey = e => (e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
+function drawChar(key, anim, time, x, yFeet, flip, flash) {
+  const m = ATLAS[key]; if (!m || !IMG.chars) return false;
+  const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1], im = flash ? IMG.charsF : IMG.chars;
+  if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(im, sx, sy, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); ctx.restore(); }
+  else ctx.drawImage(im, sx, sy, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
+  return true;
+}
+// El aspecto de Alec crece con su poder en la misión: cuatro niveles
+const heroKey = () => 'hero' + (S.p.tier || 1);
 // ───────────────────────── Dibujo ─────────────────────────
 function resize() {
   const w = cv.clientWidth || 1, h = cv.clientHeight || 1, dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -4087,7 +4108,7 @@ function renderWorld() {
     drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  for (const m of S.mirrors) { ctx.globalAlpha = 0.5 + 0.1 * Math.sin(S.t * 7); drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, true); ctx.globalAlpha = 0.6; drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, false); ctx.globalAlpha = 1; }
+  for (const m of S.mirrors) { const fl = S.target ? S.target.x < m.x : false; ctx.globalAlpha = 0.55 + 0.1 * Math.sin(S.t * 7); if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, true)) drawSprite(SPR.player, m.x, m.y + 8, fl, true); ctx.globalAlpha = 0.6; if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, false)) drawSprite(SPR.player, m.x, m.y + 8, fl, false); ctx.globalAlpha = 1; }
   for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
@@ -4131,7 +4152,10 @@ function renderWorld() {
       const air = e.leapT > 0 || (e.boss && e.act === 'leap') ? 10 * Math.sin(Math.PI * (1 - Math.max(0, e.boss ? e.at / 0.9 : e.leapT / 0.7))) : 0;
       ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.95, e.r * 0.95, e.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
       const step = e.stun <= 0 && active(e) && Math.floor(S.t * (e.type.speed > 80 ? 11 : 6) + e.x * 0.13) % 2 === 1;
-      if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
+      const ck = charKey(e), acting = e.wind > 0 || e.cast > 0 || e.lungeWind > 0 || e.lungeT > 0 || e.leapT > 0 || e.aimT > 0 || (e.boss && ['slam', 'chargeWind', 'charge', 'cast', 'leap'].includes(e.act));
+      const still = e.stun > 0 || e.sleep > 0 || e.frozen > 0 || e.root > 0 || (e.boss && (e.act === 'rest' || e.act === 'dazed'));
+      if (ATLAS[ck] && drawChar(ck, acting ? 'atk' : still ? 'idle' : 'move', e.frozen > 0 ? 0 : S.t + e.x * 0.013, e.x, e.y + e.r + (e.boss ? 4 : 2) - air - (e.type.fly ? 6 + Math.sin(S.t * 8 + e.x) * 2 : 0), Math.cos(e.dir) < 0, e.flash > 0)) { /* dibujado con el paquete */ }
+      else if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }
     if (e.champ) { // la espada bendecida que lleva, en el color de su deidad
@@ -4200,10 +4224,11 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
+    const packHero = drawChar(heroKey(), p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, fx < 0, false);
+    if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
-    drawGun(p.x, py + 1, p.face, kick);
-    if (glow) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
+    if (!packHero) drawGun(p.x, py + 1, p.face, kick);
+    if (glow && !packHero) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;

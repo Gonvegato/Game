@@ -14,6 +14,8 @@ const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
 const IMG = {};
 function loadImg(k, src) { const im = new Image(); im.onload = () => { IMG[k] = im; }; im.src = src; }
 loadImg('vfx', 'assets/pickups_vfx.png'); loadImg('items', 'assets/items.png');
+// Personajes animados (CHARACTER MEGAPACK de overboy): un atlas con todos los fotogramas, y su copia en blanco para el destello al recibir un golpe
+{ const im = new Image(); im.onload = () => { const f = document.createElement('canvas'); f.width = im.width; f.height = im.height; const g = f.getContext('2d'); g.drawImage(im, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#ffffff'; g.fillRect(0, 0, f.width, f.height); IMG.chars = im; IMG.charsF = f; }; im.src = 'assets/chars.png'; }
 const VFX = { coin: 0, silver: 1, ruby: 2, sapphire: 3, emerald: 4, torch: 5, voidTorch: 6, slashIce: 7, slashFire: 8, slashVoid: 9 };
 // Un fotograma de una tira de 8 (32×32), centrado en (x, y)
 function strip(row, frame, x, y) { if (!IMG.vfx) return false; ctx.drawImage(IMG.vfx, (((frame | 0) % 8) + 8) % 8 * 32, row * 32, 32, 32, Math.round(x - 16), Math.round(y - 16), 32, 32); return true; }

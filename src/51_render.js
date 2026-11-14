@@ -187,7 +187,7 @@ function renderWorld() {
     drawSprite(SPR.keep, k.x, k.y + 16, false, k.flash > 0);
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
-  for (const m of S.mirrors) { ctx.globalAlpha = 0.5 + 0.1 * Math.sin(S.t * 7); drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, true); ctx.globalAlpha = 0.6; drawSprite(SPR.player, m.x, m.y + 8, S.target ? S.target.x < m.x : false, false); ctx.globalAlpha = 1; }
+  for (const m of S.mirrors) { const fl = S.target ? S.target.x < m.x : false; ctx.globalAlpha = 0.55 + 0.1 * Math.sin(S.t * 7); if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, true)) drawSprite(SPR.player, m.x, m.y + 8, fl, true); ctx.globalAlpha = 0.6; if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, false)) drawSprite(SPR.player, m.x, m.y + 8, fl, false); ctx.globalAlpha = 1; }
   for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
@@ -231,7 +231,10 @@ function renderWorld() {
       const air = e.leapT > 0 || (e.boss && e.act === 'leap') ? 10 * Math.sin(Math.PI * (1 - Math.max(0, e.boss ? e.at / 0.9 : e.leapT / 0.7))) : 0;
       ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.95, e.r * 0.95, e.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
       const step = e.stun <= 0 && active(e) && Math.floor(S.t * (e.type.speed > 80 ? 11 : 6) + e.x * 0.13) % 2 === 1;
-      if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
+      const ck = charKey(e), acting = e.wind > 0 || e.cast > 0 || e.lungeWind > 0 || e.lungeT > 0 || e.leapT > 0 || e.aimT > 0 || (e.boss && ['slam', 'chargeWind', 'charge', 'cast', 'leap'].includes(e.act));
+      const still = e.stun > 0 || e.sleep > 0 || e.frozen > 0 || e.root > 0 || (e.boss && (e.act === 'rest' || e.act === 'dazed'));
+      if (ATLAS[ck] && drawChar(ck, acting ? 'atk' : still ? 'idle' : 'move', e.frozen > 0 ? 0 : S.t + e.x * 0.013, e.x, e.y + e.r + (e.boss ? 4 : 2) - air - (e.type.fly ? 6 + Math.sin(S.t * 8 + e.x) * 2 : 0), Math.cos(e.dir) < 0, e.flash > 0)) { /* dibujado con el paquete */ }
+      else if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }
     if (e.champ) { // la espada bendecida que lleva, en el color de su deidad
@@ -300,10 +303,11 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
+    const packHero = drawChar(heroKey(), p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, fx < 0, false);
+    if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
-    drawGun(p.x, py + 1, p.face, kick);
-    if (glow) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
+    if (!packHero) drawGun(p.x, py + 1, p.face, kick);
+    if (glow && !packHero) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
