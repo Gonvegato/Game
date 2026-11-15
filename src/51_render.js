@@ -320,6 +320,7 @@ function renderWorld() {
   // Efectos bajo el jugador
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
+    if (f.k === 'godfall') { drawGodFall(f.key, f.x, f.y, f.flip, f.t, f.col); continue; }
     if (f.k === 'corpse') {   // animación de muerte: corre una vez, se queda en el último fotograma y se desvanece
       const m = ATLAS[f.key], a = m.a.die, i = Math.min(a.f.length - 1, Math.floor(f.t * a.fps)), fr = a.f[i];
       ctx.globalAlpha = Math.min(1, (f.life - f.t) / 0.5);

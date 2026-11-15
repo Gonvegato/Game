@@ -22,7 +22,7 @@ function update(dt) {
   if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
-    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
+    if (S.waveClear > (S.bossRoom ? GODFALL_T + 0.4 : 0.7)) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
   }
 
   // Temporizadores y recursos

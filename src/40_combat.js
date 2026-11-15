@@ -82,6 +82,10 @@ function kill(e) {
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
   if (S.pets.length) S.build.caza = caza() + (e.boss || e.champ ? 5 : 1);                         // Bestias: la Caza de la manada
+  if (e.boss) {   // los jefes no se desploman: se deshacen
+    S.fx.push({ k: 'godfall', key: charKey(e), x: e.x, y: e.y + e.r + 3, flip: Math.cos(e.dir) < 0, col: e.color, t: 0, life: GODFALL_T + 1.2 }); S.shake = Math.max(S.shake, 10);
+    for (const d of [0.3, 0.7, 1.15, 1.7]) S.timers.push({ t: d, fn: () => { sfx(d > 1.5 ? 'bossdie' : 'boom', 0.6, 0.8 + Math.random() * 0.3, 0); S.shake = Math.max(S.shake, 6); } });
+  }
   { const ck = charKey(e), m = ATLAS[ck]; if (m && m.a.die && !e.boss) S.fx.push({ k: 'corpse', key: ck, x: e.x, y: e.y + e.r + 2, flip: Math.cos(e.dir) < 0, t: 0, life: 1.4 }); }   // se desploma
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto

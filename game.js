@@ -2167,7 +2167,7 @@ function drawDialog(k) {
     const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], at = speakerPos(L.who), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
     g.font = `500 ${fs}px ${FONT}`;
     const lines = wrapText(g, L.text, maxW), shown = L.text.slice(0, Math.floor(d.ch));
-    const w = Math.max(...lines.map(t => g.measureText(t).width), 120 * dp) + pad * 2, h = lines.length * lh + pad * 2 + fs * 1.1;
+    const w = Math.max(...lines.map(t => g.measureText(t).width), 120 * dp) + pad * 2 + fs * 1.1, h = lines.length * lh + pad * 2 + fs * 1.1;
     let bx = clamp(sx - w / 2, 8 * dp, cv.width - w - 8 * dp), by = sy - h - 14 * dp; if (by < 8 * dp) by = 8 * dp;
     box(bx, by, w, h, { x: clamp(sx, bx + 14 * dp, bx + w - 14 * dp), y: Math.min(sy - 4 * dp, by + h + 12 * dp) });
     g.font = `700 ${Math.round(fs * 0.85)}px ${FONT}`; g.fillStyle = sp[1]; g.fillText(sp[0], bx + pad, by + pad * 0.7);
@@ -2428,10 +2428,11 @@ const ENDING = [
       R.add('alec', null, 12.5, 13.6, { hero: true, face: 0 });
     },
     beats: [
-      { wait: 4.3, min: 3.2, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
+      { wait: 6.1, min: 5.5, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
         on(R) { R.go('alec', [[18.5, 13.6]], 44, a => { a.face = 0; }); },
         ev: [[2.5, R => R.shoot('alec', 'god')],
-          [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }]] },
+          [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
+          [3.1, R => { R.shake(6); sfx('boom', 0.55, 0.9, 0); }], [3.55, R => { R.shake(6); sfx('boom', 0.55, 1.1, 0); }], [4.0, R => { R.shake(7); R.flash = 0.4; sfx('boom', 0.6, 0.8, 0); }], [4.5, R => { R.shake(8); sfx('bossdie', 0.8, 1, 0); }]] },
       { who: 'alec', text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
     ] },
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
@@ -2654,6 +2655,7 @@ function introActor(a, R) {
   const shadow = w => { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x, y, w, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; };
   if (a.fall != null) {   // caído: con su animación de muerte si la tiene; si no, vuelca y se queda en el suelo
     if (m && m.a.die) { shadow(sw + 2); introFrame(a.key, 'die', Math.floor(a.fall * m.a.die.fps), x, y, a.flip, false); return; }
+    if (TYPES[a.key] && TYPES[a.key].boss) { drawGodFall(a.key, x, y, a.flip, a.fall, TYPES[a.key].color); return; }   // un dios no vuelca: se deshace
     const k = Math.min(1, a.fall / 0.28), ang = a.fallDir * k * k * Math.PI / 2;
     ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x + a.fallDir * 9 * k, y, sw + 6 * k, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     ctx.save(); ctx.translate(x, y - Math.round(3 * k)); ctx.rotate(ang); drawChar(a.key, 'idle', 0, 0, 0, a.flip, false); ctx.restore(); return;
@@ -3194,6 +3196,10 @@ function kill(e) {
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
   if (S.pets.length) S.build.caza = caza() + (e.boss || e.champ ? 5 : 1);                         // Bestias: la Caza de la manada
+  if (e.boss) {   // los jefes no se desploman: se deshacen
+    S.fx.push({ k: 'godfall', key: charKey(e), x: e.x, y: e.y + e.r + 3, flip: Math.cos(e.dir) < 0, col: e.color, t: 0, life: GODFALL_T + 1.2 }); S.shake = Math.max(S.shake, 10);
+    for (const d of [0.3, 0.7, 1.15, 1.7]) S.timers.push({ t: d, fn: () => { sfx(d > 1.5 ? 'bossdie' : 'boom', 0.6, 0.8 + Math.random() * 0.3, 0); S.shake = Math.max(S.shake, 6); } });
+  }
   { const ck = charKey(e), m = ATLAS[ck]; if (m && m.a.die && !e.boss) S.fx.push({ k: 'corpse', key: ck, x: e.x, y: e.y + e.r + 2, flip: Math.cos(e.dir) < 0, t: 0, life: 1.4 }); }   // se desploma
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
@@ -4311,7 +4317,7 @@ function update(dt) {
   if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
-    if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
+    if (S.waveClear > (S.bossRoom ? GODFALL_T + 0.4 : 0.7)) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
   }
 
   // Temporizadores y recursos
@@ -5370,6 +5376,48 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   }
   return true;
 }
+// ── La caída de un jefe o de un dios: se tambalea entre estallidos y rayos de luz, y luego se deshace de arriba abajo en ceniza.
+//    No hay animación de muerte en el paquete para ellos; esto se hace con su propio dibujo, tira a tira. t = segundos desde que cae ──
+const GODFALL_T = 2.9;
+function drawGodFall(key, x, yFeet, flip, t, col) {
+  const m = ATLAS[key]; if (!m || !IMG.chars) return false;
+  const h01 = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
+  const T1 = 1.15, k1 = clamp(t / T1, 0, 1), k2 = clamp((t - T1) / (GODFALL_T - T1), 0, 1), f = m.a.idle.f[0];
+  x = Math.round(x); yFeet = Math.round(yFeet);
+  ctx.save();
+  ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.4 * clamp(t / 1.6, 0, 1); ctx.beginPath(); ctx.ellipse(x, yFeet - 1, m.bw * (0.3 + 0.2 * k2), 4 + 2 * k2, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;   // la mancha que deja
+  if (t < GODFALL_T) {
+    const shake = t < T1 ? 2.6 - 1.2 * k1 : 1.4 * (1 - k2), ox = Math.round(Math.sin(t * 73) * shake), sink = Math.round(k2 * 9);
+    const white = t < T1 + 0.25 && Math.floor(t * 11) % 3 === 0, im = white ? IMG.charsF : IMG.chars;
+    ctx.save(); ctx.translate(x, 0); if (flip) ctx.scale(-1, 1);
+    for (let ry = 0; ry < m.h; ry += 2) {              // de arriba abajo, cada tira se desplaza, se aclara y desaparece
+      const thr = ry / m.h * 0.72 + h01(ry + 3) * 0.28, near = clamp((thr - k2) / 0.14, 0, 1);
+      if (k2 > 0 && near <= 0) continue;
+      ctx.globalAlpha = k2 > 0 ? near : 1;
+      ctx.drawImage(im, f[0], f[1] + ry, m.w, Math.min(2, m.h - ry), -m.ax + ox + Math.round((1 - near) * (h01(ry + 11) - 0.5) * 16), yFeet - m.gy + ry + sink - Math.round((1 - near) * 5), m.w, Math.min(2, m.h - ry));
+    }
+    ctx.restore();
+    const left = x - m.ax, top = yFeet - m.gy;
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 6; i++) {                       // rayos de luz que le salen del cuerpo
+      const t0 = 0.12 + i * 0.2, u = (t - t0) / 0.9; if (u <= 0 || u >= 1) continue;
+      const bx = Math.round(left + m.w * (0.2 + 0.6 * h01(i + 5))), w = 2 + Math.round(3 * h01(i + 8));
+      ctx.fillStyle = col; ctx.globalAlpha = 0.5 * Math.sin(u * Math.PI); ctx.fillRect(bx - w, top - 40, w * 2, m.h * 0.75 + 40);
+      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.6 * Math.sin(u * Math.PI); ctx.fillRect(bx - 1, top - 40, 2, m.h * 0.75 + 40);
+    }
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    for (let i = 0; i < 9; i++) {                       // estallidos repartidos por el cuerpo
+      const t0 = 0.08 + i * 0.17, u = (t - t0) / 0.5; if (u <= 0 || u >= 1) continue;
+      drawFx('boom', u, left + m.w * (0.15 + 0.7 * h01(i + 21)), top + m.h * (0.2 + 0.6 * h01(i + 33)), i % 3 === 2 ? '#ffffff' : col, 26 + 18 * h01(i + 2));
+    }
+    if (k2 > 0) for (let i = 0; i < 34; i++) {          // ceniza y brasas que suben
+      const p = ((t - T1) * (0.5 + 0.5 * h01(i + 60)) + h01(i + 41)) % 1, px = left + m.w * h01(i + 50) + Math.sin(t * 3 + i) * 3, py = top + m.h * (0.9 - 0.9 * p) - 14 * p;
+      ctx.globalAlpha = (1 - p) * Math.min(1, k2 * 3) * (1 - k2 * 0.6); ctx.fillStyle = i % 3 ? '#2a2230' : col; ctx.fillRect(Math.round(px), Math.round(py), i % 4 ? 1 : 2, i % 4 ? 1 : 2);
+    }
+  }
+  ctx.restore();
+  return true;
+}
 // ── Efectos del paquete (assets/fx.png): ocho colores por efecto; se elige el más parecido al color pedido ──
 loadImg('fx', 'assets/fx.png');
 const FXROW = {};
@@ -5711,6 +5759,7 @@ function renderWorld() {
   // Efectos bajo el jugador
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
+    if (f.k === 'godfall') { drawGodFall(f.key, f.x, f.y, f.flip, f.t, f.col); continue; }
     if (f.k === 'corpse') {   // animación de muerte: corre una vez, se queda en el último fotograma y se desvanece
       const m = ATLAS[f.key], a = m.a.die, i = Math.min(a.f.length - 1, Math.floor(f.t * a.fps)), fr = a.f[i];
       ctx.globalAlpha = Math.min(1, (f.life - f.t) / 0.5);
@@ -6374,5 +6423,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

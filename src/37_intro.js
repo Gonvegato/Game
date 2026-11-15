@@ -183,10 +183,11 @@ const ENDING = [
       R.add('alec', null, 12.5, 13.6, { hero: true, face: 0 });
     },
     beats: [
-      { wait: 4.3, min: 3.2, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
+      { wait: 6.1, min: 5.5, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
         on(R) { R.go('alec', [[18.5, 13.6]], 44, a => { a.face = 0; }); },
         ev: [[2.5, R => R.shoot('alec', 'god')],
-          [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }]] },
+          [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
+          [3.1, R => { R.shake(6); sfx('boom', 0.55, 0.9, 0); }], [3.55, R => { R.shake(6); sfx('boom', 0.55, 1.1, 0); }], [4.0, R => { R.shake(7); R.flash = 0.4; sfx('boom', 0.6, 0.8, 0); }], [4.5, R => { R.shake(8); sfx('bossdie', 0.8, 1, 0); }]] },
       { who: 'alec', text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
     ] },
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
@@ -409,6 +410,7 @@ function introActor(a, R) {
   const shadow = w => { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x, y, w, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; };
   if (a.fall != null) {   // caído: con su animación de muerte si la tiene; si no, vuelca y se queda en el suelo
     if (m && m.a.die) { shadow(sw + 2); introFrame(a.key, 'die', Math.floor(a.fall * m.a.die.fps), x, y, a.flip, false); return; }
+    if (TYPES[a.key] && TYPES[a.key].boss) { drawGodFall(a.key, x, y, a.flip, a.fall, TYPES[a.key].color); return; }   // un dios no vuelca: se deshace
     const k = Math.min(1, a.fall / 0.28), ang = a.fallDir * k * k * Math.PI / 2;
     ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x + a.fallDir * 9 * k, y, sw + 6 * k, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     ctx.save(); ctx.translate(x, y - Math.round(3 * k)); ctx.rotate(ang); drawChar(a.key, 'idle', 0, 0, 0, a.flip, false); ctx.restore(); return;

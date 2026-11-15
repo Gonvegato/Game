@@ -128,7 +128,7 @@ function drawDialog(k) {
     const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], at = speakerPos(L.who), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
     g.font = `500 ${fs}px ${FONT}`;
     const lines = wrapText(g, L.text, maxW), shown = L.text.slice(0, Math.floor(d.ch));
-    const w = Math.max(...lines.map(t => g.measureText(t).width), 120 * dp) + pad * 2, h = lines.length * lh + pad * 2 + fs * 1.1;
+    const w = Math.max(...lines.map(t => g.measureText(t).width), 120 * dp) + pad * 2 + fs * 1.1, h = lines.length * lh + pad * 2 + fs * 1.1;
     let bx = clamp(sx - w / 2, 8 * dp, cv.width - w - 8 * dp), by = sy - h - 14 * dp; if (by < 8 * dp) by = 8 * dp;
     box(bx, by, w, h, { x: clamp(sx, bx + 14 * dp, bx + w - 14 * dp), y: Math.min(sy - 4 * dp, by + h + 12 * dp) });
     g.font = `700 ${Math.round(fs * 0.85)}px ${FONT}`; g.fillStyle = sp[1]; g.fillText(sp[0], bx + pad, by + pad * 0.7);

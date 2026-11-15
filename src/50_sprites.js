@@ -593,6 +593,48 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   }
   return true;
 }
+// ── La caída de un jefe o de un dios: se tambalea entre estallidos y rayos de luz, y luego se deshace de arriba abajo en ceniza.
+//    No hay animación de muerte en el paquete para ellos; esto se hace con su propio dibujo, tira a tira. t = segundos desde que cae ──
+const GODFALL_T = 2.9;
+function drawGodFall(key, x, yFeet, flip, t, col) {
+  const m = ATLAS[key]; if (!m || !IMG.chars) return false;
+  const h01 = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
+  const T1 = 1.15, k1 = clamp(t / T1, 0, 1), k2 = clamp((t - T1) / (GODFALL_T - T1), 0, 1), f = m.a.idle.f[0];
+  x = Math.round(x); yFeet = Math.round(yFeet);
+  ctx.save();
+  ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.4 * clamp(t / 1.6, 0, 1); ctx.beginPath(); ctx.ellipse(x, yFeet - 1, m.bw * (0.3 + 0.2 * k2), 4 + 2 * k2, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;   // la mancha que deja
+  if (t < GODFALL_T) {
+    const shake = t < T1 ? 2.6 - 1.2 * k1 : 1.4 * (1 - k2), ox = Math.round(Math.sin(t * 73) * shake), sink = Math.round(k2 * 9);
+    const white = t < T1 + 0.25 && Math.floor(t * 11) % 3 === 0, im = white ? IMG.charsF : IMG.chars;
+    ctx.save(); ctx.translate(x, 0); if (flip) ctx.scale(-1, 1);
+    for (let ry = 0; ry < m.h; ry += 2) {              // de arriba abajo, cada tira se desplaza, se aclara y desaparece
+      const thr = ry / m.h * 0.72 + h01(ry + 3) * 0.28, near = clamp((thr - k2) / 0.14, 0, 1);
+      if (k2 > 0 && near <= 0) continue;
+      ctx.globalAlpha = k2 > 0 ? near : 1;
+      ctx.drawImage(im, f[0], f[1] + ry, m.w, Math.min(2, m.h - ry), -m.ax + ox + Math.round((1 - near) * (h01(ry + 11) - 0.5) * 16), yFeet - m.gy + ry + sink - Math.round((1 - near) * 5), m.w, Math.min(2, m.h - ry));
+    }
+    ctx.restore();
+    const left = x - m.ax, top = yFeet - m.gy;
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 6; i++) {                       // rayos de luz que le salen del cuerpo
+      const t0 = 0.12 + i * 0.2, u = (t - t0) / 0.9; if (u <= 0 || u >= 1) continue;
+      const bx = Math.round(left + m.w * (0.2 + 0.6 * h01(i + 5))), w = 2 + Math.round(3 * h01(i + 8));
+      ctx.fillStyle = col; ctx.globalAlpha = 0.5 * Math.sin(u * Math.PI); ctx.fillRect(bx - w, top - 40, w * 2, m.h * 0.75 + 40);
+      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.6 * Math.sin(u * Math.PI); ctx.fillRect(bx - 1, top - 40, 2, m.h * 0.75 + 40);
+    }
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    for (let i = 0; i < 9; i++) {                       // estallidos repartidos por el cuerpo
+      const t0 = 0.08 + i * 0.17, u = (t - t0) / 0.5; if (u <= 0 || u >= 1) continue;
+      drawFx('boom', u, left + m.w * (0.15 + 0.7 * h01(i + 21)), top + m.h * (0.2 + 0.6 * h01(i + 33)), i % 3 === 2 ? '#ffffff' : col, 26 + 18 * h01(i + 2));
+    }
+    if (k2 > 0) for (let i = 0; i < 34; i++) {          // ceniza y brasas que suben
+      const p = ((t - T1) * (0.5 + 0.5 * h01(i + 60)) + h01(i + 41)) % 1, px = left + m.w * h01(i + 50) + Math.sin(t * 3 + i) * 3, py = top + m.h * (0.9 - 0.9 * p) - 14 * p;
+      ctx.globalAlpha = (1 - p) * Math.min(1, k2 * 3) * (1 - k2 * 0.6); ctx.fillStyle = i % 3 ? '#2a2230' : col; ctx.fillRect(Math.round(px), Math.round(py), i % 4 ? 1 : 2, i % 4 ? 1 : 2);
+    }
+  }
+  ctx.restore();
+  return true;
+}
 // ── Efectos del paquete (assets/fx.png): ocho colores por efecto; se elige el más parecido al color pedido ──
 loadImg('fx', 'assets/fx.png');
 const FXROW = {};
