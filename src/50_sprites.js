@@ -599,11 +599,11 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   // La llama de los guanteletes: del color de la deidad que más lleva, más grande cuanto más poder y cuando lanza
   const hands = m.hands && (m.hands[anim] || m.hands.move)[i];
   if (hands && IMG.fx) {
-    const row = fxRow(col), fw = (anim === 'atk' ? 7 : 5) + tier, fh = Math.round(fw * 1.5), ff = FXA.flame;
+    const row = fxRow(col), fw = (anim === 'atk' ? 5 : 3) + Math.floor(tier / 2), fh = Math.round(fw * 1.5), ff = FXA.flame;
     for (let h = 0; h < hands.length; h++) {
       const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], ft = S.t * 14 + h * 5, fr = Math.floor(ft) % ff.n, mix = ft - Math.floor(ft);
-      ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 3), fw, fh);
-      ctx.globalAlpha = mix; ctx.drawImage(IMG.fx, (fr + 1) % ff.n * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 3), fw, fh); ctx.globalAlpha = 1;   // la llama también se funde entre dibujos
+      ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh);
+      ctx.globalAlpha = mix; ctx.drawImage(IMG.fx, (fr + 1) % ff.n * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh); ctx.globalAlpha = 1;   // la llama también se funde entre dibujos
     }
   }
   return true;
