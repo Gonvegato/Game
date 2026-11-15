@@ -795,7 +795,11 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const cv = $('game');
 const scr = cv.getContext('2d');
 // El mundo se pinta en un lienzo pequeño (1 unidad = 1 píxel) y se amplía por un número entero: una sola rejilla de píxeles
-const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
+const lo = document.createElement('canvas'), loCtx = lo.getContext('2d');
+// El jugador se pinta en su propia capa pequeña y se coloca en pantalla con precisión de píxel de pantalla (ver render):
+// así ni él ni el mundo dan saltos de un píxel «gordo» al moverse. ctx apunta a la capa en la que se está pintando.
+const PL = 192, plCv = document.createElement('canvas'), plCtx = plCv.getContext('2d'); plCv.width = plCv.height = PL;
+let ctx = loCtx;
 // Imágenes de un paquete comprado o gratuito (carpeta assets/). Si alguna no carga, el juego usa su dibujo propio.
 // Créditos y licencia: assets/LICENSE-fantasy-rpg-pixel-pack.txt
 const IMG = {};
@@ -811,7 +815,7 @@ const ICO = { potion: 0, mana: 1, vial: 2, sword: 3, shield: 4, chest: 5, gem: 6
 const pic = (id, cls) => (id in PIC ? `<span class="pic${cls ? ' ' + cls : ''}" style="background-position:-${PIC[id] % 16 * 32}px -${Math.floor(PIC[id] / 16) * 32}px"></span>` : '');
 const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO[name] * 32}px -${(tier || 0) * 32}px"></span>`;
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
-const cam = { x: 0, y: 0 };
+const cam = { x: 0, y: 0, fx: 0, fy: 0, shx: 0, shy: 0, pl: false };   // x, y: píxel entero del juego; fx, fy: la fracción que sobra, que se aplica al ampliar
 
 // ───────────────────────── Sonido (efectos grabados y música) ─────────────────────────
 let AC = null, muted = false;
@@ -5488,7 +5492,7 @@ function resize() {
   view.cssW = w; view.cssH = h; view.dpr = dpr;
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   view.s = Math.max(1, Math.round(Math.sqrt(cv.width * cv.height / T.viewArea)));
-  lo.width = Math.ceil(cv.width / view.s); lo.height = Math.ceil(cv.height / view.s);
+  lo.width = Math.ceil(cv.width / view.s) + 1; lo.height = Math.ceil(cv.height / view.s) + 1;   // un píxel de margen para el desplazamiento fino
   view.w = cv.width / view.s; view.h = cv.height / view.s;
 }
 
@@ -5510,12 +5514,14 @@ function render() {
   renderWorld();
   const k = view.s;
   scr.setTransform(1, 0, 0, 1, 0, 0); scr.imageSmoothingEnabled = false;
-  scr.drawImage(lo, 0, 0, lo.width * k, lo.height * k);
+  const ox = Math.round(cam.fx * k), oy = Math.round(cam.fy * k);
+  scr.drawImage(lo, -ox, -oy, lo.width * k, lo.height * k);
+  if (cam.pl) { const p = S.p; scr.drawImage(plCv, Math.round((p.x - PL / 2 - cam.x - cam.shx) * k) - ox, Math.round((p.y - PL / 2 - cam.y - cam.shy) * k) - oy, PL * k, PL * k); }
   scr.textAlign = 'center';
   for (const [txt, x, y, size, col, alpha] of WTEXT) {
     scr.font = `600 ${Math.round(size * k)}px ${FONT}`; scr.globalAlpha = alpha;
-    scr.lineWidth = Math.max(2, k); scr.strokeStyle = '#0b080d'; scr.strokeText(txt, (x - cam.x) * k, (y - cam.y) * k);
-    scr.fillStyle = col; scr.fillText(txt, (x - cam.x) * k, (y - cam.y) * k);
+    scr.lineWidth = Math.max(2, k); scr.strokeStyle = '#0b080d'; scr.strokeText(txt, (x - cam.x) * k - ox, (y - cam.y) * k - oy);
+    scr.fillStyle = col; scr.fillText(txt, (x - cam.x) * k - ox, (y - cam.y) * k - oy);
   }
   scr.globalAlpha = 1;
   if (S.dialog) drawDialog(k);   // bocadillos de conversación, a resolución de pantalla para que el texto se lea nítido
@@ -5548,9 +5554,11 @@ function lights() {
 }
 function renderWorld() {
   const p = S.p, R = T.room;
-  cam.x = Math.round(view.w >= R.w + 64 ? (R.w - view.w) / 2 : clamp(p.x - view.w / 2, -32, R.w - view.w + 32));
-  cam.y = Math.round(view.h >= R.h + 64 ? (R.h - view.h) / 2 : clamp(p.y - view.h / 2, -32, R.h - view.h + 32));
-  const shx = Math.round((Math.random() - 0.5) * S.shake), shy = Math.round((Math.random() - 0.5) * S.shake);
+  // La cámara sigue al jugador con decimales. El mundo se pinta en el píxel entero (cam.x, cam.y) y lo que sobra (fx, fy) se
+  // aplica al ampliar la imagen a la pantalla: el desplazamiento avanza de píxel de pantalla en píxel de pantalla, sin tirones.
+  const cfx = view.w >= R.w + 64 ? (R.w - view.w) / 2 : clamp(p.x - view.w / 2, -32, R.w - view.w + 32), cfy = view.h >= R.h + 64 ? (R.h - view.h) / 2 : clamp(p.y - view.h / 2, -32, R.h - view.h + 32);
+  cam.x = Math.floor(cfx); cam.y = Math.floor(cfy); cam.fx = cfx - cam.x; cam.fy = cfy - cam.y; cam.pl = false;
+  const shx = Math.round((Math.random() - 0.5) * S.shake), shy = Math.round((Math.random() - 0.5) * S.shake); cam.shx = shx; cam.shy = shy;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = '#0b080d'; ctx.fillRect(0, 0, lo.width, lo.height);
@@ -5809,7 +5817,9 @@ function renderWorld() {
   }
 
   if (S.town) drawTown();
-  // Jugador
+  // Jugador: en su propia capa, centrado en ella; render() la coloca luego en su sitio exacto de la pantalla
+  ctx = plCtx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, PL, PL);
+  ctx.setTransform(1, 0, 0, 1, PL / 2 - Math.round(p.x), PL / 2 - Math.round(p.y)); cam.pl = true;
   const flying = p.dodgeT > 0 && p.fly, pr = flying ? p.r * 1.35 : p.r, py = flying ? p.y - 5 : p.y;
   if (flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
   const blink = p.inv > 0 && p.dodgeT <= 0 && Math.floor(S.t * 30) % 2 === 0;
@@ -5851,6 +5861,8 @@ function renderWorld() {
   if (dm > 1) for (let i = 0; i < dm; i++) { ctx.fillStyle = i < p.dodgeN ? C.ink : C.edge; ctx.fillRect(p.x - dm * 2.5 + i * 5, p.y + p.r + 10, 3, 3); }
   if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; pbar(Math.min(1, p.reserve / resMax()), 2); }
   if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; pbar((1 - p.chargeCd / p.chargeCdMax), 1); ctx.globalAlpha = 1; }
+
+  ctx = loCtx;   // fin de la capa del jugador
 
   // Efectos sobre todo
   for (const f of S.fx) {
@@ -6458,5 +6470,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { hush, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

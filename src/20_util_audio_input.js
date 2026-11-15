@@ -8,7 +8,11 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const cv = $('game');
 const scr = cv.getContext('2d');
 // El mundo se pinta en un lienzo pequeño (1 unidad = 1 píxel) y se amplía por un número entero: una sola rejilla de píxeles
-const lo = document.createElement('canvas'), ctx = lo.getContext('2d');
+const lo = document.createElement('canvas'), loCtx = lo.getContext('2d');
+// El jugador se pinta en su propia capa pequeña y se coloca en pantalla con precisión de píxel de pantalla (ver render):
+// así ni él ni el mundo dan saltos de un píxel «gordo» al moverse. ctx apunta a la capa en la que se está pintando.
+const PL = 192, plCv = document.createElement('canvas'), plCtx = plCv.getContext('2d'); plCv.width = plCv.height = PL;
+let ctx = loCtx;
 // Imágenes de un paquete comprado o gratuito (carpeta assets/). Si alguna no carga, el juego usa su dibujo propio.
 // Créditos y licencia: assets/LICENSE-fantasy-rpg-pixel-pack.txt
 const IMG = {};
@@ -24,7 +28,7 @@ const ICO = { potion: 0, mana: 1, vial: 2, sword: 3, shield: 4, chest: 5, gem: 6
 const pic = (id, cls) => (id in PIC ? `<span class="pic${cls ? ' ' + cls : ''}" style="background-position:-${PIC[id] % 16 * 32}px -${Math.floor(PIC[id] / 16) * 32}px"></span>` : '');
 const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO[name] * 32}px -${(tier || 0) * 32}px"></span>`;
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
-const cam = { x: 0, y: 0 };
+const cam = { x: 0, y: 0, fx: 0, fy: 0, shx: 0, shy: 0, pl: false };   // x, y: píxel entero del juego; fx, fy: la fracción que sobra, que se aplica al ampliar
 
 // ───────────────────────── Sonido (efectos grabados y música) ─────────────────────────
 let AC = null, muted = false;
