@@ -315,7 +315,7 @@ function barrelFire(target, m, big, col, reach) {
     if (res('executor')) { stun(target, 0.4); gainFury(15); }                // resonancia Verdugo
     if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     if (p.dodgeT <= 0) lunge(ang, dist(p, target) + target.r + 22);
-  } else {                               // arcabuz o pistolete: una bala a un enemigo
+  } else {                               // ballesta o pistolete: una bala a un enemigo
     if (B === 'b_icicle' && target.frozen > 0) m *= 1.3;
     if (B === 'b_drill') { if (target === p.drillT) p.drillN = Math.min(10, p.drillN + 1); else p.drillN = 0; p.drillT = target; m *= 1 + 0.15 * p.drillN; }   // Berbiquí
     if (B === 'b_net') { m *= 0.65; if ((target.netCd || 0) <= S.t) { target.netCd = S.t + 3; S.stat.net++; root(target, 0.9); } }   // Lanzarredes

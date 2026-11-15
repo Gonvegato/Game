@@ -6,7 +6,7 @@ const GSLOTS = { barrel: 'Cañón', action: 'Llave', mag: 'Munición', stock: 'C
 const GSLOT_KEYS = Object.keys(GSLOTS), GSLOT_WHAT = { barrel: 'a quién le das', action: 'cómo se dispara', mag: 'qué sale por la boca', stock: 'cómo te mueves', chamber: 'qué hace el disparo cargado' };
 // tag: lo que esa pieza tiene de especial, en tres palabras. Se enseña en la forja y al encontrarla.
 const PARTS = [
-  { id: 'b_long',    slot: 'barrel',  name: 'Cañón de arcabuz',     tag: 'Remata y sigue',     desc: 'Dispara una bala al enemigo más cercano. Si está lejos (más de la mitad de tu alcance) hace +40% de daño. Si lo mata, la misma bala sigue hasta otro enemigo cercano, hasta tres veces seguidas.', base: true },
+  { id: 'b_long',    slot: 'barrel',  name: 'Arco de ballesta',      tag: 'Remata y sigue',     desc: 'Dispara una bala al enemigo más cercano. Si está lejos (más de la mitad de tu alcance) hace +40% de daño. Si lo mata, la misma bala sigue hasta otro enemigo cercano, hasta tres veces seguidas.', base: true },
   { id: 'b_short',   slot: 'barrel',  name: 'Pistolete',            tag: 'Desenfundar',        desc: 'Dispara un 25% más rápido, pero alcanza un 30% menos. Justo después de esquivar, tu siguiente disparo sale al instante y hace el doble de daño.', cost: { iron: 1, orc: 2 } },
   { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Un arma en cada mano: cada disparo da a dos enemigos distintos a la vez, con el 55% del daño a cada uno. Alcanza un 25% menos.', cost: { iron: 1, storm: 2 } },
   { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Suelta seis postas en abanico. De cerca entran todas en el mismo enemigo y lo empujan hacia atrás; si choca contra un muro recibe un golpe extra y queda aturdido. Solo llega a la mitad de distancia.', cost: { iron: 2, feast: 2 } },
@@ -164,9 +164,9 @@ function gunName(g) {
   if (B === 'b_bomb') return A === 'a_semi' ? 'Mortero de mano' : 'Bombarda' + suf;
   if (B === 'b_horn') return 'Bocina de trueno';
   if (B === 'b_drill') return 'Berbiquí' + suf;
-  if (B === 'b_ghost') return 'Arcabuz fantasma' + suf;
+  if (B === 'b_ghost') return 'Ballesta fantasma' + suf;
   if (B === 'b_net') return 'Lanzarredes' + suf;
-  if (B === 'b_ends') return 'Arcabuz de dos distancias' + suf;
+  if (B === 'b_ends') return 'Ballesta de dos distancias' + suf;
   if (B === 'b_blow') return 'Cerbatana' + suf;
   if (B === 'b_wyrm') return 'Boca de sierpe' + suf;
   if (B === 'b_rod') return 'Vara de cobre' + suf;
@@ -179,9 +179,9 @@ function gunName(g) {
   if (B === 'b_fork') return 'Espingarda triple' + suf;
   if (B === 'b_harpoon') return 'Arpón' + suf;
   if (B === 'b_flame') return 'Sifón de fuego';
-  if (B === 'b_back') return 'Arcabuz de dos bocas' + suf;
+  if (B === 'b_back') return 'Ballesta de dos caras' + suf;
   if (B === 'b_flail') return 'Mangual';
-  return 'Arcabuz' + suf;
+  return 'Ballesta' + suf;
 }
 // Resonancias: cierta pieza del arma con cierta técnica de una deidad despiertan algo nuevo. Se activan solas.
 const RESO = [

@@ -479,7 +479,7 @@ const GSLOTS = { barrel: 'Cañón', action: 'Llave', mag: 'Munición', stock: 'C
 const GSLOT_KEYS = Object.keys(GSLOTS), GSLOT_WHAT = { barrel: 'a quién le das', action: 'cómo se dispara', mag: 'qué sale por la boca', stock: 'cómo te mueves', chamber: 'qué hace el disparo cargado' };
 // tag: lo que esa pieza tiene de especial, en tres palabras. Se enseña en la forja y al encontrarla.
 const PARTS = [
-  { id: 'b_long',    slot: 'barrel',  name: 'Cañón de arcabuz',     tag: 'Remata y sigue',     desc: 'Dispara una bala al enemigo más cercano. Si está lejos (más de la mitad de tu alcance) hace +40% de daño. Si lo mata, la misma bala sigue hasta otro enemigo cercano, hasta tres veces seguidas.', base: true },
+  { id: 'b_long',    slot: 'barrel',  name: 'Arco de ballesta',      tag: 'Remata y sigue',     desc: 'Dispara una bala al enemigo más cercano. Si está lejos (más de la mitad de tu alcance) hace +40% de daño. Si lo mata, la misma bala sigue hasta otro enemigo cercano, hasta tres veces seguidas.', base: true },
   { id: 'b_short',   slot: 'barrel',  name: 'Pistolete',            tag: 'Desenfundar',        desc: 'Dispara un 25% más rápido, pero alcanza un 30% menos. Justo después de esquivar, tu siguiente disparo sale al instante y hace el doble de daño.', cost: { iron: 1, orc: 2 } },
   { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Un arma en cada mano: cada disparo da a dos enemigos distintos a la vez, con el 55% del daño a cada uno. Alcanza un 25% menos.', cost: { iron: 1, storm: 2 } },
   { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Suelta seis postas en abanico. De cerca entran todas en el mismo enemigo y lo empujan hacia atrás; si choca contra un muro recibe un golpe extra y queda aturdido. Solo llega a la mitad de distancia.', cost: { iron: 2, feast: 2 } },
@@ -637,9 +637,9 @@ function gunName(g) {
   if (B === 'b_bomb') return A === 'a_semi' ? 'Mortero de mano' : 'Bombarda' + suf;
   if (B === 'b_horn') return 'Bocina de trueno';
   if (B === 'b_drill') return 'Berbiquí' + suf;
-  if (B === 'b_ghost') return 'Arcabuz fantasma' + suf;
+  if (B === 'b_ghost') return 'Ballesta fantasma' + suf;
   if (B === 'b_net') return 'Lanzarredes' + suf;
-  if (B === 'b_ends') return 'Arcabuz de dos distancias' + suf;
+  if (B === 'b_ends') return 'Ballesta de dos distancias' + suf;
   if (B === 'b_blow') return 'Cerbatana' + suf;
   if (B === 'b_wyrm') return 'Boca de sierpe' + suf;
   if (B === 'b_rod') return 'Vara de cobre' + suf;
@@ -652,9 +652,9 @@ function gunName(g) {
   if (B === 'b_fork') return 'Espingarda triple' + suf;
   if (B === 'b_harpoon') return 'Arpón' + suf;
   if (B === 'b_flame') return 'Sifón de fuego';
-  if (B === 'b_back') return 'Arcabuz de dos bocas' + suf;
+  if (B === 'b_back') return 'Ballesta de dos caras' + suf;
   if (B === 'b_flail') return 'Mangual';
-  return 'Arcabuz' + suf;
+  return 'Ballesta' + suf;
 }
 // Resonancias: cierta pieza del arma con cierta técnica de una deidad despiertan algo nuevo. Se activan solas.
 const RESO = [
@@ -2714,7 +2714,7 @@ function barrelFire(target, m, big, col, reach) {
     if (res('executor')) { stun(target, 0.4); gainFury(15); }                // resonancia Verdugo
     if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     if (p.dodgeT <= 0) lunge(ang, dist(p, target) + target.r + 22);
-  } else {                               // arcabuz o pistolete: una bala a un enemigo
+  } else {                               // ballesta o pistolete: una bala a un enemigo
     if (B === 'b_icicle' && target.frozen > 0) m *= 1.3;
     if (B === 'b_drill') { if (target === p.drillT) p.drillN = Math.min(10, p.drillN + 1); else p.drillN = 0; p.drillT = target; m *= 1 + 0.15 * p.drillN; }   // Berbiquí
     if (B === 'b_net') { m *= 0.65; if ((target.netCd || 0) <= S.t) { target.netCd = S.t + 3; S.stat.net++; root(target, 0.9); } }   // Lanzarredes
@@ -3629,6 +3629,9 @@ const DECOR = {"1":{"wall":[[0,0,14,22],[15,0,14,26],[30,0,16,21],[47,0,14,19],[
 const HOUSES = [[0, 0, 128, 133], [130, 0, 128, 133], [260, 0, 96, 144], [358, 0, 96, 139], [456, 0, 128, 133], [586, 0, 96, 139]];
 // Generado por tools/pack_town.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.
 const TOWN = {"anvil":[0,0,79,56],"furnace":[80,0,36,57],"workbench":[117,0,73,48],"scarecrow":[191,0,24,47],"hay":[216,0,22,20],"veg1":[239,0,16,16],"veg2":[256,0,16,16],"veg3":[273,0,16,16],"veg4":[290,0,16,16],"bush1":[307,0,29,27],"bush2":[337,0,35,33],"bush3":[373,0,43,43],"shrub":[417,0,42,64],"bush4":[460,0,29,27],"shrub2":[0,65,42,64],"table":[43,65,64,24],"bench":[108,65,58,32],"bench_s":[167,65,30,12],"fence":[198,65,68,80],"flower1":[267,65,16,16],"flower2":[284,65,16,21],"stone_floor":[301,65,64,80]};
+// Generado por tools/pack_weapons.py (Pixel Crawler de Anokolisa). No editar a mano.
+// [x, y, ancho, alto, agarre x, agarre y]
+const WEAP = {"cb_light":[0,0,22,15,7,7],"cb_heavy":[23,0,26,20,8,10],"bow_fire_0":[50,0,8,21,4,10],"bow_fire_1":[59,0,9,20,5,10],"bow_fire_2":[69,0,10,17,6,8],"bow_poison_0":[80,0,7,21,4,10],"bow_poison_1":[88,0,9,20,5,10],"bow_poison_2":[98,0,10,18,6,9],"bow_cursed_0":[109,0,7,21,4,10],"bow_cursed_1":[117,0,9,20,5,10],"bow_cursed_2":[127,0,10,17,6,8],"bow_elf_0":[138,0,7,21,4,10],"bow_elf_1":[146,0,7,18,4,9],"bow_elf_2":[154,0,10,17,6,8],"bow_wood_0":[165,0,6,21,3,10],"bow_wood_1":[172,0,8,18,4,9],"bow_wood_2":[181,0,10,17,6,8]};
 // ───────────────────────── Sprites (pixel art dibujado por código) ─────────────────────────
 // Todo se dibuja a tamaño real: 1 píxel del sprite = 1 unidad de mundo. Las figuras miran a la derecha y se voltean.
 // Las pequeñas son rejillas de texto (cada letra, un color). Las grandes se pintan con formas y sombreado automático.
@@ -4144,6 +4147,32 @@ function drawGun(x, y, ang, kick) {
   if (g.barrel === 'b_twin') { const nx = -Math.sin(ang) * 4, ny = Math.cos(ang) * 4; one(nx, ny); one(-nx, -ny); } else one(0, 0);
 }
 
+// ── El arma en la mano de Alec: la forma la decide el Cañón (ballesta ligera, pesada o arco) y el material del arco,
+// la deidad de la que más técnicas lleva (fuego, veneno, maldito, élfico o madera) ──
+loadImg('weapons', 'assets/weapons.png');
+const HEAVY_B = ['b_pierce', 'b_bomb', 'b_harpoon', 'b_far', 'b_horn', 'b_drill', 'b_net', 'b_flame', 'b_wyrm', 'b_icicle'];
+const BOW_B = { b_scatter: 2, b_fork: 2, b_swarm: 1, b_arc: 1, b_boom: 0, b_nail: 0, b_back: 1 };
+const BOW_MAT = { dragon: 'fire', forge: 'fire', storm: 'fire', venom: 'poison', feast: 'poison', beast: 'poison', shade: 'cursed', end: 'cursed', void: 'cursed', blood: 'cursed', mirror: 'cursed',
+  wood: 'elf', dream: 'elf', frost: 'elf', tide: 'elf', time: 'elf', luck: 'elf', light: 'elf' };
+function heroGod() {
+  const n = {};
+  for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id], gs = D ? [PIECE[D.a] && PIECE[D.a].god, PIECE[D.b] && PIECE[D.b].god] : [PIECE[cur.id] && PIECE[cur.id].god]; for (const g of gs) if (g) n[g] = (n[g] || 0) + (cur.lvl || 1); }
+  return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || null;
+}
+function weaponKey() {
+  const b = S.gun.barrel;
+  if (b in BOW_B) return 'bow_' + (BOW_MAT[heroGod()] || 'wood') + '_' + BOW_B[b];
+  return HEAVY_B.includes(b) ? 'cb_heavy' : 'cb_light';
+}
+function drawWeapon(x, y, ang, kick) {
+  const im = IMG.weapons; if (!im) return false;
+  const k = weaponKey(), w = WEAP[k]; if (!w) return false;
+  x += Math.cos(ang) * 6; y += Math.sin(ang) * 3 + 3;   // en las manos, por delante del cuerpo
+  const left = Math.cos(ang) < 0;
+  const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(im, w[0], w[1], w[2], w[3], -w[4] - kick, -w[5], w[2], w[3]); ctx.restore(); };
+  if (S.gun.barrel === 'b_twin') { const nx = -Math.sin(ang) * 3, ny = Math.cos(ang) * 3; one(nx, ny); one(-nx, -ny); } else one(0, 0);
+  return true;
+}
 // ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
 const charKey = e => (e.skin && ATLAS[e.skin] ? e.skin : e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
 function drawChar(key, anim, time, x, yFeet, flip, flash) {
@@ -4158,12 +4187,7 @@ const heroKey = () => 'hunter_s';
 // Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
-function heroGodColor() {
-  const n = {};
-  for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id], gs = D ? [PIECE[D.a] && PIECE[D.a].god, PIECE[D.b] && PIECE[D.b].god] : [PIECE[cur.id] && PIECE[cur.id].god]; for (const g of gs) if (g) n[g] = (n[g] || 0) + (cur.lvl || 1); }
-  const best = Object.keys(n).sort((a, b) => n[b] - n[a])[0];
-  return best ? GODS[best].color : C.ember;
-}
+function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
   const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'hunter_u' : 'hunter_d') : 'hunter_s', flip = key === 'hunter_s' && fx < 0;
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
@@ -4520,10 +4544,12 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+    const behind = Math.sin(p.face) < -0.7, kick0 = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;
+    if (behind) drawWeapon(p.x, py - 1, p.face, kick0);   // apuntando hacia arriba, el arma queda detrás
     const packHero = drawHero(p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, p.face, false);
     if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
-    drawGun(p.x, py + (packHero ? -2 : 1), p.face, kick);   // el arma que lleva, apuntando
+    if (!packHero) drawGun(p.x, py + 1, p.face, kick); else if (!behind) drawWeapon(p.x, py - 1, p.face, kick);   // el arma que lleva, apuntando
     if (glow) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar

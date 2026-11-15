@@ -513,6 +513,32 @@ function drawGun(x, y, ang, kick) {
   if (g.barrel === 'b_twin') { const nx = -Math.sin(ang) * 4, ny = Math.cos(ang) * 4; one(nx, ny); one(-nx, -ny); } else one(0, 0);
 }
 
+// ── El arma en la mano de Alec: la forma la decide el Cañón (ballesta ligera, pesada o arco) y el material del arco,
+// la deidad de la que más técnicas lleva (fuego, veneno, maldito, élfico o madera) ──
+loadImg('weapons', 'assets/weapons.png');
+const HEAVY_B = ['b_pierce', 'b_bomb', 'b_harpoon', 'b_far', 'b_horn', 'b_drill', 'b_net', 'b_flame', 'b_wyrm', 'b_icicle'];
+const BOW_B = { b_scatter: 2, b_fork: 2, b_swarm: 1, b_arc: 1, b_boom: 0, b_nail: 0, b_back: 1 };
+const BOW_MAT = { dragon: 'fire', forge: 'fire', storm: 'fire', venom: 'poison', feast: 'poison', beast: 'poison', shade: 'cursed', end: 'cursed', void: 'cursed', blood: 'cursed', mirror: 'cursed',
+  wood: 'elf', dream: 'elf', frost: 'elf', tide: 'elf', time: 'elf', luck: 'elf', light: 'elf' };
+function heroGod() {
+  const n = {};
+  for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id], gs = D ? [PIECE[D.a] && PIECE[D.a].god, PIECE[D.b] && PIECE[D.b].god] : [PIECE[cur.id] && PIECE[cur.id].god]; for (const g of gs) if (g) n[g] = (n[g] || 0) + (cur.lvl || 1); }
+  return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || null;
+}
+function weaponKey() {
+  const b = S.gun.barrel;
+  if (b in BOW_B) return 'bow_' + (BOW_MAT[heroGod()] || 'wood') + '_' + BOW_B[b];
+  return HEAVY_B.includes(b) ? 'cb_heavy' : 'cb_light';
+}
+function drawWeapon(x, y, ang, kick) {
+  const im = IMG.weapons; if (!im) return false;
+  const k = weaponKey(), w = WEAP[k]; if (!w) return false;
+  x += Math.cos(ang) * 6; y += Math.sin(ang) * 3 + 3;   // en las manos, por delante del cuerpo
+  const left = Math.cos(ang) < 0;
+  const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(im, w[0], w[1], w[2], w[3], -w[4] - kick, -w[5], w[2], w[3]); ctx.restore(); };
+  if (S.gun.barrel === 'b_twin') { const nx = -Math.sin(ang) * 3, ny = Math.cos(ang) * 3; one(nx, ny); one(-nx, -ny); } else one(0, 0);
+  return true;
+}
 // ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
 const charKey = e => (e.skin && ATLAS[e.skin] ? e.skin : e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
 function drawChar(key, anim, time, x, yFeet, flip, flash) {
@@ -527,12 +553,7 @@ const heroKey = () => 'hunter_s';
 // Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
-function heroGodColor() {
-  const n = {};
-  for (const k of SLOT_KEYS) { const cur = S.build[k]; if (!cur) continue; const D = DUO[cur.id], gs = D ? [PIECE[D.a] && PIECE[D.a].god, PIECE[D.b] && PIECE[D.b].god] : [PIECE[cur.id] && PIECE[cur.id].god]; for (const g of gs) if (g) n[g] = (n[g] || 0) + (cur.lvl || 1); }
-  const best = Object.keys(n).sort((a, b) => n[b] - n[a])[0];
-  return best ? GODS[best].color : C.ember;
-}
+function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
   const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'hunter_u' : 'hunter_d') : 'hunter_s', flip = key === 'hunter_s' && fx < 0;
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;

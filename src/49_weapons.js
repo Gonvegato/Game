@@ -1,0 +1,3 @@
+// Generado por tools/pack_weapons.py (Pixel Crawler de Anokolisa). No editar a mano.
+// [x, y, ancho, alto, agarre x, agarre y]
+const WEAP = {"cb_light":[0,0,22,15,7,7],"cb_heavy":[23,0,26,20,8,10],"bow_fire_0":[50,0,8,21,4,10],"bow_fire_1":[59,0,9,20,5,10],"bow_fire_2":[69,0,10,17,6,8],"bow_poison_0":[80,0,7,21,4,10],"bow_poison_1":[88,0,9,20,5,10],"bow_poison_2":[98,0,10,18,6,9],"bow_cursed_0":[109,0,7,21,4,10],"bow_cursed_1":[117,0,9,20,5,10],"bow_cursed_2":[127,0,10,17,6,8],"bow_elf_0":[138,0,7,21,4,10],"bow_elf_1":[146,0,7,18,4,9],"bow_elf_2":[154,0,10,17,6,8],"bow_wood_0":[165,0,6,21,3,10],"bow_wood_1":[172,0,8,18,4,9],"bow_wood_2":[181,0,10,17,6,8]};
