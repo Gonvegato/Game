@@ -63,7 +63,7 @@ function update(dt) {
     if (bestE) { S.lock = bestE; blip(900, 0.04, 'triangle', 0.03); }
   }
   if (am < 0.3) aimLatch = false;
-  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && !blocked(p, S.lock)) ? S.lock : nearestInRange();
+  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && (overWalls() || !blocked(p, S.lock))) ? S.lock : nearestInRange();
   S.target = target;
 
   // Disparo cargado
@@ -101,17 +101,20 @@ function update(dt) {
       if (tg) { const dx = tg.x - p.x, dy = tg.y - p.y, d = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx) + (i ? Math.PI / 2 : 0), r = Math.min(70, d); wx = tg.x + Math.cos(a) * r; wy = tg.y + Math.sin(a) * r; }
       else { wx = p.x - Math.cos(p.face) * 30 * (i ? -1 : 1); wy = p.y - Math.sin(p.face) * 30; }
       const at = unstick(clamp(wx, 12, T.room.w - 12), clamp(wy, 12, T.room.h - 12)); m.x += (at.x - m.x) * Math.min(1, dt * 9); m.y += (at.y - m.y) * Math.min(1, dt * 9); }); }
-  // Sabuesos: van a por la presa (quien disparas) y muerden
-  { const n = petN(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5, prey: null, dir: 0 }); S.pets.length = n;
-    const lb = lv('beast_basic'), k = lb ? 0.6 * lb : 0.3;
-    for (const pt of S.pets) {
+  // La manada: cada perro va a por la presa (quien disparas) por su lado y muerde. Crece con la Caza.
+  { const n = petN(), k = biteK(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5 + 0.13 * S.pets.length, prey: null, dir: 0, st: 0 }); S.pets.length = n;
+    packWatch();
+    S.pets.forEach((pt, i) => {
+      pt.st = packStage(i);
       if (!pt.prey || !active(pt.prey)) { pt.prey = null; let bd = 170; for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd) { bd = d; pt.prey = e; } } }
-      const goal = pt.prey || { x: p.x + 14, y: p.y + 10, r: 0 }, dx = goal.x - pt.x, dy = goal.y - pt.y, d = Math.hypot(dx, dy) || 1, reach = (goal.r || 0) + 8;
-      if (d > reach) { const sp = Math.min(d - reach + 1, 150 * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; pt.dir = dx; }
+      const a = i * 2.4 + 0.6, pr = pt.prey, gx = pr ? pr.x + Math.cos(a) * (pr.r + 10) : p.x + Math.cos(a) * 17, gy = pr ? pr.y + Math.sin(a) * (pr.r + 10) * 0.8 : p.y + 8 + Math.sin(a) * 10;
+      const dx = gx - pt.x, dy = gy - pt.y, d = Math.hypot(dx, dy) || 1;
+      if (d > 1.5) { const sp = Math.min(d, (pt.st === 2 ? 210 : 150) * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; }
+      pt.dir = pr ? pr.x - pt.x : dx; pt.run = d > 3;
       if (dist(pt, p) > 300) { pt.x = p.x; pt.y = p.y; }
       pt.cd -= dt * (duoOn('warhound') && furyFull() ? 2 : 1);
-      if (pt.prey && d <= reach + 4 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pt.prey, k); }
-    } }
+      if (pr && dist(pt, pr) <= pr.r + 15 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pr, k); }
+    }); }
   for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
     w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
     for (const e of S.enemies.slice()) {
@@ -292,6 +295,7 @@ function update(dt) {
     if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
     if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
     e.traced = Math.max(0, (e.traced || 0) - dt); e.inWell = Math.max(0, (e.inWell || 0) - dt);
+    e.doze = Math.max(0, (e.doze || 0) - dt);
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
@@ -302,16 +306,10 @@ function update(dt) {
     if (e.doom) { e.doom.t -= dt; if (e.doom.t <= 0) { fulfil(e); if (e.hp <= 0) continue; } }
     e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
     let reef = null;
-    if (duoOn('reef') && Math.hypot(e.kx, e.ky) > 170) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
-    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > 170 && (reef || touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
-      e.slamCd = 0.9; S.stat.slam++; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
-      S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
-      if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
-      if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
-      if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
-      if (has('w_deep')) addGold(1);                                         // Mar de fondo
-      if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
-      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+    if (duoOn('reef') && Math.hypot(e.kx, e.ky) > slamV(e)) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
+    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > slamV(e) && (reef || touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
+      e.slamCd = 0.9; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
+      wallSlam(e, kx / kl, ky / kl, reef);
       if (e.hp <= 0) continue;
     }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;

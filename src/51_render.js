@@ -202,7 +202,6 @@ function renderWorld() {
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   for (const m of S.mirrors) { const fl = S.target ? S.target.x < m.x : false; ctx.globalAlpha = 0.55 + 0.1 * Math.sin(S.t * 7); if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, true)) drawSprite(SPR.player, m.x, m.y + 8, fl, true); ctx.globalAlpha = 0.6; if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, false)) drawSprite(SPR.player, m.x, m.y + 8, fl, false); ctx.globalAlpha = 1; }
-  for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -266,7 +265,7 @@ function renderWorld() {
     if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
     if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
     if (e.lit > 0) { ctx.fillStyle = GODS.light.color; const y0 = Math.round(e.y - e.r * 1.7 - 5), x0 = Math.round(e.x); ctx.fillRect(x0 - 1, y0 - 2, 2, 5); ctx.fillRect(x0 - 2, y0 - 1, 5, 2); ctx.globalAlpha = 0.5; ctx.fillRect(x0 - 3, y0, 7, 1); ctx.fillRect(x0, y0 - 3, 1, 7); ctx.globalAlpha = 1; }
-    if (e.sleep > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
+    if (e.sleep > 0 || e.doze > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
     if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
     else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
     if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
@@ -280,6 +279,20 @@ function renderWorld() {
       const w = e.r * 2 + 4; ctx.fillStyle = C.wall; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w, 2.5);
       ctx.fillStyle = C.ink; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w * clamp(e.hp / e.maxHp, 0, 1), 2.5);
     }
+  }
+
+  // La manada, por delante de los enemigos para que no la tapen: el cachorro es pequeño y claro; el sabueso, el de siempre; el lobo alfa, grande, gris y con un halo a los pies.
+  if (S.pets.length) {
+    if (!SPR.pup) { SPR.pup = mkArt(ART.hound, { c: '#d79a58', C: '#a56a30' }); SPR.wolf = mkArt(ART.hound, { c: '#9aa3b2', C: '#566072', e: '#ff7a3c' }); }
+    S.pets.forEach((pt, i) => {
+      const st = pt.st || 0, sc = [0.8, 1.1, 1.7][st], sp = [SPR.pup, SPR.hound, SPR.wolf][st], im = pt.run !== false && Math.floor(S.t * 10 + i * 0.5) % 2 === 1 ? sp.b.c : sp.c;
+      ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7 * sc, 2.5 * sc, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      if (st === 2) { ctx.strokeStyle = GODS.beast.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.55 + 0.25 * Math.sin(S.t * 6); ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 14, 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+      ctx.save(); ctx.translate(Math.round(pt.x), Math.round(pt.y + 5)); ctx.scale(pt.dir < 0 ? -sc : sc, sc); ctx.drawImage(im, -sp.w / 2, -sp.h); ctx.restore();
+    });
+    // Bajo el primero de la manada, lo que lleva de Caza hacia el siguiente cambio (crecer o sumar un perro)
+    { const c = caza(), marks = [0].concat(PACK.grow, PACK.join), k = marks.findIndex(x => c < x), pt = S.pets[0];
+      if (k > 0) { const f = (c - marks[k - 1]) / (marks[k] - marks[k - 1]); ctx.globalAlpha = 0.55; ctx.fillStyle = '#000000'; ctx.fillRect(Math.round(pt.x) - 8, Math.round(pt.y) + 8, 16, 2); ctx.globalAlpha = 1; ctx.fillStyle = GODS.beast.color; ctx.fillRect(Math.round(pt.x) - 8, Math.round(pt.y) + 8, Math.round(16 * f), 2); } }
   }
 
   // Marca de objetivo
@@ -349,7 +362,7 @@ function renderWorld() {
     ctx.fillStyle = PAL.i; ctx.fillRect(bx - 5, by, 1, 1); ctx.fillRect(bx + 4, by - 1, 1, 1); ctx.fillRect(bx, by - 5, 1, 1); ctx.fillRect(bx - 1, by + 4, 1, 1);
   }
   if (S.gun.stock === 's_shield' && p.wardCd <= 0) { const a = S.t * 2.4, sx = Math.round(p.x + Math.cos(a) * 13), sy = Math.round(p.y - 2 + Math.sin(a) * 7); ctx.fillStyle = '#16101a'; ctx.fillRect(sx - 3, sy - 4, 6, 8); ctx.fillStyle = PAL.i; ctx.fillRect(sx - 2, sy - 3, 4, 6); ctx.fillStyle = PAL.g; ctx.fillRect(sx - 1, sy - 1, 2, 2); }
-  if (p.temper > 0) { const n = Math.min(15, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
+  if (p.temper > 0) { const n = Math.min(33, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
   if (S.gun.mag === 'm_last') for (let i = 0; i < 6; i++) { ctx.fillStyle = i < 6 - (p.clip || 0) ? (i === 0 ? C.ember : C.ink) : C.edge; ctx.fillRect(Math.round(p.x) - 9 + (5 - i) * 3, Math.round(p.y - p.r - 12), 2, 4); }
   if (S.gun.action === 'a_over') { ctx.fillStyle = p.overT >= 10 ? C.ember : C.edge; ctx.fillRect(Math.round(p.x) - 5, Math.round(p.y + p.r + 14), Math.round(10 * p.overT / 10), 2); }
   if (S.gun.action === 'a_pend' && p.pend > 0) for (let i = 0; i < p.pend; i++) { ctx.fillStyle = C.ember; ctx.fillRect(Math.round(p.x) - p.pend * 2 + i * 4, Math.round(p.y + p.r + 14), 2, 2); }
