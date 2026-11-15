@@ -22,7 +22,21 @@ Z = {
       'wall': [('forge', 112, 249, 16, 23), ('forge', 128, 249, 16, 23), ('forge', 144, 249, 16, 23), ('forge', 112, 282, 16, 22), ('forge', 128, 282, 16, 22), ('forge', 226, 164, 28, 44), ('dprops', 83, 70, 10, 21), ('graves', 70, 11, 20, 53)],
       'floor': [('gprops', 85, 85, 10, 9), ('gprops', 148, 84, 10, 8), ('forge', 212, 243, 8, 13), ('forge', 228, 247, 8, 13)]},
 }
+# ── Huesos y calaveras de la tierra de no-muertos: recortes en assets/library/extra/ (se guardan al pasar la carpeta Objects_separately como argumento) ──
+import sys, os
+EX = 'assets/library/extra/'
+UB = {'ub1': 'Bones_shadow1_1', 'ub2': 'Bones_shadow1_2', 'ub3': 'Bones_shadow1_3', 'ub5': 'Bones_shadow1_5', 'ub16': 'Bones_shadow1_16', 'ub18': 'Bones_shadow1_18'}
+if len(sys.argv) > 1:
+    for k, f in UB.items():
+        im = Image.open(os.path.join(sys.argv[1], f + '.png')).convert('RGBA'); im.crop(im.getbbox()).save(EX + k + '.png')
+def extra(k): im = Image.open(EX + k + '.png').convert('RGBA'); return ('x:' + k, 0, 0, im.width, im.height)
+Z[1]['floor'] += [extra(k) for k in ('ub1', 'ub2', 'ub3', 'ub5', 'ub16', 'ub18')]; Z[1]['solid'] += [extra('u_skull'), extra('u_arm4'), extra('u_ribs')]; Z[1]['wall'] += [extra('u_skull')]
+Z[4]['floor'] += [extra('ub2'), extra('ub18'), extra('ub3')]; Z[4]['solid'] += [extra('u_skull'), extra('u_arm3')]
 img = {k: Image.open(v).convert('RGBA') for k, v in SH.items()}
+for z in Z.values():
+    for lst in z.values():
+        for t in lst:
+            if t[0].startswith('x:'): img[t[0]] = Image.open(EX + t[0][2:] + '.png').convert('RGBA')
 items = []
 for z, cats in Z.items():
     for cat, lst in cats.items():
