@@ -238,7 +238,7 @@ function sleep(e, t) {
   e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
   note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
 }
-function wake(e) { e.sleep = 0; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function wake(e) { e.sleep = 0; e.wokeT = S.t; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
 function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
 function addWell(x, y, r, life, pulse, end, o) { const k = (mastery('void') ? 1.4 : 1) * (1 + 0.1 * aff('void')); S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
 const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };

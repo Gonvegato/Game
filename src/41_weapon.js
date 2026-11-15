@@ -436,7 +436,9 @@ function chargePayoff(e) {
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
   { const lc2 = lv('light_charge'), dc2 = lv('dream_charge');
     if (lc2 && active(e)) { if (e.lit > 0) { stun(e, 1); hit(e, p.dmg * 0.4 * lc2, 0, 0, false, GODS.light.color); } light(e); }   // Destello
-    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; } else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
+    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; }
+      else if (e.wokeT === S.t) { if (duoOn('digest')) addReserve(4); hit(e, p.dmg * 0.6 * (1 + 0.8 * dc2), 0, 0, true, GODS.dream.color); }   // el propio cargado lo acaba de despertar: el golpe extra entra igual
+      else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
   const fc = lv('frost_charge'), ec = lv('end_charge');
   if (fc && active(e)) {                                                    // Quebrar
     if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }

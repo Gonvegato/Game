@@ -65,102 +65,102 @@ const UPGRADES = [
 // lo matas, la desmontas y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
 const GODS = {
   dragon: { title: 'La Que Duerme Sobre Oro', theme: 'Dragones', weapon: 'Colmillo de la Durmiente', mat: 'Escama', color: '#ff6a3c',
-    key: 'Ascuas: se clavan en el enemigo y queman todas a la vez. Oro: cuanto más llevas, más daño haces.', lines: {
+    key: 'Ascuas: sus técnicas las clavan en los enemigos y queman todas a la vez, hasta 8 por enemigo. Su pasiva convierte tu oro en daño: cuanto más llevas, más pegas.', lines: {
     enter: ['entreabre un ojo. Su elegido guarda esta sala.', 'huele a intruso entre sus monedas.'],
     champ: ['cuenta su oro para calmarse. Le falta una pieza.', 'resopla humo. Ha perdido un elegido.'],
     take:  ['te apunta en su lista de deudores.', 'no olvida quién le roba.'], master: ['ruge: nadie le había robado tanto.'] } },
   stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Pico de Veta Madre', mat: 'Mena', color: '#6fe3d0',
-    key: 'Cristales: se quedan en la sala y repiten lo que haces.', lines: {
+    key: 'Cristales: los dejan Esquirla (al disparar) y Geoda (al esquivar). Solos no hacen nada; sus otras técnicas los usan para repetir tus disparos, lanzar rayos o reventarlos.', lines: {
     enter: ['tarda un siglo en mirarte. Ya te está mirando.', 'cruje. Su elegido despierta.'],
     champ: ['no dice nada. En algún lugar se agrieta una montaña.', 'guarda silencio. Es un mal silencio.'],
     take:  ['toma nota. Tiene tiempo.', 'observa cómo tallas lo que era suyo.'], master: ['pronuncia tu nombre, muy despacio.'] } },
   venom: { title: 'La Boticaria Sin Rostro', theme: 'Veneno', weapon: 'Aguijón de la Boticaria', mat: 'Glándula', color: '#9be04a',
-    key: 'Veneno: no caduca, se acumula y se contagia.', lines: {
+    key: 'Veneno: lo ponen sus técnicas al disparar o con rastros y charcos. No caduca y se acumula hasta 30; el cargado lo convierte en daño de golpe y la pasiva lo contagia cuando muere el enemigo.', lines: {
     enter: ['anota tu peso y tu altura.', 'prepara un frasco con tu nombre.'],
     champ: ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
     take:  ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'], master: ['te propone, encantada, un experimento.'] } },
   feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Trinchante del Anfitrión', mat: 'Especia', color: '#ff8fb3',
-    key: 'Reserva: la vida que te sobra al curarte se guarda como escudo, y luego la gastas.', lines: {
+    key: 'Reserva: con cualquier técnica suya, la curación que te sobra con la vida llena se guarda como escudo, hasta 30. Sus técnicas te curan y después convierten esa Reserva en daño.', lines: {
     enter: ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
     champ: ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
     take:  ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'], master: ['brinda por ti, y ya van tres copas.'] } },
   orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Hacha del Primer Puño', mat: 'Hueso', color: '#d9a066',
-    key: 'Furia: sube al golpear y al recibir golpes, y lo potencia todo.', lines: {
+    key: 'Furia: con cualquier técnica suya ganas Furia al golpear y al recibir golpes, hasta 100, y baja si dejas de pelear. Sus técnicas la convierten en daño, cadencia y un grito.', lines: {
     enter: ['escupe al suelo. Su elegido quiere tu cabeza.', 'hace sonar los tambores.'],
     champ: ['se ríe a carcajadas. Buen golpe.', 'golpea la mesa: ¡otro!'],
     take:  ['dice que robar a un muerto es de listos.', 'gruñe algo parecido a un elogio.'], master: ['te reta a duelo. Lo dice en serio.'] } },
   time: { title: 'El Relojero de la Última Hora', theme: 'Tiempo', weapon: 'Manecilla del Relojero', mat: 'Arena', color: '#7fa8ff',
-    key: 'Ecos: lo que haces se repite poco después. Y los enemigos lentos reciben más daño.', lines: {
+    key: 'Ecos: Segundero repite cada disparo y Rebobinar repite tu cargado poco después. Su esquive frena a los enemigos, y su pasiva hace más daño a los ralentizados o aturdidos.', lines: {
     enter: ['da cuerda a su elegido. Tic.', 'ya ha visto cómo acaba esta sala. No te lo dirá.'],
     champ: ['adelanta su reloj un minuto, molesto.', 'anota la hora de la muerte. Llega tarde.'],
     take:  ['murmura que eso ya lo habías robado antes.', 'te presta un segundo. Lo querrá de vuelta.'], master: ['detiene su reloj para mirarte bien.'] } },
   shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Guadaña de la Contadora', mat: 'Ceniza', color: '#9d8cff',
-    key: 'Sombras: los enemigos que matas se levantan y pelean por ti.', lines: {
+    key: 'Sombras: con Marca de tumba, los enemigos que matas mientras están marcados se levantan y pelean por ti unos segundos. Sus otras técnicas sacan partido de esas Sombras.', lines: {
     enter: ['empieza a contar. Tú eres el siguiente número.', 'envía a su elegido con un hueco reservado para ti.'],
     champ: ['pierde la cuenta por primera vez en mil años.', 'suma uno. No era el que esperaba.'],
     take:  ['ve cómo sus muertos te siguen a ti.', 'te observa: los muertos no deberían obedecerte.'], master: ['deja de contar y se pone en pie.'] } },
   storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Lanza de la Voz', mat: 'Chispa', color: '#ffe14d',
-    key: 'Agujas: se clavan sin hacer nada hasta que las descargas; entonces saltan rayos.', lines: {
+    key: 'Agujas: Aguja estática las clava al disparar. Solas no hacen nada: hay que descargarlas con el cargado (Sobretensión) o atravesando al enemigo con el esquive (Paso relámpago), y entonces saltan rayos.', lines: {
     enter: ['truena a lo lejos. Su elegido ya está aquí.', 'carga el aire. Se te eriza el pelo.'],
     champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
     take:  ['te avisa: los rayos no tienen dueño.', 'ríe. Le gusta el ruido que haces.'], master: ['grita tu nombre, y se oye en los cuatro mundos.'] } },
   tide: { title: 'El Ahogado Bajo la Ola', theme: 'Mareas', weapon: 'Ancla del Ahogado', mat: 'Sal', color: '#4fb4d8',
-    key: 'Empujones: lanzas a los enemigos contra los muros, y el choque les hace daño. Los Empapados lo sufren más.', lines: {
+    key: 'Empujones y Empapado: sus técnicas empujan y empapan. Si un enemigo choca contra un muro recibe daño y queda aturdido, y su pasiva hace más daño a los Empapados. Los jefes no se dejan empujar.', lines: {
     enter: ['sube un palmo el agua de la sala.', 'arrastra algo pesado por el fondo. Viene hacia aquí.'],
     champ: ['suelta una burbuja. Tarda en llegar arriba.', 'se lleva a su elegido mar adentro, sin prisa.'],
     take:  ['te deja sal en los labios.', 'dice que todo lo que flota acaba volviendo.'], master: ['retira el mar entero para mirarte.'] } },
   luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Estoque de la Dama', mat: 'Taba', color: '#f2ead0',
-    key: 'Críticos y azar: dados, monedas y rachas. Si sale bien, sale muy bien.', lines: {
+    key: 'Críticos y azar: Dado cargado da a tu disparo probabilidad de crítico, el cargado tira dados, el esquive lanza una moneda y la pasiva acumula Rachas con cada crítico. Si sale bien, sale muy bien.', lines: {
     enter: ['apuesta por su elegido. Paga poco: lo ve claro.', 'baraja sin mirar las cartas.'],
     champ: ['pierde la apuesta y sonríe igual.', 'paga su deuda con una moneda de dos caras.'],
     take:  ['te guiña un ojo. O le ha entrado algo.', 'sube la apuesta.'], master: ['te ofrece los dados. Están calientes.'] } },
   wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Hoz de la Madre', mat: 'Semilla', color: '#3fbf73',
-    key: 'Semillas: brotan en el enemigo y lo dejan clavado en el sitio. Zarzas: cierran el paso.', lines: {
+    key: 'Semillas y Raíces: cada impacto planta una Semilla y, al juntar 3 (2 desde el nivel II), brotan Raíces que clavan al enemigo en el sitio. Su cargado crea zarzales que frenan y dañan.', lines: {
     enter: ['hace crecer musgo en tus botas.', 'deja que su elegido eche raíces en esta sala.'],
     champ: ['lo cubre de hojas. Mañana será un árbol.', 'no llora: abona.'],
     take:  ['te llama mala hierba, con cariño.', 'siente cómo podas lo que era suyo.'], master: ['florece en pleno invierno, solo por verte.'] } },
   frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Punzón de la Dama', mat: 'Carámbano', color: '#bfe9ff',
-    key: 'Escarcha: se acumula y frena. Con 5, el enemigo queda Congelado y puedes romperlo.', lines: {
+    key: 'Escarcha: sus técnicas la ponen al disparar, con el cargado o con placas de hielo. Cada punto frena; con 5, el enemigo queda Congelado y el cargado puede romperlo.', lines: {
     enter: ['no se mueve. Nunca se ha movido.', 'baja la temperatura de la sala. Ves tu aliento.'],
     champ: ['no parpadea. Guarda al muerto bajo el hielo, intacto.', 'deja que nieve sobre su elegido.'],
     take:  ['te mira hacerlo. Solo te mira.', 'tiene todo el tiempo del mundo para cobrártelo.'], master: ['da un paso. El primero en mil inviernos.'] } },
   blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Lanceta del Acreedor', mat: 'Coágulo', color: '#d6334a',
-    key: 'Heridas: sangran más cuanta menos vida tengas. Pagos: das vida para pegar más y la recuperas matando.', lines: {
+    key: 'Heridas: su disparo las abre y sangran más cuanta menos vida tengas. Sus otras técnicas te cobran vida para pegar más y te la devuelven al matar o al atravesar enemigos.', lines: {
     enter: ['abre su libro de cuentas por tu nombre.', 'te presta a su elegido. Con intereses.'],
     champ: ['apunta la pérdida. Te la cobrará.', 'lame la pluma y tacha una línea.'],
     take:  ['sonríe: ahora tú también le debes.', 'te fía. Eso es peor.'], master: ['cierra el libro: ya eres su mejor cliente.'] } },
   end: { title: 'La Última Página', theme: 'Final', weapon: 'Pluma de la Última Página', mat: 'Tinta', color: '#9fb0c8',
-    key: 'Sentencias: marcas a un enemigo y, al acabar el plazo, recibe de golpe parte del daño que le hiciste.', lines: {
+    key: 'Sentencia: la pone su técnica de disparo, que se llama igual. Al acabar el plazo, el enemigo recibe de golpe parte del daño que le hiciste; sus otras técnicas la cumplen antes, la adelantan o la pasan a otro enemigo.', lines: {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
   light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lanza del Ojo', mat: 'Lucero', color: '#ffb84d',
-    key: 'Iluminados: parte del daño que recibe uno lo reciben también los demás Iluminados.', lines: {
+    key: 'Iluminado: lo ponen sus técnicas al disparar, con el cargado o al esquivar. Con Señalar, parte del daño que recibe un Iluminado lo reciben también los demás Iluminados.', lines: {
     enter: ['te ve. Te ha visto siempre.', 'enfoca a su elegido. La sala se queda sin sombras.'],
     champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
     take:  ['te sigue con la mirada mientras lo robas.', 'ya sabe dónde vas a guardarlo.'], master: ['parpadea. El mundo se apaga un instante.'] } },
   dream: { title: 'El Que Bosteza', theme: 'Sueño', weapon: 'Rueca del Que Bosteza', mat: 'Legaña', color: '#c9a0dc',
-    key: 'Dormidos: no se mueven ni atacan hasta que algo los despierta, y ese golpe hace mucho más daño.', lines: {
+    key: 'Dormido: Arrullo duerme al enemigo cada pocos disparos, y también lo hacen su cargado y la nube de su esquive. Un Dormido no se mueve ni ataca, y el golpe que lo despierta hace mucho más daño. Los jefes solo se frenan.', lines: {
     enter: ['se estira. Su elegido hace la guardia por él.', 'bosteza, y se te cierran los ojos un momento.'],
     champ: ['se da la vuelta en la cama.', 'murmura algo dormido. Era un nombre.'],
     take:  ['te deja hacer. Mañana lo habrá olvidado.', 'sueña que le roban. No se despierta.'], master: ['abre un ojo. Solo uno.'] } },
   void: { title: 'La Boca Sin Fondo', theme: 'Vacío', weapon: 'Anzuelo de la Boca', mat: 'Hueco', color: '#c44fd8',
-    key: 'Pozos: atraen a los enemigos a un punto. Cuanto más juntos están, más daño reciben.', lines: {
+    key: 'Pozos: su cargado y su esquive abren pozos que atraen a los enemigos a un punto, y su disparo los junta. Con su pasiva, cuanto más juntos están, más daño reciben.', lines: {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
   mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Daga de Azogue', mat: 'Azogue', color: '#cfd6de',
-    key: 'Reflejo: una copia tuya se pone al otro lado del enemigo y repite lo que haces.', lines: {
+    key: 'Reflejo: con Reflejo (disparo) o Doble (cargado) tienes una copia tuya al otro lado de tu objetivo que repite lo que haces.', lines: {
     enter: ['te mira desde un charco. Llevas tu cara.', 'pone a su elegido frente a un espejo. Salen dos.'],
     champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
     take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
   beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
-    key: 'Sabueso: pelea a tu lado, muerde a quien disparas y obedece a tu disparo cargado y a tu esquive.', lines: {
+    key: 'Sabueso: cualquiera de sus técnicas de disparo, cargado o esquive te da un sabueso que muerde a quien disparas; su cargado y su esquive le dan órdenes.', lines: {
     enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
     champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
   forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
-    key: 'Temple: tu arma se endurece mientras disparas y cada punto da más daño. Si te golpean, pierdes parte.', lines: {
+    key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10; cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
     enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
     take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
@@ -173,104 +173,104 @@ const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 // Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a balas, explosiones, esquives y bajas.
 const PIECES = [
   // Dragones
-  { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada disparo clava ${pl(l, 'Ascua')}. Se acumulan hasta 8 y queman todas a la vez.` },
-  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Tu disparo cargado clava ${1 + l} Ascuas y hace estallar todas las que ya tenga el enemigo: ${35 + 10 * (l - 1)}% de daño por Ascua, en área. Con la Recámara de rayo, se abre en cono.` },
-  { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `Tu esquive es un salto largo que pasa por encima de los muros. Al aterrizar, explota: ${150 * l}% de daño.` },
-  { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Los enemigos que mueren con Ascuas sueltan ${pl(l, 'moneda')}. Haces un ${l}% más de daño por cada 10 de oro que lleves, hasta +${30 + 10 * l}%.` },
+  { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Ascua')} en el enemigo. Se acumulan hasta 8 por enemigo y cada una quema un 12% de tu daño cada medio segundo.` },
+  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Cada enemigo que alcanza tu disparo cargado recibe ${1 + l} Ascuas y, acto seguido, todas sus Ascuas estallan: ${35 + 10 * (l - 1)}% de tu daño por Ascua, en un área pequeña que deja 1 Ascua a quien toca. Las Ascuas estalladas se gastan. Con la Recámara de rayo, el rayo se convierte en un cono de fuego.` },
+  { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `Tu esquive se convierte en un salto casi el doble de largo que pasa por encima de los muros. Al aterrizar, explota a tu alrededor: ${150 * l}% de tu daño en área.` },
+  { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Haces un ${l}% más de daño por cada 10 de oro que lleves, hasta +${30 + 10 * l}% (no afecta al daño continuo). Además, los enemigos que mueren con Ascuas sueltan ${pl(l, 'moneda')}; para eso necesitas algo que clave Ascuas.` },
   // Minerales
-  { id: 'stone_basic',    god: 'stone',  slot: 'basic',   name: 'Esquirla',         desc: l => `${Math.max(1, 4 - l) > 1 ? 'Cada ' + Math.max(1, 4 - l) + ' disparos dejan' : 'Cada disparo deja'} un Cristal junto al enemigo, que dura 9 s.` },
-  { id: 'stone_charge',   god: 'stone',  slot: 'charge',  name: 'Prisma',           desc: l => `Cuando disparas el cargado, cada Cristal lanza también un rayo al enemigo más cercano: ${40 * l}% del daño, con todos los efectos de tu cargado.` },
-  { id: 'stone_dodge',    god: 'stone',  slot: 'dodge',   name: 'Geoda',            desc: l => `Tu esquive deja un Cristal donde estabas. Si atraviesas un Cristal, revienta: ${120 * l}% de daño en área.` },
-  { id: 'stone_passive',  god: 'stone',  slot: 'passive', name: 'Veta',             desc: l => `El Cristal más cercano al objetivo repite cada disparo tuyo, al ${30 * l}% de daño y con tus efectos de disparo.` },
+  { id: 'stone_basic',    god: 'stone',  slot: 'basic',   name: 'Esquirla',         desc: l => `${Math.max(1, 4 - l) > 1 ? 'Cada ' + Math.max(1, 4 - l) + ' disparos dejan' : 'Cada disparo deja'} un Cristal junto al enemigo, que dura 9 s. Solo cuentan los impactos de tus disparos directos. Puede haber 6 Cristales a la vez: si sale otro, desaparece el más antiguo. Por sí solos no hacen nada; los usan Prisma, Geoda y Veta.` },
+  { id: 'stone_charge',   god: 'stone',  slot: 'charge',  name: 'Prisma',           desc: l => `Cuando disparas el cargado, cada Cristal lanza también un rayo al enemigo más cercano que vea: ${40 * l}% del daño del cargado, con todos los efectos de tu técnica de cargado. Necesitas tener Cristales en la sala.` },
+  { id: 'stone_dodge',    god: 'stone',  slot: 'dodge',   name: 'Geoda',            desc: l => `Cada esquive deja un Cristal donde estabas. Si pasas a través de un Cristal mientras esquivas (cualquiera, no solo los de Geoda), revienta: ${120 * l}% de tu daño en área, y ese Cristal desaparece.` },
+  { id: 'stone_passive',  god: 'stone',  slot: 'passive', name: 'Veta',             desc: l => `El Cristal más cercano a tu objetivo repite cada disparo tuyo, al ${30 * l}% de daño y con los efectos de tu técnica de disparo. Necesitas un Cristal cerca del enemigo; si no hay ninguno, no pasa nada.` },
   // Veneno
-  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Dardo',            desc: l => `Cada disparo aplica ${l} de Veneno. Se acumula hasta 30 y no caduca.` },
-  { id: 'venom_charge',   god: 'venom',  slot: 'charge',  name: 'Purga',            desc: l => `Tu disparo cargado convierte el Veneno en daño al instante: ${15 * l}% por punto. El enemigo conserva la mitad y deja un charco tóxico.` },
-  { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `Tu esquive deja un rastro tóxico durante 5 s que aplica ${l} de Veneno por pulso.` },
-  { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un enemigo envenenado, todo su Veneno pasa a los ${1 + l} enemigos más cercanos.` },
+  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Dardo',            desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Veneno. Se acumula hasta 30 por enemigo y no caduca. Cada punto hace un 3,5% de tu daño cada medio segundo.` },
+  { id: 'venom_charge',   god: 'venom',  slot: 'charge',  name: 'Purga',            desc: l => `Tu disparo cargado convierte en daño al instante el Veneno de cada enemigo que alcanza: ${15 * l}% de tu daño por punto. Después le queda la mitad del Veneno y deja un charco tóxico de 5 s que pone 1 de Veneno cada 0,4 s. Solo funciona si el enemigo ya tiene Veneno.` },
+  { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `Tu esquive deja un rastro tóxico a lo largo del recorrido durante 5 s. Pone ${l} de Veneno cada 0,4 s a quien lo pise.` },
+  { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un enemigo envenenado, todo su Veneno pasa, entero, a cada uno de los ${1 + l} enemigos más cercanos (sin pasar de 30). Solo funciona si muere con Veneno y hay otros enemigos cerca.` },
   // Manjares
-  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Bocado',           desc: l => `Cada disparo te cura ${(0.5 * l).toFixed(1)}. Lo que sobra con la vida llena se guarda como Reserva, hasta 30.` },
-  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Banquete',         desc: l => `Tu disparo cargado gasta toda tu Reserva y hace un ${4 * l}% más de daño por cada punto. Cada enemigo que mata te cura 4.` },
-  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Brindis',          desc: l => `Si atraviesas a un enemigo con el esquive, le haces ${60 * l}% de daño y te curas ${3 * l}.` },
-  { id: 'feast_passive',  god: 'feast',  slot: 'passive', name: 'Glotón',           desc: l => `Haces un ${l}% más de daño por cada punto de Reserva.` },
+  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Bocado',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) te cura ${(0.5 * l).toFixed(1)}. Lo que sobra con la vida llena se guarda como Reserva, hasta 30. La Reserva baja 2 por segundo si pasan 3 s sin llenarla.` },
+  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Banquete',         desc: l => `Tu disparo cargado gasta toda tu Reserva y hace un ${4 * l}% más de daño por cada punto gastado. Durante 0,6 s, cada enemigo que muere te cura 4. Sin Reserva no hay extra de daño.` },
+  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Brindis',          desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas ${3 * l}. Una vez por enemigo en cada esquive.` },
+  { id: 'feast_passive',  god: 'feast',  slot: 'passive', name: 'Glotón',           desc: l => `Haces un ${l}% más de daño por cada punto de Reserva que tengas (no afecta al daño continuo). Necesitas llenar la Reserva curándote con la vida llena.` },
   // Orcos
-  { id: 'orc_basic',      god: 'orc',    slot: 'basic',   name: 'Tambor de guerra', desc: l => `Ganas Furia al golpear y al recibir golpes. Cuanta más Furia, más daño: hasta +${40 * l}% con la Furia llena.` },
-  { id: 'orc_charge',     god: 'orc',    slot: 'charge',  name: 'Grito de guerra',  desc: l => `Tu disparo cargado gasta toda tu Furia en un grito a tu alrededor que empuja, aturde y hace hasta ${50 + 200 * l}% de daño. Cuanta más Furia, más grande.` },
-  { id: 'orc_dodge',      god: 'orc',    slot: 'dodge',   name: 'Embestida',        desc: l => `Si atraviesas a un enemigo con el esquive, le haces ${100 * l}% de daño, lo aturdes y ganas 15 de Furia.` },
-  { id: 'orc_passive',    god: 'orc',    slot: 'passive', name: 'Sed de sangre',    desc: l => `Con la Furia llena disparas un ${30 * l}% más rápido y cada baja te recarga el esquive.` },
+  { id: 'orc_basic',      god: 'orc',    slot: 'basic',   name: 'Tambor de guerra', desc: l => `Ganas Furia: 2 por cada golpe que das y 15 por cada golpe que recibes, hasta 100. Si pasas 2 s sin ganarla, baja 8 por segundo. Cuanta más Furia, más daño: hasta +${40 * l}% con la Furia llena (no afecta al daño continuo).` },
+  { id: 'orc_charge',     god: 'orc',    slot: 'charge',  name: 'Grito de guerra',  desc: l => `Tu disparo cargado gasta toda tu Furia en un grito a tu alrededor que empuja, aturde y hace desde el 50% hasta el ${50 + 200 * l}% de tu daño. Cuanta más Furia, más daño, más área y más aturdimiento (de 0,4 a 1,4 s). Con poca Furia, el grito es pequeño y flojo.` },
+  { id: 'orc_dodge',      god: 'orc',    slot: 'dodge',   name: 'Embestida',        desc: l => `Al atravesar a un enemigo con el esquive le haces ${100 * l}% de tu daño, lo apartas, lo aturdes 0,35 s y ganas 15 de Furia. Una vez por enemigo en cada esquive.` },
+  { id: 'orc_passive',    god: 'orc',    slot: 'passive', name: 'Sed de sangre',    desc: l => `Solo con la Furia llena (100): disparas un ${30 * l}% más rápido y cada baja te devuelve todas las cargas de esquive. Llevar esta técnica ya te hace ganar Furia al golpear y al recibir golpes.` },
   // Tiempo
-  { id: 'time_basic',     god: 'time',   slot: 'basic',   name: 'Segundero',        desc: l => `Cada disparo deja un eco: 1,5 s después vuelve a golpear solo, al ${50 + 15 * (l - 1)}% de daño y con todos sus efectos.` },
-  { id: 'time_charge',    god: 'time',   slot: 'charge',  name: 'Rebobinar',        desc: l => `Tu disparo cargado se repite solo 2 s después, desde donde lo lanzaste, al ${60 + 15 * (l - 1)}% de daño.` },
-  { id: 'time_dodge',     god: 'time',   slot: 'dodge',   name: 'Hora muerta',      desc: l => `Tu esquive deja una burbuja durante ${2 + l} s. Dentro, los enemigos y sus proyectiles van al 30% de velocidad.` },
-  { id: 'time_passive',   god: 'time',   slot: 'passive', name: 'Reloj de arena',   desc: l => `Los enemigos ralentizados o aturdidos reciben un ${30 * l}% más de todo el daño.` },
+  { id: 'time_basic',     god: 'time',   slot: 'basic',   name: 'Segundero',        desc: l => `Cada disparo tuyo deja un eco: 1,5 s después el mismo enemigo vuelve a recibir el golpe, al ${50 + 15 * (l - 1)}% de daño y con los efectos de tu técnica de disparo. Si el enemigo ya ha muerto, se pierde. Los ecos no hacen críticos ni dejan otro eco.` },
+  { id: 'time_charge',    god: 'time',   slot: 'charge',  name: 'Rebobinar',        desc: l => `Tu disparo cargado se repite solo 2 s después, desde el mismo sitio y hacia el mismo lado, al ${60 + 15 * (l - 1)}% de daño. La repetición no gasta nada (ni Furia, ni Reserva, ni vida), pero tampoco recibe los extras del cargado original (dado, Reserva gastada…).` },
+  { id: 'time_dodge',     god: 'time',   slot: 'dodge',   name: 'Hora muerta',      desc: l => `Tu esquive deja una burbuja donde estabas durante ${2 + l} s. Dentro, los enemigos van al 30% de velocidad y sus proyectiles se frenan. Los jefes solo bajan al 72%.` },
+  { id: 'time_passive',   god: 'time',   slot: 'passive', name: 'Reloj de arena',   desc: l => `Los enemigos ralentizados o aturdidos reciben un ${30 * l}% más de todo tu daño, también el continuo. Necesitas algo que los frene o los aturda (Escarcha, burbuja, zarzal, Raíces…).` },
   // Sombras
-  { id: 'shade_basic',    god: 'shade',  slot: 'basic',   name: 'Marca de tumba',   desc: l => `Tus disparos marcan al enemigo. Si muere marcado, se levanta como Sombra y pelea por ti 9 s. Hasta ${2 + l} Sombras a la vez.` },
-  { id: 'shade_charge',   god: 'shade',  slot: 'charge',  name: 'Orden',            desc: l => `Tu disparo cargado lanza a todas tus Sombras contra el objetivo y las hace estallar: ${150 * l}% de daño en área cada una.` },
-  { id: 'shade_dodge',    god: 'shade',  slot: 'dodge',   name: 'Relevo',           desc: l => `Tu esquive deja una Sombra donde estabas durante ${3 + l} s.` },
-  { id: 'shade_passive',  god: 'shade',  slot: 'passive', name: 'Séquito',          desc: l => `Haces un ${8 * l}% más de daño por cada Sombra viva. Tus Sombras aplican tus efectos de disparo al golpear.` },
+  { id: 'shade_basic',    god: 'shade',  slot: 'basic',   name: 'Marca de tumba',   desc: l => `Cada impacto de tu disparo marca al enemigo 6 s. Si muere marcado, se levanta como Sombra y pelea por ti 9 s, golpeando con el 40% de tu daño. Puedes tener ${2 + l} Sombras a la vez: si se levanta otra, desaparece la más antigua. Los jefes no se levantan.` },
+  { id: 'shade_charge',   god: 'shade',  slot: 'charge',  name: 'Orden',            desc: l => `Tu disparo cargado lanza a todas tus Sombras hacia donde apuntas y las hace estallar: ${150 * l}% de tu daño en área cada una. Las Sombras se gastan. Sin Sombras no hace nada.` },
+  { id: 'shade_dodge',    god: 'shade',  slot: 'dodge',   name: 'Relevo',           desc: l => `Tu esquive deja una Sombra donde estabas durante ${3 + l} s. No cuenta para el máximo de Sombras y desaparece al cambiar de sala.` },
+  { id: 'shade_passive',  god: 'shade',  slot: 'passive', name: 'Séquito',          desc: l => `Haces un ${8 * l}% más de daño por cada Sombra viva (no afecta al daño continuo). Además, los golpes de tus Sombras aplican los efectos de tu técnica de disparo. Necesitas tener Sombras.` },
   // Tormenta
-  { id: 'storm_basic',    god: 'storm',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada disparo clava ${pl(l, 'Aguja')}, hasta 6 por enemigo. Solas no hacen nada: hay que descargarlas.` },
-  { id: 'storm_charge',   god: 'storm',  slot: 'charge',  name: 'Sobretensión',     desc: l => `Tu disparo cargado descarga las Agujas de los enemigos que alcanza: cada una hace ${70 + 20 * (l - 1)}% de daño y lanza un rayo a otro enemigo.` },
-  { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Si atraviesas a un enemigo con el esquive, descargas sus Agujas (${80 + 20 * (l - 1)}% cada una). Si no tiene, le clavas 2.` },
-  { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a los enemigos que alcanzan.` },
+  { id: 'storm_basic',    god: 'storm',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Aguja')}, hasta 6 por enemigo. Se caen si pasan 6 s sin clavar más. Solas no hacen nada: necesitas una técnica que las descargue (Sobretensión o Paso relámpago).` },
+  { id: 'storm_charge',   god: 'storm',  slot: 'charge',  name: 'Sobretensión',     desc: l => `Tu disparo cargado descarga las Agujas de cada enemigo que alcanza: recibe ${70 + 20 * (l - 1)}% de tu daño por Aguja, y cada Aguja lanza un rayo a otro enemigo cercano con el 60% de ese daño. Solo funciona si el enemigo ya tiene Agujas.` },
+  { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Al atravesar a un enemigo con el esquive descargas sus Agujas: ${80 + 20 * (l - 1)}% de tu daño por Aguja, y un rayo por Aguja a otros enemigos con el 60% de eso. Si no tiene Agujas, le clavas 2.` },
+  { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a cada enemigo que alcanzan, listas para descargarlas después. Necesitas una técnica que descargue Agujas.` },
   // Mareas
-  { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada disparo empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro hacen un ${50 * l}% más de daño.` },
-  { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `Tu disparo cargado suelta además una ola a tu alrededor: ${50 * l}% de daño, empapa y lanza lejos a todos. Los que chocan contra un muro reciben el golpe.` },
-  { id: 'tide_dodge',     god: 'tide',   slot: 'dodge',   name: 'Corriente',        desc: l => `Tu esquive deja una corriente durante ${3 + l} s que empapa a los enemigos y los arrastra en la dirección en que esquivaste.` },
-  { id: 'tide_passive',   god: 'tide',   slot: 'passive', name: 'Marea alta',       desc: l => `Los Empapados reciben un ${15 * l}% más de todo el daño, y tus empujones los lanzan un 50% más lejos.` },
+  { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro (90% de tu daño y aturden 0,7 s) hacen un ${50 * l}% más. Los jefes no se dejan empujar.` },
+  { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `Tu disparo cargado suelta además una ola a tu alrededor: ${50 * l}% de tu daño, los empapa 5 s y lanza lejos a todos los que alcanza. Los que chocan contra un muro reciben el golpe. Los jefes reciben el daño pero no se mueven.` },
+  { id: 'tide_dodge',     god: 'tide',   slot: 'dodge',   name: 'Corriente',        desc: l => `Tu esquive deja una corriente a lo largo del recorrido durante ${3 + l} s. Cada 0,4 s empapa 3 s a los enemigos que la tocan y los arrastra en la dirección en que esquivaste. Los jefes no se mueven.` },
+  { id: 'tide_passive',   god: 'tide',   slot: 'passive', name: 'Marea alta',       desc: l => `Los Empapados reciben un ${15 * l}% más de daño (no del continuo), y cualquier empujón los lanza un 50% más lejos. Necesitas algo que los empape.` },
   // Fortuna
-  { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada disparo tiene un ${10 + 10 * l}% de ser crítico (250% de daño). Cada disparo que no es crítico sube un 5% la probabilidad, hasta que sale uno.` },
-  { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `Tu disparo cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}: con un 1 hace el 60% del daño; con un 6, el triple.` },
-  { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara: no gastas el esquive. Cruz: la moneda se queda donde estabas y revienta (${120 * l}% en área).` },
-  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha. Si te golpean, la pierdes.` },
+  { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada disparo tiene un ${10 + 10 * l}% de ser crítico (250% de daño). Cada disparo que no es crítico sube un 5% la probabilidad hasta que sale uno; entonces vuelve a la base. Solo pueden ser críticos tus disparos directos, no los repetidos.` },
+  { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `Tu disparo cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}, que decide su daño: 1, el 60%; 2, el 80%; 3, el 100%; 4, el 130%; 5, el 170%; 6, el triple. Las repeticiones del cargado no tiran dado.` },
+  { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara (50%): recuperas la carga de esquive. Cruz: la moneda se queda donde estabas y a los 0,55 s revienta: ${120 * l}% de tu daño en área.` },
+  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si te golpean, las pierdes todas. Necesitas algo que haga críticos, como Dado cargado.` },
   // Bosque
-  { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada disparo planta una Semilla. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y hacen ${80 * l}% de daño.` },
-  { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de daño por pulso.` },
-  { id: 'wood_dodge',     god: 'wood',   slot: 'dodge',   name: 'Enredadera',       desc: l => `Tu esquive deja una enredadera durante 4 s. La primera vez que un enemigo la pisa, queda enraizado 1 s y recibe ${60 * l}% de daño.` },
-  { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o entre zarzas reciben un ${20 * l}% más de daño, y te curan ${l} al morir.` },
+  { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) planta una Semilla, que no caduca. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y le hacen ${80 * l}% de tu daño. Luego la cuenta vuelve a empezar. A los jefes las Raíces les duran solo un tercio.` },
+  { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de tu daño cada 0,4 s.` },
+  { id: 'wood_dodge',     god: 'wood',   slot: 'dodge',   name: 'Enredadera',       desc: l => `Tu esquive deja una enredadera a lo largo del recorrido durante 4 s. La primera vez que cada enemigo la pisa, queda enraizado 1 s y recibe ${60 * l}% de tu daño.` },
+  { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o dentro de un zarzal reciben un ${20 * l}% más de daño (no del continuo), y cada uno que muere así te cura ${l}. Necesitas algo que los enraíce o un zarzal.` },
   // Hielo
-  { id: 'frost_basic',    god: 'frost',  slot: 'basic',   name: 'Aliento helado',   desc: l => `Cada disparo pone ${l} de Escarcha. Cada punto frena un 12%; con 5, el enemigo queda Congelado 1,5 s.` },
-  { id: 'frost_charge',   god: 'frost',  slot: 'charge',  name: 'Quebrar',          desc: l => `Tu disparo cargado rompe a los Congelados: ${150 * l}% de daño extra y esquirlas en área. A los demás les pone 3 de Escarcha.` },
-  { id: 'frost_dodge',    god: 'frost',  slot: 'dodge',   name: 'Paso de hielo',    desc: l => `Tu esquive deja una placa de hielo durante 4 s. Pone ${l} de Escarcha por pulso a quien la pise.` },
-  { id: 'frost_passive',  god: 'frost',  slot: 'passive', name: 'Cero absoluto',    desc: l => `Los Congelados reciben un ${25 * l}% más de daño. Si mueren congelados, ponen 2 de Escarcha a los enemigos cercanos.` },
+  { id: 'frost_basic',    god: 'frost',  slot: 'basic',   name: 'Aliento helado',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Escarcha. Cada punto frena un 12% durante 2 s, y se pierde toda si pasan 4 s sin poner más. Con 5, el enemigo queda Congelado 1,5 s. Los jefes quedan Congelados la mitad y, en vez de pararse, solo se frenan.` },
+  { id: 'frost_charge',   god: 'frost',  slot: 'charge',  name: 'Quebrar',          desc: l => `Tu disparo cargado rompe a los Congelados que alcanza: reciben ${150 * l}% de tu daño extra, sueltan esquirlas en área (algo más de la mitad de ese daño) y dejan de estar Congelados. A los demás les pone 3 de Escarcha.` },
+  { id: 'frost_dodge',    god: 'frost',  slot: 'dodge',   name: 'Paso de hielo',    desc: l => `Tu esquive deja una placa de hielo donde estabas durante 4 s. Pone ${l} de Escarcha cada 0,4 s a quien la pise.` },
+  { id: 'frost_passive',  god: 'frost',  slot: 'passive', name: 'Cero absoluto',    desc: l => `Los Congelados reciben un ${25 * l}% más de daño (no del continuo). Si mueren congelados, ponen 2 de Escarcha a hasta 4 enemigos cercanos. Necesitas algo que los congele.` },
   // Sangre
-  { id: 'blood_basic',    god: 'blood',  slot: 'basic',   name: 'Herida abierta',   desc: l => `Cada disparo abre ${pl(l, 'Herida')}, hasta 6. Sangran cada medio segundo, y hasta el triple cuanta menos vida tengas tú.` },
-  { id: 'blood_charge',   god: 'blood',  slot: 'charge',  name: 'Sangría',          desc: l => `Tu disparo cargado te cuesta el 10% de tu vida actual y hace un ${60 * l}% más de daño. Cada enemigo que mata te devuelve 5.` },
-  { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Si atraviesas a un enemigo con el esquive, le haces ${60 * l}% de daño y te curas ${4 * l}.` },
-  { id: 'blood_passive',  god: 'blood',  slot: 'passive', name: 'Deuda',            desc: l => `Con menos de la mitad de vida haces un ${20 * l}% más de daño. Además, el primer golpe mortal de cada sala te deja a 1 de vida.` },
+  { id: 'blood_basic',    god: 'blood',  slot: 'basic',   name: 'Herida abierta',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) abre ${pl(l, 'Herida')}, hasta 6 por enemigo. Duran 5 s desde la última que abres. Cada Herida quita un 5% de tu daño cada medio segundo, y hasta el triple cuanta menos vida tengas tú.` },
+  { id: 'blood_charge',   god: 'blood',  slot: 'charge',  name: 'Sangría',          desc: l => `Tu disparo cargado te cuesta el 10% de tu vida actual (nunca baja de 1) y hace un ${60 * l}% más de daño. Durante 0,7 s, cada enemigo que muere te devuelve 5 de vida.` },
+  { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas ${4 * l}. Una vez por enemigo en cada esquive.` },
+  { id: 'blood_passive',  god: 'blood',  slot: 'passive', name: 'Deuda',            desc: l => `Con menos de la mitad de vida haces un ${20 * l}% más de daño (no del continuo). Además, el primer golpe que te mataría en cada sala te deja a 1 de vida y 1 s invulnerable.` },
   // Final
-  { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Tu disparo pone una Sentencia de 5 s. Al acabar, el enemigo recibe de golpe el ${30 + 10 * l}% de todo el daño que le hiciste en ese tiempo.` },
-  { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `Tu disparo cargado cumple al instante las Sentencias de los enemigos que alcanza, con un ${30 * l}% más.` },
-  { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas ${l} por cada una.` },
-  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}.` },
+  { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Esta técnica pone el efecto Sentencia. Cada impacto de tu disparo (también los que repiten otras técnicas) la pone al enemigo si aún no tiene una; dura 5 s y no se renueva. Al acabar, el enemigo recibe de golpe el ${30 + 10 * l}% del daño de todos los golpes que recibió en ese tiempo (el daño continuo no cuenta). Luego el siguiente impacto pone otra.` },
+  { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `Tu disparo cargado cumple al instante la Sentencia de cada enemigo que alcanza, con un ${30 * l}% más; el daño del propio cargado ya cuenta. Solo funciona si el enemigo ya tiene una Sentencia: pónsela antes, por ejemplo con la técnica de disparo Sentencia.` },
+  { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas ${l} por cada una. Necesitas que los enemigos ya tengan Sentencia.` },
+  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Necesitas otro enemigo cerca.` },
   // Luz
-  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada disparo Ilumina al enemigo 6 s. Cuando un Iluminado recibe daño, los demás Iluminados reciben el ${20 + 10 * l}%.` },
-  { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `Tu disparo cargado Ilumina a todos los que alcanza. Si ya estaban Iluminados, los ciega: quedan aturdidos 1 s y reciben un ${40 * l}% más.` },
-  { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un destello donde estabas: Ilumina a los enemigos cercanos y les hace ${50 * l}% de daño.` },
-  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Haces un ${5 * l}% más de daño por cada enemigo Iluminado, hasta seis.` },
+  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) Ilumina al enemigo 6 s. Cuando un Iluminado recibe un golpe, los demás Iluminados reciben el ${20 + 10 * l}% de ese daño (no se encadena y el daño continuo no cuenta). Necesitas al menos dos Iluminados.` },
+  { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `Tu disparo cargado Ilumina 6 s a todos los que alcanza. A los que ya estaban Iluminados, antes los ciega: quedan aturdidos 1 s y reciben un golpe extra del ${40 * l}% de tu daño. Los jefes no se aturden.` },
+  { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un destello donde estabas: Ilumina 6 s a los enemigos cercanos y les hace ${50 * l}% de tu daño.` },
+  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Haces un ${5 * l}% más de daño por cada enemigo Iluminado en la sala, contando hasta seis (no al daño continuo). Necesitas algo que Ilumine.` },
   // Sueño
-  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Uno de cada ${Math.max(2, 5 - l)} disparos Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño.` },
-  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `Tu disparo cargado no despierta a los Dormidos y les hace un ${80 * l}% más. A los despiertos los Duerme 2 s.` },
-  { id: 'dream_dodge',    god: 'dream',  slot: 'dodge',   name: 'Polvo de sueño',   desc: l => `Tu esquive deja una nube durante ${2 + l} s. Duerme 2 s a cada enemigo que entre, una vez por enemigo.` },
-  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (Ascuas, Veneno, Heridas) no despierta a los Dormidos y les hace un ${50 * l}% más.` },
+  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Uno de cada ${Math.max(2, 5 - l)} disparos Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño. Solo cuentan tus disparos directos. Tras despertar, no se le puede dormir otra vez en 4 s. A los jefes no se les duerme: solo se frenan un poco.` },
+  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `Si tu disparo cargado da a un enemigo Dormido, recibe además un golpe extra del 60% de tu daño, aumentado un ${80 * l}%. Si da a uno despierto, lo Duerme 2 s (a los jefes solo los frena).` },
+  { id: 'dream_dodge',    god: 'dream',  slot: 'dodge',   name: 'Polvo de sueño',   desc: l => `Tu esquive deja una nube donde estabas durante ${2 + l} s. Duerme 2 s a cada enemigo que entre, una vez por enemigo.` },
+  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (quemaduras, veneno, cortes y zonas del suelo) ya no despierta a los Dormidos y les hace un ${50 * l}% más. Sin esta técnica, ese daño los despierta. Necesitas algo que los duerma.` },
   // Vacío
-  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada disparo atrae a los enemigos cercanos hacia el que recibe el impacto${l > 1 ? ', con más fuerza a cada nivel' : ''}. Así se amontonan.` },
-  { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `Tu disparo cargado abre un pozo de 2,5 s donde apuntas: atrae a todos al centro, hace ${25 * l}% de daño por pulso y al cerrarse estalla (${100 * l}%).` },
-  { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `Tu esquive deja un pozo pequeño durante ${1 + l} s que atrae a los enemigos cercanos.` },
-  { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada enemigo pegado a él, hasta cuatro.` },
+  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada disparo atrae hacia el enemigo alcanzado a los enemigos que tenga cerca${l > 1 ? ', con más fuerza a cada nivel' : ''}. Así se amontonan. Solo cuentan tus disparos directos, y los jefes no se mueven.` },
+  { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `Tu disparo cargado abre un pozo de 2,5 s donde apuntas: atrae a todos al centro, les hace ${25 * l}% de tu daño cada 0,5 s y al cerrarse estalla (${100 * l}%). Los jefes reciben el daño pero no se mueven.` },
+  { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `Tu esquive deja un pozo pequeño donde estabas durante ${1 + l} s, que atrae a los enemigos cercanos. No hace daño, y los jefes no se mueven.` },
+  { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada enemigo pegado a él, contando hasta cuatro (no al daño continuo). Necesitas que estén amontonados.` },
   // Espejos
-  { id: 'mirror_basic',   god: 'mirror', slot: 'basic',   name: 'Reflejo',          desc: l => `Un Reflejo tuyo se pone al otro lado de tu objetivo. Cuando disparas, él también dispara, al ${30 * l}% de daño y con tus efectos.` },
-  { id: 'mirror_charge',  god: 'mirror', slot: 'charge',  name: 'Doble',            desc: l => `Tu Reflejo repite tu disparo cargado desde su lado, al ${40 + 15 * l}% de daño: el enemigo lo recibe por los dos lados.` },
-  { id: 'mirror_dodge',   god: 'mirror', slot: 'dodge',   name: 'Engaño',           desc: l => `Al esquivar dejas una imagen tuya donde estabas. Los enemigos cercanos se quedan mirándola, aturdidos ${(0.6 + 0.3 * l).toFixed(1)} s.` },
-  { id: 'mirror_passive', god: 'mirror', slot: 'passive', name: 'Azogue',           desc: l => `Cuando te golpean, el golpe rebota: los enemigos cercanos reciben ${100 * l}% de tu daño.` },
+  { id: 'mirror_basic',   god: 'mirror', slot: 'basic',   name: 'Reflejo',          desc: l => `Un Reflejo tuyo se pone al otro lado de tu objetivo. Cada vez que disparas a un enemigo, él también le dispara, al ${30 * l}% de daño y con los efectos de tu técnica de disparo. Sus disparos no hacen críticos ni dejan ecos.` },
+  { id: 'mirror_charge',  god: 'mirror', slot: 'charge',  name: 'Doble',            desc: l => `Tienes un Reflejo al otro lado de tu objetivo. Cuando disparas el cargado, él lo repite desde su lado, al ${40 + 15 * l}% de daño: el enemigo lo recibe por los dos lados. La repetición no gasta nada.` },
+  { id: 'mirror_dodge',   god: 'mirror', slot: 'dodge',   name: 'Engaño',           desc: l => `Al esquivar dejas una imagen tuya donde estabas. Los enemigos cercanos se quedan mirándola, aturdidos ${(0.6 + 0.3 * l).toFixed(1)} s. Los jefes no se dejan engañar.` },
+  { id: 'mirror_passive', god: 'mirror', slot: 'passive', name: 'Azogue',           desc: l => `Cuando te golpean, el golpe rebota: los enemigos cercanos reciben ${100 * l}% de tu daño. No pasa si eres invulnerable o si paras el golpe.` },
   // Bestias
-  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Un sabueso pelea a tu lado y muerde al enemigo que disparas (${60 * l}% de daño, con tus efectos). Tus disparos hacen un 15% más a su presa.` },
-  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `Tu disparo cargado hace que el sabueso salte sobre el objetivo: ${250 * l}% de daño en área y aturde 1 s.` },
-  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Al esquivar, el sabueso embiste a los enemigos que tenías encima: ${80 * l}% de daño y los aparta.` },
-  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos con menos del 30% de vida reciben un ${25 * l}% más de todo el daño.` },
+  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Un sabueso pelea a tu lado y muerde cada 0,8 s al enemigo al que disparas (si no disparas, al más cercano): ${60 * l}% de tu daño, con los efectos de tu técnica de disparo. Tus disparos hacen un 15% más a su presa.` },
+  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `Tienes un sabueso a tu lado. Tu disparo cargado lo hace saltar adonde apuntas: ${250 * l}% de tu daño en área y aturde 1 s. Los jefes no se aturden.` },
+  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Tienes un sabueso a tu lado. Al esquivar, salta adonde estabas y muerde a los enemigos de alrededor: ${80 * l}% de tu daño, con los efectos de tu técnica de disparo, y los aparta.` },
+  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos con menos del 30% de vida reciben un ${25 * l}% más de daño (no del continuo). No te da sabueso.` },
   // Forja
-  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(3, 9 - l * 2)} disparos ganas 1 de Temple, hasta 10. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.` },
-  { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `Tu disparo cargado añade un martillazo a tu alrededor: ${120 * l}% de daño y aturde. Ganas 1 de Temple por cada enemigo golpeado.` },
-  { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Después de esquivar, tus ${1 + l} siguientes disparos salen al rojo: +50% de daño y salpican al enemigo de al lado.` },
+  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(3, 9 - l * 2)} disparos ganas 1 de Temple, hasta 10. Cuentan las veces que disparas, no los impactos. Cada punto da +3% de daño. Si te golpean, pierdes la mitad. Se conserva de una sala a otra.` },
+  { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `Tu disparo cargado añade un martillazo a tu alrededor: ${120 * l}% de tu daño, aturde 0,6 s y te da 1 de Temple por cada enemigo golpeado. Las repeticiones del cargado no dan Temple.` },
+  { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Después de esquivar, tus ${1 + l} siguientes disparos salen al rojo: +50% de daño, y cada impacto salpica al enemigo más cercano con la mitad de ese daño.` },
   { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma mejora: +${5 * l}% de daño, de cadencia y de alcance.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
@@ -440,26 +440,26 @@ const TECHS = [
 const RAR = [{ name: 'Común', color: '#a3a9bd' }, { name: 'Rara', color: '#6fb7ff' }, { name: 'Épica', color: '#c98bff' }, { name: 'Legendaria', color: '#ffd24a' }];
 // Maestría: llevar a la misma deidad en 3 acciones (los dúos cuentan para las dos).
 const MASTERY = {
-  dragon: { name: 'Heredera del fuego',    desc: 'Las Ascuas se acumulan hasta 20 y queman un 50% más.' },
-  stone:  { name: 'Corazón de la montaña', desc: 'Puedes tener el doble de Cristales, y Veta usa dos a la vez.' },
-  venom:  { name: 'Paciente cero',         desc: 'El Veneno hace daño el doble de rápido.' },
-  feast:  { name: 'Invitado de honor',     desc: 'Todas tus curaciones son un 50% mayores.' },
-  orc:    { name: 'Caudillo',              desc: 'La Furia nunca baja de 50.' },
-  time:   { name: 'Dueño de la hora',      desc: 'Tus ecos hacen el 100% del daño original.' },
-  shade:  { name: 'Reina de los muertos',  desc: 'Tus Sombras hacen un 50% más de daño y duran un 50% más.' },
-  tide:   { name: 'Señor del abismo',      desc: 'Cada golpe contra el muro suelta una ola que empapa y hace 150% de daño en área.' },
-  luck:   { name: 'La casa siempre gana',  desc: 'Tus críticos hacen el 400% del daño en vez del 250%.' },
-  wood:   { name: 'Corazón del bosque',    desc: 'Las Raíces duran el doble y, al brotar, dejan dos Semillas ya plantadas en el enemigo.' },
-  frost:  { name: 'Invierno eterno',       desc: 'Los enemigos quedan Congelados el doble de tiempo.' },
-  blood:  { name: 'Cobro final',           desc: 'Cada enemigo que muere sangrando te cura 2.' },
-  end:    { name: 'Letra pequeña',         desc: 'Las Sentencias se cumplen en 3 s en vez de 5.' },
-  light:  { name: 'Mediodía',              desc: 'Los Iluminados ya no dejan de estarlo.' },
-  dream:  { name: 'Sueño profundo',        desc: 'Los Dormidos aguantan un golpe sin despertarse, y ese golpe también hace más daño.' },
-  void:   { name: 'Horizonte',             desc: 'Tus pozos son un 40% más grandes y duran un segundo más.' },
-  mirror: { name: 'Sala de espejos',       desc: 'Tienes un segundo Reflejo, a un lado del enemigo.' },
-  beast:  { name: 'Jauría',                desc: 'Tienes un segundo sabueso.' },
-  forge:  { name: 'Obra maestra',          desc: 'El Temple llega hasta 15 y ya no lo pierdes al recibir golpes.' },
-  storm:  { name: 'Tormenta perfecta',     desc: 'Si un rayo de descarga alcanza a un enemigo con Agujas, también se las descarga, en cadena.' },
+  dragon: { name: 'Heredera del fuego',    desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): las Ascuas se acumulan hasta 20 por enemigo, en vez de 8, y queman un 50% más.' },
+  stone:  { name: 'Corazón de la montaña', desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): puedes tener 12 Cristales a la vez, en vez de 6, y Veta repite cada disparo desde los dos Cristales más cercanos.' },
+  venom:  { name: 'Paciente cero',         desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): el Veneno hace daño el doble de rápido: cada 0,25 s en vez de cada 0,5 s.' },
+  feast:  { name: 'Invitado de honor',     desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): todas tus curaciones son un 50% mayores.' },
+  orc:    { name: 'Caudillo',              desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): la Furia nunca baja de 50, ni siquiera al gastarla con el grito.' },
+  time:   { name: 'Dueño de la hora',      desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los ecos de Segundero y la repetición de Rebobinar hacen el 100% del daño original.' },
+  shade:  { name: 'Reina de los muertos',  desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tus Sombras hacen un 50% más de daño y duran un 50% más (13,5 s en vez de 9).' },
+  tide:   { name: 'Señor del abismo',      desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): cada golpe contra el muro suelta además una ola: 150% de tu daño en área, y empapa 4 s a los enemigos de alrededor.' },
+  luck:   { name: 'La casa siempre gana',  desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tus críticos hacen el 400% del daño en vez del 250%.' },
+  wood:   { name: 'Corazón del bosque',    desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): todas las Raíces duran el doble y, al brotar, dejan dos Semillas ya plantadas en el enemigo.' },
+  frost:  { name: 'Invierno eterno',       desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los enemigos quedan Congelados el doble de tiempo (3 s en vez de 1,5).' },
+  blood:  { name: 'Cobro final',           desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): cada enemigo que muere con Heridas te cura 2.' },
+  end:    { name: 'Letra pequeña',         desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): las Sentencias se cumplen a los 3 s en vez de a los 5.' },
+  light:  { name: 'Mediodía',              desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los Iluminados ya no dejan de estarlo.' },
+  dream:  { name: 'Sueño profundo',        desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los Dormidos aguantan un golpe sin despertarse, y ese golpe también se lleva el extra de daño.' },
+  void:   { name: 'Horizonte',             desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tus pozos son un 40% más grandes y duran un segundo más.' },
+  mirror: { name: 'Sala de espejos',       desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tienes un segundo Reflejo, a un lado del enemigo.' },
+  beast:  { name: 'Jauría',                desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tienes un segundo sabueso.' },
+  forge:  { name: 'Obra maestra',          desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): el Temple llega hasta 15 y ya no lo pierdes al recibir golpes.' },
+  storm:  { name: 'Tormenta perfecta',     desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): si un rayo de descarga alcanza a un enemigo con Agujas, también se las descarga, en cadena (cada enemigo, una vez por cadena).' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
 const PLANS = [
@@ -1476,7 +1476,7 @@ function bookHtml() {
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
       PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
       TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
-      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Se activa si llevas técnicas suyas en 3 acciones. ${MASTERY[g].desc}</span></li></ul></section>`;
+      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>${MASTERY[g].desc}</span></li></ul></section>`;
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
@@ -2400,7 +2400,7 @@ function sleep(e, t) {
   e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
   note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
 }
-function wake(e) { e.sleep = 0; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function wake(e) { e.sleep = 0; e.wokeT = S.t; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
 function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
 function addWell(x, y, r, life, pulse, end, o) { const k = (mastery('void') ? 1.4 : 1) * (1 + 0.1 * aff('void')); S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
 const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
@@ -2961,7 +2961,9 @@ function chargePayoff(e) {
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
   { const lc2 = lv('light_charge'), dc2 = lv('dream_charge');
     if (lc2 && active(e)) { if (e.lit > 0) { stun(e, 1); hit(e, p.dmg * 0.4 * lc2, 0, 0, false, GODS.light.color); } light(e); }   // Destello
-    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; } else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
+    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; }
+      else if (e.wokeT === S.t) { if (duoOn('digest')) addReserve(4); hit(e, p.dmg * 0.6 * (1 + 0.8 * dc2), 0, 0, true, GODS.dream.color); }   // el propio cargado lo acaba de despertar: el golpe extra entra igual
+      else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
   const fc = lv('frost_charge'), ec = lv('end_charge');
   if (fc && active(e)) {                                                    // Quebrar
     if (e.frozen > 0) { e.frozen = 0; e.stun = Math.min(e.stun, 0.2); S.stat.shatter++; note(e.x, e.y - e.r - 12, '¡Roto!', GODS.frost.color, true); explode(e.x, e.y, 46, p.dmg * 0.8 * fc, { col: GODS.frost.color, skip: e }); hit(e, p.dmg * 1.5 * fc, 0, 0, true, GODS.frost.color); }
