@@ -119,6 +119,7 @@ function fireBasic(target) {
     if (alt) target = alt; p.rotaT = target;
   }
   if (!target && !draw) { p.cd = 0.12; p.crit = false; return; }   // tensando se puede soltar sin objetivo
+  p.kickT = 0.14;   // Alec enseña el puñetazo un instante al soltar
   p.shotN += 1; p.trig += 1;
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Presta!', C.ember, true); }   // Palma presta

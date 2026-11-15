@@ -27,10 +27,77 @@
           "west": "Idle/rotations/west.png",
           "south-west": "Idle/rotations/south-west.png"
         },
-        "animations": {}
+        "animations": {
+          "Running": {
+            "south": [
+              "Idle/animations/Running/south/frame_000.png",
+              "Idle/animations/Running/south/frame_001.png",
+              "Idle/animations/Running/south/frame_002.png",
+              "Idle/animations/Running/south/frame_003.png"
+            ],
+            "east": [
+              "Idle/animations/Running/east/frame_000.png",
+              "Idle/animations/Running/east/frame_001.png",
+              "Idle/animations/Running/east/frame_002.png",
+              "Idle/animations/Running/east/frame_003.png"
+            ],
+            "north": [
+              "Idle/animations/Running/north/frame_000.png",
+              "Idle/animations/Running/north/frame_001.png",
+              "Idle/animations/Running/north/frame_002.png",
+              "Idle/animations/Running/north/frame_003.png"
+            ]
+          },
+          "Cross_Punch": {
+            "north": [
+              "Idle/animations/Cross_Punch/north/frame_000.png",
+              "Idle/animations/Cross_Punch/north/frame_001.png",
+              "Idle/animations/Cross_Punch/north/frame_002.png",
+              "Idle/animations/Cross_Punch/north/frame_003.png",
+              "Idle/animations/Cross_Punch/north/frame_004.png",
+              "Idle/animations/Cross_Punch/north/frame_005.png"
+            ],
+            "south": [
+              "Idle/animations/Cross_Punch/south/frame_000.png",
+              "Idle/animations/Cross_Punch/south/frame_001.png",
+              "Idle/animations/Cross_Punch/south/frame_002.png",
+              "Idle/animations/Cross_Punch/south/frame_003.png",
+              "Idle/animations/Cross_Punch/south/frame_004.png",
+              "Idle/animations/Cross_Punch/south/frame_005.png"
+            ],
+            "east": [
+              "Idle/animations/Cross_Punch/east/frame_000.png",
+              "Idle/animations/Cross_Punch/east/frame_001.png",
+              "Idle/animations/Cross_Punch/east/frame_002.png",
+              "Idle/animations/Cross_Punch/east/frame_003.png",
+              "Idle/animations/Cross_Punch/east/frame_004.png",
+              "Idle/animations/Cross_Punch/east/frame_005.png"
+            ]
+          },
+          "Breathing_Idle": {
+            "north": [
+              "Idle/animations/Breathing_Idle/north/frame_000.png",
+              "Idle/animations/Breathing_Idle/north/frame_001.png",
+              "Idle/animations/Breathing_Idle/north/frame_002.png",
+              "Idle/animations/Breathing_Idle/north/frame_003.png"
+            ],
+            "east": [
+              "Idle/animations/Breathing_Idle/east/frame_000.png",
+              "Idle/animations/Breathing_Idle/east/frame_001.png",
+              "Idle/animations/Breathing_Idle/east/frame_002.png",
+              "Idle/animations/Breathing_Idle/east/frame_003.png"
+            ],
+            "south": [
+              "Idle/animations/Breathing_Idle/south/frame_000.png",
+              "Idle/animations/Breathing_Idle/south/frame_001.png",
+              "Idle/animations/Breathing_Idle/south/frame_002.png",
+              "Idle/animations/Breathing_Idle/south/frame_003.png"
+            ]
+          }
+        }
       }
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-11-15T20:20:28.473989"
+  "export_date": "2026-11-15T21:00:44.638110"
 }

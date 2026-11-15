@@ -402,7 +402,7 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    const behind = Math.sin(p.face) < -0.7, kick0 = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;
+    const behind = Math.sin(p.face) < -0.7, kick0 = p.windup <= 0 && p.kickT > 0 ? Math.round(3 * clamp(p.kickT / 0.09, 0, 1)) : 0;
     // Al lanzar echa los puños hacia delante: recoge mientras prepara y estira justo después del disparo
     const casting = p.dodgeT <= 0 && (glow || kick0 > 0), castT = casting ? ((kick0 > 0 ? 5 : 1) + 0.02) / 18 : S.t;   // brazo atrás mientras prepara (fotograma 2), puño delante al soltar (fotograma 6)
     const packHero = drawHero(p.dodgeT > 0 ? 'dash' : casting ? 'atk' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', castT, p.x, py + p.r + 2, p.face, false);

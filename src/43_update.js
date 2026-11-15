@@ -27,6 +27,7 @@ function update(dt) {
 
   // Temporizadores y recursos
   p.cd = Math.max(0, p.cd - dt);
+  p.kickT = Math.max(0, (p.kickT || 0) - dt);
   p.chargeCd = Math.max(0, p.chargeCd - dt); p.inv = Math.max(0, p.inv - dt); p.buffer = Math.max(0, p.buffer - dt);
   const ready = p.cd <= 0 && p.windup <= 0;
   if (ready && !p.wasReady) { p.readyT = S.t; }
