@@ -91,6 +91,7 @@ function choosePick(i) {
 
 // ───────────────────────── Técnicas que te ofrecen ─────────────────────────
 // Una por acción. Si ya llevas ahí la técnica de otra deidad y existe dúo entre las dos, te ofrecen el dúo en su lugar.
+// Subir de nivel lo que ya llevas sale siempre; lo nuevo, solo si serviría de algo con lo que llevas (tabla de 13_needs.js).
 function pieceCard(pc) {
   const cur = S.build[pc.slot], god = pc.god, rar = rollRar();
   const have = godCount(god), M2 = MASTERY[god], isNew = !godsIn(pc.slot).includes(god);
@@ -111,6 +112,7 @@ function pieceCard(pc) {
   }
   const lvl = 1 + rar, duo0 = cur && !D ? duoFor(cur.id, pc.id) : null, duo = duo0 && duoIsOpen(duo0) ? duo0 : null;   // un dúo con una deidad sin abrir no se ofrece
   if (duo) {   // la técnica que llevas se funde con esta
+    if (!duoOk(duo, pc)) return null;   // ni la técnica nueva ni la regla del dúo servirían con lo que llevas (13_needs.js)
     const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
     o.desc = duoText(duo, nl);
@@ -118,23 +120,34 @@ function pieceCard(pc) {
     o.apply = () => { S.build[pc.slot] = { id: duo.id, lvl: nl }; };
     return o;
   }
+  if (!pieceOk(pc)) return null;   // no te la ofrecen si nada de lo que llevas (ni ella misma) pone lo que necesita (13_needs.js)
   o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
   if (cur) { o.swap = true; o.note = 'Sustituye a ' + curName(cur) + (prog ? ' · ' + prog : ''); }
   o.apply = () => { S.build[pc.slot] = { id: pc.id, lvl }; };
   return o;
 }
-// Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
+// Técnicas sueltas. Las ofrendas (SOLO) salen aunque no lleves nada de su deidad; las demás, solo si ya llevas alguna técnica suya en tus ranuras.
+// Y todas, solo si lo que necesitan (tabla de 13_needs.js) lo pone algo de lo que llevas o ellas mismas.
 const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'q_shard', 'a_pup', 'g_whet', 'd_blood', 'v_vapors', 'f_carve'];
-const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
-const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : SOLO.includes(t.id) ? 'nada, sirve sola' : 'cualquier técnica de esta deidad');
+const techOk = t => !S.techs.has(t.id) && (godCount(t.god) >= 1 || SOLO.includes(t.id)) && looseOk(t);
+// El «Necesita: …» del Recetario sale de la misma tabla
+const techNeeds = t => { const w = needsText(t.id), th0 = GODS[t.god].theme;
+  if (SOLO.includes(t.id)) return w || 'nada, sirve sola';
+  return w ? w + '; y llevar ya alguna técnica de ' + th0 + ' en tus ranuras' : 'nada, sirve sola; pero solo sale si ya llevas alguna técnica de ' + th0 + ' en tus ranuras'; };
 // Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
 const duoIsOpen = D => godIsOpen(PIECE[D.a].god) && godIsOpen(PIECE[D.b].god);
 const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
-function pieceOptions(god) {
+// Todo lo que esta deidad podría ofrecerte ahora, con su peso en el sorteo
+function pieceCands(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
   for (const t of TECHS.filter(x => x.god === god && techOk(x)))
     cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, pic: t.id, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
+  return cands;
+}
+function pieceOptions(god) {
+  const cands = pieceCands(god);
+  // Si al filtrar queda poco, sale lo que haya (y siempre puedes vender la reliquia).
   // Sorteo ponderado: lo raro sale menos y un dúo disponible sale más.
   // Lo que sustituiría a una técnica que ya llevas va al final: solo aparece si no hay otra cosa que ofrecer, y como mucho una.
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);

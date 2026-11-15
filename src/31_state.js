@@ -28,7 +28,7 @@ function startRun(mission) {
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
   S.next = { type: 'god', god: randGod() };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
-    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
+    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).map(pieceCard).filter(Boolean).slice(0, 3);   // solo las que sirven solas (pieceCard filtra)
     pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts, tip: 'relic' })];
     advancePick(); return;
   }
