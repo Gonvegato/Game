@@ -31,7 +31,13 @@ const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0, fx: 0, fy: 0, shx: 0, shy: 0, pl: false };   // x, y: píxel entero del juego; fx, fy: la fracción que sobra, que se aplica al ampliar
 
 // ───────────────────────── Sonido (efectos grabados y música) ─────────────────────────
-let AC = null, muted = false;
+// Versión del juego (la pone build.sh: el número de commits) y dónde está corriendo
+const GAME_V = +'__GAME_V__' || 0, IN_APP = location.hostname === 'kiteo.app';
+// Ajustes del jugador: se guardan aparte de la partida, así que sobreviven a «Nueva partida»
+const CFG = { sound: 1, music: 3, sfx: 3, blend: 1 };
+try { Object.assign(CFG, JSON.parse(localStorage.getItem('kiteo.cfg') || '{}')); } catch (e) { /* sin ajustes guardados */ }
+function saveCfg() { try { localStorage.setItem('kiteo.cfg', JSON.stringify(CFG)); } catch (e) { /* almacenamiento bloqueado */ } }
+let AC = null, muted = !CFG.sound;
 function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume().catch(() => {}); return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
@@ -48,14 +54,14 @@ function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
   if (!AC || muted || hushed || AC.state !== 'running') return;
   const buf = SFX[name], t = AC.currentTime; if (!buf || t - (SFXT[name] || -1) < gap) return;
   SFXT[name] = t;
-  try { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol; src.connect(g); g.connect(AC.destination); src.start(t); } catch (e) { /* sin sonido */ }
+  try { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol * CFG.sfx / 3; src.connect(g); g.connect(AC.destination); src.start(t); } catch (e) { /* sin sonido */ }
 }
 // La música va por pantalla: título, aldea, mazmorra, campo abierto, jefe y victoria. En los menús de dentro de una misión sigue la que sonaba.
 let hushed = false;   // la app está en segundo plano o la pestaña oculta: ni música ni efectos
 function hush(on) { hushed = !!on; if (hushed && musNow && MUS[musNow]) { MUS[musNow].pause(); } else if (!hushed) musicTick(); }
 document.addEventListener('visibilitychange', () => hush(document.hidden));
 function musicWant() {
-  if (muted || hushed || !S) return null;
+  if (muted || hushed || !S || !CFG.music) return null;
   const m = S.mode;
   if (m === 'intro') return S.intro && S.intro.L === ENDING ? 'm_end' : 'm_title';   // el final del reino tiene su propia música
   if (m === 'title') return 'm_title';
@@ -71,9 +77,10 @@ function musicTick() {
   if (w !== musNow) {
     if (musNow && MUS[musNow]) MUS[musNow].pause();
     musNow = w;
-    if (w) { const a = MUS[w] || (MUS[w] = new Audio('assets/audio/' + w + '.mp3')); a.loop = w !== 'm_win'; a.volume = 0.32; try { a.currentTime = 0; } catch (e) { /* aún sin cargar */ } }
+    if (w) { const a = MUS[w] || (MUS[w] = new Audio('assets/audio/' + w + '.mp3')); a.loop = w !== 'm_win'; try { a.currentTime = 0; } catch (e) { /* aún sin cargar */ } }
   }
   const a = musNow && MUS[musNow];
+  if (a) a.volume = Math.min(1, 0.32 * CFG.music / 3);
   if (a && a.paused && !(musNow === 'm_win' && a.ended)) { const pr = a.play(); if (pr && pr.catch) pr.catch(() => {}); }
 }
 

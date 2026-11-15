@@ -6,23 +6,59 @@ const HINTS = {
   touch: 'Toca un enemigo para fijarlo como objetivo',
   none: 'Pulsa un botón del mando, una tecla o la pantalla',
 };
+// ── Menú principal: continuar, nueva partida y ajustes (con la versión del juego) ──
+let titleView = 'menu', titleSel = 0;
+const hasSave = () => !!(M.seenIntro || M.runs || Object.keys(M.done || {}).length || M.run);
+function titleItems() {
+  if (titleView === 'confirm') return [['no', 'No, volver'], ['wipe', 'Sí, borrar y empezar de cero']];
+  if (titleView === 'settings') { const lv = n => ['Apagado', 'Bajo', 'Medio', 'Normal', 'Alto'][n]; return [
+    ['sound', 'Sonido', CFG.sound ? 'Encendido' : 'Apagado'], ['music', 'Volumen de la música', lv(CFG.music)], ['sfx', 'Volumen de los efectos', lv(CFG.sfx)],
+    ['blend', 'Suavizado de animaciones', CFG.blend ? 'Sí' : 'No'], ['ctl', 'Controles'], ['cred', 'Créditos'], ['back', 'Volver']]; }
+  if (titleView === 'ctl' || titleView === 'cred') return [['settings', 'Volver']];
+  return (hasSave() ? [['cont', M.run ? 'Continuar · ' + M.run.mission.name : 'Continuar']] : []).concat([['new', 'Nueva partida'], ['settings', 'Ajustes']]);
+}
+function titleHtml() {
+  const it = titleItems(); titleSel = clamp(titleSel, 0, it.length - 1);
+  const btns = `<div class="tmenu">${it.map(([id, nm, val], i) => `<button class="fi tm${i === titleSel ? ' sel' : ''}${id === 'wipe' ? ' danger' : ''}" data-tm="${id}"><b>${nm}</b>${val ? `<i>${val}</i>` : ''}</button>`).join('')}</div>`;
+  const ver = `Versión ${GAME_V || 'de desarrollo'} · ${IN_APP ? 'app de Android' : 'web'}`;
+  let mid = '';
+  if (titleView === 'confirm') mid = `<h2>¿Empezar de cero?</h2><p class="lead">Se borrará todo tu progreso: encargos cumplidos, almas, hierro, piezas forjadas y el árbol. Los ajustes se conservan. No se puede deshacer.</p>`;
+  else if (titleView === 'settings') mid = `<h2>Ajustes</h2><p class="ver"><b>${ver}</b>${IN_APP ? '<br>La app busca versiones nuevas cada vez que se abre. Si hay una, la descarga sola: en esta pantalla se aplica al momento; si estás jugando, la próxima vez que abras.' : ''}</p>`;
+  else if (titleView === 'ctl') mid = `<h2>Controles</h2><dl class="keys">
+        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo · Start pausa</dd></div>
+        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo · Esc pausa</dd></div>
+        <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
+      </dl><p class="fine">Con mando: pulsa cualquier botón para que se detecte. En el móvil, juega en horizontal.</p>`;
+  else if (titleView === 'cred') mid = `<h2>Créditos</h2><p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · iconos de Clockwork Raven Studios (Raven Fantasy Icons) · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p>`;
+  else mid = `<p class="lead">Dispara, da un paso, dispara. Roba las técnicas de los dioses y úsalas para matarlos.</p>`;
+  return `<div class="titlebox"><p class="eyebrow">Un roguelite de guanteletes y dioses</p><h1 class="logo">Alec, el sin dios</h1>${mid}${btns}<p class="fine vertag">${ver}</p></div>`;
+}
+function titleAct(id) {
+  const cyc = (k, n) => { CFG[k] = (CFG[k] + 1) % n; saveCfg(); };
+  if (id === 'cont') { titleView = 'menu'; if (M.seenIntro) openForge(); else playIntro(); return; }
+  if (id === 'new') { if (hasSave()) { titleView = 'confirm'; titleSel = 0; } else { playIntro(); return; } }
+  else if (id === 'wipe') { try { localStorage.removeItem('kiteo.save3'); sessionStorage.setItem('kiteo.fresh', '1'); } catch (e) { /* sin almacenamiento */ } location.reload(); return; }
+  else if (id === 'no' || id === 'back') { titleView = 'menu'; titleSel = 0; }
+  else if (id === 'settings' || id === 'ctl' || id === 'cred') { titleSel = id === 'settings' && titleView !== 'menu' ? titleSel : 0; titleView = id; }
+  else if (id === 'sound') { cyc('sound', 2); muted = !CFG.sound; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; }
+  else if (id === 'music') cyc('music', 5);
+  else if (id === 'sfx') cyc('sfx', 5);
+  else if (id === 'blend') cyc('blend', 2);
+  audioInit(); musicTick(); sfx('tick', 0.3); renderOverlay();
+}
+function titleInput() {
+  const n = titleItems().length;
+  if (I.navY) { titleSel = (titleSel + (I.navY > 0 ? 1 : n - 1)) % n; sfx('tick', 0.25); renderOverlay(); }
+  else if (I.atkP) titleAct(titleItems()[titleSel][0]);
+  else if (I.backP && titleView !== 'menu') titleAct(titleView === 'ctl' || titleView === 'cred' ? 'settings' : 'back');
+}
 function renderOverlay() {
   const m = S.mode;
   ov.hidden = m === 'play' || m === 'town' || m === 'intro';
   if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
-  if (m === 'title') {
-    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de guanteletes y dioses</p><h1 class="logo">Alec, el sin dios</h1>
-      <p class="lead">Dispara, da un paso, dispara. Roba las técnicas de los dioses y úsalas para matarlos.</p>
-      <button id="ovBtn" class="primary big">${M.seenIntro ? 'Continuar' : 'Empezar'}</button>
-      <details class="ctl"><summary>Controles</summary><dl class="keys">
-        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo · Start pausa</dd></div>
-        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo · Esc pausa</dd></div>
-        <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
-      </dl></details>
-      <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · iconos de Clockwork Raven Studios (Raven Fantasy Icons) · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
-  } else if (m === 'pause') {
+  if (m === 'title') h = titleHtml();
+  else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
@@ -47,16 +83,18 @@ function renderOverlay() {
   const rr = $('rrBtn'); if (rr) rr.addEventListener('click', () => { audioInit(); rerollPick(); });
   const bk = $('bookBtn'); if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
   const b = $('ovBtn'); if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
+  ovBody.querySelectorAll('[data-tm]').forEach((b, i) => b.addEventListener('click', () => { titleSel = i; titleAct(b.dataset.tm); }));
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
 }
 function primaryAction(force) {
-  if (S.mode === 'title') { if (M.seenIntro) openForge(); else playIntro(); }   // la primera vez, Alec cuenta su historia antes de llegar a la plaza
-  else if (S.mode === 'pause') setMode('play');
+  if (S.mode === 'title') return;   // el menú principal tiene sus propios botones
+  if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
   else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else openForge(); }   // tras matar al dios por primera vez, el final del reino
 }
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
-$('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); musicTick(); });
+$('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí';
+$('btnMute').addEventListener('click', () => { muted = !muted; CFG.sound = muted ? 0 : 1; saveCfg(); $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); musicTick(); });
 
 let hudKey = '';
 // Las cuatro acciones en el HUD: una casilla por acción, con el color de su deidad y el nivel en puntos
@@ -118,6 +156,7 @@ function frame(now) {
     if (I.atkP) choosePick(pickSel);
     if (I.backP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();
+  else if (m === 'title') titleInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   if (!introDraw()) render();
   renderHud();
@@ -125,6 +164,8 @@ function frame(now) {
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
+// Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
+try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
 window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

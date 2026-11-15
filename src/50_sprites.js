@@ -546,7 +546,7 @@ const charKey = e => (e.skin && ATLAS[e.skin] ? e.skin : e.champ ? 'champ' : Obj
 let MIX = null;
 function mixFrame(im, m, a, time) {
   const n = a.f.length, ft = time * a.fps, fl = Math.floor(ft), i = ((fl % n) + n) % n, fr = ft - fl;
-  if (n < 2 || fr < 0.06) return [im, a.f[i][0], a.f[i][1], i];
+  if (n < 2 || fr < 0.06 || !CFG.blend) return [im, a.f[i][0], a.f[i][1], i];
   if (!MIX) { MIX = document.createElement('canvas'); MIX.width = 192; MIX.height = 160; }
   if (MIX.width < m.w || MIX.height < m.h) { MIX.width = Math.max(MIX.width, m.w); MIX.height = Math.max(MIX.height, m.h); }
   const g = MIX.getContext('2d'), j = (i + 1) % n;
