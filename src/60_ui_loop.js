@@ -112,7 +112,7 @@ function renderHud() {
     Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
-  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
+  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(pct(p.reserve)) : '');
   const ms = S.mission;
   // Cabecera del encargo: nombre, en qué tramo vas y una fila de cuentas (hechas, la actual, tiendas y jefe)
   if (!inRun || !ms) { $('wave').innerHTML = ''; $('pips').innerHTML = ''; }

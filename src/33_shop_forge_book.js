@@ -9,7 +9,7 @@ function openShop() {
       { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
       { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
-      { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
+      { id: 'heart', name: 'Corazón en conserva',    desc: '+15% de vida máxima', price: pr(70) },
       { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tus guanteletes: eliges entre tres', price: pr(100) },
     ].concat(plan ? [{ id: 'plan', name: 'Plano: ' + plan.name, desc: plan.desc, price: pr(110), plan: plan.id }] : []) };
   }
@@ -38,7 +38,7 @@ function shopAct(act) {
   if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { sfx('no', 0.4); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
   p.gold -= it.price; it.sold = true; sfx('ok', 0.45);
   if (it.id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.35));
-  else if (it.id === 'heart') { p.maxHp += 15; p.hp += 15; }
+  else if (it.id === 'heart') { const up = Math.round(p.maxHp * 0.15); p.maxHp += up; p.hp += up; }
   else if (it.id === 'plan') { S.plans.add(it.plan); p.dodgeN = dodgeMax(); }
   else if (it.id === 'tech') { S.rerolls = 0; pickQueue = [pieceScreen(it.god, 'Tienda · ' + GODS[it.god].title)]; afterPicks = openShop; advancePick(); return; }
   else if (it.id === 'anvil') { pickQueue = [statScreen]; afterPicks = openShop; advancePick(); return; }

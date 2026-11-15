@@ -80,7 +80,7 @@ const GODS = {
     champ: ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
     take:  ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'], master: ['te propone, encantada, un experimento.'] } },
   feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Copa del Anfitrión', mat: 'Especia', color: '#ff8fb3',
-    key: 'Reserva: con cualquier técnica suya, la curación que te sobra con la vida llena se guarda como escudo, hasta 30. Sus técnicas te curan y después convierten esa Reserva en daño.', lines: {
+    key: 'Reserva: con cualquier técnica suya, la curación que te sobra con la vida llena se guarda como escudo, hasta 30 puntos (cada punto vale el 1% de tu vida máxima). Sus técnicas te curan y después convierten esa Reserva en daño.', lines: {
     enter: ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
     champ: ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
     take:  ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'], master: ['brinda por ti, y ya van tres copas.'] } },
@@ -188,9 +188,9 @@ const PIECES = [
   { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `Tu esquive deja un rastro tóxico a lo largo del recorrido durante 5 s. Pone ${l} de Veneno cada 0,4 s a quien lo pise.` },
   { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un enemigo envenenado, todo su Veneno pasa, entero, a cada uno de los ${1 + l} enemigos más cercanos (sin pasar de 30). Solo funciona si muere con Veneno y hay otros enemigos cerca.` },
   // Manjares
-  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Bocado',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) te cura ${(0.5 * l).toFixed(1)}. Lo que sobra con la vida llena se guarda como Reserva, hasta 30. La Reserva baja 2 por segundo si pasan 3 s sin llenarla.` },
-  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Banquete',         desc: l => `Tu disparo cargado gasta toda tu Reserva y hace un ${4 * l}% más de daño por cada punto gastado. Durante 0,6 s, cada enemigo que muere te cura 4. Sin Reserva no hay extra de daño.` },
-  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Brindis',          desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas ${3 * l}. Una vez por enemigo en cada esquive.` },
+  { id: 'feast_basic',    god: 'feast',  slot: 'basic',   name: 'Bocado',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) te cura un ${(0.5 * l).toFixed(1)}% de tu vida máxima. Lo que sobra con la vida llena se guarda como Reserva, hasta 30. La Reserva baja 2 por segundo si pasan 3 s sin llenarla.` },
+  { id: 'feast_charge',   god: 'feast',  slot: 'charge',  name: 'Banquete',         desc: l => `Tu disparo cargado gasta toda tu Reserva y hace un ${4 * l}% más de daño por cada punto gastado. Durante 0,6 s, cada enemigo que muere te cura un 4% de tu vida máxima. Sin Reserva no hay extra de daño.` },
+  { id: 'feast_dodge',    god: 'feast',  slot: 'dodge',   name: 'Brindis',          desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas un ${3 * l}% de tu vida máxima. Una vez por enemigo en cada esquive.` },
   { id: 'feast_passive',  god: 'feast',  slot: 'passive', name: 'Glotón',           desc: l => `Haces un ${l}% más de daño por cada punto de Reserva que tengas (no afecta al daño continuo). Necesitas llenar la Reserva curándote con la vida llena.` },
   // Orcos
   { id: 'orc_basic',      god: 'orc',    slot: 'basic',   name: 'Tambor de guerra', desc: l => `Ganas Furia: 2 por cada golpe que das y 15 por cada golpe que recibes, hasta 100. Si pasas 2 s sin ganarla, baja 8 por segundo. Cuanta más Furia, más daño: hasta +${40 * l}% con la Furia llena (no afecta al daño continuo).` },
@@ -226,7 +226,7 @@ const PIECES = [
   { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) planta una Semilla, que no caduca. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y le hacen ${80 * l}% de tu daño. Luego la cuenta vuelve a empezar. A los jefes las Raíces les duran solo un tercio.` },
   { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de tu daño cada 0,4 s.` },
   { id: 'wood_dodge',     god: 'wood',   slot: 'dodge',   name: 'Enredadera',       desc: l => `Tu esquive deja una enredadera a lo largo del recorrido durante 4 s. La primera vez que cada enemigo la pisa, queda enraizado 1 s y recibe ${60 * l}% de tu daño.` },
-  { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o dentro de un zarzal reciben un ${20 * l}% más de daño (no del continuo), y cada uno que muere así te cura ${l}. Necesitas algo que los enraíce o un zarzal.` },
+  { id: 'wood_passive',   god: 'wood',   slot: 'passive', name: 'Savia',            desc: l => `Los enemigos enraizados o dentro de un zarzal reciben un ${20 * l}% más de daño (no del continuo), y cada uno que muere así te cura un ${l}% de tu vida máxima. Necesitas algo que los enraíce o un zarzal.` },
   // Hielo
   { id: 'frost_basic',    god: 'frost',  slot: 'basic',   name: 'Aliento helado',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Escarcha. Cada punto frena un 12% durante 2 s, y se pierde toda si pasan 4 s sin poner más. Con 5, el enemigo queda Congelado 1,5 s. Los jefes quedan Congelados la mitad y, en vez de pararse, solo se frenan.` },
   { id: 'frost_charge',   god: 'frost',  slot: 'charge',  name: 'Quebrar',          desc: l => `Tu disparo cargado rompe a los Congelados que alcanza: reciben ${150 * l}% de tu daño extra, sueltan esquirlas en área (algo más de la mitad de ese daño) y dejan de estar Congelados. A los demás les pone 3 de Escarcha.` },
@@ -234,13 +234,13 @@ const PIECES = [
   { id: 'frost_passive',  god: 'frost',  slot: 'passive', name: 'Cero absoluto',    desc: l => `Los Congelados reciben un ${25 * l}% más de daño (no del continuo). Si mueren congelados, ponen 2 de Escarcha a hasta 4 enemigos cercanos. Necesitas algo que los congele.` },
   // Sangre
   { id: 'blood_basic',    god: 'blood',  slot: 'basic',   name: 'Herida abierta',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) abre ${pl(l, 'Herida')}, hasta 6 por enemigo. Duran 5 s desde la última que abres. Cada Herida quita un 5% de tu daño cada medio segundo, y hasta el triple cuanta menos vida tengas tú.` },
-  { id: 'blood_charge',   god: 'blood',  slot: 'charge',  name: 'Sangría',          desc: l => `Tu disparo cargado te cuesta el 10% de tu vida actual (nunca baja de 1) y hace un ${60 * l}% más de daño. Durante 0,7 s, cada enemigo que muere te devuelve 5 de vida.` },
-  { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas ${4 * l}. Una vez por enemigo en cada esquive.` },
+  { id: 'blood_charge',   god: 'blood',  slot: 'charge',  name: 'Sangría',          desc: l => `Tu disparo cargado te cuesta el 10% de tu vida actual (nunca baja de 1) y hace un ${60 * l}% más de daño. Durante 0,7 s, cada enemigo que muere te devuelve un 5% de tu vida máxima.` },
+  { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas un ${4 * l}% de tu vida máxima. Una vez por enemigo en cada esquive.` },
   { id: 'blood_passive',  god: 'blood',  slot: 'passive', name: 'Deuda',            desc: l => `Con menos de la mitad de vida haces un ${20 * l}% más de daño (no del continuo). Además, el primer golpe que te mataría en cada sala te deja a 1 de vida y 1 s invulnerable.` },
   // Final
   { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Esta técnica pone el efecto Sentencia. Cada impacto de tu disparo (también los que repiten otras técnicas) la pone al enemigo si aún no tiene una; dura 5 s y no se renueva. Al acabar, el enemigo recibe de golpe el ${20 + 20 * l}% del daño de todos los golpes que recibió en ese tiempo (el daño continuo no cuenta). Si muere antes, la Sentencia no se pierde: estalla, y cada enemigo de alrededor recibe lo que le tocaba a él. Luego el siguiente impacto pone otra.` },
   { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `Tu disparo cargado cumple al instante la Sentencia de cada enemigo que alcanza, con un ${30 * l}% más; el daño del propio cargado ya cuenta. Solo funciona si el enemigo ya tiene una Sentencia: pónsela antes, por ejemplo con la técnica de disparo Sentencia.` },
-  { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas ${l} por cada una. Necesitas que los enemigos ya tengan Sentencia.` },
+  { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas un ${l}% de tu vida máxima por cada una. Necesitas que los enemigos ya tengan Sentencia.` },
   { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Lo heredado no cuenta para el estallido si ese enemigo también muere antes de plazo. Necesitas otro enemigo cerca.` },
   // Luz
   { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) Ilumina al enemigo 6 s. Cuando un Iluminado recibe un golpe, los demás Iluminados reciben el ${20 + 10 * l}% de ese daño (no se encadena y el daño continuo no cuenta). Necesitas al menos dos Iluminados.` },
@@ -282,7 +282,7 @@ const DUOS = [
   { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Además de lo que hacen Esquirla y Marca de tumba, cuando a un Cristal se le acaba el tiempo, se levanta una Sombra en su sitio. Cuenta para tu límite de Sombras: si ya estás al máximo, sustituye a la más antigua.' },
   { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Ponzoña y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
   { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Además de lo que hacen Ponzoña y Aguja estática, al descargar a un enemigo, cada rayo aplica a quien alcanza tanto Veneno como tenía ese enemigo (hasta 30). Las Agujas no caducan mientras el enemigo tenga Veneno.' },
-  { id: 'warhunger', slot: 'basic',   a: 'feast_basic',   b: 'orc_basic',    name: 'Hambre de guerra',   desc: 'Además de lo que hacen Bocado y Tambor de guerra, cada punto de vida que te curas te da 2 de Furia, también lo que va a la Reserva. Con la Furia llena, Bocado te cura el triple por disparo.' },
+  { id: 'warhunger', slot: 'basic',   a: 'feast_basic',   b: 'orc_basic',    name: 'Hambre de guerra',   desc: 'Además de lo que hacen Bocado y Tambor de guerra, cada 1% de tu vida máxima que te curas te da 2 de Furia, también lo que va a la Reserva. Con la Furia llena, Bocado te cura el triple por disparo.' },
   { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Además de lo que hacen Segundero y Marca de tumba, cuando un enemigo marcado muere y se levanta como Sombra, 1,5 s después se levanta otra en el mismo sitio. Solo con las Sombras de Marca de tumba, y los jefes no se levantan.' },
   // Cargado
   { id: 'rot',       slot: 'charge',  a: 'dragon_charge', b: 'venom_charge', name: 'Aliento podrido',    desc: 'Además de lo que hacen Aliento y Purga, antes de nada, tu disparo cargado suma las Ascuas y el Veneno de cada enemigo que alcanza y sube los dos a ese total (las Ascuas hasta su tope; el Veneno, hasta 30). Después Aliento hace estallar las Ascuas y Purga convierte el Veneno.' },
@@ -297,11 +297,11 @@ const DUOS = [
   { id: 'avalanche', slot: 'dodge',   a: 'stone_dodge',   b: 'orc_dodge',    name: 'Avalancha',          desc: 'Además de lo que hacen Geoda y Embestida, el enemigo que embistes sale despedido en la dirección de tu esquive. Si choca con un muro, un Cristal (que se rompe) u otro enemigo, estalla: 300% de daño en área, aturde 0,6 s y te da 10 de Furia. Los elegidos vuelan menos y los jefes no salen despedidos.' },
   { id: 'stalagm',   slot: 'dodge',   a: 'stone_dodge',   b: 'venom_dodge',  name: 'Estela de cristal',  desc: 'Además de lo que hacen Geoda y Rastro, el rastro tóxico deja tres Cristales a lo largo. Y todos tus Cristales, salgan de donde salgan, aplican 2 de Veneno cada medio segundo a los enemigos pegados a ellos.' },
   { id: 'miasma',    slot: 'dodge',   a: 'venom_dodge',   b: 'time_dodge',   name: 'Miasma',             desc: 'Además de lo que hacen Rastro y Hora muerta, dentro de la burbuja de Hora muerta, el Veneno de los enemigos hace daño el triple de rápido.' },
-  { id: 'toast',     slot: 'dodge',   a: 'feast_dodge',   b: 'storm_dodge',  name: 'Brindis eléctrico',  desc: 'Además de lo que hacen Brindis y Paso relámpago, cuando atraviesas a un enemigo y le descargas las Agujas, te curas 2 por cada Aguja descargada.' },
+  { id: 'toast',     slot: 'dodge',   a: 'feast_dodge',   b: 'storm_dodge',  name: 'Brindis eléctrico',  desc: 'Además de lo que hacen Brindis y Paso relámpago, cuando atraviesas a un enemigo y le descargas las Agujas, te curas un 2% de tu vida máxima por cada Aguja descargada.' },
   { id: 'horde',     slot: 'dodge',   a: 'orc_dodge',     b: 'shade_dodge',  name: 'Carga de la horda',  desc: 'Además de lo que hacen Embestida y Relevo, cuando embistes a un enemigo, todas tus Sombras saltan a su lado y lo golpean: 100% de daño cada una.' },
   { id: 'stasis',    slot: 'dodge',   a: 'time_dodge',    b: 'storm_dodge',  name: 'Relámpago en pausa', desc: 'Además de lo que hacen Hora muerta y Paso relámpago, los enemigos dentro de la burbuja reciben 1 Aguja por cada segundo que pasan en ella. Cuando la burbuja se cierra, descarga a todos los que siguen dentro (80% por Aguja).' },
   // Pasiva
-  { id: 'hoardfeast', slot: 'passive', a: 'dragon_passive', b: 'feast_passive', name: 'Banquete del dragón', desc: 'Además de lo que hacen Tesoro y Glotón, para Glotón, cada 10 de oro que llevas cuenta como 1 punto de Reserva, sin gastarse. Y cada vez que ganas oro, te curas tanto como el oro ganado.' },
+  { id: 'hoardfeast', slot: 'passive', a: 'dragon_passive', b: 'feast_passive', name: 'Banquete del dragón', desc: 'Además de lo que hacen Tesoro y Glotón, para Glotón, cada 10 de oro que llevas cuenta como 1 punto de Reserva, sin gastarse. Y cada vez que ganas oro, te curas un 1% de tu vida máxima por cada moneda ganada.' },
   { id: 'ashlegion', slot: 'passive', a: 'dragon_passive', b: 'shade_passive', name: 'Ejército de ceniza', desc: 'Además de lo que hacen Tesoro y Séquito, cada golpe de tus Sombras clava 2 Ascuas. Cuando a una Sombra se le acaba el tiempo, estalla: 100% de daño en área. Las que lanzas con Orden o sustituye otra nueva no estallan así.' },
   { id: 'clockquartz', slot: 'passive', a: 'stone_passive', b: 'time_passive', name: 'Cuarzo de reloj',   desc: 'Además de lo que hacen Veta y Reloj de arena, tus Cristales ralentizan un 40% a los enemigos pegados a ellos (a los jefes, menos), y no se gastan mientras tengan a alguien al lado. Esos enemigos cuentan como ralentizados para Reloj de arena.' },
   { id: 'indigest',  slot: 'passive', a: 'venom_passive', b: 'feast_passive', name: 'Indigestión',        desc: 'Además de lo que hacen Plaga y Glotón, te curas un 10% de todo el daño que hace tu Veneno.' },
@@ -323,7 +323,7 @@ const DUOS = [
   { id: 'facet',     slot: 'basic',   a: 'stone_basic',   b: 'luck_basic',   name: 'Faceta',             desc: 'Además de lo que hacen Esquirla y Dado cargado, cada crítico deja un Cristal junto al enemigo.' },
   { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Además de lo que hacen Ponzoña y Dado cargado, cada crítico duplica el Veneno del enemigo, hasta 30.' },
   { id: 'loaded',    slot: 'basic',   a: 'time_basic',    b: 'luck_basic',   name: 'Dado trucado',       desc: 'Además de lo que hacen Segundero y Dado cargado, cada eco tira su propio crítico, con tu misma probabilidad y aparte del disparo original. Si sale, hace daño de crítico y cuenta como crítico para todo lo demás.' },
-  { id: 'toss',      slot: 'dodge',   a: 'feast_dodge',   b: 'luck_dodge',   name: 'Propina',            desc: 'Además de lo que hacen Brindis y Cara o cruz, cada vez que lanzas la moneda te curas 5, salga cara o cruz.' },
+  { id: 'toss',      slot: 'dodge',   a: 'feast_dodge',   b: 'luck_dodge',   name: 'Propina',            desc: 'Además de lo que hacen Brindis y Cara o cruz, cada vez que lanzas la moneda te curas un 5% de tu vida máxima, salga cara o cruz.' },
   { id: 'fork',      slot: 'dodge',   a: 'storm_dodge',   b: 'luck_dodge',   name: 'Rayo caprichoso',    desc: 'Además de lo que hacen Paso relámpago y Cara o cruz, si sale cruz, la moneda cae como un rayo: descarga las Agujas de todos los que alcanza su explosión (80% por Aguja) y luego les clava 2.' },
   { id: 'allin',     slot: 'charge',  a: 'orc_charge',    b: 'luck_charge',  name: 'Órdago',             desc: 'Además de lo que hacen Grito de guerra y Todo al rojo, el dado de Todo al rojo suma 1 por cada 34 de Furia que tengas al disparar (+2 con 68 o más), sin pasar de 6.' },
   { id: 'wager',     slot: 'charge',  a: 'tide_charge',   b: 'luck_charge',  name: 'Mar gruesa',         desc: 'Además de lo que hacen Maremoto y Todo al rojo, si el dado saca un 5 o un 6, la ola del Maremoto empuja el doble y aturde 1 s. A los jefes no les afecta.' },
@@ -337,7 +337,7 @@ const DUOS = [
   { id: 'uproot',    slot: 'dodge',   a: 'orc_dodge',     b: 'wood_dodge',   name: 'Descuaje',           desc: 'Además de lo que hacen Embestida y Enredadera, embestir a un enemigo enraizado le hace el triple de daño, le quita las Raíces y lo lanza lejos. A los jefes no los lanza.' },
   { id: 'mangrove',  slot: 'dodge',   a: 'tide_dodge',    b: 'wood_dodge',   name: 'Manglar',            desc: 'Además de lo que hacen Corriente y Enredadera, la enredadera deja Empapado 4 s al enemigo que enraíza. Y todas tus Raíces, vengan de donde vengan, duran el doble en los Empapados.' },
   { id: 'amber',     slot: 'passive', a: 'stone_passive', b: 'wood_passive', name: 'Ámbar',              desc: 'Además de lo que hacen Veta y Savia, los enemigos que mueren enraizados o entre zarzas dejan un Cristal.' },
-  { id: 'orchard',   slot: 'passive', a: 'feast_passive', b: 'wood_passive', name: 'Huerto',             desc: 'Además de lo que hacen Glotón y Savia, te curas 1 cada vez que golpeas a un enemigo enraizado. El daño continuo no cuenta, y estar entre zarzas tampoco.' },
+  { id: 'orchard',   slot: 'passive', a: 'feast_passive', b: 'wood_passive', name: 'Huerto',             desc: 'Además de lo que hacen Glotón y Savia, te curas un 1% de tu vida máxima cada vez que golpeas a un enemigo enraizado. El daño continuo no cuenta, y estar entre zarzas tampoco.' },
   // Hielo (afines: Mareas, Tiempo, Minerales, Tormenta, Bosque)
   { id: 'glacier',   slot: 'basic',   a: 'stone_basic',   b: 'frost_basic',   name: 'Glaciar',           desc: 'Además de lo que hacen Esquirla y Aliento helado, cada enemigo que queda Congelado deja un Cristal a su lado.' },
   { id: 'hail',      slot: 'basic',   a: 'storm_basic',   b: 'frost_basic',   name: 'Granizo',           desc: 'Además de lo que hacen Aguja estática y Aliento helado, cuando un enemigo queda Congelado, se descargan todas sus Agujas (80% por Aguja).' },
@@ -377,7 +377,7 @@ const DUOS = [
   // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
   { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Además de lo que hacen Tambor de guerra y Sabueso, cada mordisco te da 4 de Furia. Con la Furia llena, tus perros muerden el doble de rápido.' },
   { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Ponzoña y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
-  { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'Además de lo que hacen Transfusión y Manada, la embestida de Manada abre 2 Heridas a cada enemigo que alcanza y te cura 2 por cada uno.' },
+  { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'Además de lo que hacen Transfusión y Manada, la embestida de Manada abre 2 Heridas a cada enemigo que alcanza y te cura un 2% de tu vida máxima por cada uno.' },
   { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'Además de lo que hacen Zarzal y ¡A por él!, el salto del sabueso deja enraizados 1,5 s a todos los que alcanza (a los jefes, mucho menos).' },
   // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
   { id: 'forgefire', slot: 'basic',   a: 'dragon_basic',  b: 'forge_basic',   name: 'Fuego de fragua',   desc: 'Además de lo que hacen Colmillo al rojo y Temple, con 5 o más de Temple, cada disparo clava 1 Ascua más.' },
@@ -406,7 +406,7 @@ const TECHS = [
   { id: 'd_warm',    god: 'dragon', rar: 1, name: 'Aliento tibio',     desc: 'Uno de cada cuatro disparos clava 1 Ascua. Sirve aunque no lleves nada de Dragones.' },
   { id: 'm_skin',    god: 'stone',  rar: 1, name: 'Piel de piedra',    desc: 'Recibes un 10% menos de daño.' },
   { id: 'v_slow',    god: 'venom',  rar: 1, name: 'Toxina lenta',      desc: 'Uno de cada tres disparos aplica 1 de Veneno. Sirve aunque no lleves nada de Veneno.' },
-  { id: 'f_appet',   god: 'feast',  rar: 1, name: 'Buen apetito',      desc: 'Cada baja te cura 1.' },
+  { id: 'f_appet',   god: 'feast',  rar: 1, name: 'Buen apetito',      desc: 'Cada baja te cura un 1% de tu vida máxima.' },
   { id: 'o_scars',   god: 'orc',    rar: 1, name: 'Cicatrices',        desc: 'Con menos de la mitad de vida haces un 15% más de daño.' },
   { id: 't_second',  god: 'time',   rar: 1, name: 'Un segundo más',    desc: 'Tu esquive se recarga un 20% antes.' },
   { id: 's_last',    god: 'shade',  rar: 1, name: 'Último servicio',   desc: 'El primer enemigo que matas en cada sala se levanta como Sombra y pelea por ti. Los jefes no.' },
@@ -419,7 +419,7 @@ const TECHS = [
   { id: 'b_bloom',   god: 'wood',   rar: 2, name: 'Floración',         desc: 'Los enemigos que mueren enraizados dejan un zarzal de 3 s: quien esté dentro va a la mitad de velocidad y recibe 20% de daño por pulso.' },
   { id: 'i_rime',    god: 'frost',  rar: 1, name: 'Rocío helado',      desc: 'Uno de cada cuatro disparos pone 1 de Escarcha. Sirve aunque no lleves nada de Hielo.' },
   { id: 'i_shatter', god: 'frost',  rar: 2, name: 'Astillas',          desc: 'Los enemigos que mueren Congelados lanzan esquirlas a hasta cuatro enemigos cercanos: 40% de daño a cada uno.' },
-  { id: 'h_warm',    god: 'blood',  rar: 1, name: 'Sangre caliente',   desc: 'Con menos de la mitad de vida, cada baja te cura 2.' },
+  { id: 'h_warm',    god: 'blood',  rar: 1, name: 'Sangre caliente',   desc: 'Con menos de la mitad de vida, cada baja te cura un 2% de tu vida máxima.' },
   { id: 'h_frenzy',  god: 'blood',  rar: 3, name: 'Marea roja',        desc: 'Con menos del 30% de vida disparas un 40% más rápido.' },
   { id: 'e_ink',     god: 'end',    rar: 1, name: 'Tinta fresca',      desc: 'Uno de cada cuatro disparos pone una Sentencia al enemigo, si no tiene ya una. Sin la técnica Sentencia, devuelve el 40% del daño acumulado.' },
   { id: 'e_seal',    god: 'end',    rar: 2, name: 'Sello',             desc: 'Cuando se cumple una Sentencia, el enemigo queda aturdido 0,5 s. Los jefes no. Solo sirve si pones Sentencias.' },
@@ -451,7 +451,7 @@ const MASTERY = {
   luck:   { name: 'La casa siempre gana',  desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tus críticos hacen el 400% del daño en vez del 250%.' },
   wood:   { name: 'Corazón del bosque',    desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): todas las Raíces duran el doble y, al brotar, dejan dos Semillas ya plantadas en el enemigo.' },
   frost:  { name: 'Invierno eterno',       desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los enemigos quedan Congelados el doble de tiempo (3 s en vez de 1,5).' },
-  blood:  { name: 'Cobro final',           desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): cada enemigo que muere con Heridas te cura 2.' },
+  blood:  { name: 'Cobro final',           desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): cada enemigo que muere con Heridas te cura un 2% de tu vida máxima.' },
   end:    { name: 'Letra pequeña',         desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): las Sentencias se cumplen a los 3 s en vez de a los 5.' },
   light:  { name: 'Mediodía',              desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los Iluminados ya no dejan de estarlo.' },
   dream:  { name: 'Sueño profundo',        desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los Dormidos aguantan un golpe sin despertarse, y ese golpe también se lleva el extra de daño.' },
@@ -538,7 +538,7 @@ const PARTS = [
   { id: 'm_chain',   slot: 'mag',     name: 'Gema enramada',        tag: 'Salta a otro',       desc: 'Tras dar en el blanco, el disparo salta al enemigo más cercano a él, si hay uno a poca distancia, y le hace la mitad del daño, con los efectos de tus técnicas.', cost: { iron: 1, venom: 2 } },
   { id: 'm_silver',  slot: 'mag',     name: 'Gema de plata',        tag: 'Contra élites y jefes',       desc: 'Todo tu daño directo hace un 60% más a élites, elegidos y jefes, y un 10% menos al resto. Cada élite que matas suelta 3 de oro más (el doble).', cost: { iron: 1, shade: 2 } },
   { id: 'm_frag',    slot: 'mag',     name: 'Gema de esquirlas',     tag: 'Estalla al matar',   desc: 'Si un disparo mata a su blanco, estalla en esquirlas: una para cada uno de los cinco enemigos más cercanos, con el 30% del daño y los efectos de tus técnicas.', cost: { iron: 1, stone: 2 } },
-  { id: 'm_blood',   slot: 'mag',     name: 'Gema de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo hace un 40% más de daño y te cuesta 1 de vida (nunca te deja por debajo de 1). Cada enemigo que muere, lo mate lo que lo mate, te cura 3.', cost: { iron: 1, feast: 2 } },
+  { id: 'm_blood',   slot: 'mag',     name: 'Gema de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo hace un 40% más de daño y te cuesta el 1% de tu vida máxima (nunca te deja por debajo de 1). Cada enemigo que muere, lo mate lo que lo mate, te cura un 3% de tu vida máxima.', cost: { iron: 1, feast: 2 } },
   { id: 'm_last',    slot: 'mag',     name: 'Última gema',          tag: 'El sexto, triple',   desc: 'Cada sexto disparo hace el triple de daño. Después, los guanteletes tardan al menos 1,2 s en volver a disparar.', cost: { iron: 1, luck: 2 } },
   { id: 'm_ice',     slot: 'mag',     name: 'Gema de escarcha',     tag: 'Frena y hiela',    desc: 'Cada disparo frena al enemigo un 30% durante 1,5 s. Si le das mientras ya va frenado, queda helado y aturdido 0,8 s; como mucho, una vez cada 3 s por enemigo. A los jefes los frena menos y no los aturde.', cost: { iron: 1, tide: 2 } },
   { id: 'm_fire',    slot: 'mag',     name: 'Gema incendiaria',     tag: 'Fuego en el suelo',         desc: 'Cada disparo deja una llama en el suelo, donde estaba el enemigo, que dura 2 s. Cada 0,4 s clava 1 Ascua a quien esté encima.', cost: { iron: 1, dragon: 2 } },
@@ -557,14 +557,14 @@ const PARTS = [
   { id: 'm_quick',   slot: 'mag',     name: 'Gema de azogue',       tag: 'Repite desde detrás',  desc: 'Cada cuarto disparo vuelve desde el otro lado del enemigo y le da otra vez, con la mitad del daño y sin efectos. Si llevas en tus ranuras alguna técnica de Espejos, cada segundo disparo.', cost: { iron: 1, mirror: 3 }, theme: 'mirror' },
   { id: 'm_star',    slot: 'mag',     name: 'Gema de lucero',       tag: 'Ilumina enemigos',            desc: 'Cada disparo deja Iluminado al enemigo 4 s, y tus disparos hacen un 12% más a los Iluminados. Si llevas en tus ranuras alguna técnica de Luz, un 25%. El reparto de daño entre Iluminados solo ocurre si llevas la técnica Señalar.', cost: { iron: 1, light: 3 }, theme: 'light' },
   { id: 's_grave',   slot: 'stock',   name: 'Brazal de lápida',     tag: 'Levanta Sombras',    desc: 'Cada ocho enemigos que matas, el octavo se levanta como Sombra y pelea por ti. Si llevas en tus ranuras alguna técnica de Sombras, cada cinco. Los jefes no cuentan. Puedes tener 2 Sombras a la vez, más si tus técnicas suben el tope.', cost: { iron: 1, shade: 3 }, theme: 'shade' },
-  { id: 's_wine',    slot: 'stock',   name: 'Brazal de bota de vino', tag: 'Cura al matar',   desc: 'Cada enemigo que muere te cura 1; si ya tienes la vida llena, ese punto va a tu Reserva. Si llevas en tus ranuras alguna técnica de Manjares, 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
+  { id: 's_wine',    slot: 'stock',   name: 'Brazal de bota de vino', tag: 'Cura al matar',   desc: 'Cada enemigo que muere te cura un 1% de tu vida máxima; si ya tienes la vida llena, ese punto va a tu Reserva. Si llevas en tus ranuras alguna técnica de Manjares, 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
   { id: 's_kennel',  slot: 'stock',   name: 'Brazal de perrera',    tag: 'Cachorro que muerde',   desc: 'Un perro te acompaña y muerde cada 0,8 s al enemigo al que disparas, con el 30% de tu daño base (o lo que diga tu técnica Sabueso, si la llevas) y los efectos de tus técnicas. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza. Si llevas en tus ranuras alguna técnica de Bestias, tienes un perro más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
   { id: 's_geode',   slot: 'stock',   name: 'Brazal de geoda',      tag: 'Deja Cristales',     desc: 'Cada esquive deja un Cristal donde estabas. Cada vez que disparas, hasta cuatro de tus Cristales cercanos al blanco le lanzan una esquirla con el 20% del daño, sin efectos. Si llevas en tus ranuras alguna técnica de Minerales, el 40%.', cost: { iron: 1, stone: 3 }, theme: 'stone' },
   { id: 'm_blunt',   slot: 'mag',     name: 'Gema roma',            tag: 'El quinto aturde',   desc: 'Cada quinto disparo deja aturdido al enemigo 0,6 s. A los jefes no los aturde.', cost: { iron: 1, dream: 2 } },
   { id: 'm_grow',    slot: 'mag',     name: 'Gema voraz',           tag: 'Más daño al matar',      desc: 'Cada enemigo que matas de un disparo sube un 2% el daño de tus disparos hasta el final de la partida, hasta +60% (30 bajas). Los jefes no cuentan.', cost: { iron: 2, blood: 2 } },
   { id: 'm_awl',     slot: 'mag',     name: 'Gema de punzón',       tag: 'Da al de detrás',    desc: 'El disparo atraviesa al blanco y da también al primer enemigo que tenga justo detrás, a poca distancia, con el 60% del daño y los efectos de tus técnicas.', cost: { iron: 1, end: 2 } },
   { id: 'm_timed',   slot: 'mag',     name: 'Gema de mecha',        tag: 'Explota después',    desc: 'El disparo se queda clavado y explota 1 s después, con la mitad del daño, al blanco y a los que tenga muy cerca. Si el blanco muere antes, explota donde cayó.', cost: { iron: 1, void: 2 } },
-  { id: 'm_leech',   slot: 'mag',     name: 'Gema sanguijuela',     tag: 'Cura cada 8 impactos',     desc: 'Cada 8 impactos de tus disparos te curas 2 de vida. Cada impacto cuenta por separado, también los de un disparo que da a varios enemigos.', cost: { iron: 1, frost: 2 } },
+  { id: 'm_leech',   slot: 'mag',     name: 'Gema sanguijuela',     tag: 'Cura cada 8 impactos',     desc: 'Cada 8 impactos de tus disparos te curas un 2% de tu vida máxima. Cada impacto cuenta por separado, también los de un disparo que da a varios enemigos.', cost: { iron: 1, frost: 2 } },
   { id: 's_sapper',  slot: 'stock',   name: 'Brazal de zapador',    tag: 'Pegado al muro',     desc: 'Mientras estés pegado a un muro, tus disparos hacen un 30% más de daño.', cost: { iron: 1, dream: 2 } },
   { id: 's_dance',   slot: 'stock',   name: 'Brazal de bailarín',   tag: 'Atravesar devuelve esquive',  desc: 'Atravesar a un enemigo con el esquive te devuelve una carga de esquive al momento (sin pasar de tu máximo). Solo una vez por esquive. Las estocadas de la Palma de lanza y las embestidas de las Brasas de embestida y de trueno cuentan como un esquive cada una: no gastan carga, así que te recargan una gastada.', cost: { iron: 1, mirror: 2 } },
   { id: 's_tower',   slot: 'stock',   name: 'Brazal de torre',      tag: 'Sin esquive, más duro',        desc: 'No puedes esquivar. A cambio, recibes un 30% menos de daño y tus disparos hacen un 25% más. Tus técnicas de Esquive y las piezas que dependen de esquivar dejan de servirte.', cost: { iron: 2, forge: 2 } },
@@ -639,7 +639,7 @@ const RESO = [
   { id: 'firingline',   name: 'Línea de tiro',       parts: ['b_twin'],    techs: ['shade_basic'],  desc: 'Necesitas las Palmas gemelas en los guanteletes y la técnica Marca de tumba (Disparo de Sombras, o un dúo con ella). Cada vez que disparas, cada una de tus Sombras dispara también al enemigo más cercano a ella, con el 30% de tu daño base y los efectos de tus técnicas.' },
   { id: 'executor',     name: 'Verdugo',             parts: ['b_spike'],   techs: ['orc_dodge'],    desc: 'Necesitas la Palma de lanza en los guanteletes y la técnica Embestida (Esquive de Orcos, o un dúo con ella). Cada estocada de la Palma de lanza deja aturdido al enemigo 0,4 s y te da 15 de Furia.' },
   { id: 'clockwork',    name: 'Reloj de cuerda',     parts: ['a_draw'],    techs: ['time_basic'],   desc: 'Necesitas los Dedos tensos en los guanteletes y la técnica Segundero (Disparo de Tiempo, o un dúo con ella). Un disparo tensado a tope deja dos ecos en vez de uno; el segundo llega 0,35 s después del primero.' },
-  { id: 'leadfeast',    name: 'Banquete de brasas',  parts: ['m_drum'],    techs: ['feast_basic'],  desc: 'Necesitas la Gema doble en los guanteletes y la técnica Bocado (Disparo de Manjares, o un dúo con ella). Cada recarga te cura 4, y el primer disparo tras recargar te cura el triple de lo que cura Bocado.' },
+  { id: 'leadfeast',    name: 'Banquete de brasas',  parts: ['m_drum'],    techs: ['feast_basic'],  desc: 'Necesitas la Gema doble en los guanteletes y la técnica Bocado (Disparo de Manjares, o un dúo con ella). Cada recarga te cura un 4% de tu vida máxima, y el primer disparo tras recargar te cura el triple de lo que cura Bocado.' },
   { id: 'acidrain',     name: 'Lluvia ácida',        parts: ['c_rain'],    techs: ['venom_charge'], desc: 'Necesitas la Brasa de aluvión en los guanteletes y la técnica Purga (Cargado de Veneno, o un dúo con ella). El aluvión deja la zona convertida en un charco tóxico durante 5 s, que pone 2 de Veneno cada 0,4 s a quien esté dentro.' },
   { id: 'furnace',      name: 'Fragua viva',         parts: ['m_belt'],    techs: ['orc_basic'],    desc: 'Necesitas la Gema candente en los guanteletes y la técnica Tambor de guerra (Disparo de Orcos, o un dúo con ella). Cuanto más calientes están los guanteletes, más daño hacen tus disparos: hasta un 40% más con el calor al máximo. Al recalentarse, sueltan una explosión a tu alrededor (250% de tu daño base) que aparta a los enemigos.' },
   { id: 'vigil',        name: 'Vigilia',             parts: ['s_brace'],   techs: ['time_passive'], desc: 'Necesitas el Brazal de pilar en los guanteletes y la técnica Reloj de arena (Pasiva de Tiempo, o un dúo con ella). Mientras el Brazal de pilar está activo (medio segundo quieto), tus disparos frenan un 60% durante 1 s a quien alcanzan.' },
@@ -650,7 +650,7 @@ const RESO = [
   { id: 'packhunt',     name: 'Montería',            parts: ['b_swarm'],   techs: ['beast_basic'],  desc: 'Necesitas la Palma de avispero en los guanteletes y la técnica Sabueso (Disparo de Bestias, o un dúo con ella). Con cada andanada de la Palma de avispero, tu sabueso salta al primer enemigo alcanzado y lo muerde con el 60% de tu daño base.' },
   { id: 'deathclock',   name: 'Hora señalada',       parts: ['a_spring'],  techs: ['end_basic'],    desc: 'Necesitas los Dedos de resorte en los guanteletes y la técnica Sentencia (Disparo de Final, o un dúo con ella). Si disparas tras esperar 4 s o más con los guanteletes listos (resorte al máximo) a un enemigo con Sentencia, esta se cumple al instante, antes de que llegue el disparo.' },
   { id: 'mirrorhall',   name: 'Galería de espejos',  parts: ['m_split'],   techs: ['mirror_basic'], desc: 'Necesitas la Gema partida en los guanteletes y la técnica Reflejo (Disparo de Espejos, o un dúo con ella). Los dos trozos de la Gema partida hacen el doble de daño. Se suma al ensamble Astillas.' },
-  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'Necesitas la Gema de sangre en los guanteletes y la técnica Sangría (Cargado de Sangre, o un dúo con ella). El disparo cargado de Sangría ya no te cuesta el 10% de tu vida y conserva su daño extra. La Gema de sangre te sigue costando 1 de vida por disparo.' },
+  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'Necesitas la Gema de sangre en los guanteletes y la técnica Sangría (Cargado de Sangre, o un dúo con ella). El disparo cargado de Sangría ya no te cuesta el 10% de tu vida y conserva su daño extra. La Gema de sangre te sigue costando el 1% de tu vida máxima por disparo.' },
   { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'Necesitas la Brasa de meteoro en los guanteletes y la técnica Singularidad (Cargado de Vacío, o un dúo con ella). Al lanzar el meteoro se abre durante 1 s un pozo en el punto de impacto, que arrastra a todos hacia él antes de que caiga.' },
   { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Necesitas la Palma de vigía en los guanteletes y la técnica Señalar (Disparo de Luz, o un dúo con ella). Cada disparo lejano de la Palma de vigía (el que hace el doble) deja también Iluminados a los enemigos de alrededor del blanco.' },
   { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'Necesitas los Dedos de rescoldo en los guanteletes y la técnica Arrullo (Disparo de Sueño, o un dúo con ella). Cada disparo de los Dedos de rescoldo Duerme 3 s al enemigo, salvo que se haya despertado hace menos de 4 s. A los jefes los deja Adormilados 1,5 s.' },
@@ -698,7 +698,7 @@ const TREE = [
     { id: 'hp',      name: 'Aguante',         max: 8, cost: C8,  desc: r => `+${10 * r} de vida máxima` },
     { id: 'skin',    name: 'Piel curtida',    max: 5, cost: C5,  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
     { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: C5,  desc: r => `Te mueves un ${3 * r}% más rápido` },
-    { id: 'mend',    name: 'Remiendo',        max: 5, cost: C5,  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
+    { id: 'mend',    name: 'Remiendo',        max: 5, cost: C5,  desc: r => `Al limpiar cada sala recuperas un ${4 * r}% de tu vida máxima más, además del 5% de siempre` },
     { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [50, 150],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
     { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [40, 90, 180],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
   { name: 'Oficio', sub: 'Daño, cadencia, alcance y disparo cargado', nodes: [
@@ -732,7 +732,7 @@ const TREE_EXT = Object.fromEntries(TREE2_NODES.map(n => [n.ext, n.id])), TREE_A
 const ROOMS = {
   souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades (también te las paga el reino al cumplir encargos). Si repites un encargo ya cumplido, estas salas dan el 30%.' },
   iron:  { name: 'Veta de Hierro Místico', tag: 'Hierro',  color: '#c9d2e0', desc: 'Hierro Místico: lo necesitas para forjar cualquier pieza de los guanteletes.' },
-  heart: { name: 'Fuente de vida',         tag: 'Vida',    color: '#ff6f86', desc: '+20 de vida máxima y te curas 20.' },
+  heart: { name: 'Fuente de vida',         tag: 'Vida',    color: '#ff6f86', desc: '+20% de vida máxima, y recuperas esa misma cantidad.' },
   gold:  { name: 'Cámara del tesoro',      tag: 'Oro',     color: '#ffd24a', desc: 'Oro para gastar en la tienda que hay antes del jefe.' },
   anvil: { name: 'Yunque abandonado',      tag: 'Yunque',  color: '#f2c14e', desc: 'Elige una mejora de los guanteletes para esta partida: cadencia, daño, alcance o velocidad.' },
 };
@@ -748,7 +748,7 @@ const GLOSS = [
   [/Ascuas?/, 'Ascuas', 'fuego clavado en un enemigo (lo ponen las técnicas de Dragones). Cada Ascua le quita el 12% de tu daño cada medio segundo. Se acumulan hasta 8 por enemigo. Si pasan 4 s sin clavarle otra, se apagan todas.'],
   [/Venenos?\b|envenenad/, 'Veneno', 'puntos en un enemigo (técnicas de Veneno). Cada punto le quita el 3,5% de tu daño cada medio segundo. Hasta 30 puntos. No se va nunca: dura hasta que muere.'],
   [/Cristal(es)?/, 'Cristales', 'piedras que se quedan en el suelo 9 s (técnicas de Minerales). Como mucho hay 6 a la vez; si sale otro, se va el más viejo. Solos no hacen nada: otras técnicas y piezas los usan.'],
-  [/Reserva/, 'Reserva', 'escudo extra (técnicas de Manjares). La curación que te sobra con la vida llena se guarda aquí, hasta 30. Los golpes la gastan antes que tu vida.'],
+  [/Reserva/, 'Reserva', 'escudo extra (técnicas de Manjares). La curación que te sobra con la vida llena se guarda aquí, hasta 30 puntos; cada punto vale el 1% de tu vida máxima. Los golpes la gastan antes que tu vida.'],
   [/Furia/, 'Furia', 'barra de 0 a 100 (técnicas de Orcos o los Dedos de tambor). Sube al golpear y al recibir golpes. Si pasas 2 s sin pelear, baja 8 por segundo. Muchas técnicas de Orcos mejoran con más Furia o con la barra llena.'],
   [/\becos?\b/, 'Eco', 'repetición del disparo que llega sola 1,5 s después al mismo enemigo (técnicas del Tiempo). Aplica tus efectos de disparo y puede ser crítico.'],
   [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y luchan a tu lado 9 s (técnicas de Sombras). Como mucho tienes 2 más el nivel de tu técnica de disparo de Sombras; si sale otra, se va la más vieja.'],
@@ -1211,7 +1211,7 @@ const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); retur
 function roomCleared() {
   const p = S.p, n = S.lvl, W = S.world, ms = S.mission, N = roomsOf(ms), last = S.room >= N;
   if (S.bossRoom) { bossDown(); return; }
-  p.hp = Math.min(p.maxHp, p.hp + 5 + 4 * tk('mend'));
+  p.hp = Math.min(p.maxHp, p.hp + pct(5 + 4 * tk('mend')));
   const gold = Math.round(8 + 2 * n); addGold(gold);
   pickQueue = []; S.rerolls = tk('reroll');
   const unit = ms.type === 'defend' ? 'oleada' : ms.type === 'assault' ? 'campamento' : 'sala', here = ms.name + ' · ' + unit + ' ' + S.room + ' de ' + N;
@@ -1223,7 +1223,7 @@ function roomCleared() {
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
-  else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
+  else if (S.roomType === 'heart') { const up = Math.round(p.maxHp * 0.2); p.maxHp += up; p.hp = Math.min(p.maxHp, p.hp + up); got = '+20% de vida máxima (+' + up + ')'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
@@ -1346,7 +1346,7 @@ function openShop() {
       { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
       { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
-      { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
+      { id: 'heart', name: 'Corazón en conserva',    desc: '+15% de vida máxima', price: pr(70) },
       { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tus guanteletes: eliges entre tres', price: pr(100) },
     ].concat(plan ? [{ id: 'plan', name: 'Plano: ' + plan.name, desc: plan.desc, price: pr(110), plan: plan.id }] : []) };
   }
@@ -1375,7 +1375,7 @@ function shopAct(act) {
   if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { sfx('no', 0.4); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
   p.gold -= it.price; it.sold = true; sfx('ok', 0.45);
   if (it.id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.35));
-  else if (it.id === 'heart') { p.maxHp += 15; p.hp += 15; }
+  else if (it.id === 'heart') { const up = Math.round(p.maxHp * 0.15); p.maxHp += up; p.hp += up; }
   else if (it.id === 'plan') { S.plans.add(it.plan); p.dodgeN = dodgeMax(); }
   else if (it.id === 'tech') { S.rerolls = 0; pickQueue = [pieceScreen(it.god, 'Tienda · ' + GODS[it.god].title)]; afterPicks = openShop; advancePick(); return; }
   else if (it.id === 'anvil') { pickQueue = [statScreen]; afterPicks = openShop; advancePick(); return; }
@@ -3208,16 +3208,19 @@ const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: bi
 
 // ───────────────────────── Recursos del jugador ─────────────────────────
 function gainFury(n) { const p = S.p; if (!godCount('orc') && !G('a_drum')) return; n *= 1 + 0.15 * aff('orc'); p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+// Vida en porcentaje: toda curación, coste de vida y Reserva se mide en «puntos», y un punto es el 1% de tu vida máxima.
+// Así siguen valiendo lo mismo cuando la vida máxima crece con el árbol.
+const pct = n => n * S.p.maxHp / 100, toPts = hp => hp * 100 / S.p.maxHp;
 function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
 function heal(n) {
   const p = S.p;
   if (n <= 0) return;
   n *= (mastery('feast') ? 1.5 : 1) * (1 + 0.1 * aff('feast'));
   p.hp += n;
-  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
-  if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
+  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(toPts(over)); }
+  if (duoOn('warhunger')) gainFury(toPts(n) * 2);                                    // dúo Hambre de guerra
 }
-function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(pct(n)); }   // dúo Banquete del dragón
 
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
@@ -3235,16 +3238,16 @@ function kill(e) {
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
   if (has('i_shatter') && e.frozen > 0) for (const o of others(e, 100, 4)) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: GODS.frost.color }); hit(o, p.dmg * 0.4, 0, 0, false, GODS.frost.color); }   // Astillas
-  if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
-  if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
-  if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
+  if (mastery('blood') && e.bleed > 0) heal(pct(2));                                                // maestría Cobro final
+  if (has('h_warm') && p.hp < p.maxHp / 2) heal(pct(2));                                            // Sangre caliente
+  if (S.t < (S.bloodT || 0)) { heal(pct(5)); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
   if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Brazal de lápida
-  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Brazal de bota de vino
+  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(pct(k)); }   // Brazal de bota de vino
   if (G('m_gold')) addGold(1);
-  if (G('m_blood')) heal(3);                                                                  // Gema de sangre
+  if (G('m_blood')) heal(pct(3));                                                                  // Gema de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
   if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
@@ -3252,13 +3255,13 @@ function kill(e) {
   sfx('kill', 0.3);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
   if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); sfx('relic', 0.6); }
-  if (S.t < S.banquet) heal(4);
+  if (S.t < S.banquet) heal(pct(4));
   { const bp = lv('wood_passive'), held = e.root > 0 || e.bram > 0;
-    if (bp && held) heal(bp);                                                                  // Savia
+    if (bp && held) heal(pct(bp));                                                                  // Savia
     if (duoOn('amber') && held) addCrystal(e.x, e.y);                                          // dúo Ámbar
     if (has('b_bloom') && e.root > 0) S.zones.push({ x: e.x, y: e.y, r: 34, life: 3, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.2, bram: true, col: GODS.wood.color });   // Floración
     if (duoOn('drowned') && e.wet > 0 && !e.boss) raiseShade(e.x, e.y); }                      // dúo Ahogados
-  if (has('f_appet')) heal(1);                                                                 // Buen apetito
+  if (has('f_appet')) heal(pct(1));                                                                 // Buen apetito
   if (has('s_last') && !S.firstKill && !e.boss) { S.firstKill = true; raiseShade(e.x, e.y); }  // Último servicio                                                                 // Banquete
   const tl = lv('dragon_passive');
   if (tl && e.ember > 0) { addGold(tl); note(e.x, e.y - e.r - 10, '+' + tl + ' oro', RAR[3].color); }   // Tesoro
@@ -3302,7 +3305,7 @@ function hit(e, dmg, ux, uy, big, col) {
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
-    if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
+    if (duoOn('orchard') && e.root > 0) heal(pct(1)); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
   if (e.traced > 0) dmg *= 1.3;                                                               // Gema de marca
@@ -3412,7 +3415,7 @@ function bite(pet, e, k, order) {
   onHit(e, dmg, ux, uy, false, GODS.beast.color, 'pet');
   if (st === 2) { let n = 0; for (const o of S.enemies.slice()) { if (o === e || !active(o) || dist(e, o) > e.r + o.r + 12) continue; hit(o, dmg * 0.3, ux, uy, false, GODS.beast.color); if (++n >= 3) break; } }   // lobo alfa: alcanza a los pegados a la presa
   if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
-  if (!active(e) && has('a_feral')) heal(2);
+  if (!active(e) && has('a_feral')) heal(pct(2));
 }
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 const shareK = () => 0.2 + 0.1 * lv('light_basic') + 0.04 * aff('light');
@@ -3443,7 +3446,7 @@ function freeze(e) {
 function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.frost = (e.frost || 0) + n; e.frostT = 4; if (e.frost >= 5) freeze(e); else slow(e, 2, 1 - 0.12 * e.frost); }
 // Sangre: Heridas que sangran según la vida que te falta
 function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
-function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
+function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(toPts(n)); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
 const doomK = () => (0.2 + 0.2 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
@@ -3572,7 +3575,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   if (db) addEmber(e, db * (src === 'echo' && duoOn('eternal') ? 2 : 1));                         // Colmillo al rojo (y dúo Brasa eterna)
   if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Ponzoña
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
-  if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
+  if (fb) heal(pct(0.5 * fb) * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática
   { const wb = lv('tide_basic');
     if (wb && active(e)) { soak(e, 4); push(e, ux, uy, 150 * (duoOn('ram') && furyFull() ? 2 : 1)); }   // Oleaje (y dúo Ariete)
@@ -3620,7 +3623,7 @@ function shot(e, dmg, ux, uy, big, col) {
   onHit(e, dmg, ux, uy, big, col, 'player');
   if (G('m_blunt') && p.shotN % 5 === 0 && active(e)) stun(e, 0.6);                             // Gema roma
   if (G('m_grow') && !active(e) && !e.boss) p.grow = Math.min(30, (p.grow || 0) + 1);          // Gema voraz
-  if (G('m_leech')) { p.leechN = (p.leechN || 0) + 1; if (p.leechN >= 8) { p.leechN = 0; heal(2); } }   // Gema sanguijuela
+  if (G('m_leech')) { p.leechN = (p.leechN || 0) + 1; if (p.leechN >= 8) { p.leechN = 0; heal(pct(2)); } }   // Gema sanguijuela
   if (G('m_awl') && !S._awl) { S._awl = true; let bestE = null, ba = 70;                       // Gema de punzón: el de detrás
     for (const o of S.enemies) { if (!active(o) || o === e) continue; const ex = o.x - e.x, ey = o.y - e.y, al = ex * ux + ey * uy; if (al > 0 && al - o.r < ba && Math.abs(ex * uy - ey * ux) <= o.r + 7) { ba = al - o.r; bestE = o; } }
     if (bestE) { S.stat.awl++; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: bestE.x, y2: bestE.y, t: 0, life: 0.1, col }); onHit(bestE, dmg * 0.6, ux, uy, false, col, 'player'); } S._awl = false; }
@@ -3688,7 +3691,7 @@ function fireBasic(target) {
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Presta!', C.ember, true); }   // Palma presta
   if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Dedos de péndulo (sustituye el 1,5 del Compás por la racha)
-  if (g.mag === 'm_blood') payLife(1);
+  if (g.mag === 'm_blood') payLife(pct(1));
   if (g.mag === 'm_gold') { if (p.gold >= 1) { p.gold -= 1; mult *= 1.35; } else mult *= 0.8; }           // Gema de oro
   if (g.action === 'a_spring' && res('deathclock') && (p.idle || 0) >= 4 && target && target.doom) fulfil(target);   // resonancia Hora señalada
   if (g.action === 'a_spring') { const k = 1 + Math.min(2, 0.5 * (p.idle || 0)); if (k > 1.4) { S.stat.spring++; note(p.x, p.y - 14, 'x' + k.toFixed(1), C.ember); } mult *= k; }   // Dedos de resorte
@@ -3763,7 +3766,7 @@ function fireBasic(target) {
   // Gema
   if (g.mag === 'm_drum') {              // dos disparos y a recargar
     p.shells -= 1;
-    if (p.shells <= 0) { p.shells = 2; p.cd = periodOf() * 1.25; if (res('leadfeast')) { heal(4); p.feastShot = true; } }   // resonancia Banquete de plomo
+    if (p.shells <= 0) { p.shells = 2; p.cd = periodOf() * 1.25; if (res('leadfeast')) { heal(pct(4)); p.feastShot = true; } }   // resonancia Banquete de plomo
     else p.cd = periodOf() * 0.22;
   }
   if (g.mag === 'm_belt') {              // la gema candente calienta los guanteletes
@@ -3928,10 +3931,10 @@ function startDodge(a, free) {
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
   if (sd) raiseShade(p.x, p.y, 3 + sd, true);                               // Relevo
-  { const ed = lv('end_dodge'); if (ed) for (const e of S.enemies) if (active(e) && e.doom && dist(p, e) < 130) { e.doom.t -= 2; heal(ed); } }   // Pasar página
+  { const ed = lv('end_dodge'); if (ed) for (const e of S.enemies) if (active(e) && e.doom && dist(p, e) < 130) { e.doom.t -= 2; heal(pct(ed)); } }   // Pasar página
   const ld = lv('luck_dodge');
   if (ld && !free) {                                                        // Cara o cruz
-    if (duoOn('toss')) heal(5);                                             // dúo Propina
+    if (duoOn('toss')) heal(pct(5));                                             // dúo Propina
     if (Math.random() < 0.5) { p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); S.stat.heads++; note(p.x, p.y - 18, 'Cara', GODS.luck.color, true); }
     else {
       const x = p.x, y = p.y; S.stat.tails++; note(x, y - 18, 'Cruz', GODS.luck.color);
@@ -3954,7 +3957,7 @@ function endDodge() {
   { const md = lv('mirror_dodge'), bd3 = lv('beast_dodge'), fd3 = lv('forge_dodge');
     if (md && !p.isLunge) { S.fx.push({ k: 'ghost', x: from.x, y: from.y, t: 0, life: 0.6 + 0.3 * md }); S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 70, t: 0, life: 0.25, col: GODS.mirror.color }); for (const e of S.enemies) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 70 + e.r) stun(e, 0.6 + 0.3 * md); }   // Engaño
     if (bd3 && !p.isLunge && S.pets.length) { const pt = S.pets[0]; pt.x = from.x; pt.y = from.y; S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 50, t: 0, life: 0.2, col: GODS.beast.color });
-      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3, true); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(2); } } } }   // Manada (y dúo Rastro de sangre)
+      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3, true); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(pct(2)); } } } }   // Manada (y dúo Rastro de sangre)
     if (fd3 && !p.isLunge) p.redhot = 1 + fd3; }                              // Al rojo
   { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
     if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
@@ -3972,9 +3975,9 @@ function dashThrough(e) {
   if (G('s_dance') && !p.danced) { p.danced = true; p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); note(p.x, p.y - 18, '¡Otra!', C.energy); }   // Brazal de bailarín
   if (G('s_spikes') && active(e)) { S.stat.spk++; hit(e, p.dmg * 1.5, p.dvx, p.dvy, true, C.ink); stun(e, 0.5); }   // Brazal de púas
   if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
-  if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
-  if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
-  { const bd2 = lv('blood_dodge'); if (bd2 && active(e)) { hit(e, p.dmg * 0.6 * bd2, p.dvx, p.dvy, false, GODS.blood.color); heal(4 * bd2); } }   // Transfusión
+  if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(pct(2 * n)); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
+  if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(pct(3 * fd)); }   // Brindis
+  { const bd2 = lv('blood_dodge'); if (bd2 && active(e)) { hit(e, p.dmg * 0.6 * bd2, p.dvx, p.dvy, false, GODS.blood.color); heal(pct(4 * bd2)); } }   // Transfusión
   if (od && active(e)) {                                                    // Embestida
     const up = duoOn('uproot') && e.root > 0;                               // dúo Descuaje
     hit(e, p.dmg * od * (up ? 3 : 1), p.dvx, p.dvy, true, GODS.orc.color); gainFury(15);
@@ -4240,7 +4243,7 @@ function hurtPlayer(dmg) {
   if (has('q_break')) p.broke = true;
   if (!mastery('forge')) p.temper = Math.floor(p.temper / 2);
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
-  if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
+  if (p.reserve > 0) { const a = Math.min(pct(p.reserve), dmg); p.reserve -= toPts(a); dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
   if (G('s_wind') && !S.windUsed && p.hp > 0 && p.hp < p.maxHp * 0.3) { S.windUsed = true; S.stat.wind++; heal(p.maxHp * 0.2); note(p.x, p.y - 20, '¡Segundo aire!', '#8fe08a', true); }   // Brazal de segundo aire
   if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata
@@ -6503,7 +6506,7 @@ function renderHud() {
     Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
-  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
+  $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(pct(p.reserve)) : '');
   const ms = S.mission;
   // Cabecera del encargo: nombre, en qué tramo vas y una fila de cuentas (hechas, la actual, tiendas y jefe)
   if (!inRun || !ms) { $('wave').innerHTML = ''; $('pips').innerHTML = ''; }

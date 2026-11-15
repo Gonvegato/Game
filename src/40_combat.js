@@ -63,16 +63,19 @@ const note = (x, y, txt, col, big) => S.fx.push({ k: 'num', x, y, t: 0, life: bi
 
 // ───────────────────────── Recursos del jugador ─────────────────────────
 function gainFury(n) { const p = S.p; if (!godCount('orc') && !G('a_drum')) return; n *= 1 + 0.15 * aff('orc'); p.fury = Math.min(100, p.fury + n); p.furyT = 2; }
+// Vida en porcentaje: toda curación, coste de vida y Reserva se mide en «puntos», y un punto es el 1% de tu vida máxima.
+// Así siguen valiendo lo mismo cuando la vida máxima crece con el árbol.
+const pct = n => n * S.p.maxHp / 100, toPts = hp => hp * 100 / S.p.maxHp;
 function addReserve(n) { const p = S.p; p.reserve = Math.min(resMax(), p.reserve + n); p.resT = 3; }
 function heal(n) {
   const p = S.p;
   if (n <= 0) return;
   n *= (mastery('feast') ? 1.5 : 1) * (1 + 0.1 * aff('feast'));
   p.hp += n;
-  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(over); }
-  if (duoOn('warhunger')) gainFury(n * 2);                                    // dúo Hambre de guerra
+  if (p.hp > p.maxHp) { const over = p.hp - p.maxHp; p.hp = p.maxHp; if (godCount('feast')) addReserve(toPts(over)); }
+  if (duoOn('warhunger')) gainFury(toPts(n) * 2);                                    // dúo Hambre de guerra
 }
-function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(n); }   // dúo Banquete del dragón
+function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p.gold += n; if (n >= 1 && S.mode === 'play') for (let i = 0; i < Math.min(4, Math.ceil(n / 15)); i++) S.fx.push({ k: 'coin', x: p.x + (i - 1) * 9, y: p.y - 12, t: -0.07 * i, life: 0.6 }); if (duoOn('hoardfeast')) heal(pct(n)); }   // dúo Banquete del dragón
 
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
@@ -90,16 +93,16 @@ function kill(e) {
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
   if (has('i_shatter') && e.frozen > 0) for (const o of others(e, 100, 4)) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: GODS.frost.color }); hit(o, p.dmg * 0.4, 0, 0, false, GODS.frost.color); }   // Astillas
-  if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
-  if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
-  if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
+  if (mastery('blood') && e.bleed > 0) heal(pct(2));                                                // maestría Cobro final
+  if (has('h_warm') && p.hp < p.maxHp / 2) heal(pct(2));                                            // Sangre caliente
+  if (S.t < (S.bloodT || 0)) { heal(pct(5)); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
   if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Brazal de lápida
-  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Brazal de bota de vino
+  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(pct(k)); }   // Brazal de bota de vino
   if (G('m_gold')) addGold(1);
-  if (G('m_blood')) heal(3);                                                                  // Gema de sangre
+  if (G('m_blood')) heal(pct(3));                                                                  // Gema de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
   if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
@@ -107,13 +110,13 @@ function kill(e) {
   sfx('kill', 0.3);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
   if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); sfx('relic', 0.6); }
-  if (S.t < S.banquet) heal(4);
+  if (S.t < S.banquet) heal(pct(4));
   { const bp = lv('wood_passive'), held = e.root > 0 || e.bram > 0;
-    if (bp && held) heal(bp);                                                                  // Savia
+    if (bp && held) heal(pct(bp));                                                                  // Savia
     if (duoOn('amber') && held) addCrystal(e.x, e.y);                                          // dúo Ámbar
     if (has('b_bloom') && e.root > 0) S.zones.push({ x: e.x, y: e.y, r: 34, life: 3, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.2, bram: true, col: GODS.wood.color });   // Floración
     if (duoOn('drowned') && e.wet > 0 && !e.boss) raiseShade(e.x, e.y); }                      // dúo Ahogados
-  if (has('f_appet')) heal(1);                                                                 // Buen apetito
+  if (has('f_appet')) heal(pct(1));                                                                 // Buen apetito
   if (has('s_last') && !S.firstKill && !e.boss) { S.firstKill = true; raiseShade(e.x, e.y); }  // Último servicio                                                                 // Banquete
   const tl = lv('dragon_passive');
   if (tl && e.ember > 0) { addGold(tl); note(e.x, e.y - e.r - 10, '+' + tl + ' oro', RAR[3].color); }   // Tesoro
@@ -157,7 +160,7 @@ function hit(e, dmg, ux, uy, big, col) {
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
-    if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
+    if (duoOn('orchard') && e.root > 0) heal(pct(1)); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
   if (e.traced > 0) dmg *= 1.3;                                                               // Gema de marca
@@ -267,7 +270,7 @@ function bite(pet, e, k, order) {
   onHit(e, dmg, ux, uy, false, GODS.beast.color, 'pet');
   if (st === 2) { let n = 0; for (const o of S.enemies.slice()) { if (o === e || !active(o) || dist(e, o) > e.r + o.r + 12) continue; hit(o, dmg * 0.3, ux, uy, false, GODS.beast.color); if (++n >= 3) break; } }   // lobo alfa: alcanza a los pegados a la presa
   if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
-  if (!active(e) && has('a_feral')) heal(2);
+  if (!active(e) && has('a_feral')) heal(pct(2));
 }
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 const shareK = () => 0.2 + 0.1 * lv('light_basic') + 0.04 * aff('light');
@@ -298,7 +301,7 @@ function freeze(e) {
 function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.frost = (e.frost || 0) + n; e.frostT = 4; if (e.frost >= 5) freeze(e); else slow(e, 2, 1 - 0.12 * e.frost); }
 // Sangre: Heridas que sangran según la vida que te falta
 function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
-function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
+function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(toPts(n)); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
 const doomK = () => (0.2 + 0.2 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
