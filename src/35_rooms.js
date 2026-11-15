@@ -133,8 +133,8 @@ const ROOM_GEN = {
       if (!far(cx, cy) || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
       pond(g, cx, cy, rx + 0.4, ry + 0.4); i++;
     }
-    for (let i = 0, t = 0; i < Math.floor(c * r / 60) && t < 1200; t++) {   // obstáculos del tema
-      const roll = Math.random(), big = roll > 0.8, small = roll < 0.3, w = big ? 3 : small ? 1 : 2, h = small ? 1 : 2, x = ri(5, c - 6 - w), y = ri(5, r - 6 - h);
+    for (let i = 0, t = 0; i < Math.floor(c * r / 115) && t < 1200; t++) {   // obstáculos del tema: pocos y grandes
+      const roll = Math.random(), big = roll > 0.5, small = roll < 0.08, w = big ? 3 : small ? 1 : 2, h = small ? 1 : 2, x = ri(5, c - 6 - w), y = ri(5, r - 6 - h);
       if (!far(x + w / 2, y + h / 2) || !areaFree(g, x - 3, y - 3, w + 6, h + 6)) continue;
       if (small) ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }); else if (big) ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }); else ob(g, x, y, 2, 2, Math.random() < 0.62 ? 'tree' : 'rock', { v: ri(0, 23) });
       i++;
@@ -159,10 +159,9 @@ const ROOM_GEN = {
       ob(g, x + 2, y + 1, 2, 2, 'prop', { k: 'scarecrow' }); OUT.decor.push({ r: BIO.deco[9], x: x + 1, y: y + 2.6, shadow: false }, { r: BIO.deco[9], x: x + 5, y: y + 2.2, shadow: false });
     });
     for (let i = 0; i < 2; i++) put(2, 1, 2, (x, y) => ob(g, x, y, 2, 1, 'prop', { k: 'hay' }));
-    for (let i = 0; i < 4; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'barrel', { v: i }));
-    for (let i = 0; i < 5; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'tree', { v: ri(0, 23) }));
-    for (let i = 0; i < 5; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }));
-    for (let i = 0; i < 2; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'rock', { v: ri(0, 23) }));
+    for (let i = 0; i < 2; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'barrel', { v: i }));
+    for (let i = 0; i < 4; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'tree', { v: ri(0, 23) }));
+    for (let i = 0; i < 2; i++) put(3, 2, 2, (x, y) => ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }));
     return [cx, cy + 4];
   },
   // La plaza del reino: el castillo arriba; la plaza mayor empedrada con el pozo, el tablón y el mercado; la forja con su patio
@@ -253,7 +252,7 @@ function buildRoom(boss, kindF, sizeF) {
     const [sx, sy] = ROOM_GEN[kind](g, c, r), out = OUT;
     for (let j = sy - 1; j <= sy + 1; j++) for (let i = sx - 1; i <= sx + 1; i++) if (g[j] && i >= 0 && i < c) g[j][i] = 0;   // el punto de entrada, despejado
     const solids = [];   // mazmorras: obstáculos sueltos de una casilla (ataúdes, setas, pilares...) que tapan el paso y los disparos
-    if (!out) for (let i = 0, t = 0; i < (boss ? 0 : Math.round(c * r / 190)) && t < 200; t++) {
+    if (!out) for (let i = 0, t = 0; i < (boss ? 0 : Math.round(c * r / 420)) && t < 200; t++) {
       const x = ri(3, c - 4), y = ri(3, r - 4);
       if (Math.hypot(x - sx, y - sy) < 4 || !areaFree(g, x - 2, y - 2, 5, 5)) continue;
       g[y][x] = 1; solids.push({ x, y }); i++;

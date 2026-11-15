@@ -90,7 +90,7 @@ function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
   if (L) d.ch = Math.min(L.text.length, d.ch + dt * 55);
   d.t += dt;
-  if (I.dodgeP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
+  if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
   if (d.i >= d.lines.length && d.choices) {
     if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP && d.t > 0.2) { const c = d.choices[d.sel]; S.dialog = null; modeT = 0; c.fn(); }

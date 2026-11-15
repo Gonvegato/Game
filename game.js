@@ -876,6 +876,7 @@ function pollInput() {
   dodge = down('ShiftLeft') || down('ShiftRight') || down('KeyK');
   chg = down('KeyE') || down('KeyL');
   start = down('Escape') || down('KeyP');
+  let tabR = down('KeyR'), back = down('ShiftLeft') || down('ShiftRight') || down('KeyK');   // en menús: RB (o R) pestaña siguiente; B (o Shift) volver
 
   // Mando
   const p = readPad();
@@ -891,7 +892,7 @@ function pollInput() {
     dodge = dodge || b(1) || b(5);
     chg = chg || b(2) || b(6);
     start = start || b(9);
-    clear = clear || b(11); tab = tab || b(4);
+    clear = clear || b(11); tab = tab || b(4); tabR = tabR || b(5); back = back || b(1);
   } else padName = '';
 
   // Táctil
@@ -918,6 +919,7 @@ function pollInput() {
   I.clearP = clear && !prev.clear;
   I.chgP = chg && !prev.chg; prev.chg = chg;
   I.tabP = tab && !prev.tab; prev.tab = tab;
+  I.tabL = I.tabP; I.tabR = tabR && !prev.tabR; prev.tabR = tabR; I.backP = back && !prev.back; prev.back = back;
   I.navL = nav === -1 && prev.nav !== -1;
   I.navR = nav === 1 && prev.nav !== 1;
   prev.atk = atk; prev.dodge = dodge; prev.start = start; prev.clear = clear; prev.nav = nav;
@@ -1387,7 +1389,7 @@ function forgeHtml() {
       return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
   if (forgeTab === 'room') body = roomHtml(); else if (forgeTab === 'king') body = kingHtml();
-  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña. B (o Shift) vuelve a la plaza.</p>`;
+  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB y RB (o Q y R) pasan a la pestaña de la izquierda o de la derecha. B (o Shift) vuelve a la plaza.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -1432,8 +1434,14 @@ function navPick(els, cur, dx, dy) {
   return best < 0 ? cur : best;
 }
 function listInput() {
-  if (S.mode === 'forge' && I.dodgeP && modeT > 0.3) { closePlace(); return; }
-  if (S.mode === 'forge' && I.tabP) { const tabs = placeTabs(), i = tabs.findIndex(t => t[0] === forgeTab); if (tabs.length > 1) forgeAct('tab:' + tabs[(i + 1) % tabs.length][0]); return; }
+  if (S.mode === 'forge' && I.backP && modeT > 0.3) { closePlace(); return; }
+  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en el arma, por sus cinco partes
+    const seq = []; for (const [id] of placeTabs()) { if (id === 'gun') for (const k of GSLOT_KEYS) seq.push(['gun', k]); else seq.push([id, null]); }
+    if (seq.length < 2) return;
+    const i = seq.findIndex(([t, k]) => t === forgeTab && (t !== 'gun' || k === forgeSlot)), n = seq[(i + (I.tabR ? 1 : seq.length - 1)) % seq.length];
+    if (n[0] !== forgeTab) forgeAct('tab:' + n[0]); if (n[1] && n[1] !== forgeSlot) forgeAct('slot:' + n[1]);
+    return;
+  }
   const els = [...ovBody.querySelectorAll('.fi')];
   if (I.navX || I.navY) {
     const n = navPick(els, listSel, I.navX, I.navY);
@@ -1741,8 +1749,8 @@ const ROOM_GEN = {
       if (!far(cx, cy) || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
       pond(g, cx, cy, rx + 0.4, ry + 0.4); i++;
     }
-    for (let i = 0, t = 0; i < Math.floor(c * r / 60) && t < 1200; t++) {   // obstáculos del tema
-      const roll = Math.random(), big = roll > 0.8, small = roll < 0.3, w = big ? 3 : small ? 1 : 2, h = small ? 1 : 2, x = ri(5, c - 6 - w), y = ri(5, r - 6 - h);
+    for (let i = 0, t = 0; i < Math.floor(c * r / 115) && t < 1200; t++) {   // obstáculos del tema: pocos y grandes
+      const roll = Math.random(), big = roll > 0.5, small = roll < 0.08, w = big ? 3 : small ? 1 : 2, h = small ? 1 : 2, x = ri(5, c - 6 - w), y = ri(5, r - 6 - h);
       if (!far(x + w / 2, y + h / 2) || !areaFree(g, x - 3, y - 3, w + 6, h + 6)) continue;
       if (small) ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }); else if (big) ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }); else ob(g, x, y, 2, 2, Math.random() < 0.62 ? 'tree' : 'rock', { v: ri(0, 23) });
       i++;
@@ -1767,10 +1775,9 @@ const ROOM_GEN = {
       ob(g, x + 2, y + 1, 2, 2, 'prop', { k: 'scarecrow' }); OUT.decor.push({ r: BIO.deco[9], x: x + 1, y: y + 2.6, shadow: false }, { r: BIO.deco[9], x: x + 5, y: y + 2.2, shadow: false });
     });
     for (let i = 0; i < 2; i++) put(2, 1, 2, (x, y) => ob(g, x, y, 2, 1, 'prop', { k: 'hay' }));
-    for (let i = 0; i < 4; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'barrel', { v: i }));
-    for (let i = 0; i < 5; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'tree', { v: ri(0, 23) }));
-    for (let i = 0; i < 5; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }));
-    for (let i = 0; i < 2; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'rock', { v: ri(0, 23) }));
+    for (let i = 0; i < 2; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'barrel', { v: i }));
+    for (let i = 0; i < 4; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'tree', { v: ri(0, 23) }));
+    for (let i = 0; i < 2; i++) put(3, 2, 2, (x, y) => ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }));
     return [cx, cy + 4];
   },
   // La plaza del reino: el castillo arriba; la plaza mayor empedrada con el pozo, el tablón y el mercado; la forja con su patio
@@ -1861,7 +1868,7 @@ function buildRoom(boss, kindF, sizeF) {
     const [sx, sy] = ROOM_GEN[kind](g, c, r), out = OUT;
     for (let j = sy - 1; j <= sy + 1; j++) for (let i = sx - 1; i <= sx + 1; i++) if (g[j] && i >= 0 && i < c) g[j][i] = 0;   // el punto de entrada, despejado
     const solids = [];   // mazmorras: obstáculos sueltos de una casilla (ataúdes, setas, pilares...) que tapan el paso y los disparos
-    if (!out) for (let i = 0, t = 0; i < (boss ? 0 : Math.round(c * r / 190)) && t < 200; t++) {
+    if (!out) for (let i = 0, t = 0; i < (boss ? 0 : Math.round(c * r / 420)) && t < 200; t++) {
       const x = ri(3, c - 4), y = ri(3, r - 4);
       if (Math.hypot(x - sx, y - sy) < 4 || !areaFree(g, x - 2, y - 2, 5, 5)) continue;
       g[y][x] = 1; solids.push({ x, y }); i++;
@@ -2093,7 +2100,7 @@ function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
   if (L) d.ch = Math.min(L.text.length, d.ch + dt * 55);
   d.t += dt;
-  if (I.dodgeP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
+  if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
   if (d.i >= d.lines.length && d.choices) {
     if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP && d.t > 0.2) { const c = d.choices[d.sel]; S.dialog = null; modeT = 0; c.fn(); }
@@ -4339,7 +4346,7 @@ function weaponKey() {
 function drawWeapon(x, y, ang, kick) {
   const im = IMG.weapons; if (!im) return false;
   const k = weaponKey(), w = WEAP[k]; if (!w) return false;
-  x += Math.cos(ang) * 6; y += Math.sin(ang) * 3 + 3;   // en las manos, por delante del cuerpo
+  x += Math.cos(ang) * 1.5; y += Math.sin(ang) * 1 + 5;   // en las manos, pegada al cuerpo
   const left = Math.cos(ang) < 0;
   const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(im, w[0], w[1], w[2], w[3], -w[4] - kick, -w[5], w[2], w[3]); ctx.restore(); };
   if (S.gun.barrel === 'b_twin') { const nx = -Math.sin(ang) * 3, ny = Math.cos(ang) * 3; one(nx, ny); one(-nx, -ny); } else one(0, 0);
@@ -4901,15 +4908,15 @@ BIO.savanna = { land: [16, 512], water: [0, 240], winner: [64, 240], base: '#b3a
 // trees y rocks: obstáculos de 2×2 · big: de 3×2 · small: de 1×1 · deco: adorno que se pisa · forest y fbush: el borde de la sala
 const THEMES = {
   grass: { biome: 'grass', trees: BIO.tree.slice(0, 6), rocks: BIO.rock, big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)), small: BIO.bush, deco: BIO.deco, forest: BIO.tree.slice(0, 6), fbush: BIO.bush, pc: true },
-  crypt: { biome: 'grass', trees: ['pine_m', 'pine_m', 'pine_s', BIO.tree[1], 'pine_l', 'dead_m'], rocks: BIO.rock.concat(['tomb1', 'tomb2', 'tomb3']), big: ['cross_stat', 'graves_row', 'angel2', 'reaper', 'cross2', 'olive'],
+  crypt: { biome: 'grass', trees: ['pine_l', 'pine_m', 'pine_l', 'pine_m', 'pine_l', 'dead_m'], rocks: BIO.rock.concat(['tomb1', 'tomb2', 'tomb3']), big: ['cross_stat', 'graves_row', 'angel2', 'reaper', 'cross2', 'olive'],
     small: ['grave1', 'grave2', 'grave3', 'grave4', 'cross_big', 'angel1', 'coffin1', 'coffin2'], deco: BIO.deco.slice(0, 3).concat([BIO.deco[10], BIO.deco[11]]), forest: ['pine_m', 'pine_s', 'pine_m', BIO.tree[1], 'pine_l', 'dead_s'], fbush: ['darkbush', BIO.bush[0]], dim: 'rgba(30,40,60,0.16)' },
   nest: { biome: 'grass', trees: [BIO.tree[0], 'mush_tall', BIO.tree[4], 'mush_l', BIO.tree[5], 'vine_l'], rocks: ['mossy2', 'boulder2', 'mossy3', 'boulder1'], big: ['mush_xl', 'mush_l', 'bush_g', 'bush_a', 'mossy3'],
     small: ['flower_m', 'flower_m2', 'vine_m', 'mush_m', 'vine_s', 'flower_l'], deco: BIO.deco, forest: BIO.tree.slice(0, 6).concat(['mush_l']), fbush: ['bush_g', BIO.bush[1], BIO.bush[3]], pc: true, dim: 'rgba(20,60,30,0.10)' },
   mines: { biome: 'snow', trees: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [161, 433, 30, 31], [192, 432, 32, 31]], rocks: [[113, 370, 30, 28], [112, 408, 27, 23], [145, 409, 29, 21], 'grey1', 'rune1', [148, 381, 26, 18]],
     big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)).concat(['rune1']), small: [[176, 385, 16, 13], [209, 386, 15, 13], [304, 386, 16, 12], [208, 464, 16, 16], 'rune2', 'grey2', [144, 436, 16, 28]], deco: [[307, 435, 10, 9], [177, 417, 14, 13], [210, 418, 14, 12], [305, 403, 14, 12]],
     forest: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [230, 454, 22, 24], [261, 452, 24, 26]], fbush: [[176, 385, 16, 13], [145, 467, 14, 12], [193, 466, 14, 12]] },
-  ash: { biome: 'savanna', trees: ['dead_m', 'deadtree', 'dead_s', [240, 518, 32, 40], 'dead_l', [160, 530, 31, 28]], rocks: [[116, 522, 44, 21], [160, 511, 31, 17], 'boulder3', 'boulder2'], big: ['tusk_l', 'tusk_m', 'deadtree', [192, 512, 48, 47], 'cross_stat'],
-    small: ['tusk_s', 'deadbush', [193, 530, 13, 27], [178, 497, 12, 13], 'coffin1', 'grave2', [113, 545, 29, 13]], deco: [[129, 499, 15, 12], [113, 500, 14, 11], [145, 545, 15, 14], [260, 496, 25, 14]], forest: ['dead_m', 'dead_s', 'deadbush', 'dead_l', [193, 530, 13, 27], 'dead_m'], fbush: ['deadbush', [178, 497, 12, 13]], sparse: true, dim: 'rgba(52,34,34,0.34)' },
+  ash: { biome: 'savanna', trees: ['dead_l', 'deadtree', 'dead_m', [240, 518, 32, 40], 'dead_l', [274, 513, 45, 46]], rocks: [[116, 522, 44, 21], [160, 511, 31, 17], 'boulder3', 'boulder2'], big: ['tusk_l', 'tusk_m', 'deadtree', [192, 512, 48, 47], 'cross_stat'],
+    small: ['tusk_s', 'deadbush', [193, 530, 13, 27], 'coffin1'], deco: [[129, 499, 15, 12], [113, 500, 14, 11], [145, 545, 15, 14], [260, 496, 25, 14]], forest: ['dead_m', 'dead_s', 'deadbush', 'dead_l', [193, 530, 13, 27], 'dead_m'], fbush: ['deadbush', [178, 497, 12, 13]], sparse: true, dim: 'rgba(52,34,34,0.34)' },
 };
 const ZONE_THEME = ['crypt', 'nest', 'mines', 'ash'];
 // Una casa de aldea pintada a mano con la paleta del paquete (el paquete no trae edificios)
@@ -5003,12 +5010,12 @@ function roomBgOut() {
     for (let i = 0; i <= n; i++) { const x = (ax + (bx - ax) * i / n) * 16, y = (ay + (by - ay) * i / n) * 16; spr(BIO.cobble, x - 17 + (hash(i, k, 3) - 0.5) * 6, y - 15 + (hash(i, k, 4) - 0.5) * 6); }
   }
   for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
-    if (dry(x, y) && hash(x, y, 7) < (TH.sparse ? 0.1 : 0.16)) { const d = pick(TH.deco, Math.floor(hash(x, y, 8) * 97)), q = refS(d); ref(d, x * CELL + q[2] / 2 + hash(x, y, 9) * (16 - Math.min(16, q[2])), y * CELL + Math.min(16, q[3]) + hash(x, y, 10) * (16 - Math.min(16, q[3]))); }
+    if (dry(x, y) && hash(x, y, 7) < (TH.sparse ? 0.05 : 0.09)) { const d = pick(TH.deco, Math.floor(hash(x, y, 8) * 97)), q = refS(d); ref(d, x * CELL + q[2] / 2 + hash(x, y, 9) * (16 - Math.min(16, q[2])), y * CELL + Math.min(16, q[3]) + hash(x, y, 10) * (16 - Math.min(16, q[3]))); }
     if (!B.land && at(x, y) === 2 && at(x - 1, y) === 2 && at(x + 1, y) === 2 && at(x, y - 1) === 2 && at(x, y + 1) === 2 && hash(x, y, 11) < 0.07) spr(BIO.lily[hash(x, y, 12) < 0.5 ? 0 : 1], x * CELL, y * CELL + 2);
   }
   // Matorrales y flores de Pixel Crawler sueltos por la hierba (no estorban: son de adorno)
   if (tw && TH.pc) for (let y = 3; y < r - 3; y++) for (let x = 3; x < c - 3; x++) {
-    if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.022) continue;
+    if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.012) continue;
     const k = ['bush1', 'bush4', 'flower1', 'flower2', 'flower1', 'bush1'][Math.floor(hash(x, y, 82) * 6)], t = TOWN[k];
     if (t) g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(x * CELL + 8 - t[2] / 2), Math.round(y * CELL + 14 - t[3]), t[2], t[3]);
   }
@@ -5169,7 +5176,7 @@ function roomBgDungeon(Dover) {
     for (let y = 1; y < r - 1; y++) for (let x = 1; x < c - 1; x++) {
       if (wallAt(x, y) || sp.has(y * c + x) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
       const byWall = wallAt(x, y - 1), h = hash(x, y, 61);
-      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.08)) continue;
+      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.34 : 0.035)) continue;
       const it = list[Math.floor(hash(x, y, 62) * list.length)];
       if (!byWall && hash(x, y, 64) < 0.5) for (let n = 0; n < 2; n++) { const it2 = list[Math.floor(hash(x, y, 65 + n) * list.length)]; items.push({ it: it2, x: x * CELL + 8 + (hash(x, y, 67 + n) - 0.5) * 22, y: y * CELL + 12 + (hash(x, y, 69 + n) - 0.5) * 14 }); }   // en grupo, no sueltos
       for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (y + j >= 0 && y + j < r && x + i >= 0 && x + i < c) used[(y + j) * c + x + i] = 1;
@@ -5323,7 +5330,7 @@ function frame(now) {
     if (I.navX || I.navY) { const n = navPick([...ovBody.querySelectorAll('.card')], pickSel, I.navX, I.navY); if (n >= 0 && n !== pickSel) { pickSel = n; moved = true; } }
     if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => { c.classList.toggle('sel', i === pickSel); if (i === pickSel) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
-    if (I.dodgeP) rerollPick();
+    if (I.backP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   render(); renderHud();

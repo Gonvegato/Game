@@ -20,15 +20,15 @@ BIO.savanna = { land: [16, 512], water: [0, 240], winner: [64, 240], base: '#b3a
 // trees y rocks: obstáculos de 2×2 · big: de 3×2 · small: de 1×1 · deco: adorno que se pisa · forest y fbush: el borde de la sala
 const THEMES = {
   grass: { biome: 'grass', trees: BIO.tree.slice(0, 6), rocks: BIO.rock, big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)), small: BIO.bush, deco: BIO.deco, forest: BIO.tree.slice(0, 6), fbush: BIO.bush, pc: true },
-  crypt: { biome: 'grass', trees: ['pine_m', 'pine_m', 'pine_s', BIO.tree[1], 'pine_l', 'dead_m'], rocks: BIO.rock.concat(['tomb1', 'tomb2', 'tomb3']), big: ['cross_stat', 'graves_row', 'angel2', 'reaper', 'cross2', 'olive'],
+  crypt: { biome: 'grass', trees: ['pine_l', 'pine_m', 'pine_l', 'pine_m', 'pine_l', 'dead_m'], rocks: BIO.rock.concat(['tomb1', 'tomb2', 'tomb3']), big: ['cross_stat', 'graves_row', 'angel2', 'reaper', 'cross2', 'olive'],
     small: ['grave1', 'grave2', 'grave3', 'grave4', 'cross_big', 'angel1', 'coffin1', 'coffin2'], deco: BIO.deco.slice(0, 3).concat([BIO.deco[10], BIO.deco[11]]), forest: ['pine_m', 'pine_s', 'pine_m', BIO.tree[1], 'pine_l', 'dead_s'], fbush: ['darkbush', BIO.bush[0]], dim: 'rgba(30,40,60,0.16)' },
   nest: { biome: 'grass', trees: [BIO.tree[0], 'mush_tall', BIO.tree[4], 'mush_l', BIO.tree[5], 'vine_l'], rocks: ['mossy2', 'boulder2', 'mossy3', 'boulder1'], big: ['mush_xl', 'mush_l', 'bush_g', 'bush_a', 'mossy3'],
     small: ['flower_m', 'flower_m2', 'vine_m', 'mush_m', 'vine_s', 'flower_l'], deco: BIO.deco, forest: BIO.tree.slice(0, 6).concat(['mush_l']), fbush: ['bush_g', BIO.bush[1], BIO.bush[3]], pc: true, dim: 'rgba(20,60,30,0.10)' },
   mines: { biome: 'snow', trees: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [161, 433, 30, 31], [192, 432, 32, 31]], rocks: [[113, 370, 30, 28], [112, 408, 27, 23], [145, 409, 29, 21], 'grey1', 'rune1', [148, 381, 26, 18]],
     big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)).concat(['rune1']), small: [[176, 385, 16, 13], [209, 386, 15, 13], [304, 386, 16, 12], [208, 464, 16, 16], 'rune2', 'grey2', [144, 436, 16, 28]], deco: [[307, 435, 10, 9], [177, 417, 14, 13], [210, 418, 14, 12], [305, 403, 14, 12]],
     forest: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [230, 454, 22, 24], [261, 452, 24, 26]], fbush: [[176, 385, 16, 13], [145, 467, 14, 12], [193, 466, 14, 12]] },
-  ash: { biome: 'savanna', trees: ['dead_m', 'deadtree', 'dead_s', [240, 518, 32, 40], 'dead_l', [160, 530, 31, 28]], rocks: [[116, 522, 44, 21], [160, 511, 31, 17], 'boulder3', 'boulder2'], big: ['tusk_l', 'tusk_m', 'deadtree', [192, 512, 48, 47], 'cross_stat'],
-    small: ['tusk_s', 'deadbush', [193, 530, 13, 27], [178, 497, 12, 13], 'coffin1', 'grave2', [113, 545, 29, 13]], deco: [[129, 499, 15, 12], [113, 500, 14, 11], [145, 545, 15, 14], [260, 496, 25, 14]], forest: ['dead_m', 'dead_s', 'deadbush', 'dead_l', [193, 530, 13, 27], 'dead_m'], fbush: ['deadbush', [178, 497, 12, 13]], sparse: true, dim: 'rgba(52,34,34,0.34)' },
+  ash: { biome: 'savanna', trees: ['dead_l', 'deadtree', 'dead_m', [240, 518, 32, 40], 'dead_l', [274, 513, 45, 46]], rocks: [[116, 522, 44, 21], [160, 511, 31, 17], 'boulder3', 'boulder2'], big: ['tusk_l', 'tusk_m', 'deadtree', [192, 512, 48, 47], 'cross_stat'],
+    small: ['tusk_s', 'deadbush', [193, 530, 13, 27], 'coffin1'], deco: [[129, 499, 15, 12], [113, 500, 14, 11], [145, 545, 15, 14], [260, 496, 25, 14]], forest: ['dead_m', 'dead_s', 'deadbush', 'dead_l', [193, 530, 13, 27], 'dead_m'], fbush: ['deadbush', [178, 497, 12, 13]], sparse: true, dim: 'rgba(52,34,34,0.34)' },
 };
 const ZONE_THEME = ['crypt', 'nest', 'mines', 'ash'];
 // Una casa de aldea pintada a mano con la paleta del paquete (el paquete no trae edificios)
@@ -122,12 +122,12 @@ function roomBgOut() {
     for (let i = 0; i <= n; i++) { const x = (ax + (bx - ax) * i / n) * 16, y = (ay + (by - ay) * i / n) * 16; spr(BIO.cobble, x - 17 + (hash(i, k, 3) - 0.5) * 6, y - 15 + (hash(i, k, 4) - 0.5) * 6); }
   }
   for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
-    if (dry(x, y) && hash(x, y, 7) < (TH.sparse ? 0.1 : 0.16)) { const d = pick(TH.deco, Math.floor(hash(x, y, 8) * 97)), q = refS(d); ref(d, x * CELL + q[2] / 2 + hash(x, y, 9) * (16 - Math.min(16, q[2])), y * CELL + Math.min(16, q[3]) + hash(x, y, 10) * (16 - Math.min(16, q[3]))); }
+    if (dry(x, y) && hash(x, y, 7) < (TH.sparse ? 0.05 : 0.09)) { const d = pick(TH.deco, Math.floor(hash(x, y, 8) * 97)), q = refS(d); ref(d, x * CELL + q[2] / 2 + hash(x, y, 9) * (16 - Math.min(16, q[2])), y * CELL + Math.min(16, q[3]) + hash(x, y, 10) * (16 - Math.min(16, q[3]))); }
     if (!B.land && at(x, y) === 2 && at(x - 1, y) === 2 && at(x + 1, y) === 2 && at(x, y - 1) === 2 && at(x, y + 1) === 2 && hash(x, y, 11) < 0.07) spr(BIO.lily[hash(x, y, 12) < 0.5 ? 0 : 1], x * CELL, y * CELL + 2);
   }
   // Matorrales y flores de Pixel Crawler sueltos por la hierba (no estorban: son de adorno)
   if (tw && TH.pc) for (let y = 3; y < r - 3; y++) for (let x = 3; x < c - 3; x++) {
-    if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.022) continue;
+    if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.012) continue;
     const k = ['bush1', 'bush4', 'flower1', 'flower2', 'flower1', 'bush1'][Math.floor(hash(x, y, 82) * 6)], t = TOWN[k];
     if (t) g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(x * CELL + 8 - t[2] / 2), Math.round(y * CELL + 14 - t[3]), t[2], t[3]);
   }

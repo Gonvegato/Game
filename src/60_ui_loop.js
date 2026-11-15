@@ -99,7 +99,7 @@ function frame(now) {
     if (I.navX || I.navY) { const n = navPick([...ovBody.querySelectorAll('.card')], pickSel, I.navX, I.navY); if (n >= 0 && n !== pickSel) { pickSel = n; moved = true; } }
     if (moved) { ovBody.querySelectorAll('.card').forEach((c, i) => { c.classList.toggle('sel', i === pickSel); if (i === pickSel) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }); blip(700, 0.03, 'triangle', 0.03); }
     if (I.atkP) choosePick(pickSel);
-    if (I.dodgeP) rerollPick();
+    if (I.backP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   render(); renderHud();

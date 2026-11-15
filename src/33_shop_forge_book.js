@@ -87,7 +87,7 @@ function forgeHtml() {
       return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
   }
   if (forgeTab === 'room') body = roomHtml(); else if (forgeTab === 'king') body = kingHtml();
-  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB (o Q) cambia de pestaña. B (o Shift) vuelve a la plaza.</p>`;
+  return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB y RB (o Q y R) pasan a la pestaña de la izquierda o de la derecha. B (o Shift) vuelve a la plaza.</p>`;
 }
 function forgeAct(act) {
   const [k, id, n] = act.split(':');
@@ -132,8 +132,14 @@ function navPick(els, cur, dx, dy) {
   return best < 0 ? cur : best;
 }
 function listInput() {
-  if (S.mode === 'forge' && I.dodgeP && modeT > 0.3) { closePlace(); return; }
-  if (S.mode === 'forge' && I.tabP) { const tabs = placeTabs(), i = tabs.findIndex(t => t[0] === forgeTab); if (tabs.length > 1) forgeAct('tab:' + tabs[(i + 1) % tabs.length][0]); return; }
+  if (S.mode === 'forge' && I.backP && modeT > 0.3) { closePlace(); return; }
+  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en el arma, por sus cinco partes
+    const seq = []; for (const [id] of placeTabs()) { if (id === 'gun') for (const k of GSLOT_KEYS) seq.push(['gun', k]); else seq.push([id, null]); }
+    if (seq.length < 2) return;
+    const i = seq.findIndex(([t, k]) => t === forgeTab && (t !== 'gun' || k === forgeSlot)), n = seq[(i + (I.tabR ? 1 : seq.length - 1)) % seq.length];
+    if (n[0] !== forgeTab) forgeAct('tab:' + n[0]); if (n[1] && n[1] !== forgeSlot) forgeAct('slot:' + n[1]);
+    return;
+  }
   const els = [...ovBody.querySelectorAll('.fi')];
   if (I.navX || I.navY) {
     const n = navPick(els, listSel, I.navX, I.navY);

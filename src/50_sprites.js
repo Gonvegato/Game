@@ -533,7 +533,7 @@ function weaponKey() {
 function drawWeapon(x, y, ang, kick) {
   const im = IMG.weapons; if (!im) return false;
   const k = weaponKey(), w = WEAP[k]; if (!w) return false;
-  x += Math.cos(ang) * 6; y += Math.sin(ang) * 3 + 3;   // en las manos, por delante del cuerpo
+  x += Math.cos(ang) * 1.5; y += Math.sin(ang) * 1 + 5;   // en las manos, pegada al cuerpo
   const left = Math.cos(ang) < 0;
   const one = (ox, oy) => { ctx.save(); ctx.translate(Math.round(x + ox), Math.round(y + oy)); ctx.rotate(ang); if (left) ctx.scale(1, -1); ctx.drawImage(im, w[0], w[1], w[2], w[3], -w[4] - kick, -w[5], w[2], w[3]); ctx.restore(); };
   if (S.gun.barrel === 'b_twin') { const nx = -Math.sin(ang) * 3, ny = Math.cos(ang) * 3; one(nx, ny); one(-nx, -ny); } else one(0, 0);

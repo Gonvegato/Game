@@ -83,7 +83,7 @@ function roomBgDungeon(Dover) {
     for (let y = 1; y < r - 1; y++) for (let x = 1; x < c - 1; x++) {
       if (wallAt(x, y) || sp.has(y * c + x) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
       const byWall = wallAt(x, y - 1), h = hash(x, y, 61);
-      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.08)) continue;
+      const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.34 : 0.035)) continue;
       const it = list[Math.floor(hash(x, y, 62) * list.length)];
       if (!byWall && hash(x, y, 64) < 0.5) for (let n = 0; n < 2; n++) { const it2 = list[Math.floor(hash(x, y, 65 + n) * list.length)]; items.push({ it: it2, x: x * CELL + 8 + (hash(x, y, 67 + n) - 0.5) * 22, y: y * CELL + 12 + (hash(x, y, 69 + n) - 0.5) * 14 }); }   // en grupo, no sueltos
       for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (y + j >= 0 && y + j < r && x + i >= 0 && x + i < c) used[(y + j) * c + x + i] = 1;

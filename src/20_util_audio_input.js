@@ -78,6 +78,7 @@ function pollInput() {
   dodge = down('ShiftLeft') || down('ShiftRight') || down('KeyK');
   chg = down('KeyE') || down('KeyL');
   start = down('Escape') || down('KeyP');
+  let tabR = down('KeyR'), back = down('ShiftLeft') || down('ShiftRight') || down('KeyK');   // en menús: RB (o R) pestaña siguiente; B (o Shift) volver
 
   // Mando
   const p = readPad();
@@ -93,7 +94,7 @@ function pollInput() {
     dodge = dodge || b(1) || b(5);
     chg = chg || b(2) || b(6);
     start = start || b(9);
-    clear = clear || b(11); tab = tab || b(4);
+    clear = clear || b(11); tab = tab || b(4); tabR = tabR || b(5); back = back || b(1);
   } else padName = '';
 
   // Táctil
@@ -120,6 +121,7 @@ function pollInput() {
   I.clearP = clear && !prev.clear;
   I.chgP = chg && !prev.chg; prev.chg = chg;
   I.tabP = tab && !prev.tab; prev.tab = tab;
+  I.tabL = I.tabP; I.tabR = tabR && !prev.tabR; prev.tabR = tabR; I.backP = back && !prev.back; prev.back = back;
   I.navL = nav === -1 && prev.nav !== -1;
   I.navR = nav === 1 && prev.nav !== 1;
   prev.atk = atk; prev.dodge = dodge; prev.start = start; prev.clear = clear; prev.nav = nav;
