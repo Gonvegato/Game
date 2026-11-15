@@ -1785,14 +1785,17 @@ function pieceCard(pc) {
   o.apply = () => { S.build[pc.slot] = { id: pc.id, lvl }; };
   return o;
 }
-// Técnicas sueltas. Las ofrendas (SOLO) salen aunque no lleves nada de su deidad; las demás, solo si ya llevas alguna técnica suya en tus ranuras.
-// Y todas, solo si lo que necesitan (tabla de 13_needs.js) lo pone algo de lo que llevas o ellas mismas.
+// Técnicas sueltas. Son complementos: no salen hasta que tengas técnica en las cuatro acciones (disparo, cargado, esquive y pasiva),
+// que son las que marcan el camino de la build. Las ofrendas (SOLO) salen aunque no lleves nada de su deidad; las demás, solo si ya
+// llevas alguna técnica suya en tus ranuras. Y todas, solo si lo que necesitan (tabla de 13_needs.js) lo pone algo de lo que llevas o ellas mismas.
+const slotsFull = () => SLOT_KEYS.every(k => S.build[k]);
 const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'q_shard', 'a_pup', 'g_whet', 'd_blood', 'v_vapors', 'f_carve'];
-const techOk = t => !S.techs.has(t.id) && (godCount(t.god) >= 1 || SOLO.includes(t.id)) && looseOk(t);
+const techOk = t => slotsFull() && !S.techs.has(t.id) && (godCount(t.god) >= 1 || SOLO.includes(t.id)) && looseOk(t);
 // El «Necesita: …» del Recetario sale de la misma tabla
 const techNeeds = t => { const w = needsText(t.id), th0 = GODS[t.god].theme;
-  if (SOLO.includes(t.id)) return w || 'nada, sirve sola';
-  return w ? w + '; y llevar ya alguna técnica de ' + th0 + ' en tus ranuras' : 'nada, sirve sola; pero solo sale si ya llevas alguna técnica de ' + th0 + ' en tus ranuras'; };
+  const full = ' Como todas las técnicas sueltas, no sale hasta que tengas técnica en las cuatro acciones';
+  if (SOLO.includes(t.id)) return (w || 'nada, sirve sola') + '.' + full;
+  return (w ? w + '; y llevar ya alguna técnica de ' + th0 + ' en tus ranuras' : 'nada, sirve sola; pero solo sale si ya llevas alguna técnica de ' + th0 + ' en tus ranuras') + '.' + full; };
 // Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
 const duoIsOpen = D => godIsOpen(PIECE[D.a].god) && godIsOpen(PIECE[D.b].god);
 const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
