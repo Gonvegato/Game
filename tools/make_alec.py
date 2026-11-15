@@ -10,7 +10,7 @@ from PIL import Image
 PAL = {
     'k': '#120e17',                                   # contorno
     'h': '#8a84a4', 'H': '#c4bfd6', 'w': '#f3f0fa',   # pelo blanco largo
-    's': '#e3b08a', 'S': '#b77f60', 'e': '#e0203a', 'E': '#ff8a7a',   # piel y ojos rojos
+    's': '#e3b08a', 'S': '#b77f60', 'e': '#8f1424', 'W': '#f6f2ea',   # piel y ojos rojos
     'r': '#5a1f2c', 'R': '#3a141e', 't': '#7c2c3a',   # pañuelo que le tapa hasta la nariz
     'c': '#37324c', 'C': '#221f31', 'd': '#575072', 'g': '#a8823a', 'G': '#6e5424',   # túnica oscura y ribete
     'm': '#8e93a1', 'M': '#565a69', 'n': '#cfd4de',   # guantelete
@@ -34,7 +34,7 @@ DOWN = grid([
     '..khwHhwwHwhHwhk..',
     '..khHhHwHHwHhHhk..',
     '..khHhhhsshhhHhk..',
-    '..khsSeEssEeSshk..',
+    '..khsSWesseWSshk..',
     '..khrrrrrrrrrrhk..',
     '..khHrtrrrrtrHhk..',
     '.khHhRrrrrrrRhHhk.',
@@ -85,7 +85,7 @@ SIDE = grid([
     '.kHwHHwwHHwwwHhk..',
     '.khwHwwHwwHwwHhk..',
     '.khwHwHHwHhsHsk...',
-    '.khwHwHhHsseEsk...',
+    '.khwHwHhHssWesk...',
     '.khHwHhhrrrrrrk...',
     '.khHwHhhrtrrrrk...',
     '.khHwHhhRrrrrk....',
