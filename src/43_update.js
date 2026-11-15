@@ -317,6 +317,7 @@ function update(dt) {
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
     e.autoCd = Math.max(0, e.autoCd - dt); e.mark = Math.max(0, e.mark - dt);
     if (e.slowT > 0) e.slowT -= dt; else e.slowF = 1;
+    if (e.iceT > 0) e.iceT -= dt;   // la marca de la Bala de escarcha caduca con su frenado
     if (lunch < 1 && dist(p, e) < 90) slow(e, 0.15, lunch);                // dúo Sobremesa larga
     if (e.needles > 0 && !(duoOn('syringe') && e.venom > 0)) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
     if (e.fling > 0) {                   // dúo Avalancha: enemigo lanzado
