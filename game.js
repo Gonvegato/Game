@@ -1341,9 +1341,12 @@ function openShop() {
 function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a.idle.f[0]; return `<div class="keeper"><i style="width:${m.w}px;height:${m.h}px;background-position:-${f[0]}px -${f[1]}px"></i><span>«Mira sin prisa, mercenario. Lo que no compres hoy, mañana lo llevará otro.»</span></div>`; }
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
-  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1>${keeperHtml()}<p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro solo sirve en este encargo: gástalo.</p><div class="forge"><section>` +
-    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0)}${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
-    `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button>`;
+  const icoOf = it => ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0);
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}
+    <div class="shopwrap"><div><div class="stalls">` +
+    S.shop.items.map((it, i) => `<button class="fi stall${it.sold ? ' on sold' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><em class="tile">${icoOf(it)}</em><b>${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Vendido' : `<u class="coin">${it.price}</u>`}</i></button>`).join('') +
+    `</div><p class="fine">El oro solo sirve en este encargo: lo que no gastes aquí se pierde al terminar.</p><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button></div>
+    <aside class="carry"><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></aside></div>`;
 }
 function shopAct(act) {
   const [k, i] = act.split(':'), p = S.p;
@@ -1386,12 +1389,12 @@ function forgeHtml() {
     known.sort((a, b) => rank(a) - rank(b));
     const on = ensOf(M.gun), L = legOf(M.gun);
     body = `<p class="fine">Tus guanteletes tienen cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Guanteletes legendarios: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
-      <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
-        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${pic(M.gun[sk])}${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
-      <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
+      <div class="gunwrap"><div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
+        return `<button class="fi slot row${sk === k ? ' on' : ''}" data-act="slot:${sk}">${pic(M.gun[sk], 't')}<b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
+      <div class="gcol"><h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
       known.map(x => { const mounted = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${pic(x.id)}${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
-      `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
+        return `<button class="fi row${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}">${pic(x.id, 't')}<b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i class="st ${mounted ? 'ok' : forged ? 'go' : 'buy'}">${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar<br>' + costTxt(x.cost)}</i></button>`; }).join('') +
+      `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '') + '</div></div>';
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
     const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tus guanteletes no llevan ninguna pieza afín a una deidad.</span></li>';
@@ -1501,25 +1504,40 @@ function buildHtml(full) {
   else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
   return rows.join('');
 }
+// El recetario va por páginas: una por deidad y unas pocas más. LB y RB (o Q y R) pasan de página; también se puede tocar la pestaña.
+let bookPage = 0;
+const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_KEYS.map(g => [g, GODS[g].theme, GODS[g].color]), [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
 function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que llevas. Solo cabe una técnica por acción (disparo, cargado, esquive y pasiva). Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p><div class="book"><section class="glossall"><h2>Glosario: qué significa cada cosa</h2><p class="fine">Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…) se explican aquí.</p><ul class="build full">${GLOSS.map(([, n, w]) => `<li><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('')}</ul></section>`;
-  for (const g of GOD_KEYS) {
-    const n = godCount(g), G = GODS[g];
-    h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
-      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pic(pc.id)}${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
-      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${pic(t.id)}${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
-      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>${MASTERY[g].desc}</span></li></ul></section>`;
+  const P = bookPages(); bookPage = ((bookPage % P.length) + P.length) % P.length;
+  const [id, , col] = P[bookPage];
+  const card = (own, tag, tagCol, icon, name, desc) => `<li class="bk${own ? ' own' : ''}">${icon || '<span class="pic t none"></span>'}<em${tagCol ? ` style="color:${tagCol}"` : ''}>${tag}</em><b>${name}</b><span>${desc}</span></li>`;
+  let body = '';
+  if (id === 'llevo') {
+    body = `<div class="bkhead" style="--c:${col}"><h2>Lo que llevas en este encargo</h2><p>Solo cabe una técnica por acción: disparo, cargado, esquive y pasiva. Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p></div><ul class="build full carrylist">${buildHtml(true) || '<li><span>Todavía no llevas nada.</span></li>'}</ul>`;
+  } else if (GODS[id]) {
+    const G = GODS[id], n = godCount(id);
+    body = `<div class="bkhead" style="--c:${col}"><h2>${G.title}</h2><p><b>${G.theme}.</b> ${G.key}</p><p class="mast"><u>${'<i class="on"></i>'.repeat(Math.min(n, 3))}${'<i></i>'.repeat(Math.max(0, 3 - n))}</u> Maestría ${Math.min(n, 3)}/3 · <b>${MASTERY[id].name}:</b> ${MASTERY[id].desc}</p></div><ul class="bklist">` +
+      PIECES.filter(x => x.god === id).map(pc => { const l = lv(pc.id); return card(l, SLOTS[pc.slot], col, pic(pc.id, 't'), pc.name + (l ? ' ' + ROMAN[l] : ''), pc.desc(Math.max(1, l))); }).join('') +
+      TECHS.filter(t => t.god === id).map(t => card(S.techs.has(t.id), 'Técnica · ' + RAR[t.rar].name, RAR[t.rar].color, pic(t.id, 't'), t.name, `${t.desc} Necesita: ${techNeeds(t)}.`)).join('') + '</ul>';
+  } else if (id === 'duos') {
+    body = `<div class="bkhead" style="--c:${col}"><h2>Dúos</h2><p>Dos técnicas de deidades distintas para la misma acción se funden en una. Te lo ofrecen al quebrar una reliquia si ya llevas una de las dos.</p></div>` +
+      SLOT_KEYS.map(k => `<h3>Dúos de ${SLOTS[k].toLowerCase()}</h3><ul class="bklist">` + DUOS.filter(d => d.slot === k).map(d => card(duoOn(d.id), GODS[PIECE[d.a].god].theme + ' + ' + GODS[PIECE[d.b].god].theme, null, pic(d.a, 't'), d.name, `Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}`)).join('') + '</ul>').join('');
+  } else if (id === 'reso') {
+    body = `<div class="bkhead" style="--c:${col}"><h2>Resonancias</h2><p>Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p></div><ul class="bklist">` +
+      RESO.map(R => card(res(R.id), R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, pic(R.parts[0], 't'), R.name, `${R.parts.map(pid => (M.parts[pid] ? PART[pid].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(tid => PIECE[tid].name + ' (' + GODS[PIECE[tid].god].theme + ')').join(' + ')}. ${R.desc}`)).join('') + '</ul>' +
+      `<h3>Planos</h3><ul class="bklist">` + PLANS.map(x => card(S.plans.has(x.id), 'Plano', null, '', x.name, x.desc)).join('') + '</ul>';
+  } else if (id === 'piezas') {
+    body = `<div class="bkhead" style="--c:${col}"><h2>Piezas de los guanteletes</h2><p>Las que has descubierto. Quedan ${PARTS.filter(x => !M.parts[x.id]).length} por descubrir.</p></div>` +
+      GSLOT_KEYS.map(sk => { const L = PARTS.filter(x => x.slot === sk && M.parts[x.id]); return L.length ? `<h3>${GSLOTS[sk]} · ${GSLOT_WHAT[sk]}</h3><ul class="bklist">` + L.map(x => card(G(x.id), x.tag, null, pic(x.id, 't'), x.name, x.desc)).join('') + '</ul>' : ''; }).join('');
+  } else {
+    body = `<div class="bkhead" style="--c:${col}"><h2>Glosario</h2><p>Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…), explicadas.</p></div><ul class="bklist gl">` + GLOSS.map(([, n, w]) => `<li class="bk own"><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('') + '</ul>';
   }
-  for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
-    DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
-    RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${pic(x.id)}${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
-    `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
-  h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
-  return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
+  return `<p class="eyebrow">Recetario del herrero · página ${bookPage + 1} de ${P.length}</p><h1>Lo que se les puede robar</h1>
+    <div class="bktabs">${P.map(([pid, nm, c], i) => `<button class="bkt${i === bookPage ? ' on' : ''}" data-bk="${i}" style="--c:${c}">${nm}</button>`).join('')}</div>
+    <div class="bkpage">${body}</div><p class="fine keyhint">LB y RB (o Q y R) pasan de página. El stick mueve la página. Cualquier otro botón vuelve.</p><button id="ovBtn" class="primary">Volver</button>`;
 }
-function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
+function bookTurn(d) { bookPage += d; renderOverlay(); ov.scrollTop = 0; sfx('tick', 0.25); }
+function openBook() { bookFrom = S.mode; if (S.god && S.mode === 'pick') bookPage = 1 + GOD_KEYS.indexOf(S.god); S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 
@@ -6188,6 +6206,7 @@ function renderOverlay() {
   ovBody.innerHTML = h;
   ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop' || m === 'pick');
   if (m === 'forge' || m === 'shop') bindList();
+  ovBody.querySelectorAll('[data-bk]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); audioInit(); bookPage = +b.dataset.bk; bookTurn(0); }));
   const rr = $('rrBtn'); if (rr) rr.addEventListener('click', () => { audioInit(); rerollPick(); });
   const bk = $('bookBtn'); if (bk) bk.addEventListener('click', () => { audioInit(); openBook(); });
   const b = $('ovBtn'); if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
@@ -6250,7 +6269,7 @@ function frame(now) {
   const m = S.mode;
   if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
   if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
-  if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
+  if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (I.tabL || I.tabR || I.navX) bookTurn(I.tabL || I.navX < 0 ? -1 : 1); else if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'town') townUpdate(dt);
   else if (m === 'intro') introUpdate(dt);
@@ -6270,5 +6289,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();
