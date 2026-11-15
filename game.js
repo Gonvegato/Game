@@ -216,10 +216,10 @@ const PIECES = [
   { id: 'shade_dodge',    god: 'shade',  slot: 'dodge',   name: 'Relevo',           desc: l => `Tu esquive deja una Sombra donde estabas durante ${3 + l} s. No cuenta para el máximo de Sombras y desaparece al cambiar de sala.` },
   { id: 'shade_passive',  god: 'shade',  slot: 'passive', name: 'Séquito',          desc: l => `Haces un ${8 * l}% más de daño por cada Sombra viva (no afecta al daño continuo). Además, los golpes de tus Sombras aplican los efectos de tu técnica de disparo. Necesitas tener Sombras.` },
   // Tormenta
-  { id: 'storm_basic',    god: 'storm',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Aguja')}, hasta 6 por enemigo. Se caen si pasan 6 s sin clavar más. Solas no hacen nada: necesitas una técnica que las descargue (Sobretensión o Paso relámpago).` },
+  { id: 'storm_basic',    god: 'storm',  slot: 'basic',   name: 'Aguja estática',   desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Aguja')}, hasta 6 por enemigo. Se caen si pasan 6 s sin clavar más. Solas no hacen nada: necesitas algo que las descargue (Sobretensión, Paso relámpago, Sobrecarga o la Palma de cobre).` },
   { id: 'storm_charge',   god: 'storm',  slot: 'charge',  name: 'Sobretensión',     desc: l => `Tu disparo cargado descarga las Agujas de cada enemigo que alcanza: recibe ${70 + 20 * (l - 1)}% de tu daño por Aguja, y cada Aguja lanza un rayo a otro enemigo cercano con el 60% de ese daño. Solo funciona si el enemigo ya tiene Agujas.` },
   { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Al atravesar a un enemigo con el esquive descargas sus Agujas: ${80 + 20 * (l - 1)}% de tu daño por Aguja, y un rayo por Aguja a otros enemigos con el 60% de eso. Si no tiene Agujas, le clavas 2.` },
-  { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a cada enemigo que alcanzan, listas para descargarlas después. Necesitas una técnica que descargue Agujas.` },
+  { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a cada enemigo que alcanzan, listas para descargarlas después. Necesitas algo que descargue Agujas.` },
   // Mareas
   { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro (90% de tu daño y aturden 0,7 s) hacen un ${50 * l}% más. Los jefes no se dejan empujar: como quedan Empapados, cada empujón los golpea como un choque contra el muro, sin aturdirlos, una vez cada 3 s.` },
   { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `Tu disparo cargado suelta además una ola a tu alrededor: ${50 * l}% de tu daño, los empapa 5 s y lanza lejos a todos los que alcanza. Los que chocan contra un muro reciben el golpe. Los jefes reciben el daño pero no se mueven; como quedan Empapados, reciben además el golpe contra el muro (si no lo han recibido en los últimos 3 s).` },
@@ -249,9 +249,9 @@ const PIECES = [
   { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Esta técnica pone el efecto Sentencia. Cada impacto de tu disparo (también los que repiten otras técnicas) la pone al enemigo si aún no tiene una; dura 5 s y no se renueva. Al acabar, el enemigo recibe de golpe el ${20 + 20 * l}% del daño de todos los golpes que recibió en ese tiempo (el daño continuo no cuenta). Si muere antes, la Sentencia no se pierde: estalla, y cada enemigo de alrededor recibe lo que le tocaba a él. Luego el siguiente impacto pone otra.` },
   { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `Tu disparo cargado cumple al instante la Sentencia de cada enemigo que alcanza, con un ${30 * l}% más; el daño del propio cargado ya cuenta. Solo funciona si el enemigo ya tiene una Sentencia: pónsela antes, por ejemplo con la técnica de disparo Sentencia.` },
   { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas un ${l}% de tu vida máxima por cada una. Necesitas que los enemigos ya tengan Sentencia.` },
-  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Lo heredado no cuenta para el estallido si ese enemigo también muere antes de plazo. Necesitas otro enemigo cerca.` },
+  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Lo heredado no cuenta para el estallido si ese enemigo también muere antes de plazo. Necesitas algo que ponga Sentencias, y otro enemigo cerca.` },
   // Luz
-  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) Ilumina al enemigo 6 s. Cuando un Iluminado recibe un golpe, los demás Iluminados reciben el ${20 + 10 * l}% de ese daño (no se encadena y el daño continuo no cuenta). Necesitas al menos dos Iluminados.` },
+  { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) Ilumina al enemigo 6 s. Cuando un Iluminado recibe un golpe, los demás Iluminados reciben el ${20 + 10 * l}% de ese daño (no se encadena y el daño continuo no cuenta). Hacen falta al menos dos Iluminados a la vez; los que alcanza tu disparo ya cuentan.` },
   { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `Tu disparo cargado Ilumina 6 s a todos los que alcanza. A los que ya estaban Iluminados, antes los ciega: quedan aturdidos 1 s y reciben un golpe extra del ${40 * l}% de tu daño. Los jefes no se aturden.` },
   { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un destello donde estabas: Ilumina 6 s a los enemigos cercanos y les hace ${50 * l}% de tu daño.` },
   { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Haces un ${5 * l}% más de daño por cada enemigo Iluminado en la sala, contando hasta seis (no al daño continuo). Un jefe o un elegido Iluminado cuenta por tres. Necesitas algo que Ilumine.` },
@@ -393,23 +393,23 @@ const DUOS = [
   { id: 'warhammer', slot: 'charge',  a: 'orc_charge',    b: 'forge_charge',  name: 'Martillo de guerra', desc: 'Además de lo que hacen Grito de guerra y Martillazo, el Martillazo crece con la Furia que tienes al disparar, hasta el doble de tamaño con la Furia llena, y te da 2 de Temple por enemigo golpeado en vez de 1.' },
   { id: 'quench',    slot: 'dodge',   a: 'storm_dodge',   b: 'forge_dodge',   name: 'Templar al rayo',   desc: 'Además de lo que hacen Paso relámpago y Al rojo, cada disparo al rojo clava 2 Agujas al enemigo.' },
 ];
-// Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. req: piezas que hay que llevar.
+// Técnicas extra: no ocupan ranura. rar: 1 rara, 2 épica, 3 legendaria. Lo que necesita cada una para servir está en 13_needs.js.
 const TECHS = [
   { id: 'd_blood',   god: 'dragon', rar: 1, name: 'Sangre de dragón',  desc: 'Todas tus explosiones, vengan de donde vengan, son un 30% más grandes y clavan 2 Ascuas a cada enemigo que alcanzan. Solo sirve si tienes algo que explote.' },
-  { id: 'd_pyre',    god: 'dragon', rar: 2, name: 'Pira',              desc: 'Los enemigos que mueren con Ascuas explotan: 30% de daño por cada Ascua que tenían, y la explosión clava la mitad de esas Ascuas a los que alcanza.', req: ['dragon_basic'] },
-  { id: 'm_reson',   god: 'stone',  rar: 1, name: 'Resonancia',        desc: 'Cada vez que algo tuyo explota, el Cristal más cercano (si está a pocos pasos) estalla también: 60% de daño en un área pequeña. El Cristal no se rompe. Solo sirve si tienes Cristales.' },
+  { id: 'd_pyre',    god: 'dragon', rar: 2, name: 'Pira',              desc: 'Los enemigos que mueren con Ascuas explotan: 30% de daño por cada Ascua que tenían, y la explosión clava la mitad de esas Ascuas a los que alcanza.' },
+  { id: 'm_reson',   god: 'stone',  rar: 1, name: 'Resonancia',        desc: 'Cada vez que algo tuyo explota, el Cristal más cercano (si está a pocos pasos) estalla también: 60% de daño en un área pequeña. El Cristal no se rompe. Solo sirve si tienes Cristales y algo que explote.' },
   { id: 'm_quartz',  god: 'stone',  rar: 2, name: 'Cuarzo vivo',       desc: 'Donde muere un enemigo nace un Cristal, y todos tus Cristales duran el doble (18 s).' },
   { id: 'v_vapors',  god: 'venom',  rar: 1, name: 'Vapores',           desc: 'Todas tus explosiones, vengan de donde vengan, aplican 3 de Veneno a cada enemigo que alcanzan. Solo sirve si tienes algo que explote.' },
   { id: 'v_syn',     god: 'venom',  rar: 2, name: 'Organismo débil',   desc: 'Los enemigos con Veneno reciben un 3% más de todo el daño por cada punto de Veneno, hasta +90% con 30.' },
   { id: 'f_cellar',  god: 'feast',  rar: 1, name: 'Bodega',            desc: 'Tu Reserva máxima pasa de 30 a 60.' },
   { id: 'f_carve',   god: 'feast',  rar: 2, name: 'Trinchar',          desc: 'Cuando un golpe tuyo deja a un enemigo por debajo del 12% de vida, lo remata. El daño continuo (Ascuas, Veneno, Heridas) no remata. No funciona con jefes.' },
   { id: 'o_drums',   god: 'orc',    rar: 1, name: 'Tambores lejanos',  desc: 'Ganas 8 de Furia cada vez que algo tuyo explota y 10 con cada baja.' },
-  { id: 'o_berserk', god: 'orc',    rar: 3, name: 'Berserker',         desc: 'Con la Furia llena, disparar no te frena: andas a toda velocidad mientras disparas, tensas o giras la manivela. Cargar el disparo cargado sí te sigue frenando.', req: ['orc_basic'] },
+  { id: 'o_berserk', god: 'orc',    rar: 3, name: 'Berserker',         desc: 'Con la Furia llena, disparar no te frena: andas a toda velocidad mientras disparas, tensas o giras la manivela. Cargar el disparo cargado sí te sigue frenando.' },
   { id: 't_overtime', god: 'time',  rar: 1, name: 'Prórroga',          desc: 'Tus ecos y repeticiones llegan en la mitad de tiempo: el de Segundero a los 0,75 s y el de Rebobinar al segundo. Solo sirve si llevas algo que deje eco.' },
-  { id: 't_paradox', god: 'time',   rar: 3, name: 'Paradoja',          desc: 'Cada eco de Segundero deja a su vez otro eco 1,5 s después, al 60% del daño del primero. Ese segundo eco ya no se repite.', req: ['time_basic'] },
+  { id: 't_paradox', god: 'time',   rar: 3, name: 'Paradoja',          desc: 'Cada eco de Segundero deja a su vez otro eco 1,5 s después, al 60% del daño del primero. Ese segundo eco ya no se repite.' },
   { id: 's_guard',   god: 'shade',  rar: 1, name: 'Guardia de honor',  desc: 'Tus Sombras destruyen los proyectiles enemigos que tocan.' },
   { id: 's_legion',  god: 'shade',  rar: 2, name: 'Legión',            desc: 'Puedes tener 3 Sombras más a la vez, y duran el doble (18 s). Las de Relevo duran lo mismo.' },
-  { id: 'r_over',    god: 'storm',  rar: 2, name: 'Sobrecarga',        desc: 'Cuando un enemigo llega a 6 Agujas, se descargan solas: 100% de daño por Aguja y un rayo por Aguja a otros enemigos.', req: ['storm_basic'] },
+  { id: 'r_over',    god: 'storm',  rar: 2, name: 'Sobrecarga',        desc: 'Cuando un enemigo llega a 6 Agujas, se descargan solas: 100% de daño por Aguja y un rayo por Aguja a otros enemigos.' },
   // Ofrendas: técnicas sueltas que sirven aunque no lleves nada más de esa deidad
   { id: 'd_warm',    god: 'dragon', rar: 1, name: 'Aliento tibio',     desc: 'Uno de cada cuatro disparos clava 1 Ascua. Sirve aunque no lleves nada de Dragones.' },
   { id: 'm_skin',    god: 'stone',  rar: 1, name: 'Piel de piedra',    desc: 'Recibes un 10% menos de daño.' },
@@ -422,7 +422,7 @@ const TECHS = [
   { id: 'w_brine',   god: 'tide',   rar: 1, name: 'Salitre',           desc: 'Uno de cada cuatro disparos empuja al enemigo con fuerza, y puede estamparlo contra un muro. A los jefes no los mueve.' },
   { id: 'w_deep',    god: 'tide',   rar: 2, name: 'Mar de fondo',      desc: 'Cuando un enemigo choca contra un muro, queda aturdido 1,4 s en vez de 0,7 y te da 1 de oro.' },
   { id: 'l_coin',    god: 'luck',   rar: 1, name: 'Moneda de la suerte', desc: 'Tus disparos tienen un 8% más de probabilidad de ser crítico (250% de daño). Sirve aunque no lleves nada de Fortuna.' },
-  { id: 'l_jack',    god: 'luck',   rar: 3, name: 'Premio gordo',      desc: 'Si un crítico mata, el enemigo revienta: 150% de daño en área y 3 de oro.', req: ['luck_basic'] },
+  { id: 'l_jack',    god: 'luck',   rar: 3, name: 'Premio gordo',      desc: 'Si un crítico mata, el enemigo revienta: 150% de daño en área y 3 de oro.' },
   { id: 'b_thorn',   god: 'wood',   rar: 1, name: 'Espina',            desc: 'Uno de cada cinco disparos deja enraizado al enemigo 0,8 s (a los jefes, mucho menos).' },
   { id: 'b_bloom',   god: 'wood',   rar: 2, name: 'Floración',         desc: 'Los enemigos que mueren enraizados dejan un zarzal de 3 s: quien esté dentro va a la mitad de velocidad y recibe 20% de daño por pulso.' },
   { id: 'i_rime',    god: 'frost',  rar: 1, name: 'Rocío helado',      desc: 'Uno de cada cuatro disparos pone 1 de Escarcha. Sirve aunque no lleves nada de Hielo.' },
@@ -548,7 +548,7 @@ const PARTS = [
   { id: 'm_frag',    slot: 'mag',     name: 'Gema de esquirlas',     tag: 'Estalla al matar',   desc: 'Si un disparo mata a su blanco, estalla en esquirlas: una para cada uno de los cinco enemigos más cercanos, con el 30% del daño y los efectos de tus técnicas.', cost: { iron: 1, stone: 2 } },
   { id: 'm_blood',   slot: 'mag',     name: 'Gema de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo hace un 40% más de daño y te cuesta el 1% de tu vida máxima (nunca te deja por debajo de 1). Cada enemigo que muere, lo mate lo que lo mate, te cura un 3% de tu vida máxima.', cost: { iron: 1, feast: 2 } },
   { id: 'm_last',    slot: 'mag',     name: 'Última gema',          tag: 'El sexto, triple',   desc: 'Cada sexto disparo hace el triple de daño. Después, los guanteletes tardan al menos 1,2 s en volver a disparar.', cost: { iron: 1, luck: 2 } },
-  { id: 'm_ice',     slot: 'mag',     name: 'Gema de escarcha',     tag: 'Frena y hiela',    desc: 'Cada disparo frena al enemigo un 30% durante 1,5 s. Si le das mientras ya va frenado, queda helado y aturdido 0,8 s; como mucho, una vez cada 3 s por enemigo. A los jefes los frena menos y no los aturde.', cost: { iron: 1, tide: 2 } },
+  { id: 'm_ice',     slot: 'mag',     name: 'Gema de escarcha',     tag: 'Frena y hiela',    desc: 'Cada disparo frena al enemigo un 30% durante 1,5 s. Si le das mientras ya va frenado, queda Congelado 0,8 s (y sirve para las técnicas que aprovechan a los Congelados); como mucho, una vez cada 3 s por enemigo. A los jefes los frena menos y no los aturde.', cost: { iron: 1, tide: 2 } },
   { id: 'm_fire',    slot: 'mag',     name: 'Gema incendiaria',     tag: 'Fuego en el suelo',         desc: 'Cada disparo deja una llama en el suelo, donde estaba el enemigo, que dura 2 s. Cada 0,4 s clava 1 Ascua a quien esté encima.', cost: { iron: 1, dragon: 2 } },
   { id: 'm_gold',    slot: 'mag',     name: 'Gema de oro',          tag: 'Gasta oro, pega más',   desc: 'Cada disparo gasta 1 de oro y hace un 35% más de daño. Si no te queda oro, hace un 20% menos. Cada enemigo que muere te da 1 de oro.', cost: { iron: 1, luck: 2 } },
   { id: 'm_split',   slot: 'mag',     name: 'Gema partida',         tag: 'Se parte en dos',     desc: 'Al dar en el blanco, el disparo se parte en dos trozos que siguen hacia delante en diagonal, uno a cada lado. Cada trozo da al primer enemigo que encuentra a poca distancia, con el 35% del daño y los efectos de tus técnicas.', cost: { iron: 1, mirror: 2 } },
@@ -793,6 +793,446 @@ function gloss(txt, max) {
   for (const [re, name, what] of GLOSS) { if (re.test(txt)) out.push(`<q><b>${name}:</b> ${what}</q>`); if (out.length >= (max || 6)) break; }
   return out.length ? `<small class="gloss">${out.join('')}</small>` : '';
 }
+// ───────────────────────── Qué hace funcionar a cada técnica ─────────────────────────
+// Muchas técnicas solo sirven si otra cosa pone antes su mecánica (Racha sin críticos, Prisma sin Cristales…).
+// Esta tabla dice, para cada técnica de ranura, técnica suelta, dúo, pieza de los guanteletes, plano, resonancia
+// y guanteletes legendarios:
+//   da:   las mecánicas que pone en juego solo por llevarlo, funcione o no lo demás que hace.
+//   pide: lo que necesita para servir de algo. Si falta, no te la ofrecen al quebrar una reliquia.
+//         Solo se apunta lo que, sin esa mecánica, deja la técnica inútil o casi; un extra condicionado
+//         («y si además arde, …») no cuenta.
+//   daSi: mecánicas que solo pone si ya tiene lo que se indica (Orden solo hace explosiones si hay Sombras).
+// Cada palabra es una mecánica; «a|b» quiere decir «a o b». Sale de leer las descripciones y el código de
+// 40_combat.js, 41_weapon.js y 43_update.js. En el código, el filtro está en 32_rewards.js (pieceCard y techOk).
+
+// Las mecánicas. txt: cómo se dice en «Necesita: …». from: qué mecánicas cuentan como fuente al listar ejemplos.
+// base: la tiene todo el mundo (esquivar), salvo lo que diga el código de abajo.
+const MECH = {
+  ascuas:       { txt: 'algo que clave Ascuas' },
+  veneno:       { txt: 'algo que ponga Veneno' },
+  cristales:    { txt: 'algo que deje Cristales' },
+  usaCristales: { txt: 'algo que use los Cristales' },
+  cura:         { txt: 'algo que te cure con la vida llena' },
+  reservaOn:    { txt: 'una técnica de Manjares en tus ranuras' },   // con ella, la curación que sobra va a la Reserva (heal, 40_combat.js)
+  reserva:      { txt: 'llenar la Reserva, o sea, llevar algo de Manjares y algo que te cure con la vida llena', from: ['cura', 'reserva'] },
+  furia:        { txt: 'tener Furia: una técnica de Orcos en tus ranuras o los Dedos de tambor' },   // gainFury no hace nada sin eso
+  eco:          { txt: 'algo que deje ecos o repita el cargado' },
+  ecoSegundero: { txt: 'la técnica Segundero (o un dúo con ella)' },
+  sombras:      { txt: 'algo que levante Sombras' },
+  agujas:       { txt: 'algo que clave Agujas' },
+  descarga:     { txt: 'algo que descargue las Agujas' },
+  rayo:         { txt: 'algo que lance rayos' },
+  empapado:     { txt: 'algo que empape' },
+  choque:       { txt: 'algo que estampe enemigos contra el muro' },
+  criticos:     { txt: 'algo que dé probabilidad de crítico (sin eso no hay ninguna)' },   // critChance (40_combat.js) es 0 para todo el mundo
+  enraizado:    { txt: 'algo que enraíce' },
+  zarzal:       { txt: 'un zarzal' },
+  congelado:    { txt: 'algo que congele (que ponga Escarcha)' },
+  frenado:      { txt: 'algo que frene o aturda' },
+  herida:       { txt: 'algo que abra Heridas' },
+  pagarVida:    { txt: 'algo que te cobre vida' },
+  sentencia:    { txt: 'algo que ponga Sentencias' },
+  iluminado:    { txt: 'algo que Ilumine' },
+  usaIlum:      { txt: 'algo que aproveche a los Iluminados' },
+  dormido:      { txt: 'algo que Duerma' },
+  amontonado:   { txt: 'algo que amontone a los enemigos' },
+  pozoDano:     { txt: 'un pozo que haga daño' },
+  explosion:    { txt: 'algo que explote' },
+  temple:       { txt: 'algo que dé Temple' },
+  perro:        { txt: 'un perro' },
+  reflejo:      { txt: 'un Reflejo' },
+  esquive:      { txt: 'poder esquivar (con el Brazal de torre no se puede)', base: true },
+  atravesar:    { txt: 'atravesar enemigos (Palma de lanza, Brasa de embestida)' },
+  brasaRayo:    { txt: 'la Brasa de rayo' },
+};
+// Mecánicas que salen de juntar otras dos
+const NEED_RULES = [
+  ['reserva', 'cura reservaOn'],   // la Reserva se llena con la curación que sobra, solo si llevas algo de Manjares
+];
+
+const NEEDS = {
+  // ── Técnicas de ranura ──
+  // Dragones
+  dragon_basic:   { da: 'ascuas' },
+  dragon_charge:  { da: 'ascuas explosion' },                 // clava Ascuas y las hace estallar: sirve sola
+  dragon_dodge:   { da: 'explosion', pide: 'esquive' },
+  dragon_passive: {},                                          // el oro lo tiene todo el mundo; las monedas por Ascuas son un extra
+  // Minerales: los Cristales solos no hacen nada
+  stone_basic:    { da: 'cristales', pide: 'usaCristales' },
+  stone_charge:   { da: 'usaCristales', pide: 'cristales' },
+  stone_dodge:    { da: 'cristales usaCristales explosion', pide: 'esquive' },   // deja Cristales y los revienta: la fuente
+  stone_passive:  { da: 'usaCristales', pide: 'cristales' },
+  // Veneno
+  venom_basic:    { da: 'veneno' },
+  venom_charge:   { pide: 'veneno' },
+  venom_dodge:    { da: 'veneno', pide: 'esquive' },
+  venom_passive:  { pide: 'veneno' },
+  // Manjares: cualquier técnica suya abre la Reserva, pero hay que curarse con la vida llena para llenarla
+  feast_basic:    { da: 'cura reservaOn' },
+  feast_charge:   { da: 'reservaOn', pide: 'reserva' },       // su curación al matar dura 0,6 s: no se cuenta como fuente
+  feast_dodge:    { da: 'cura reservaOn', pide: 'esquive|atravesar' },
+  feast_passive:  { da: 'reservaOn', pide: 'reserva' },
+  // Orcos: cualquier técnica suya da Furia (al golpear y al recibir golpes)
+  orc_basic:      { da: 'furia' },
+  orc_charge:     { da: 'furia explosion choque frenado' },
+  orc_dodge:      { da: 'furia choque frenado', pide: 'esquive|atravesar' },
+  orc_passive:    { da: 'furia' },
+  // Tiempo
+  time_basic:     { da: 'eco ecoSegundero' },
+  time_charge:    { da: 'eco' },
+  time_dodge:     { da: 'frenado', pide: 'esquive' },
+  time_passive:   { pide: 'frenado' },
+  // Sombras
+  shade_basic:    { da: 'sombras' },
+  shade_charge:   { pide: 'sombras', daSi: { explosion: 'sombras' } },
+  shade_dodge:    { da: 'sombras', pide: 'esquive' },          // la Sombra de Relevo también pelea
+  shade_passive:  { pide: 'sombras' },
+  // Tormenta: clavar y descargar son dos técnicas distintas, salvo Paso relámpago que hace las dos
+  storm_basic:    { da: 'agujas', pide: 'descarga' },
+  storm_charge:   { da: 'descarga rayo', pide: 'agujas' },
+  storm_dodge:    { da: 'agujas descarga rayo', pide: 'esquive|atravesar' },
+  storm_passive:  { pide: 'descarga', daSi: { agujas: 'descarga' } },
+  // Mareas: los empujones de Mareas estampan contra el muro y el golpe aturde
+  tide_basic:     { da: 'empapado choque frenado' },
+  tide_charge:    { da: 'empapado choque frenado' },
+  tide_dodge:     { da: 'empapado choque frenado', pide: 'esquive' },
+  tide_passive:   { pide: 'empapado' },
+  // Fortuna
+  luck_basic:     { da: 'criticos' },
+  luck_charge:    {},
+  luck_dodge:     { da: 'explosion', pide: 'esquive' },
+  luck_passive:   { pide: 'criticos' },
+  // Bosque
+  wood_basic:     { da: 'enraizado frenado' },
+  wood_charge:    { da: 'zarzal frenado' },
+  wood_dodge:     { da: 'enraizado frenado', pide: 'esquive' },
+  wood_passive:   { pide: 'enraizado|zarzal', daSi: { cura: 'enraizado|zarzal' } },
+  // Hielo: Quebrar pone 3 de Escarcha a los que no rompe; dos cargados seguidos ya congelan
+  frost_basic:    { da: 'congelado frenado' },
+  frost_charge:   { da: 'congelado frenado explosion' },
+  frost_dodge:    { da: 'congelado frenado', pide: 'esquive' },
+  frost_passive:  { pide: 'congelado', daSi: { congelado: 'congelado' } },
+  // Sangre
+  blood_basic:    { da: 'herida' },
+  blood_charge:   { da: 'pagarVida' },
+  blood_dodge:    { da: 'cura', pide: 'esquive|atravesar' },
+  blood_passive:  {},
+  // Final: la Sentencia que no se cumple estalla al morir el enemigo
+  end_basic:      { da: 'sentencia explosion' },
+  end_charge:     { pide: 'sentencia' },
+  end_dodge:      { pide: 'sentencia esquive', daSi: { cura: 'sentencia' } },
+  end_passive:    { pide: 'sentencia' },
+  // Luz: Señalar y Destello Iluminan ellos mismos lo que aprovechan
+  light_basic:    { da: 'iluminado usaIlum' },
+  light_charge:   { da: 'iluminado usaIlum frenado' },
+  light_dodge:    { da: 'iluminado', pide: 'esquive' },
+  light_passive:  { da: 'usaIlum', pide: 'iluminado' },
+  // Sueño: Pesadilla duerme a los despiertos, así que sirve sola
+  dream_basic:    { da: 'dormido' },
+  dream_charge:   { da: 'dormido' },
+  dream_dodge:    { da: 'dormido', pide: 'esquive' },
+  dream_passive:  { pide: 'dormido' },
+  // Vacío
+  void_basic:     { da: 'amontonado' },
+  void_charge:    { da: 'amontonado pozoDano explosion' },
+  void_dodge:     { da: 'amontonado', pide: 'esquive' },
+  void_passive:   { pide: 'amontonado' },                    // dudoso: en una melé ya se pegan algo, pero poco
+  // Espejos
+  mirror_basic:   { da: 'reflejo' },
+  mirror_charge:  { da: 'reflejo' },
+  mirror_dodge:   { da: 'frenado', pide: 'esquive' },
+  mirror_passive: { da: 'explosion' },
+  // Bestias
+  beast_basic:    { da: 'perro' },
+  beast_charge:   { da: 'perro explosion frenado' },
+  beast_dodge:    { da: 'perro choque', pide: 'esquive' },
+  beast_passive:  {},
+  // Forja
+  forge_basic:    { da: 'temple' },
+  forge_charge:   { da: 'temple frenado' },
+  forge_dodge:    { pide: 'esquive' },
+  forge_passive:  {},
+
+  // ── Dúos ── Solo lo que añade la regla del dúo: lo de sus dos técnicas ya sale de sus entradas.
+  // Un dúo se ofrece si sirve la técnica nueva que trae o si sirve su regla (ver dúoOk). Los de esquive piden además poder esquivar.
+  obsidian:   { da: 'ascuas explosion usaCristales' },
+  eternal:    {},
+  tombstone:  { da: 'sombras usaCristales' },
+  boil:       { da: 'veneno' },
+  syringe:    { pide: 'descarga', daSi: { veneno: 'descarga' } },
+  warhunger:  {},
+  clockmark:  { da: 'sombras' },
+  steam:      { da: 'explosion' },
+  ram:        {},
+  facet:      { da: 'cristales', pide: 'usaCristales' },     // más Cristales: siguen sin servir si nada los usa
+  snakeeyes:  {},
+  loaded:     {},
+  graveroot:  { da: 'sombras' },
+  thornrod:   { da: 'descarga rayo' },                         // al brotar descarga: Aguja estática ya sirve dentro del dúo
+  clover:     {},
+  glacier:    { da: 'cristales', pide: 'usaCristales' },
+  hail:       { da: 'descarga rayo' },
+  hibernate:  { da: 'dormido' },                               // al descongelarse se duermen (Arrullo ya duerme)
+  warwound:   {},
+  hemotoxin:  {},
+  deadline:   {},
+  verdict:    {},
+  lens:       { da: 'iluminado usaCristales' },
+  beacon:     { pide: 'descarga|rayo' },
+  doubles:    {},
+  prismatic:  { da: 'usaIlum' },
+  warhound:   {},
+  rabid:      { da: 'veneno' },
+  forgefire:  { da: 'ascuas' },
+  rot:        { da: 'veneno' },                                // las Ascuas de Aliento pasan a Veneno para Purga
+  roar:       { pide: 'brasaRayo' },
+  rod:        { pide: 'agujas cristales' },
+  table:      { pide: 'cristales', daSi: { reserva: 'cristales' } },
+  cortege:    { pide: 'sombras', daSi: { veneno: 'sombras' } },
+  supper:     { pide: 'sombras', daSi: { reserva: 'sombras' } },
+  echocry:    {},
+  winetide:   { da: 'reserva' },
+  tsunami:    { pide: 'agujas' },
+  allin:      {},
+  wager:      {},
+  wildfire:   { da: 'ascuas' },
+  perennial:  {},
+  iceberg:    { da: 'congelado' },                             // Maremoto empapa y la ola siguiente congela
+  bloodrite:  { da: 'sombras' },
+  autodafe:   { pide: 'sentencia' },
+  digest:     { daSi: { reserva: 'dormido' } },
+  maelstrom:  {},
+  collapse:   { da: 'explosion' },
+  afterimage: {},
+  wolfthorn:  { da: 'enraizado' },
+  warhammer:  {},
+  comet:      {},
+  avalanche:  { da: 'explosion usaCristales' },
+  stalagm:    { da: 'cristales veneno usaCristales' },
+  miasma:     {},
+  toast:      {},
+  horde:      {},
+  stasis:     { da: 'agujas descarga' },
+  reef:       { da: 'usaCristales explosion' },
+  whirl:      {},
+  toss:       {},
+  fork:       { da: 'descarga' },
+  nettle:     {},
+  uproot:     {},
+  mangrove:   {},
+  siesta:     {},
+  funnel:     { da: 'frenado' },
+  frostthorn: {},
+  bloodhound: { da: 'herida' },
+  quench:     { da: 'agujas' },
+  hoardfeast: { da: 'cura' },                                  // el oro cura, y para Glotón cuenta como Reserva
+  ashlegion:  { pide: 'sombras', daSi: { ascuas: 'sombras', explosion: 'sombras' } },
+  clockquartz:{ pide: 'cristales', daSi: { frenado: 'cristales' } },
+  indigest:   { pide: 'veneno', daSi: { cura: 'veneno' } },
+  longlunch:  { pide: 'reserva', daSi: { frenado: 'reserva' } },
+  warthunder: { da: 'rayo agujas' },
+  chargedshade: { pide: 'sombras', daSi: { agujas: 'sombras', descarga: 'sombras' } },
+  brine:      { pide: 'veneno empapado' },
+  drowned:    { pide: 'empapado', daSi: { sombras: 'empapado' } },
+  jackpot:    { pide: 'criticos' },
+  bones:      { pide: 'sombras', daSi: { criticos: 'sombras' } },
+  amber:      { pide: 'enraizado|zarzal', daSi: { cristales: 'enraizado|zarzal' } },
+  orchard:    { pide: 'enraizado', daSi: { cura: 'enraizado' } },
+  stillness:  { pide: 'congelado' },
+  thicket:    { pide: 'enraizado|zarzal' },
+  sunfire:    { da: 'usaIlum', pide: 'ascuas iluminado' },
+  eclipse:    { da: 'usaIlum', pide: 'sombras', daSi: { iluminado: 'sombras' } },
+  luckglass:  {},
+  bloodwine:  { pide: 'pagarVida', daSi: { reserva: 'pagarVida' } },
+  obituary:   { pide: 'sentencia', daSi: { sombras: 'sentencia' } },
+  poppy:      { pide: 'veneno', daSi: { dormido: 'veneno' } },
+  whetstone:  { pide: 'cristales', daSi: { temple: 'cristales' } },
+
+  // ── Técnicas sueltas ──
+  d_blood:    { pide: 'explosion', daSi: { ascuas: 'explosion' } },
+  d_pyre:     { pide: 'ascuas', daSi: { explosion: 'ascuas' } },   // vale con cualquier Ascua, no solo con Colmillo al rojo
+  m_reson:    { da: 'usaCristales', pide: 'cristales explosion' },
+  m_quartz:   { da: 'cristales', pide: 'usaCristales' },
+  v_vapors:   { pide: 'explosion', daSi: { veneno: 'explosion' } },
+  v_syn:      { pide: 'veneno' },
+  f_cellar:   { pide: 'reserva' },
+  f_carve:    {},
+  o_drums:    { pide: 'furia' },
+  o_berserk:  { pide: 'furia' },
+  t_overtime: { pide: 'eco' },
+  t_paradox:  { da: 'eco', pide: 'ecoSegundero' },              // solo repite los ecos de Segundero
+  s_guard:    { pide: 'sombras' },
+  s_legion:   { pide: 'sombras' },
+  r_over:     { da: 'descarga rayo', pide: 'agujas' },
+  d_warm:     { da: 'ascuas' },
+  m_skin:     {},
+  v_slow:     { da: 'veneno' },
+  f_appet:    { da: 'cura' },
+  o_scars:    {},
+  t_second:   { pide: 'esquive' },
+  s_last:     { da: 'sombras' },
+  r_spark:    { da: 'rayo' },
+  w_brine:    { da: 'choque frenado' },
+  w_deep:     { pide: 'choque' },
+  l_coin:     { da: 'criticos' },
+  l_jack:     { pide: 'criticos', daSi: { explosion: 'criticos' } },   // vale cualquier crítico, no solo los de Dado cargado
+  b_thorn:    { da: 'enraizado frenado' },
+  b_bloom:    { pide: 'enraizado', daSi: { zarzal: 'enraizado' } },
+  i_rime:     { da: 'frenado' },                                // 1 de Escarcha cada 4 disparos se pierde antes de llegar a 5: no congela
+  i_shatter:  { pide: 'congelado' },
+  h_warm:     {},                                               // cura solo con poca vida: no llena la Reserva
+  h_frenzy:   {},
+  e_ink:      { da: 'sentencia explosion' },
+  e_seal:     { pide: 'sentencia', daSi: { frenado: 'sentencia' } },
+  u_glint:    { da: 'iluminado', pide: 'usaIlum' },
+  u_halo:     { da: 'usaIlum', pide: 'iluminado', daSi: { explosion: 'iluminado' } },
+  z_yawn:     { da: 'dormido' },
+  z_night:    { pide: 'dormido', daSi: { frenado: 'dormido' } },
+  o_tug:      { da: 'amontonado' },
+  o_crush:    { pide: 'pozoDano' },
+  q_shard:    {},
+  q_break:    {},
+  a_pup:      { da: 'perro' },
+  a_feral:    { pide: 'perro', daSi: { cura: 'perro' } },
+  g_whet:     {},
+  g_slag:     { pide: 'temple', daSi: { explosion: 'temple' } },
+  r_judge:    { pide: 'descarga', daSi: { explosion: 'descarga' } },
+
+  // ── Piezas de los guanteletes ── (las que no aparecen ni dan ni piden nada de esto)
+  b_scatter: { da: 'choque frenado' },
+  b_spike:   { da: 'atravesar' },
+  b_flame:   { da: 'ascuas' },
+  b_blow:    { da: 'veneno' },
+  b_wyrm:    { da: 'ascuas' },
+  b_rod:     { da: 'agujas descarga rayo' },                   // se descarga solo al juntar 6
+  b_icicle:  { da: 'congelado frenado' },
+  b_horn:    { da: 'frenado' },
+  b_net:     { da: 'enraizado frenado' },
+  a_rider:   { pide: 'esquive' },
+  a_kick:    { da: 'choque frenado' },
+  a_drum:    { da: 'furia' },
+  a_glass:   { da: 'eco' },
+  a_dice:    { da: 'criticos' },
+  a_nana:    { da: 'dormido' },
+  a_burst:   { da: 'frenado' },
+  m_charged: { da: 'explosion' },
+  m_heavy:   { da: 'choque frenado' },
+  m_blood:   { da: 'pagarVida cura' },
+  m_ice:     { da: 'frenado congelado' },                      // al segundo impacto deja Congelado 0,8 s (no a los jefes)
+  m_fire:    { da: 'ascuas' },
+  m_seed:    { da: 'enraizado frenado' },
+  m_salt:    { da: 'empapado choque' },
+  m_saw:     { da: 'herida' },
+  m_star:    { da: 'iluminado usaIlum' },
+  m_blunt:   { da: 'frenado' },
+  m_timed:   { da: 'explosion' },
+  m_leech:   { da: 'cura' },
+  s_grave:   { da: 'sombras' },
+  s_wine:    { da: 'cura reserva' },                           // con la vida llena, cada baja va a la Reserva aunque no lleves Manjares
+  s_kennel:  { da: 'perro' },
+  s_geode:   { da: 'cristales usaCristales' },
+  s_heavy:   { da: 'choque frenado' },
+  s_spikes:  { da: 'frenado', pide: 'esquive|atravesar' },
+  s_dance:   { pide: 'esquive|atravesar' },
+  s_tower:   {},                                               // quita el esquive a todo el mundo (ver mechsOf)
+  c_beam:    { da: 'brasaRayo' },
+  c_dash:    { da: 'atravesar' },
+  c_blast:   { da: 'choque frenado' },
+  c_mine:    { da: 'explosion' },
+  c_nova:    { da: 'choque' },
+  c_meteor:  { da: 'explosion frenado' },
+  c_balm:    { da: 'cura choque' },
+  c_sima:    { da: 'amontonado pozoDano explosion' },
+  c_doom:    { da: 'sentencia explosion' },
+  c_anvil:   { da: 'temple frenado' },
+  c_ward:    { da: 'choque' },
+  c_blink:   { da: 'explosion' },
+  c_drain:   { da: 'cura' },
+  c_quake:   { da: 'frenado' },
+};
+// Planos, resonancias y guanteletes legendarios: también ponen mecánicas mientras están activos
+const NEEDS_MORE = {
+  'plan.mortar':     { daSi: { explosion: 'brasaRayo' } },
+  'plan.recoil':     { da: 'esquive' },                         // el esquive gratis del cargado funciona incluso con el Brazal de torre
+  'res.dragonbreath':{ da: 'ascuas' },
+  'res.leadstorm':   { da: 'descarga' },
+  'res.quarry':      { da: 'cristales' },
+  'res.executor':    { da: 'frenado' },
+  'res.clockwork':   { da: 'eco' },
+  'res.acidrain':    { da: 'veneno' },
+  'res.furnace':     { da: 'explosion' },
+  'res.vigil':       { da: 'frenado' },
+  'res.firerain':    { da: 'ascuas' },
+  'res.pinball':     { da: 'descarga' },
+  'res.cavalry':     { da: 'ascuas explosion' },
+  'res.eventide':    { da: 'amontonado' },
+  'res.sunbeam':     { da: 'iluminado' },
+  'res.lullaby':     { da: 'dormido' },
+  'res.anvilsong':   { da: 'temple' },
+  'res.tidalhook':   { da: 'empapado frenado' },
+  'res.thornmine':   { da: 'zarzal' },
+  'leg.monsmeg':     { da: 'frenado' },
+  'leg.zhuge':       { da: 'veneno' },
+  'leg.dragon':      { da: 'ascuas' },
+  'leg.widow':       { daSi: { veneno: 'herida' } },
+  'leg.winter':      { da: 'congelado' },
+  'leg.pack':        { da: 'perro' },
+  'leg.blacksun':    { da: 'iluminado usaIlum' },
+  'leg.master':      { da: 'temple explosion' },
+  'leg.tempest':     { da: 'descarga' },
+};
+
+// ───────────────────────── Cómo se usa la tabla ─────────────────────────
+const mwords = s => (s || '').split(' ').filter(Boolean);
+const needOf = id => NEEDS[id] || NEEDS_MORE[id] || {};
+const needMet = (tok, have) => tok.split('|').some(m => have.has(m));
+// Lo que pide: lo de la tabla y, en los dúos de esquive, poder esquivar (o atravesar)
+const pideOf = id => { const w = mwords(needOf(id).pide); if (DUO[id] && DUO[id].slot === 'dodge' && !w.some(t => t.includes('esquive'))) w.push('esquive|atravesar'); return w; };
+// Una partida, de verdad o imaginada: técnicas en las ranuras, técnicas sueltas, piezas montadas y planos
+const buildNow = () => ({ build: S.build, techs: S.techs, gun: S.gun, plans: S.plans });
+const withSlot = (slot, id) => Object.assign(buildNow(), { build: Object.assign({}, S.build, { [slot]: { id, lvl: 1 } }) });
+const withTech = id => Object.assign(buildNow(), { techs: new Set([...S.techs, id]) });
+// Todo lo que lleva: cada dúo cuenta como sus dos técnicas más su regla; y las resonancias y guanteletes legendarios que estarían activos
+function carried(st) {
+  const ids = [];
+  for (const k of SLOT_KEYS) { const c = st.build[k]; if (!c) continue; const D = DUO[c.id]; if (D) ids.push(D.a, D.b, c.id); else ids.push(c.id); }
+  for (const t of st.techs || []) ids.push(t);
+  for (const k of GSLOT_KEYS) if (st.gun[k]) ids.push(st.gun[k]);
+  for (const x of st.plans || []) ids.push('plan.' + x);
+  const pieces = ids.slice();
+  for (const R of RESO) if (R.parts.every(pid => st.gun[PART[pid].slot] === pid) && R.techs.every(t => pieces.includes(t))) ids.push('res.' + R.id);
+  const L = legOf(st.gun); if (L) ids.push('leg.' + L.id);
+  return ids;
+}
+// Las mecánicas que hay en juego con eso
+function mechsOf(st) {
+  const ids = carried(st), have = new Set();
+  if (st.gun.stock !== 's_tower') have.add('esquive');   // todo el mundo esquiva, salvo con el Brazal de torre
+  for (const id of ids) for (const m of mwords(needOf(id).da)) have.add(m);
+  for (let again = true; again;) {   // lo que sale de juntar mecánicas, hasta que no salga nada nuevo
+    again = false;
+    const add = (m, need) => { if (!have.has(m) && mwords(need).every(t => needMet(t, have))) { have.add(m); again = true; } };
+    for (const [m, need] of NEED_RULES) add(m, need);
+    for (const id of ids) { const ds = needOf(id).daSi; if (ds) for (const m in ds) add(m, ds[m]); }
+  }
+  return have;
+}
+const worksWith = (id, have) => pideOf(id).every(t => needMet(t, have));
+// ¿Serviría esta técnica de ranura si la pones en su acción? La que sustituye deja de contar como fuente.
+const pieceOk = pc => worksWith(pc.id, mechsOf(withSlot(pc.slot, pc.id)));
+// Un dúo trae una técnica nueva (pc) y una regla: se ofrece si sirve cualquiera de las dos, porque lo que ya llevabas sigue ahí
+const duoOk = (D, pc) => { const have = mechsOf(withSlot(D.slot, D.id)); return worksWith(pc.id, have) || worksWith(D.id, have); };
+const looseOk = t => worksWith(t.id, mechsOf(withTech(t.id)));
+
+// «Necesita: …» en palabras: qué mecánica y ejemplos de lo que la pone (solo de deidades abiertas y piezas descubiertas)
+function mechFrom(m, max) {
+  const from = MECH[m].from || [m], gives = id => mwords(needOf(id).da).some(x => from.includes(x));
+  const names = PIECES.filter(x => godIsOpen(x.god) && gives(x.id)).map(x => x.name)
+    .concat(TECHS.filter(x => godIsOpen(x.god) && gives(x.id)).map(x => x.name), PARTS.filter(x => M.parts[x.id] && gives(x.id)).map(x => x.name));
+  return names.length ? ' (' + names.slice(0, max || 4).join(', ') + (names.length > (max || 4) ? '…' : '') + ')' : '';
+}
+const needText = tok => tok.split('|').map(m => MECH[m].txt + (MECH[m].base ? '' : mechFrom(m))).join(', o ');
+const needsText = id => { const w = pideOf(id); return w.length ? w.map(needText).join('; y ') : ''; };
 // ───────────────────────── Utilidades ─────────────────────────
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -1095,7 +1535,7 @@ function startRun(mission) {
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
   S.next = { type: 'god', god: randGod() };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
-    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
+    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).map(pieceCard).filter(Boolean).slice(0, 3);   // solo las que sirven solas (pieceCard filtra)
     pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts, tip: 'relic' })];
     advancePick(); return;
   }
@@ -1310,6 +1750,7 @@ function choosePick(i) {
 
 // ───────────────────────── Técnicas que te ofrecen ─────────────────────────
 // Una por acción. Si ya llevas ahí la técnica de otra deidad y existe dúo entre las dos, te ofrecen el dúo en su lugar.
+// Subir de nivel lo que ya llevas sale siempre; lo nuevo, solo si serviría de algo con lo que llevas (tabla de 13_needs.js).
 function pieceCard(pc) {
   const cur = S.build[pc.slot], god = pc.god, rar = rollRar();
   const have = godCount(god), M2 = MASTERY[god], isNew = !godsIn(pc.slot).includes(god);
@@ -1330,6 +1771,7 @@ function pieceCard(pc) {
   }
   const lvl = 1 + rar, duo0 = cur && !D ? duoFor(cur.id, pc.id) : null, duo = duo0 && duoIsOpen(duo0) ? duo0 : null;   // un dúo con una deidad sin abrir no se ofrece
   if (duo) {   // la técnica que llevas se funde con esta
+    if (!duoOk(duo, pc)) return null;   // ni la técnica nueva ni la regla del dúo servirían con lo que llevas (13_needs.js)
     const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
     o.desc = duoText(duo, nl);
@@ -1337,23 +1779,34 @@ function pieceCard(pc) {
     o.apply = () => { S.build[pc.slot] = { id: duo.id, lvl: nl }; };
     return o;
   }
+  if (!pieceOk(pc)) return null;   // no te la ofrecen si nada de lo que llevas (ni ella misma) pone lo que necesita (13_needs.js)
   o.name += lvl > 1 ? ' ' + ROMAN[lvl] : ''; o.desc = pc.desc(lvl);
   if (cur) { o.swap = true; o.note = 'Sustituye a ' + curName(cur) + (prog ? ' · ' + prog : ''); }
   o.apply = () => { S.build[pc.slot] = { id: pc.id, lvl }; };
   return o;
 }
-// Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
+// Técnicas sueltas. Las ofrendas (SOLO) salen aunque no lleves nada de su deidad; las demás, solo si ya llevas alguna técnica suya en tus ranuras.
+// Y todas, solo si lo que necesitan (tabla de 13_needs.js) lo pone algo de lo que llevas o ellas mismas.
 const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'q_shard', 'a_pup', 'g_whet', 'd_blood', 'v_vapors', 'f_carve'];
-const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
-const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : SOLO.includes(t.id) ? 'nada, sirve sola' : 'cualquier técnica de esta deidad');
+const techOk = t => !S.techs.has(t.id) && (godCount(t.god) >= 1 || SOLO.includes(t.id)) && looseOk(t);
+// El «Necesita: …» del Recetario sale de la misma tabla
+const techNeeds = t => { const w = needsText(t.id), th0 = GODS[t.god].theme;
+  if (SOLO.includes(t.id)) return w || 'nada, sirve sola';
+  return w ? w + '; y llevar ya alguna técnica de ' + th0 + ' en tus ranuras' : 'nada, sirve sola; pero solo sale si ya llevas alguna técnica de ' + th0 + ' en tus ranuras'; };
 // Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
 const duoIsOpen = D => godIsOpen(PIECE[D.a].god) && godIsOpen(PIECE[D.b].god);
 const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
-function pieceOptions(god) {
+// Todo lo que esta deidad podría ofrecerte ahora, con su peso en el sorteo
+function pieceCands(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
   for (const t of TECHS.filter(x => x.god === god && techOk(x)))
     cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, pic: t.id, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
+  return cands;
+}
+function pieceOptions(god) {
+  const cands = pieceCands(god);
+  // Si al filtrar queda poco, sale lo que haya (y siempre puedes vender la reliquia).
   // Sorteo ponderado: lo raro sale menos y un dúo disponible sale más.
   // Lo que sustituiría a una técnica que ya llevas va al final: solo aparece si no hay otra cosa que ofrecer, y como mucho una.
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);
@@ -3710,7 +4163,8 @@ function shot(e, dmg, ux, uy, big, col) {
   if (G('m_star') && e.lit > 0) dmg *= th('light') ? 1.25 : 1.12;
   if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Brazal de catalejo: primer tiro
   if (G('m_ice') && active(e)) {                                                               // Gema de escarcha
-    if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
+    if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); if (!e.boss) e.frozen = Math.max(e.frozen || 0, 0.8); S.stat.freeze++;   // cuenta como Congelado de verdad
+      note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
     slow(e, 1.5, 0.7); e.iceT = 1.5; if (res('coldiron')) addFrost(e, 1);                       // resonancia Hierro frío
   }
   onHit(e, dmg, ux, uy, big, col, 'player');
@@ -6689,5 +7143,5 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { spawn, godsOpen,godsOpenN, lootGod, pieceOptions, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

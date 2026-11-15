@@ -323,7 +323,7 @@ const NEEDS = {
   m_charged: { da: 'explosion' },
   m_heavy:   { da: 'choque frenado' },
   m_blood:   { da: 'pagarVida cura' },
-  m_ice:     { da: 'frenado' },                                // aturde, pero no deja Congelado para Cero absoluto ni Quebrar
+  m_ice:     { da: 'frenado congelado' },                      // al segundo impacto deja Congelado 0,8 s (no a los jefes)
   m_fire:    { da: 'ascuas' },
   m_seed:    { da: 'enraizado frenado' },
   m_salt:    { da: 'empapado choque' },

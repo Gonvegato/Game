@@ -48,7 +48,8 @@ function shot(e, dmg, ux, uy, big, col) {
   if (G('m_star') && e.lit > 0) dmg *= th('light') ? 1.25 : 1.12;
   if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Brazal de catalejo: primer tiro
   if (G('m_ice') && active(e)) {                                                               // Gema de escarcha
-    if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
+    if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); if (!e.boss) e.frozen = Math.max(e.frozen || 0, 0.8); S.stat.freeze++;   // cuenta como Congelado de verdad
+      note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
     slow(e, 1.5, 0.7); e.iceT = 1.5; if (res('coldiron')) addFrost(e, 1);                       // resonancia Hierro frío
   }
   onHit(e, dmg, ux, uy, big, col, 'player');
