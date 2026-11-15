@@ -104,6 +104,14 @@ const GODS = {
     take:  ['examina tus guanteletes y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
+// Las deidades se van fijando en Alec poco a poco. Al principio solo cuatro, las que se entienden a la primera
+// (quemar, congelar, curarse, críticos) y cuya técnica de disparo ya hace algo por sí sola. Cada encargo cumplido
+// por primera vez (los doce normales y los cuatro guardianes) abre la siguiente de GOD_ORDER, de la más directa a la
+// más enrevesada: al final quedan las que piden combinar dos técnicas (Agujas, Cristales) o pensar con retraso (Sentencia).
+// Orcos va la primera porque el dios del reino es el Primer Puño. Cuáles están abiertas se calcula con M.done (godsOpen, en 30_meta.js).
+const GOD_START = ['dragon', 'frost', 'feast', 'luck'];
+const GOD_ORDER = ['orc', 'venom', 'wood', 'tide', 'forge', 'blood', 'beast', 'void', 'time', 'dream', 'light', 'mirror', 'shade', 'storm', 'stone', 'end'];
+const GOD_UNLOCK = GOD_START.concat(GOD_ORDER);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
 const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');

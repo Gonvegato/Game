@@ -42,15 +42,16 @@ const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · 
 
 // Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado
 function missionWin() {
-  const ms = S.mission, first = !isDone(ms.id);
+  const ms = S.mission, first = !isDone(ms.id), n0 = godsOpenN();
   M.done = M.done || {}; M.done[ms.id] = 1;
+  S.newGod = godsOpenN() > n0 ? GOD_UNLOCK[godsOpenN() - 1] : null;   // cada encargo cumplido por primera vez hace que otra deidad se fije en ti
   S.pay = first ? payOf(ms) : Math.round(payOf(ms) * 0.3); S.soulsRun += S.pay; S.first = first;
   if (ms.type === 'boss' || ms.type === 'god') { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } }
   endRun(true); setMode('win');
 }
 function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode('dead'); }
 const resumePlay = () => { S.mode = 'play'; modeT = 0; renderOverlay(); };
-const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+const lootGod = () => randGod();
 
 // ── Defensa de una aldea: cada oleada es un tramo; parte de los enemigos va a por la campana en vez de a por ti ──
 function fillDefWave() {

@@ -13,7 +13,7 @@ function titleItems() {
   if (titleView === 'confirm') return [['no', 'No, volver'], ['wipe', 'Sí, borrar y empezar de cero']];
   if (titleView === 'settings') { const lv = n => ['Apagado', 'Bajo', 'Medio', 'Normal', 'Alto'][n]; return [
     ['sound', 'Sonido', CFG.sound ? 'Encendido' : 'Apagado'], ['music', 'Volumen de la música', lv(CFG.music)], ['sfx', 'Volumen de los efectos', lv(CFG.sfx)],
-    ['blend', 'Suavizado de animaciones', CFG.blend ? 'Sí' : 'No'], ['ctl', 'Controles'], ['cred', 'Créditos'], ['back', 'Volver']]; }
+    ['blend', 'Suavizado de animaciones', CFG.blend ? 'Sí' : 'No'], ['tips', 'Volver a ver los avisos de ayuda', Object.keys(M.tips || {}).length ? '' : 'Activados'], ['ctl', 'Controles'], ['cred', 'Créditos'], ['back', 'Volver']]; }
   if (titleView === 'ctl' || titleView === 'cred') return [['settings', 'Volver']];
   return (hasSave() ? [['cont', M.run ? 'Continuar · ' + M.run.mission.name : 'Continuar']] : []).concat([['new', 'Nueva partida'], ['settings', 'Ajustes']]);
 }
@@ -44,6 +44,7 @@ function titleAct(id) {
   else if (id === 'music') cyc('music', 5);
   else if (id === 'sfx') cyc('sfx', 5);
   else if (id === 'blend') cyc('blend', 2);
+  else if (id === 'tips') tipsReset();
   audioInit(); musicTick(); sfx('tick', 0.3); renderOverlay();
 }
 function titleInput() {
@@ -67,12 +68,12 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">A la plaza</button>`;
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
-      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
+      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
       <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
-    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards rows">` +
+    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1>${tipBox(pickTip)}<div class="cards rows">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.pic ? pic(u.pic) : u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
@@ -85,6 +86,13 @@ function renderOverlay() {
   const b = $('ovBtn'); if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
   ovBody.querySelectorAll('[data-tm]').forEach((b, i) => b.addEventListener('click', () => { titleSel = i; titleAct(b.dataset.tm); }));
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
+}
+// En la pantalla de victoria: la deidad que se acaba de fijar en ti, con su color, su tema y lo que hace
+function newGodHtml(g) {
+  const G = GODS[g]; if (!G) return '';
+  const n = godsOpenN(), all = GOD_UNLOCK.length;
+  return `<div class="bkhead newgod" style="--c:${G.color}"><em>Una deidad nueva se ha fijado en ti</em><h2>${G.title}</h2><p><b>${G.theme}.</b> ${G.key}</p>
+    <p class="fine">Desde el próximo encargo puedes encontrarte a sus elegidos y robarle técnicas. Su página del Recetario ya está abierta. ${n >= all ? 'Ya te conocen las ' + all + ' deidades.' : 'Te conocen ' + n + ' de ' + all + ' deidades: cada encargo que cumplas por primera vez atrae a otra.'}</p></div>`;
 }
 function primaryAction(force) {
   if (S.mode === 'title') return;   // el menú principal tiene sus propios botones
@@ -159,7 +167,7 @@ function frame(now) {
   else if (m === 'title') titleInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   if (!introDraw()) render();
-  renderHud();
+  renderHud(); tipTick(dt);
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
 
@@ -167,5 +175,5 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { spawn, godsOpen,godsOpenN, lootGod, pieceOptions, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

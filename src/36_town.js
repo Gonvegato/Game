@@ -18,7 +18,8 @@ function openTown(from) {
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
   const back = { castle: 'king', forgeOut: 'forge', innOut: 'inn' }[from];
   if (back) { const k = room.out.spots.find(s => s.id === back); S.p.x = k.x; S.p.y = k.y + 22; S.p.face = Math.PI / 2; }
-  S.mode = 'town'; modeT = 0; renderOverlay();
+  S.mode = 'town'; modeT = 0; renderOverlay(); tipClear();
+  if (kind[0] === 'plaza') { if (M.souls > 0) tip('souls'); if (M.iron > 0) tip('iron'); }   // la primera vez que vuelves con algo, para qué sirve
   if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
   else if (from === 'forge') sayRaw('[La forja. Huele a hierro y a carbón.]', C.energy);
   else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
@@ -171,7 +172,8 @@ function kingExplain() {
     { who: 'king', text: `El ${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).join(', ')} y ${zones[3]}.` },
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
-    { who: 'king', text: 'Por el camino, los dioses menores te ofrecerán sus técnicas. Úsalas sin miedo: solo te duran ese encargo.' },
+    { who: 'king', text: 'Por el camino robarás técnicas a los dioses menores. Úsalas sin miedo: solo te duran ese encargo.' },
+    { who: 'king', text: 'Al principio solo cuatro de ellos se fijarán en ti. Cada encargo que cumplas atraerá la mirada de otro, hasta veinte.' },
     { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tus guanteletes en la forja.' },
     { who: 'king', text: 'Y si caes, te retiras y vuelves a intentarlo. En la posada tienes cama y siempre habrá otro encargo.' },
   ];

@@ -17,6 +17,13 @@ for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
 }
 save();
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
+// Deidades abiertas: las cuatro del principio más una por cada encargo previo al dios ya cumplido. Sale de M.done, así que
+// un guardado anterior a este sistema tiene las que le tocan sin migrar nada.
+const jobsDone = () => Object.keys(M.done || {}).filter(id => M.done[id] && /^[a-z]+:\d+:(\d+|b)$/.test(id)).length;
+const godsOpenN = () => Math.min(GOD_UNLOCK.length, GOD_START.length + jobsDone());
+const godsOpen = () => GOD_UNLOCK.slice(0, godsOpenN());
+const godIsOpen = g => GOD_UNLOCK.indexOf(g) < godsOpenN();
+const randGod = () => { const L = godsOpen(); return L[Math.floor(Math.random() * L.length)]; };
 const tr = id => +M.tree[id] || 0;   // rangos comprados de un nodo concreto
 const tk = id => tr(id) + (TREE_EXT[id] ? tr(TREE_EXT[id]) : 0);   // rango efectivo de una habilidad: lo del primer árbol más lo del segundo
 const tree2Open = () => KINGDOMS.length > 1 && !!(M.done || {})['valdehierro:g'];   // el segundo árbol llega con el segundo reino; mientras no exista, ni se enseña
@@ -45,8 +52,9 @@ function saveRun() {
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
+  const r = M.run; newGame(); tipClear(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
+  if (S.next && S.next.type === 'god' && !godIsOpen(S.next.god)) S.next.god = randGod();   // una sala guardada con una deidad que aún no se ha fijado en ti
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
 }
