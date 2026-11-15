@@ -80,7 +80,8 @@ function roomHtml() {
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
     <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
-    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${M.seenEnding ? `
+    <button class="fi" data-act="ending"><b>Recordar el final de ${K.name}</b><span>La caída de ${TYPES[K.god].name}, el pago del rey y el camino que sigue.</span></button>` : ''}`;
 }
 
 // ───────────────────────── Conversaciones con bocadillos ─────────────────────────
@@ -161,7 +162,10 @@ function kingExplain() {
 }
 function kingProgress() {
   const K = kingdomNow(), god = TYPES[K.god].name, down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
-  if (isDone(K.id + ':g')) return [{ who: 'king', text: `${god} ha caído. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar.` }, { who: 'queen', text: 'Otros reyes ya preguntan por ti.' }];
+  if (isDone(K.id + ':g')) return [   // el reino es libre: de momento no hay más encargos que los que ya conoce
+    { who: 'king', text: `${god} ha caído y ${K.name} es libre. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar.` },
+    { who: 'king', text: 'Por ahora no tengo encargos nuevos que darte. Los del tablón siguen ahí: repite los que quieras. Pagan menos, pero pagan.' },
+    { who: 'queen', text: 'Otros reyes ya preguntan por ti. Cuando llegue su carta, serás el primero en saberlo.' }];
   if (down === 4) return [{ who: 'king', text: `Los cuatro guardianes han caído. ${god} ya no tiene tras quién esconderse: búscalo en el tablón antes de que venga él.` }];
   if (down) return [{ who: 'king', text: `${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis soldados vuelven a mirar a los ojos.` }, { who: 'king', text: `Quedan ${4 - down}. Mientras sigan en pie, ${god} no dará la cara.` }];
   if (jobs) return [{ who: 'king', text: `${jobs === 1 ? 'Un encargo cumplido' : jobs + ' encargos cumplidos'}. Bien. Cumple los tres de una zona y saldrá su guardián.` }];
