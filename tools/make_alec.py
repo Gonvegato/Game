@@ -171,8 +171,8 @@ def anims(view):
         move = [frame(view, 'l', 0, gl=(0, -1), gr=(0, 1), sway=-1), frame(view, 'stand', 1, sway=-1), frame(view, 'r', 0, gl=(0, 1), gr=(0, -1)),
                 frame(view, 'r', 0, gl=(0, 1), gr=(0, -1), sway=1), frame(view, 'stand', 1, sway=1), frame(view, 'l', 0, gl=(0, -1), gr=(0, 1))]
         # al lanzar abre los brazos hacia fuera para que la llama no le tape la cara
-        atk = [frame(view, 'stand', 0, gl=(0, -2), gr=(0, -2), hot=1), frame(view, 'stand', 1, gl=(-2, 1 * d), gr=(2, 1 * d), hot=1), frame(view, 'stand', 1, gl=(-3, 2 * d), gr=(3, 2 * d), hot=1),
-               frame(view, 'stand', 1, gl=(-2, 1 * d), gr=(2, 1 * d), hot=1), frame(view, 'stand', 0, gl=(-1, 0), gr=(1, 0)), frame(view, 'stand')]
+        atk = [frame(view, 'stand', 0, gl=(0, -2), gr=(0, -2), hot=1), frame(view, 'stand', 1, gl=(-1, 1 * d), gr=(1, 1 * d), hot=1), frame(view, 'stand', 1, gl=(-1, 2 * d), gr=(1, 2 * d), hot=1),
+               frame(view, 'stand', 1, gl=(-1, 1 * d), gr=(1, 1 * d), hot=1), frame(view, 'stand', 0, gl=(-1, 0), gr=(1, 0)), frame(view, 'stand')]
     return {'idle': idle, 'move': move, 'atk': atk}
 
 def main():
