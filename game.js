@@ -717,32 +717,32 @@ const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] ==
 const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));
 const TREE = [
   { name: 'Cuerpo', sub: 'Vida, defensa, movimiento y esquive', nodes: [
-    { id: 'hp',      name: 'Aguante',         max: 8, cost: curve(8, 1.55, 8),  desc: r => `+${10 * r} de vida máxima` },
-    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
-    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `Te mueves un ${3 * r}% más rápido` },
-    { id: 'mend',    name: 'Remiendo',        max: 5, cost: curve(15, 1.7, 5),  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
-    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [90, 220],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
-    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [60, 130, 260],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
+    { id: 'hp',      name: 'Aguante',         max: 8, cost: curve(10, 1.78, 8),  desc: r => `+${10 * r} de vida máxima` },
+    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
+    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Te mueves un ${3 * r}% más rápido` },
+    { id: 'mend',    name: 'Remiendo',        max: 5, cost: curve(22, 2.2, 5),  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
+    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [150, 500],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
+    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [100, 260, 600],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
   { name: 'Oficio', sub: 'Daño, cadencia, alcance y disparo cargado', nodes: [
-    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(8, 1.55, 8),  desc: r => `Disparas un ${3 * r}% más rápido` },
-    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(8, 1.55, 8),  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
-    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(15, 1.7, 5),  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
-    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(15, 1.7, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Torno de ballesta, Manivela de ribadoquín, Llave de retén ni Mecha lenta` },
-    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(15, 1.7, 5),  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
-    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(15, 1.7, 5),  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
+    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(10, 1.78, 8),  desc: r => `Disparas un ${3 * r}% más rápido` },
+    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(10, 1.78, 8),  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
+    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(22, 2.2, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Torno de ballesta, Manivela de ribadoquín, Llave de retén ni Mecha lenta` },
+    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
+    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
   { name: 'Memoria', sub: 'Oro, almas y más opciones al elegir', nodes: [
-    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(15, 1.7, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
-    { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(15, 1.7, 5),  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
-    { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(15, 1.7, 5),  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
-    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [40, 90, 180],      desc: r => `Al desmontar un arma, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
-    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [120],              desc: () => 'Al desmontar un arma, eliges entre cuatro técnicas en vez de tres' },
-    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
-    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [160],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
+    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(22, 2.2, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
+    { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
+    { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [80, 200, 450],      desc: r => `Al desmontar un arma, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [400],              desc: () => 'Al desmontar un arma, eliges entre cuatro técnicas en vez de tres' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [700],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
+    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [600],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
 ];
 const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
-  souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades. Solo se consiguen aquí.' },
+  souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades (también te las paga el reino al cumplir encargos). Si repites un encargo ya cumplido, estas salas dan el 30%.' },
   iron:  { name: 'Veta de Hierro Místico', tag: 'Hierro',  color: '#c9d2e0', desc: 'Hierro Místico: lo necesitas para forjar cualquier arma y sus mejoras.' },
   heart: { name: 'Fuente de vida',         tag: 'Vida',    color: '#ff6f86', desc: '+20 de vida máxima y te curas 20.' },
   gold:  { name: 'Cámara del tesoro',      tag: 'Oro',     color: '#ffd24a', desc: 'Oro para gastar en la tienda que hay antes del jefe.' },
@@ -1007,7 +1007,7 @@ function saveRun() {
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission; S.keepHp = r.keepHp;
+  const r = M.run; newGame(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -1036,7 +1036,7 @@ function newGame() {
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
-  newGame(); M.run = null; S.mission = mission;
+  newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
@@ -1185,7 +1185,7 @@ function roomCleared() {
     if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay un arma bendecida'));
   } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
-  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose'))); S.soulsRun += k; got = '+' + k + ' almas'; }
+  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
   else if (S.roomType === 'heart') { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); got = '+20 de vida máxima'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }

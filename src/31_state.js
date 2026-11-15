@@ -21,7 +21,7 @@ function newGame() {
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
-  newGame(); M.run = null; S.mission = mission;
+  newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
   const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');

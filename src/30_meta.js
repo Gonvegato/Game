@@ -43,7 +43,7 @@ function saveRun() {
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission; S.keepHp = r.keepHp;
+  const r = M.run; newGame(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
