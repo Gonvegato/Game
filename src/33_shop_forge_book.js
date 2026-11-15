@@ -65,10 +65,10 @@ function forgeHtml() {
     const on = ensOf(M.gun), L = legOf(M.gun);
     body = `<p class="fine">Tus guanteletes tienen cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Guanteletes legendarios: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
       <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
-        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
+        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${pic(M.gun[sk])}${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
       known.map(x => { const mounted = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${pic(x.id)}${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
@@ -79,12 +79,15 @@ function forgeHtml() {
       <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
       <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
   } else {
-    const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
+    const spentOf = ns => ns.reduce((a, n) => a + n.cost.slice(0, tr(n.id)).reduce((x, y) => x + y, 0), 0);
+    const spent = spentOf(TREE_NODES), hrs = M.time / 3600, done1 = spent >= TREE_TOTAL;
     const hm = h => (h >= 1 ? Math.floor(h) + ' h ' : '') + Math.round((h % 1) * 60) + ' min';
-    const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
-    const pace = `${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo jugado: ${hm(hrs)}.` + (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : '');
-    body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
-      return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
+    const pace = `Árbol de Valdehierro: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%)${done1 ? ', completo' : ''}. Tiempo jugado: ${hm(hrs)}. Este árbol tiene tope: el siguiente reino trae el suyo.`;
+    const sec = (T, lock) => T.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tr(n.id), full = r >= n.max, cost = n.cost[r], base = n.ext ? TREE_NODES.find(x => x.id === n.ext).max : 0;
+      return `<button class="fi${full ? ' on' : !lock && M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r || base ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('');
+    const open2 = tree2Open();
+    body = `<p class="fine">${pace}</p><div class="forge">` + sec(TREE, false) + '</div>' +
+      `<h2>El árbol del siguiente reino</h2><p class="fine">${open2 ? `Abierto: ${spentOf(TREE2_NODES)} de ${TREE2_TOTAL} almas invertidas. Sigue donde el primero se queda, y cada rango cuesta mucho más.` : 'Cerrado. Se abre cuando liberes Valdehierro matando a su dios. Sigue donde este árbol se queda, con más rangos de las mismas mejoras, y cada rango cuesta mucho más.'}</p><div class="forge${open2 ? '' : ' locked'}">` + sec(TREE2, !open2) + '</div>';
   }
   if (forgeTab === 'room') body = roomHtml(); else if (forgeTab === 'king') body = kingHtml();
   return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB y RB (o Q y R) pasan a la pestaña de la izquierda o de la derecha. B (o Shift) vuelve a la plaza.</p>`;
@@ -100,7 +103,7 @@ function forgeAct(act) {
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'intro') { playIntro(); return; }   // desde la habitación de la posada: volver a ver la cinemática del principio
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
-  else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
+  else if (k === 't') { const nd = TREE_ALL.find(x => x.id === id), r = tr(id); if (r < nd.max && M.souls >= nd.cost[r] && (!nd.ext || tree2Open())) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
   sfx(ok ? 'ok' : 'no', 0.45);
   save(); renderOverlay();
 }
@@ -181,15 +184,15 @@ function bookHtml() {
   for (const g of GOD_KEYS) {
     const n = godCount(g), G = GODS[g];
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
-      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
-      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
+      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pic(pc.id)}${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
+      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${pic(t.id)}${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
       `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>${MASTERY[g].desc}</span></li></ul></section>`;
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
+  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${pic(x.id)}${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
     `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;

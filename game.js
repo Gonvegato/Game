@@ -688,33 +688,46 @@ const ENSEMBLES = [
 const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] === id));
 
 // Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
-// Está pensado para unas 30 horas de juego hasta completarlo: los primeros rangos son baratos y los últimos, caros.
+// El árbol del primer reino cuesta en total alrededor de vez y media lo que pagan sus 17 encargos la primera vez (unas 2.900 almas
+// contando las salas de almas): si te atascas puedes repetir encargos y seguir subiendo, y cerca del final vas sobrado.
+// Tiene tope. El siguiente reino trae su propio árbol (TREE2), que sigue donde este se queda y cuesta mucho más.
 const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));
+const C8 = [10, 15, 25, 35, 50, 65, 85, 115], C5 = [10, 20, 35, 50, 75];
 const TREE = [
   { name: 'Cuerpo', sub: 'Vida, defensa, movimiento y esquive', nodes: [
-    { id: 'hp',      name: 'Aguante',         max: 8, cost: curve(10, 1.78, 8),  desc: r => `+${10 * r} de vida máxima` },
-    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
-    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Te mueves un ${3 * r}% más rápido` },
-    { id: 'mend',    name: 'Remiendo',        max: 5, cost: curve(22, 2.2, 5),  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
-    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [150, 500],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
-    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [100, 260, 600],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
+    { id: 'hp',      name: 'Aguante',         max: 8, cost: C8,  desc: r => `+${10 * r} de vida máxima` },
+    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: C5,  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
+    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: C5,  desc: r => `Te mueves un ${3 * r}% más rápido` },
+    { id: 'mend',    name: 'Remiendo',        max: 5, cost: C5,  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
+    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [50, 150],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
+    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [40, 90, 180],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
   { name: 'Oficio', sub: 'Daño, cadencia, alcance y disparo cargado', nodes: [
-    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(10, 1.78, 8),  desc: r => `Disparas un ${3 * r}% más rápido` },
-    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(10, 1.78, 8),  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
-    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
-    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(22, 2.2, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Dedos tensos, Dedos de molinete, Dedos de retén ni Dedos de rescoldo` },
-    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
-    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
+    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: C8,  desc: r => `Disparas un ${3 * r}% más rápido` },
+    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: C8,  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
+    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: C5,  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: C5,  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Dedos tensos, Dedos de molinete, Dedos de retén ni Dedos de rescoldo` },
+    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: C5,  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
+    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: C5,  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
   { name: 'Memoria', sub: 'Oro, almas y más opciones al elegir', nodes: [
-    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(22, 2.2, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
-    { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
-    { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
-    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [80, 200, 450],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
-    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [400],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
-    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [700],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
-    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [600],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
+    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: C5,  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
+    { id: 'nose',    name: 'Olfato',          max: 5, cost: C5,  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
+    { id: 'luck',    name: 'Favor robado',    max: 5, cost: C5,  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [30, 60, 130],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [120],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
+    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [180],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
 ];
 const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
+// El árbol del segundo reino: más rangos de las mismas mejoras, por encima del tope del primero. Se abre al matar al dios de Valdehierro.
+const ext = (base, max, cost) => { const b = TREE_NODES.find(n => n.id === base); return { id: base + '2', ext: base, name: b.name + ' II', max, cost, desc: r => b.desc(b.max + r) }; };
+const D8 = curve(150, 1.5, 8), D5 = curve(200, 1.7, 5), D3 = [300, 600, 1200];
+const TREE2 = [
+  { name: 'Cuerpo II', sub: 'Más vida, defensa y movimiento', nodes: [ext('hp', 8, D8), ext('skin', 3, D3), ext('feet', 3, D3), ext('mend', 5, D5)] },
+  { name: 'Oficio II', sub: 'Más daño, cadencia, alcance y disparo cargado', nodes: [ext('rate', 8, D8), ext('dmg', 8, D8), ext('eye', 3, D3), ext('armorer', 3, D3), ext('coup', 5, D5)] },
+  { name: 'Memoria II', sub: 'Más oro, almas y mejores técnicas', nodes: [ext('purse', 5, D5), ext('nose', 5, D5), ext('luck', 3, D3)] },
+];
+const TREE2_NODES = TREE2.flatMap(br => br.nodes), TREE2_TOTAL = TREE2_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
+const TREE_EXT = Object.fromEntries(TREE2_NODES.map(n => [n.ext, n.id])), TREE_ALL = TREE_NODES.concat(TREE2_NODES);
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
   souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades (también te las paga el reino al cumplir encargos). Si repites un encargo ya cumplido, estas salas dan el 30%.' },
@@ -794,6 +807,8 @@ const VFX = { coin: 0, silver: 1, ruby: 2, sapphire: 3, emerald: 4, torch: 5, vo
 // Un fotograma de una tira de 8 (32×32), centrado en (x, y)
 function strip(row, frame, x, y) { if (!IMG.vfx) return false; ctx.drawImage(IMG.vfx, (((frame | 0) % 8) + 8) % 8 * 32, row * 32, 32, 32, Math.round(x - 16), Math.round(y - 16), 32, 32); return true; }
 const ICO = { potion: 0, mana: 1, vial: 2, sword: 3, shield: 4, chest: 5, gem: 6, book: 7, key: 8, axe: 9, bow: 10, staff: 11, helm: 12, ring: 13, scroll: 14, bomb: 15, lantern: 16, mug: 17 };
+// Icono propio de una pieza o técnica (assets/icons.png); cadena vacía si no tiene
+const pic = (id, cls) => (id in PIC ? `<span class="pic${cls ? ' ' + cls : ''}" style="background-position:-${PIC[id] % 16 * 32}px -${Math.floor(PIC[id] / 16) * 32}px"></span>` : '');
 const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO[name] * 32}px -${(tier || 0) * 32}px"></span>`;
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0 };
@@ -985,7 +1000,9 @@ for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
 }
 save();
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
-const tk = id => +M.tree[id] || 0;   // rango de una habilidad del árbol
+const tr = id => +M.tree[id] || 0;   // rangos comprados de un nodo concreto
+const tk = id => tr(id) + (TREE_EXT[id] ? tr(TREE_EXT[id]) : 0);   // rango efectivo de una habilidad: lo del primer árbol más lo del segundo
+const tree2Open = () => !!(M.done || {})['valdehierro:g'];   // el segundo árbol llega con el segundo reino
 // El árbol antiguo era de sí o no: lo que tuvieras comprado pasa a rango 1 de su equivalente
 { const OLD = { c1: 'hp', c2: 'revive', c3: 'skin', c4: 'reflex', o1: 'rate', o2: 'eye', o3: 'dmg', o4: 'armorer', m1: 'eye4', m2: 'reroll', m3: 'recall', m4: 'door' };
   for (const [a, b] of Object.entries(OLD)) if (M.tree[a]) { M.tree[b] = Math.max(tk(b), 1); delete M.tree[a]; } }
@@ -1168,7 +1185,7 @@ const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, pic: x.id, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
@@ -1253,7 +1270,7 @@ function pieceCard(pc) {
   const cur = S.build[pc.slot], god = pc.god, rar = rollRar();
   const have = godCount(god), M2 = MASTERY[god], isNew = !godsIn(pc.slot).includes(god);
   const prog = !isNew || have >= 3 ? '' : have + 1 >= 3 ? 'Completa la maestría ' + M2.name : M2.name + ': ' + (have + 1) + '/3';
-  const o = { tag: SLOTS[pc.slot], rar, name: pc.name, color: GODS[god].color, note: prog, god };
+  const o = { tag: SLOTS[pc.slot], rar, pic: pc.id, name: pc.name, color: GODS[god].color, note: prog, god };
   const up = (name, descFn) => {   // subir de nivel lo que ya llevas en esa acción
     if (cur.lvl >= 5) return null;
     const nl = Math.min(5, cur.lvl + 1 + rar);
@@ -1291,7 +1308,7 @@ function pieceOptions(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
   for (const t of TECHS.filter(x => x.god === god && techOk(x)))
-    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
+    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, pic: t.id, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
   // Sorteo ponderado: lo raro sale menos y un dúo disponible sale más.
   // Lo que sustituiría a una técnica que ya llevas va al final: solo aparece si no hay otra cosa que ofrecer, y como mucho una.
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);
@@ -1370,10 +1387,10 @@ function forgeHtml() {
     const on = ensOf(M.gun), L = legOf(M.gun);
     body = `<p class="fine">Tus guanteletes tienen cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Guanteletes legendarios: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
       <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
-        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
+        return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${pic(M.gun[sk])}${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
       known.map(x => { const mounted = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${pic(x.id)}${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
@@ -1384,12 +1401,15 @@ function forgeHtml() {
       <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
       <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
   } else {
-    const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
+    const spentOf = ns => ns.reduce((a, n) => a + n.cost.slice(0, tr(n.id)).reduce((x, y) => x + y, 0), 0);
+    const spent = spentOf(TREE_NODES), hrs = M.time / 3600, done1 = spent >= TREE_TOTAL;
     const hm = h => (h >= 1 ? Math.floor(h) + ' h ' : '') + Math.round((h % 1) * 60) + ' min';
-    const rate = hrs > 0.25 && M.earned > 0 ? M.earned / hrs : 0;
-    const pace = `${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%). Tiempo jugado: ${hm(hrs)}.` + (rate ? ` Ganas unas ${Math.round(rate)} almas por hora; a ese ritmo te faltan unas ${Math.max(0, Math.round((TREE_TOTAL - spent - M.souls) / rate))} h para completarlo.` : '');
-    body = `<p class="fine">${pace}</p><div class="forge">` + TREE.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tk(n.id), full = r >= n.max, cost = n.cost[r];
-      return `<button class="fi${full ? ' on' : M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('') + '</div>';
+    const pace = `Árbol de Valdehierro: ${spent} de ${TREE_TOTAL} almas invertidas (${Math.round(spent / TREE_TOTAL * 100)}%)${done1 ? ', completo' : ''}. Tiempo jugado: ${hm(hrs)}. Este árbol tiene tope: el siguiente reino trae el suyo.`;
+    const sec = (T, lock) => T.map(br => `<section><h3>${br.name} · ${br.sub}</h3>` + br.nodes.map(n => { const r = tr(n.id), full = r >= n.max, cost = n.cost[r], base = n.ext ? TREE_NODES.find(x => x.id === n.ext).max : 0;
+      return `<button class="fi${full ? ' on' : !lock && M.souls >= cost ? '' : ' off'}" data-act="t:${n.id}"><b>${n.name} ${r}/${n.max}</b><span>${r || base ? 'Ahora: ' + n.desc(r) + '. ' : ''}${full ? '' : 'Siguiente: ' + n.desc(r + 1)}</span><i>${full ? 'Al máximo' : cost + ' almas'}</i></button>`; }).join('') + '</section>').join('');
+    const open2 = tree2Open();
+    body = `<p class="fine">${pace}</p><div class="forge">` + sec(TREE, false) + '</div>' +
+      `<h2>El árbol del siguiente reino</h2><p class="fine">${open2 ? `Abierto: ${spentOf(TREE2_NODES)} de ${TREE2_TOTAL} almas invertidas. Sigue donde el primero se queda, y cada rango cuesta mucho más.` : 'Cerrado. Se abre cuando liberes Valdehierro matando a su dios. Sigue donde este árbol se queda, con más rangos de las mismas mejoras, y cada rango cuesta mucho más.'}</p><div class="forge${open2 ? '' : ' locked'}">` + sec(TREE2, !open2) + '</div>';
   }
   if (forgeTab === 'room') body = roomHtml(); else if (forgeTab === 'king') body = kingHtml();
   return head + body + `<p class="fine keyhint">Muévete con el stick izquierdo o la cruceta. El stick derecho desplaza la pantalla. LB y RB (o Q y R) pasan a la pestaña de la izquierda o de la derecha. B (o Shift) vuelve a la plaza.</p>`;
@@ -1405,7 +1425,7 @@ function forgeAct(act) {
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'intro') { playIntro(); return; }   // desde la habitación de la posada: volver a ver la cinemática del principio
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
-  else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
+  else if (k === 't') { const nd = TREE_ALL.find(x => x.id === id), r = tr(id); if (r < nd.max && M.souls >= nd.cost[r] && (!nd.ext || tree2Open())) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
   sfx(ok ? 'ok' : 'no', 0.45);
   save(); renderOverlay();
 }
@@ -1486,15 +1506,15 @@ function bookHtml() {
   for (const g of GOD_KEYS) {
     const n = godCount(g), G = GODS[g];
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
-      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
-      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
+      PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pic(pc.id)}${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
+      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${pic(t.id)}${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
       `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>${MASTERY[g].desc}</span></li></ul></section>`;
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
+  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${pic(x.id)}${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
     `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
@@ -4643,6 +4663,8 @@ const FXA = {"flame": {"y": 0, "w": 20, "h": 30, "n": 12}, "hit": {"y": 240, "w"
 // Generado por tools/pack_houses.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.
 // [x, y, ancho, alto] de cada casa en assets/houses.png; las 0, 1 y 4 son grandes (128 px), las demás pequeñas (96 px); de la 6 a la 11, las mismas en ruinas
 const HOUSES = [[0, 0, 128, 133], [130, 0, 128, 133], [260, 0, 96, 144], [358, 0, 96, 139], [456, 0, 128, 133], [586, 0, 96, 139], [684, 0, 128, 133], [814, 0, 128, 133], [944, 0, 96, 144], [1042, 0, 96, 139], [1140, 0, 128, 133], [1270, 0, 96, 139]];
+// Generado por tools/pack_icons.py («Raven Fantasy Icons», Clockwork Raven Studios). Posición de cada icono en assets/icons.png, 16 por fila.
+const PIC = {"m_seed":0,"m_salt":1,"m_saw":2,"m_quick":3,"m_star":4,"m_std":5,"m_drum":6,"m_belt":7,"m_charged":8,"m_heavy":9,"m_chain":10,"m_silver":11,"m_frag":12,"m_blood":13,"m_last":14,"m_ice":15,"m_fire":16,"m_gold":17,"m_split":18,"m_mark":19,"m_big":20,"m_blunt":21,"m_grow":22,"m_awl":23,"m_timed":24,"m_leech":25,"a_drum":26,"a_glass":27,"a_dice":28,"a_nana":29,"a_fuse":30,"a_auto":31,"a_pend":32,"a_hold":33,"a_spring":34,"a_alt":35,"a_combo":36,"a_rider":37,"a_kick":38,"a_fly":39,"a_fin":40,"a_firm":41,"a_rota":42,"a_over":43,"a_bolt":44,"a_semi":45,"a_burst":46,"a_rotary":47,"a_draw":48,"s_grave":49,"s_wine":50,"s_kennel":51,"s_geode":52,"s_roll":53,"s_anchor":54,"s_sprint":55,"s_venge":56,"s_gasp":57,"s_sapper":58,"s_dance":59,"s_tower":60,"s_loot":61,"s_wind":62,"s_spring":63,"s_shield":64,"s_scope":65,"s_spikes":66,"s_bone":67,"s_std":68,"s_light":69,"s_heavy":70,"s_recoil":71,"s_brace":72,"b_blow":73,"b_wyrm":74,"b_rod":75,"b_icicle":76,"b_long":77,"b_short":78,"b_twin":79,"b_scatter":80,"b_pierce":81,"b_bomb":82,"b_spike":83,"b_fork":84,"b_harpoon":85,"b_flame":86,"b_back":87,"b_flail":88,"b_boom":89,"b_nail":90,"b_arc":91,"b_far":92,"b_swarm":93,"b_horn":94,"b_drill":95,"b_ghost":96,"b_net":97,"b_ends":98,"c_sima":99,"c_doom":100,"c_anvil":101,"c_beam":102,"c_fan":103,"c_rain":104,"c_supp":105,"c_dash":106,"c_blast":107,"c_mine":108,"c_nova":109,"c_turret":110,"c_snipe":111,"c_meteor":112,"c_chain":113,"c_balm":114,"c_bounce":115,"c_volley":116,"c_ward":117,"c_blink":118,"c_drain":119,"c_brand":120,"c_quake":121,"dragon_basic":122,"dragon_charge":123,"dragon_dodge":124,"dragon_passive":125,"stone_basic":126,"stone_charge":127,"stone_dodge":128,"stone_passive":129,"venom_basic":130,"venom_charge":131,"venom_dodge":132,"venom_passive":133,"feast_basic":134,"feast_charge":135,"feast_dodge":136,"feast_passive":137,"orc_basic":138,"orc_charge":139,"orc_dodge":140,"orc_passive":141,"time_basic":142,"time_charge":143,"time_dodge":144,"time_passive":145,"shade_basic":146,"shade_charge":147,"shade_dodge":148,"shade_passive":149,"storm_basic":150,"storm_charge":151,"storm_dodge":152,"storm_passive":153,"tide_basic":154,"tide_charge":155,"tide_dodge":156,"tide_passive":157,"luck_basic":158,"luck_charge":159,"luck_dodge":160,"luck_passive":161,"wood_basic":162,"wood_charge":163,"wood_dodge":164,"wood_passive":165,"frost_basic":166,"frost_charge":167,"frost_dodge":168,"frost_passive":169,"blood_basic":170,"blood_charge":171,"blood_dodge":172,"blood_passive":173,"end_basic":174,"end_charge":175,"end_dodge":176,"end_passive":177,"light_basic":178,"light_charge":179,"light_dodge":180,"light_passive":181,"dream_basic":182,"dream_charge":183,"dream_dodge":184,"dream_passive":185,"void_basic":186,"void_charge":187,"void_dodge":188,"void_passive":189,"mirror_basic":190,"mirror_charge":191,"mirror_dodge":192,"mirror_passive":193,"beast_basic":194,"beast_charge":195,"beast_dodge":196,"beast_passive":197,"forge_basic":198,"forge_charge":199,"forge_dodge":200,"forge_passive":201,"d_blood":202,"d_pyre":203,"m_reson":204,"m_quartz":205,"v_vapors":206,"v_syn":207,"f_cellar":208,"f_carve":209,"o_drums":210,"o_berserk":211,"t_overtime":212,"t_paradox":213,"s_guard":214,"s_legion":215,"r_over":216,"d_warm":217,"m_skin":218,"v_slow":219,"f_appet":220,"o_scars":221,"t_second":222,"s_last":223,"r_spark":224,"w_brine":225,"w_deep":226,"l_coin":227,"l_jack":228,"b_thorn":229,"b_bloom":230,"i_rime":231,"i_shatter":232,"h_warm":233,"h_frenzy":234,"e_ink":235,"e_seal":236,"u_glint":237,"u_halo":238,"z_yawn":239,"z_night":240,"o_tug":241,"o_crush":242,"q_shard":243,"q_break":244,"a_pup":245,"a_feral":246,"g_whet":247,"g_slag":248,"r_judge":249};
 // Generado por tools/pack_outdoor.py (Pixel Crawler de Anokolisa). No editar a mano.
 const OUTP = {"u_lich":[0,0,150,113],"pine_l":[151,0,46,103],"dead_l":[198,0,46,103],"mush_tall":[245,0,60,96],"u_ruin1":[306,0,80,95],"u_dtree1":[387,0,63,89],"mush_xl":[0,114,87,88],"tent":[88,114,48,87],"barrel_big":[137,114,52,82],"u_thorn1":[190,114,110,80],"olive":[301,114,78,76],"u_tree1":[380,114,59,74],"deadtree":[440,114,64,74],"tusk_l":[0,203,54,71],"u_dtree2":[55,203,59,69],"u_ribs":[115,203,30,64],"u_ribs2":[146,203,31,64],"pine_m":[178,203,32,64],"dead_m":[211,203,32,64],"u_tree2":[244,203,49,63],"u_arm1":[294,203,61,62],"u_ruin2":[356,203,79,62],"vine_l":[436,203,45,62],"cross_stat":[0,275,32,60],"skullflag":[33,275,48,59],"u_arm2":[82,275,45,57],"cross2":[128,275,30,56],"u_ruin3":[159,275,55,54],"u_arm3":[215,275,31,53],"u_thorn2":[247,275,94,53],"cross_big":[342,275,20,53],"u_pile":[363,275,71,51],"cask":[435,275,34,50],"u_bones2":[0,336,48,48],"tusk_m":[49,336,39,48],"flower_l2":[89,336,38,48],"u_skull":[128,336,31,47],"u_ruin4":[160,336,47,46],"tusk_s":[208,336,29,46],"flower_l":[238,336,38,46],"mossy2":[277,336,43,46],"u_dtree3":[321,336,46,45],"boulder2":[368,336,43,45],"mossy3":[412,336,59,45],"mush_l":[0,385,53,45],"boulder3":[54,385,59,44],"u_arm4":[114,385,28,43],"reaper":[143,385,30,43],"darkbush":[174,385,57,42],"vine_m":[232,385,22,42],"u_tree3":[255,385,32,41],"shelf":[288,385,44,41],"ctable":[333,385,40,40],"rune1":[374,385,42,40],"grey1":[417,385,42,40],"u_beast":[460,385,43,39],"u_log":[0,431,84,39],"tomb1":[85,431,22,39],"tomb2":[108,431,22,39],"tomb3":[131,431,24,39],"firering":[156,431,36,36],"coffin1":[193,431,20,35],"coffin2":[214,431,20,35],"angel1":[235,431,16,34],"bedroll1":[252,431,20,34],"bedroll2":[273,431,20,34],"u_bones1":[294,431,44,33],"angel2":[339,431,32,33],"pine_s":[372,431,16,32],"dead_s":[389,431,16,32],"boulder1":[406,431,37,32],"bush_g":[444,431,47,32],"bush_a":[0,471,47,32],"graves_row":[48,471,48,31],"vine_s":[97,471,24,31],"rune2":[122,471,28,31],"grey2":[151,471,28,31],"flower_m":[180,471,28,30],"deadbush":[209,471,25,29],"mush_m":[235,471,27,28],"grave2":[263,471,14,26],"barrels":[278,471,32,26],"flower_m2":[311,471,27,26],"grave1":[339,471,14,22],"grave3":[354,471,16,21],"grave4":[371,471,14,19],"bags":[386,471,22,15]};
 // Generado por tools/pack_town.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.
@@ -6144,7 +6166,7 @@ function renderOverlay() {
         <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
       </dl></details>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
+      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · iconos de Clockwork Raven Studios (Raven Fantasy Icons) · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
   } else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
@@ -6160,7 +6182,7 @@ function renderOverlay() {
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards rows">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.pic ? pic(u.pic) : u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
@@ -6186,7 +6208,7 @@ function hudBuild() {
   const short = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
   return SLOT_KEYS.map(k => { const cur = S.build[k]; if (!cur) return `<li class="slot empty"><em>${short[k]}</em><b>—</b></li>`;
     const D = DUO[cur.id], col = D ? RAR[3].color : GODS[PIECE[cur.id].god].color, nm = D ? D.name : PIECE[cur.id].name;
-    return `<li class="slot" style="--c:${col}"><em>${short[k]}</em><b>${nm}</b><u>${'<i></i>'.repeat(cur.lvl)}</u></li>`; }).join('');
+    return `<li class="slot" style="--c:${col}">${pic(D ? D.a : cur.id, 's')}<em>${short[k]}</em><b>${nm}</b><u>${'<i></i>'.repeat(cur.lvl)}</u></li>`; }).join('');
 }
 function renderHud() {
   const p = S.p;

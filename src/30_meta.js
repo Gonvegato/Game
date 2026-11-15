@@ -17,7 +17,9 @@ for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
 }
 save();
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
-const tk = id => +M.tree[id] || 0;   // rango de una habilidad del árbol
+const tr = id => +M.tree[id] || 0;   // rangos comprados de un nodo concreto
+const tk = id => tr(id) + (TREE_EXT[id] ? tr(TREE_EXT[id]) : 0);   // rango efectivo de una habilidad: lo del primer árbol más lo del segundo
+const tree2Open = () => !!(M.done || {})['valdehierro:g'];   // el segundo árbol llega con el segundo reino
 // El árbol antiguo era de sí o no: lo que tuvieras comprado pasa a rango 1 de su equivalente
 { const OLD = { c1: 'hp', c2: 'revive', c3: 'skin', c4: 'reflex', o1: 'rate', o2: 'eye', o3: 'dmg', o4: 'armorer', m1: 'eye4', m2: 'reroll', m3: 'recall', m4: 'door' };
   for (const [a, b] of Object.entries(OLD)) if (M.tree[a]) { M.tree[b] = Math.max(tk(b), 1); delete M.tree[a]; } }

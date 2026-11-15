@@ -9,7 +9,7 @@ const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, pic: x.id, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
@@ -94,7 +94,7 @@ function pieceCard(pc) {
   const cur = S.build[pc.slot], god = pc.god, rar = rollRar();
   const have = godCount(god), M2 = MASTERY[god], isNew = !godsIn(pc.slot).includes(god);
   const prog = !isNew || have >= 3 ? '' : have + 1 >= 3 ? 'Completa la maestría ' + M2.name : M2.name + ': ' + (have + 1) + '/3';
-  const o = { tag: SLOTS[pc.slot], rar, name: pc.name, color: GODS[god].color, note: prog, god };
+  const o = { tag: SLOTS[pc.slot], rar, pic: pc.id, name: pc.name, color: GODS[god].color, note: prog, god };
   const up = (name, descFn) => {   // subir de nivel lo que ya llevas en esa acción
     if (cur.lvl >= 5) return null;
     const nl = Math.min(5, cur.lvl + 1 + rar);
@@ -132,7 +132,7 @@ function pieceOptions(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
   for (const t of TECHS.filter(x => x.god === god && techOk(x)))
-    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
+    cands.push([[0, 0.9, 0.6, 0.4][t.rar], { tag: 'Técnica', rar: t.rar, pic: t.id, name: t.name, color: GODS[god].color, desc: t.desc, note: 'No ocupa ranura', god, apply: () => { S.techs.add(t.id); } }]);
   // Sorteo ponderado: lo raro sale menos y un dúo disponible sale más.
   // Lo que sustituiría a una técnica que ya llevas va al final: solo aparece si no hay otra cosa que ofrecer, y como mucho una.
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);

@@ -20,6 +20,8 @@ const VFX = { coin: 0, silver: 1, ruby: 2, sapphire: 3, emerald: 4, torch: 5, vo
 // Un fotograma de una tira de 8 (32×32), centrado en (x, y)
 function strip(row, frame, x, y) { if (!IMG.vfx) return false; ctx.drawImage(IMG.vfx, (((frame | 0) % 8) + 8) % 8 * 32, row * 32, 32, 32, Math.round(x - 16), Math.round(y - 16), 32, 32); return true; }
 const ICO = { potion: 0, mana: 1, vial: 2, sword: 3, shield: 4, chest: 5, gem: 6, book: 7, key: 8, axe: 9, bow: 10, staff: 11, helm: 12, ring: 13, scroll: 14, bomb: 15, lantern: 16, mug: 17 };
+// Icono propio de una pieza o técnica (assets/icons.png); cadena vacía si no tiene
+const pic = (id, cls) => (id in PIC ? `<span class="pic${cls ? ' ' + cls : ''}" style="background-position:-${PIC[id] % 16 * 32}px -${Math.floor(PIC[id] / 16) * 32}px"></span>` : '');
 const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO[name] * 32}px -${(tier || 0) * 32}px"></span>`;
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0 };

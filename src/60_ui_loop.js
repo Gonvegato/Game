@@ -21,7 +21,7 @@ function renderOverlay() {
         <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
       </dl></details>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
+      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · iconos de Clockwork Raven Studios (Raven Fantasy Icons) · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
   } else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
@@ -37,7 +37,7 @@ function renderOverlay() {
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards rows">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.pic ? pic(u.pic) : u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
@@ -63,7 +63,7 @@ function hudBuild() {
   const short = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
   return SLOT_KEYS.map(k => { const cur = S.build[k]; if (!cur) return `<li class="slot empty"><em>${short[k]}</em><b>—</b></li>`;
     const D = DUO[cur.id], col = D ? RAR[3].color : GODS[PIECE[cur.id].god].color, nm = D ? D.name : PIECE[cur.id].name;
-    return `<li class="slot" style="--c:${col}"><em>${short[k]}</em><b>${nm}</b><u>${'<i></i>'.repeat(cur.lvl)}</u></li>`; }).join('');
+    return `<li class="slot" style="--c:${col}">${pic(D ? D.a : cur.id, 's')}<em>${short[k]}</em><b>${nm}</b><u>${'<i></i>'.repeat(cur.lvl)}</u></li>`; }).join('');
 }
 function renderHud() {
   const p = S.p;

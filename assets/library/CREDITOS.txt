@@ -7,6 +7,7 @@ Créditos y licencias del arte de terceros (ver también los Terms.txt y Readme.
 - Super Pixel Effects Gigapack — Will Tice / unTied Games (untiedgames.itch.io). Uso personal y comercial dentro de un juego; obliga a dar crédito; prohíbe redistribuir los archivos sueltos. Por eso el paquete NO está en este repositorio: solo assets/fx.png, montado con tools/pack_fx.py.
 - Effect and Bullet 16x16 — paquete aportado por el dueño del juego; autor y licencia sin comprobar. Solo se usa el proyectil, dentro de assets/fx.png.
 - Free Undead Tileset Top Down — paquete aportado por el dueño del juego; su licencia remite a craftpix.net/file-licenses. Solo están en el repositorio los 25 objetos recortados que usa el juego (assets/library/extra/).
+- Raven Fantasy Icons (versión gratuita) — Clockwork Raven Studios. Paquete aportado por el dueño del juego; no está en el repositorio, solo assets/icons.png, montado con tools/pack_icons.py con los 250 iconos que usa el juego.
 - Alec (assets/library/alec/) — dibujado a mano para este juego con tools/make_alec.py; no procede de ningún paquete.
 
 Música y sonido (assets/audio/, todo con licencia CC0 según su página de OpenGameArt; no obliga a citar, se cita igualmente):

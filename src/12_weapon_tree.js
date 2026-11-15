@@ -215,33 +215,46 @@ const ENSEMBLES = [
 const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] === id));
 
 // Árbol de habilidades: cada mejora tiene varios rangos y se paga con almas. cost[r] es lo que cuesta el rango r+1.
-// Está pensado para unas 30 horas de juego hasta completarlo: los primeros rangos son baratos y los últimos, caros.
+// El árbol del primer reino cuesta en total alrededor de vez y media lo que pagan sus 17 encargos la primera vez (unas 2.900 almas
+// contando las salas de almas): si te atascas puedes repetir encargos y seguir subiendo, y cerca del final vas sobrado.
+// Tiene tope. El siguiente reino trae su propio árbol (TREE2), que sigue donde este se queda y cuesta mucho más.
 const curve = (base, g, n) => Array.from({ length: n }, (_, r) => Math.round(base * Math.pow(g, r)));
+const C8 = [10, 15, 25, 35, 50, 65, 85, 115], C5 = [10, 20, 35, 50, 75];
 const TREE = [
   { name: 'Cuerpo', sub: 'Vida, defensa, movimiento y esquive', nodes: [
-    { id: 'hp',      name: 'Aguante',         max: 8, cost: curve(10, 1.78, 8),  desc: r => `+${10 * r} de vida máxima` },
-    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
-    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Te mueves un ${3 * r}% más rápido` },
-    { id: 'mend',    name: 'Remiendo',        max: 5, cost: curve(22, 2.2, 5),  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
-    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [150, 500],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
-    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [100, 260, 600],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
+    { id: 'hp',      name: 'Aguante',         max: 8, cost: C8,  desc: r => `+${10 * r} de vida máxima` },
+    { id: 'skin',    name: 'Piel curtida',    max: 5, cost: C5,  desc: r => `Recibes un ${5 * r}% menos de daño de todos los golpes` },
+    { id: 'feet',    name: 'Pies ligeros',    max: 5, cost: C5,  desc: r => `Te mueves un ${3 * r}% más rápido` },
+    { id: 'mend',    name: 'Remiendo',        max: 5, cost: C5,  desc: r => `Al limpiar cada sala te curas ${4 * r} de vida más, además de los 5 de siempre` },
+    { id: 'reflex',  name: 'Reflejos',        max: 2, cost: [50, 150],          desc: r => (r < 2 ? 'Tienes una carga de esquive más' : 'Tienes una carga de esquive más, y tus esquives se recargan un 20% antes') },
+    { id: 'revive',  name: 'Segundo aliento', max: 3, cost: [40, 90, 180],     desc: r => `Una vez por partida, si mueres vuelves con el ${10 + 20 * r}% de tu vida máxima y 1,5 s de invulnerabilidad` } ] },
   { name: 'Oficio', sub: 'Daño, cadencia, alcance y disparo cargado', nodes: [
-    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(10, 1.78, 8),  desc: r => `Disparas un ${3 * r}% más rápido` },
-    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(10, 1.78, 8),  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
-    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
-    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(22, 2.2, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Dedos tensos, Dedos de molinete, Dedos de retén ni Dedos de rescoldo` },
-    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
-    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
+    { id: 'rate',    name: 'Pulso firme',     max: 8, cost: C8,  desc: r => `Disparas un ${3 * r}% más rápido` },
+    { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: C8,  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
+    { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: C5,  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: C5,  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Dedos tensos, Dedos de molinete, Dedos de retén ni Dedos de rescoldo` },
+    { id: 'armorer', name: 'Maestro armero',  max: 5, cost: C5,  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
+    { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: C5,  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
   { name: 'Memoria', sub: 'Oro, almas y más opciones al elegir', nodes: [
-    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(22, 2.2, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
-    { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
-    { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
-    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [80, 200, 450],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
-    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [400],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
-    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [700],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
-    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [600],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
+    { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: C5,  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
+    { id: 'nose',    name: 'Olfato',          max: 5, cost: C5,  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
+    { id: 'luck',    name: 'Favor robado',    max: 5, cost: C5,  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [30, 60, 130],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [120],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
+    { id: 'door',    name: 'Otra puerta',     max: 1, cost: [180],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
 ];
 const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
+// El árbol del segundo reino: más rangos de las mismas mejoras, por encima del tope del primero. Se abre al matar al dios de Valdehierro.
+const ext = (base, max, cost) => { const b = TREE_NODES.find(n => n.id === base); return { id: base + '2', ext: base, name: b.name + ' II', max, cost, desc: r => b.desc(b.max + r) }; };
+const D8 = curve(150, 1.5, 8), D5 = curve(200, 1.7, 5), D3 = [300, 600, 1200];
+const TREE2 = [
+  { name: 'Cuerpo II', sub: 'Más vida, defensa y movimiento', nodes: [ext('hp', 8, D8), ext('skin', 3, D3), ext('feet', 3, D3), ext('mend', 5, D5)] },
+  { name: 'Oficio II', sub: 'Más daño, cadencia, alcance y disparo cargado', nodes: [ext('rate', 8, D8), ext('dmg', 8, D8), ext('eye', 3, D3), ext('armorer', 3, D3), ext('coup', 5, D5)] },
+  { name: 'Memoria II', sub: 'Más oro, almas y mejores técnicas', nodes: [ext('purse', 5, D5), ext('nose', 5, D5), ext('luck', 3, D3)] },
+];
+const TREE2_NODES = TREE2.flatMap(br => br.nodes), TREE2_TOTAL = TREE2_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
+const TREE_EXT = Object.fromEntries(TREE2_NODES.map(n => [n.ext, n.id])), TREE_ALL = TREE_NODES.concat(TREE2_NODES);
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
   souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades (también te las paga el reino al cumplir encargos). Si repites un encargo ya cumplido, estas salas dan el 30%.' },
