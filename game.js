@@ -757,37 +757,43 @@ const C = {
 
 // Glosario: cada palabra propia del juego, explicada en una línea. Se añade sola debajo de cualquier texto que la use.
 const GLOSS = [
-  [/Ascuas?/, 'Ascuas', 'brasas en el enemigo que le queman un poco cada segundo. Se apagan a los 4 s si no clavas más.'],
-  [/Venenos?\b|envenenad/, 'Veneno', 'puntos que hacen daño poco a poco y nunca se van. Cuantos más puntos, más daño.'],
-  [/Cristal(es)?/, 'Cristales', 'se quedan en el suelo unos segundos. Solos no hacen nada; otras técnicas los usan.'],
-  [/Reserva/, 'Reserva', 'un escudo que se llena con la curación que te sobra. Se gasta antes que tu vida.'],
-  [/Furia/, 'Furia', 'una barra que sube al golpear y al recibir golpes. Baja sola si dejas de pelear.'],
-  [/\becos?\b/, 'Eco', 'una repetición del golpe que llega sola un momento después.'],
-  [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y luchan a tu lado unos segundos.'],
-  [/Agujas?|descarg/, 'Agujas', 'se clavan sin hacer daño. Al descargarlas, cada una hace daño y lanza un rayo a otro enemigo.'],
-  [/Empapad|empapa/, 'Empapado', 'mojado unos segundos. Solo no hace nada; algunas técnicas de Mareas lo aprovechan.'],
-  [/Semillas?/, 'Semillas', 'se plantan en el enemigo. Al juntar varias, brotan Raíces.'],
-  [/Raíces|enraíza|enraizad/, 'Raíces', 'el enemigo no puede moverse del sitio, pero sí atacar.'],
-  [/Escarcha|Congelad|congela/, 'Escarcha', 'cada punto frena al enemigo. Al quinto queda Congelado: no se mueve ni ataca, y puede romperse.'],
-  [/Heridas?\b|sangra/, 'Heridas', 'el enemigo pierde vida cada medio segundo; más cuanto más herido estés tú.'],
-  [/Sentencias?/, 'Sentencia', 'una cuenta atrás sobre el enemigo. Al acabar, recibe de golpe parte del daño que le hiciste mientras tanto.'],
-  [/Ilumina/, 'Iluminado', 'marcado con luz unos segundos. Parte del daño que recibe uno lo reciben todos los Iluminados.'],
-  [/Dormid|Duerme/, 'Dormido', 'no se mueve ni ataca hasta que lo golpeas, y ese golpe hace más daño.'],
-  [/pozo|Singularidad/, 'Pozo', 'un punto que arrastra hacia él a los enemigos cercanos.'],
-  [/Reflejo/, 'Reflejo', 'una copia tuya que se coloca al otro lado de tu objetivo.'],
-  [/sabueso/, 'Sabueso', 'un perro que te sigue y muerde al enemigo al que disparas.'],
-  [/Temple/, 'Temple', 'puntos que gana el arma al disparar. Cada uno da +3% de daño. Si te golpean, pierdes la mitad.'],
-  [/crític/, 'Crítico', 'un golpe de suerte que hace el 250% del daño.'],
-  [/aturd/, 'Aturdido', 'no se mueve ni ataca durante un momento.'],
-  [/Compás/, 'Compás', 'pulsar el disparo justo cuando se llena el anillo que te rodea.'],
-  [/frenazo|te frena/, 'Frenazo', 'el instante en que te quedas quieto al disparar.'],
-  [/esquive que lo atraviesa|[Aa]travesar a un enemigo con el esquive|[Ee]mbestir a un enemigo/, 'Atravesar', 'esquivar pasando por encima de un enemigo.'],
+  [/Ascuas?/, 'Ascuas', 'fuego clavado en un enemigo (lo ponen las técnicas de Dragones). Cada Ascua le quita el 12% de tu daño cada medio segundo. Se acumulan hasta 8 por enemigo. Si pasan 4 s sin clavarle otra, se apagan todas.'],
+  [/Venenos?\b|envenenad/, 'Veneno', 'puntos en un enemigo (técnicas de Veneno). Cada punto le quita el 3,5% de tu daño cada medio segundo. Hasta 30 puntos. No se va nunca: dura hasta que muere.'],
+  [/Cristal(es)?/, 'Cristales', 'piedras que se quedan en el suelo 9 s (técnicas de Minerales). Como mucho hay 6 a la vez; si sale otro, se va el más viejo. Solos no hacen nada: otras técnicas y piezas los usan.'],
+  [/Reserva/, 'Reserva', 'escudo extra (técnicas de Manjares). La curación que te sobra con la vida llena se guarda aquí, hasta 30. Los golpes la gastan antes que tu vida.'],
+  [/Furia/, 'Furia', 'barra de 0 a 100 (técnicas de Orcos o la Llave de tambor). Sube al golpear y al recibir golpes. Si pasas 2 s sin pelear, baja 8 por segundo. Muchas técnicas de Orcos mejoran con más Furia o con la barra llena.'],
+  [/\becos?\b/, 'Eco', 'repetición del disparo que llega sola 1,5 s después al mismo enemigo (técnicas del Tiempo). Aplica tus efectos de disparo y puede ser crítico.'],
+  [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y luchan a tu lado 9 s (técnicas de Sombras). Como mucho tienes 2 más el nivel de tu técnica de disparo de Sombras; si sale otra, se va la más vieja.'],
+  [/Agujas?|descarg/, 'Agujas', 'se clavan en un enemigo sin hacer daño, hasta 6 (técnicas de Tormenta). Se caen a los 6 s si no le clavas más. Al descargarlas, recibe tu daño por cada Aguja y salta un rayo por Aguja (60% de tu daño) a enemigos cercanos.'],
+  [/Empapad|empapa/, 'Empapado', 'mojado unos segundos (técnicas de Mareas). Solo no hace nada: algunas técnicas de Mareas y dúos hacen más contra enemigos Empapados.'],
+  [/Semillas?/, 'Semillas', 'se plantan en un enemigo (técnicas de Bosque). Al juntar 3 (2 si tu técnica de disparo de Bosque está a nivel 2 o más), brotan: recibe el 80% de tu daño por nivel de esa técnica y queda Enraizado 1,5 s.'],
+  [/Raíces|enraíza|enraizad|Enraizad/, 'Enraizado', 'el enemigo no puede moverse del sitio, pero sí atacar. En los jefes dura un tercio.'],
+  [/Escarcha|Congelad|congela/, 'Escarcha', 'puntos de frío (técnicas de Hielo). Cada punto frena al enemigo un 12% más. Al quinto queda Congelado 1,5 s: ni se mueve ni ataca. Los jefes solo quedan muy frenados, la mitad de tiempo. Si pasan 4 s sin ponerle más, se va.'],
+  [/Heridas?\b|sangra/, 'Heridas', 'cortes que sangran (técnicas de Sangre), hasta 6. Cada medio segundo el enemigo pierde el 5% de tu daño por Herida, y hasta el triple cuanta menos vida te quede a ti. Duran 5 s desde la última.'],
+  [/Sentencias?/, 'Sentencia', 'cuenta atrás de 5 s sobre un enemigo (la ponen las técnicas del Final y la Recámara de sentencia). Mientras dura, apunta todo el daño que le haces. Al acabar, recibe de golpe un porcentaje de ese daño: del 40% al 80% según el nivel de la técnica Sentencia. Solo una por enemigo.'],
+  [/Ilumina/, 'Iluminado', 'marcado con luz 6 s (técnicas de Luz). Si llevas la técnica de disparo de Luz, cuando un Iluminado recibe daño, los demás Iluminados reciben también del 30% al 70% (según su nivel).'],
+  [/Dormid|\bduerme/, 'Dormido', 'ni se mueve ni ataca (técnicas del Sueño). El primer golpe hace más daño y lo despierta; el daño continuo también lo despierta. Los jefes no se duermen: quedan frenados a la mitad. Tras despertar no puede volver a dormirse en 4 s.'],
+  [/pozo|Singularidad/, 'Pozo', 'punto del suelo que arrastra hacia él a los enemigos cercanos unos segundos (técnicas del Vacío y algunas piezas). No arrastra a los jefes.'],
+  [/\bReflejo\b/, 'Reflejo', 'copia tuya que aparece al otro lado de tu objetivo y repite tus disparos (técnicas de Espejos).'],
+  [/sabueso/, 'Sabueso', 'perro que te acompaña y muerde al enemigo al que disparas (técnicas de Bestias o la Culata de perrera).'],
+  [/Temple/, 'Temple', 'puntos que gana el arma al disparar (técnicas de Forja), hasta 10. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.'],
+  [/crític/, 'Crítico', 'disparo que hace el 250% del daño. Solo hay probabilidad de crítico si llevas algo que la dé (técnicas de Fortuna, la Llave de dados…).'],
+  [/aturd/, 'Aturdido', 'ni se mueve ni ataca durante el tiempo indicado.'],
+  [/Compás/, 'Compás', 'pulsar el disparo justo cuando se llena el anillo que te rodea (Llaves de compás).'],
+  [/frenazo|te frena/, 'Frenazo', 'el instante en que te quedas quieto al disparar. Algunas piezas lo acortan o lo quitan.'],
+  [/esquive que lo atraviesa|[Aa]travesar a un enemigo con el esquive|[Ee]mbestir a un enemigo|Atravesar/, 'Atravesar', 'esquivar pasando a través de un enemigo.'],
   [/zarzal|zarzas/, 'Zarzal', 'espinas en el suelo que frenan y dañan a quien las pisa.'],
-  [/contra (un|el) muro/, 'Golpe contra el muro', 'si empujas con fuerza a un enemigo contra un muro, recibe daño y queda aturdido.'],
+  [/contra (un|el) muro/, 'Golpe contra el muro', 'si empujas fuerte a un enemigo contra un muro o el borde de la sala, recibe un golpe extra y queda aturdido. No funciona con jefes.'],
+  [/Maestría/, 'Maestría', 'efecto extra de una deidad: se activa si llevas técnicas suyas en 3 de tus 4 acciones (disparo, cargado, esquive y pasiva).'],
+  [/\b[Dd]úos?\b/, 'Dúo', 'técnica que mezcla dos. Te la ofrecen si llevas una técnica de una deidad en una acción y otra deidad te da la suya para esa misma acción. Sustituye a las dos.'],
+  [/[Rr]esonancia/, 'Resonancia', 'efecto extra que se activa solo al llevar a la vez una pieza concreta del arma y una técnica concreta.'],
+  [/[Ee]nsambl/, 'Ensamble', 'efecto extra que se activa al montar a la vez dos piezas concretas del arma.'],
+  [/[Ll]egendari/, 'Arma legendaria', 'tres piezas concretas montadas a la vez: el arma cambia de nombre y gana un efecto propio.'],
+  [/[Aa]fín\b|[Aa]finidad/, 'Afinidad', 'piezas hechas con material de una deidad: si en la misión llevas alguna técnica de esa deidad, la pieza gana un extra.'],
 ];
 function gloss(txt, max) {
   const out = [];
-  for (const [re, name, what] of GLOSS) { if (re.test(txt)) out.push(`<q><b>${name}:</b> ${what}</q>`); if (out.length >= (max || 3)) break; }
+  for (const [re, name, what] of GLOSS) { if (re.test(txt)) out.push(`<q><b>${name}:</b> ${what}</q>`); if (out.length >= (max || 6)) break; }
   return out.length ? `<small class="gloss">${out.join('')}</small>` : '';
 }
 // ───────────────────────── Utilidades ─────────────────────────
@@ -1312,7 +1318,7 @@ function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
   return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1>${keeperHtml()}<p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro solo sirve en este encargo: gástalo.</p><div class="forge"><section>` +
-    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0)}${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
+    S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0)}${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
     `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button>`;
 }
 function shopAct(act) {
@@ -1360,7 +1366,7 @@ function forgeHtml() {
         return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
       known.map(x => { const mounted = M.gun[k] === x.id, forged = M.parts[x.id] === 2;
-        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
+        return `<button class="fi${mounted ? ' on' : forged || canPay(x.cost) ? '' : ' off'}" data-act="p:${x.id}"><b>${x.name}${x.base ? '' : ` <u>${x.tag}</u>`}</b><span>${x.desc}</span>${gloss(x.desc, 4)}${affHint(x.id)}${legHint(x.id)}<i>${mounted ? 'Montada' : forged ? 'Montar' : 'Forjar: ' + costTxt(x.cost)}</i></button>`; }).join('') +
       `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
@@ -1443,7 +1449,7 @@ function buildHtml(full) {
     return bits.length || extra ? `<li class="line">${bits.join('')}${extra ? `<span class="more">+ ${extra}</span>` : ''}</li>` : '';
   }
   const rows = [];
-  const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>` : ''}</li>`);
+  const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>${full ? gloss(sub, 4) : ''}` : ''}</li>`);
   for (const k of SLOT_KEYS) {
     const cur = S.build[k];
     if (!cur) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Ranura libre</span></li>`); continue; }
@@ -1462,16 +1468,16 @@ function buildHtml(full) {
   return rows.join('');
 }
 function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que llevas. Solo cabe una técnica por acción (disparo, cargado, esquive y pasiva). Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p><div class="book">`;
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que llevas. Solo cabe una técnica por acción (disparo, cargado, esquive y pasiva). Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p><div class="book"><section class="glossall"><h2>Glosario: qué significa cada cosa</h2><p class="fine">Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…) se explican aquí.</p><ul class="build full">${GLOSS.map(([, n, w]) => `<li><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('')}</ul></section>`;
   for (const g of GOD_KEYS) {
     const n = godCount(g), G = GODS[g];
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
       PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
-      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
+      TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Necesita: ${techNeeds(t)}.</span></li>`).join('') +
       `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Se activa si llevas técnicas suyas en 3 acciones. ${MASTERY[g].desc}</span></li></ul></section>`;
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
-    DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}</span></li>`).join('') + `</ul></section>`;
+    DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza del arma más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2>Piezas del arma</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
@@ -5155,7 +5161,7 @@ function renderOverlay() {
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
       <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y guardia de Anokolisa (Pixel Crawler) · efectos del Fantasy RPG Pixel Pack.</p>`;
   } else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por bala · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
     h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
@@ -5169,7 +5175,7 @@ function renderOverlay() {
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
     h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards">` +
-      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
+      pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong><span>${u.desc}</span>${u.tag === 'Fundir' ? '' : gloss(u.desc + ' ' + (u.note || ''), 6)}${u.note ? `<small>${u.note}</small>` : ''}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
