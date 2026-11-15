@@ -314,7 +314,7 @@ function renderWorld() {
   // Proyectiles enemigos
   for (const sh of S.shots) {
     const x = Math.round(sh.x), y = Math.round(sh.y), r = Math.max(2, Math.round(sh.r)), tw = Math.floor(S.t * 12 + x) % 2;
-    if (sh.vx != null && drawFx('bolt', (S.t * 14 + x * 0.1) % 1, sh.x, sh.y, C.arcane, Math.max(12, r * 5), Math.atan2(sh.vy, sh.vx))) continue;
+    if (sh.vx != null && drawFx('bolt', (S.t * 14 + x * 0.1) % 1, sh.x - sh.vx * 0.012, sh.y - sh.vy * 0.012, C.arcane, Math.max(11, r * 3.4), Math.atan2(sh.vy, sh.vx))) continue;
     ctx.fillStyle = C.arcane; ctx.globalAlpha = 0.28; ctx.fillRect(x - r - 2, y - r, r * 2 + 4, r * 2); ctx.fillRect(x - r, y - r - 2, r * 2, r * 2 + 4);
     ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(x - r, y - r + 1, r * 2, r * 2 - 2); ctx.fillRect(x - r + 1, y - r, r * 2 - 2, r * 2);
     ctx.fillStyle = C.arcane; ctx.fillRect(x - r + 1, y - r + 1, r * 2 - 2, r * 2 - 2);
@@ -389,16 +389,22 @@ function renderWorld() {
   // Efectos sobre todo
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
-    if (f.k === 'tracer') {   // estela fina, el proyectil que la recorre y el impacto al llegar
-      const u = 1 - k, col = f.col || C.energy, w = f.w || 1;
-      ctx.strokeStyle = col; ctx.globalAlpha = k * 0.7; ctx.lineWidth = (1.4 * k + 0.5) * w; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.globalAlpha = 1;
-      const v = Math.min(1, u * 2.2);
-      if (v < 1) drawFx('bolt', (S.t * 16) % 1, f.x1 + (f.x2 - f.x1) * v, f.y1 + (f.y2 - f.y1) * v, col, 12 * Math.min(1.5, w), Math.atan2(f.y2 - f.y1, f.x2 - f.x1));
-      else drawFx('hit', (u * 2.2 - 1) / 1.2, f.x2, f.y2, col, 20 * Math.min(1.5, w));
+    if (f.k === 'tracer') {   // un dardo de luz que viaja del origen al blanco con una cola corta, y un destello al llegar. No pinta la línea entera
+      const u = 1 - k, col = f.col || C.energy, w = Math.min(1.7, f.w || 1), dx = f.x2 - f.x1, dy = f.y2 - f.y1, len = Math.hypot(dx, dy) || 1, T = 0.62, v = Math.min(1, u / T);
+      if (v < 1) {
+        const a = Math.max(0, v - Math.min(0.5, 30 / len)), at = q => [f.x1 + dx * q, f.y1 + dy * q], h = at(v);
+        ctx.lineCap = 'round'; ctx.strokeStyle = col;
+        for (let i = 0; i < 3; i++) { const q = at(a + (v - a) * i / 3); ctx.globalAlpha = 0.22 + 0.26 * i; ctx.lineWidth = (0.7 + 0.8 * i) * w; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(h[0], h[1]); ctx.stroke(); }
+        { const q = at(a + (v - a) * 0.6); ctx.globalAlpha = 0.9; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.8 * w; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(h[0], h[1]); ctx.stroke(); }
+        ctx.lineCap = 'butt'; ctx.globalAlpha = 1;
+        const hx = Math.round(h[0]), hy = Math.round(h[1]), r = w > 1.3 ? 2 : 1;   // la cabeza: un punto de luz con su halo
+        ctx.fillStyle = col; ctx.fillRect(hx - r - 1, hy - r, r * 2 + 2, r * 2); ctx.fillRect(hx - r, hy - r - 1, r * 2, r * 2 + 2);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(hx - r, hy - r, r * 2, r * 2);
+      } else drawFx('hit', (u - T) / (1 - T), f.x2, f.y2, col, 12 + 6 * w);
     }
     else if (f.k === 'ring') { ctx.strokeStyle = f.col; ctx.globalAlpha = k; ctx.lineWidth = 3 * k + 0.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.6 * k), 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = f.col; ctx.globalAlpha = 0.18 * k; ctx.fill(); }
     else if (f.k === 'beam') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k * 0.5; ctx.lineWidth = f.w * 3 * k; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = k; ctx.lineWidth = f.w * k; ctx.stroke(); }
-    else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
+    else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; const X = Math.round(x), Y = Math.round(y); ctx.fillStyle = '#16101a'; ctx.fillRect(X - 3, Y - 4, 6, 8); ctx.fillRect(X - 4, Y - 3, 8, 6); ctx.fillStyle = f.col; ctx.fillRect(X - 2, Y - 3, 4, 6); ctx.fillRect(X - 3, Y - 2, 6, 4); ctx.fillStyle = tone(f.col, 1.5); ctx.fillRect(X - 2, Y - 2, 2, 2); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(X - 1, Y - 5 - (Math.floor(S.t * 16) % 2), 1, 2); }   // un orbe redondo con su mecha
     else if (f.k === 'smoke') { const sz = k > 0.6 ? 2 : 3; ctx.fillStyle = k > 0.5 ? '#b9b3ad' : '#7d7780'; ctx.globalAlpha = 0.55 * k; ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 1, sz, sz); }
     else if (f.k === 'flash' && f.col && drawFx('cast', 1 - k, f.x, f.y, f.col, 18)) { }
     else if (f.k === 'flash') { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y) - 1, 4, 2); ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 2, 2, 4); ctx.fillStyle = '#ff8a3c'; ctx.fillRect(Math.round(f.x) - 3, Math.round(f.y), 1, 1); ctx.fillRect(Math.round(f.x) + 2, Math.round(f.y) - 1, 1, 1); }
