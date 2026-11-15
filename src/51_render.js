@@ -102,7 +102,7 @@ function renderWorld() {
 
   // Alcance
   ctx.beginPath(); ctx.arc(p.x, p.y, rangeOf(), 0, Math.PI * 2);
-  ctx.strokeStyle = C.energy; ctx.globalAlpha = S.noTarget > 0 ? 0.55 : 0.13; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  ctx.strokeStyle = C.energy; ctx.globalAlpha = S.noTarget > 0 ? 0.5 : 0; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;   // el alcance solo se enseña cuando disparas sin nadie a tiro
 
   // Previsualización del disparo cargado: cono, o rayo cortado por las columnas
   if (p.charging) {
@@ -333,7 +333,6 @@ function renderWorld() {
   // Jugador
   const flying = p.dodgeT > 0 && p.fly, pr = flying ? p.r * 1.35 : p.r, py = flying ? p.y - 5 : p.y;
   if (flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-  if (p.fury > 0) { ctx.strokeStyle = GODS.orc.color; ctx.globalAlpha = 0.25 + 0.5 * p.fury / 100; ctx.lineWidth = 1 + 2.5 * p.fury / 100; ctx.beginPath(); ctx.arc(p.x, py, pr + 2, 0, Math.PI * 2 * p.fury / 100); ctx.stroke(); ctx.globalAlpha = 1; }
   const blink = p.inv > 0 && p.dodgeT <= 0 && Math.floor(S.t * 30) % 2 === 0;
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
@@ -348,13 +347,15 @@ function renderWorld() {
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
-  if (p.heat > 0.02) { ctx.strokeStyle = p.over > 0 ? '#ffffff' : C.blood; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * p.heat); ctx.stroke(); }
-  if (S.gun.action === 'a_rotary') { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.35 + 0.5 * p.spin; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, S.t * 14 * p.spin, S.t * 14 * p.spin + Math.PI * 1.4); ctx.stroke(); ctx.globalAlpha = 1; }
+  // Barrita bajo los pies en vez de anillos: fila 0 el ritmo de disparo, fila 1 calor, reserva y espera del cargado
+  const pbar = (f, row, col) => { const w = 14, x = Math.round(p.x - w / 2), y = Math.round(p.y + p.r + 5 + row * 3); ctx.save(); ctx.globalAlpha = Math.min(1, ctx.globalAlpha + 0.2); ctx.fillStyle = '#0b080d'; ctx.fillRect(x - 1, y - 1, w + 2, 4); ctx.fillStyle = col || ctx.strokeStyle; ctx.fillRect(x, y, Math.round(w * clamp(f, 0, 1)), 2); ctx.restore(); };
+  if (p.fury > 0) pbar(p.fury / 100, 3, GODS.orc.color);
+  if (p.heat > 0.02) { ctx.strokeStyle = p.over > 0 ? '#ffffff' : C.blood; ctx.lineWidth = 2.4; pbar(p.heat, 1); }
   else if (p.drawing && S.gun.action === 'a_hold') { const n = 1 + Math.floor(p.draw * 2 + 0.001); for (let i = 0; i < 3; i++) { ctx.fillStyle = i < n ? C.ember : C.edge; ctx.fillRect(Math.round(p.x) - 6 + i * 5, Math.round(p.y - p.r - 13), 3, 5); } }
-  else if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * p.draw); ctx.stroke(); }
-  else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
-  else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * clamp(1 - p.cd / period, 0, 1)); ctx.stroke(); ctx.globalAlpha = 1; }
-  else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
+  else if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; pbar(p.draw, 0); }
+  else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; pbar((1 - p.windup / p.windupTotal), 0); }
+  else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; pbar(clamp(1 - p.cd / period, 0, 1), 0); ctx.globalAlpha = 1; }
+  else pbar(1, 0, C.energy);
   if (S.gun.barrel === 'b_flail' && p.orbAway <= 0) {   // la bola del mangual y su cadena
     const bx = Math.round(p.x + Math.cos(p.orbA) * 34), by = Math.round(p.y + Math.sin(p.orbA) * 34);
     ctx.fillStyle = PAL.I; for (let i = 1; i < 5; i++) ctx.fillRect(Math.round(p.x + (bx - p.x) * i / 5), Math.round(p.y + (by - p.y) * i / 5), 1, 1);
@@ -369,8 +370,8 @@ function renderWorld() {
   if (S.gun.mag === 'm_drum') for (let i = 0; i < 2; i++) { ctx.fillStyle = i < p.shells && !(p.cd > 0.3 && p.shells === 2) ? C.ember : C.edge; ctx.fillRect(p.x - 5 + i * 6, p.y - p.r - 12, 4, 5); }
   const dm = dodgeMax();
   if (dm > 1) for (let i = 0; i < dm; i++) { ctx.fillStyle = i < p.dodgeN ? C.ink : C.edge; ctx.fillRect(p.x - dm * 2.5 + i * 5, p.y + p.r + 10, 3, 3); }
-  if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 11, a0, a0 + Math.PI * 2 * Math.min(1, p.reserve / resMax())); ctx.stroke(); }
-  if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * (1 - p.chargeCd / p.chargeCdMax)); ctx.stroke(); ctx.globalAlpha = 1; }
+  if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; pbar(Math.min(1, p.reserve / resMax()), 2); }
+  if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; pbar((1 - p.chargeCd / p.chargeCdMax), 1); ctx.globalAlpha = 1; }
 
   // Efectos sobre todo
   for (const f of S.fx) {

@@ -105,7 +105,7 @@ const GODS = {
     champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
     take:  ['te avisa: los rayos no tienen dueño.', 'ríe. Le gusta el ruido que haces.'], master: ['grita tu nombre, y se oye en los cuatro mundos.'] } },
   tide: { title: 'El Ahogado Bajo la Ola', theme: 'Mareas', weapon: 'Ancla del Ahogado', mat: 'Sal', color: '#4fb4d8',
-    key: 'Empujones y Empapado: sus técnicas empujan y empapan. Si un enemigo choca contra un muro recibe daño y queda aturdido, y su pasiva hace más daño a los Empapados. Los jefes no se dejan empujar.', lines: {
+    key: 'Empujones y Empapado: sus técnicas empujan y empapan. Si un enemigo choca contra un muro recibe daño y queda aturdido, y a los Empapados les basta un empujón flojo para chocar. Su pasiva hace más daño a los Empapados. Los jefes no se dejan empujar, pero si están Empapados reciben ese golpe igualmente, una vez cada 3 s.', lines: {
     enter: ['sube un palmo el agua de la sala.', 'arrastra algo pesado por el fondo. Viene hacia aquí.'],
     champ: ['suelta una burbuja. Tarda en llegar arriba.', 'se lleva a su elegido mar adentro, sin prisa.'],
     take:  ['te deja sal en los labios.', 'dice que todo lo que flota acaba volviendo.'], master: ['retira el mar entero para mirarte.'] } },
@@ -130,7 +130,7 @@ const GODS = {
     champ: ['apunta la pérdida. Te la cobrará.', 'lame la pluma y tacha una línea.'],
     take:  ['sonríe: ahora tú también le debes.', 'te fía. Eso es peor.'], master: ['cierra el libro: ya eres su mejor cliente.'] } },
   end: { title: 'La Última Página', theme: 'Final', weapon: 'Pluma de la Última Página', mat: 'Tinta', color: '#9fb0c8',
-    key: 'Sentencia: la pone su técnica de disparo, que se llama igual. Al acabar el plazo, el enemigo recibe de golpe parte del daño que le hiciste; sus otras técnicas la cumplen antes, la adelantan o la pasan a otro enemigo.', lines: {
+    key: 'Sentencia: la pone su técnica de disparo, que se llama igual. Al acabar el plazo, el enemigo recibe de golpe parte del daño que le hiciste; si muere antes, la Sentencia estalla sobre los de alrededor. Sus otras técnicas la cumplen antes, la adelantan o la pasan a otro enemigo.', lines: {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
@@ -140,12 +140,12 @@ const GODS = {
     champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
     take:  ['te sigue con la mirada mientras lo robas.', 'ya sabe dónde vas a guardarlo.'], master: ['parpadea. El mundo se apaga un instante.'] } },
   dream: { title: 'El Que Bosteza', theme: 'Sueño', weapon: 'Rueca del Que Bosteza', mat: 'Legaña', color: '#c9a0dc',
-    key: 'Dormido: Arrullo duerme al enemigo cada pocos disparos, y también lo hacen su cargado y la nube de su esquive. Un Dormido no se mueve ni ataca, y el golpe que lo despierta hace mucho más daño. Los jefes solo se frenan.', lines: {
+    key: 'Dormido: Arrullo duerme al enemigo cada pocos disparos, y también lo hacen su cargado y la nube de su esquive. Un Dormido no se mueve ni ataca, y el golpe que lo despierta hace mucho más daño. Los jefes no se duermen: quedan Adormilados, frenados, y el siguiente golpe les hace el mismo daño extra.', lines: {
     enter: ['se estira. Su elegido hace la guardia por él.', 'bosteza, y se te cierran los ojos un momento.'],
     champ: ['se da la vuelta en la cama.', 'murmura algo dormido. Era un nombre.'],
     take:  ['te deja hacer. Mañana lo habrá olvidado.', 'sueña que le roban. No se despierta.'], master: ['abre un ojo. Solo uno.'] } },
   void: { title: 'La Boca Sin Fondo', theme: 'Vacío', weapon: 'Anzuelo de la Boca', mat: 'Hueco', color: '#c44fd8',
-    key: 'Pozos: su cargado y su esquive abren pozos que atraen a los enemigos a un punto, y su disparo los junta. Con su pasiva, cuanto más juntos están, más daño reciben.', lines: {
+    key: 'Pozos: su cargado y su esquive abren pozos que atraen a los enemigos a un punto, y su disparo los junta y hace algo de daño a los que arrastra. Con su pasiva, cuanto más juntos están, más daño reciben.', lines: {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
@@ -155,12 +155,12 @@ const GODS = {
     champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
     take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
   beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
-    key: 'Sabueso: cualquiera de sus técnicas de disparo, cargado o esquive te da un sabueso que muerde a quien disparas; su cargado y su esquive le dan órdenes.', lines: {
+    key: 'Manada: cualquiera de sus técnicas de disparo, cargado o esquive te da un perro que muerde a quien disparas; su cargado y su esquive le dan órdenes. Crece con la Caza, las bajas de la misión con él a tu lado: de cachorro a sabueso, luego a lobo alfa, y al final se le une otro cachorro.', lines: {
     enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
     champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
   forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
-    key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10; cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
+    key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10 (y 2 más por cada nivel de la técnica a partir del segundo); cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
     enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
     take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
@@ -213,15 +213,15 @@ const PIECES = [
   { id: 'storm_dodge',    god: 'storm',  slot: 'dodge',   name: 'Paso relámpago',   desc: l => `Al atravesar a un enemigo con el esquive descargas sus Agujas: ${80 + 20 * (l - 1)}% de tu daño por Aguja, y un rayo por Aguja a otros enemigos con el 60% de eso. Si no tiene Agujas, le clavas 2.` },
   { id: 'storm_passive',  god: 'storm',  slot: 'passive', name: 'Conductor',        desc: l => `Los rayos de una descarga clavan ${pl(l, 'Aguja')} a cada enemigo que alcanzan, listas para descargarlas después. Necesitas una técnica que descargue Agujas.` },
   // Mareas
-  { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro (90% de tu daño y aturden 0,7 s) hacen un ${50 * l}% más. Los jefes no se dejan empujar.` },
-  { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `Tu disparo cargado suelta además una ola a tu alrededor: ${50 * l}% de tu daño, los empapa 5 s y lanza lejos a todos los que alcanza. Los que chocan contra un muro reciben el golpe. Los jefes reciben el daño pero no se mueven.` },
+  { id: 'tide_basic',     god: 'tide',   slot: 'basic',   name: 'Oleaje',           desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) empuja al enemigo y lo deja Empapado 4 s. Los golpes contra el muro (90% de tu daño y aturden 0,7 s) hacen un ${50 * l}% más. Los jefes no se dejan empujar: como quedan Empapados, cada empujón los golpea como un choque contra el muro, sin aturdirlos, una vez cada 3 s.` },
+  { id: 'tide_charge',    god: 'tide',   slot: 'charge',  name: 'Maremoto',         desc: l => `Tu disparo cargado suelta además una ola a tu alrededor: ${50 * l}% de tu daño, los empapa 5 s y lanza lejos a todos los que alcanza. Los que chocan contra un muro reciben el golpe. Los jefes reciben el daño pero no se mueven; como quedan Empapados, reciben además el golpe contra el muro (si no lo han recibido en los últimos 3 s).` },
   { id: 'tide_dodge',     god: 'tide',   slot: 'dodge',   name: 'Corriente',        desc: l => `Tu esquive deja una corriente a lo largo del recorrido durante ${3 + l} s. Cada 0,4 s empapa 3 s a los enemigos que la tocan y los arrastra en la dirección en que esquivaste. Los jefes no se mueven.` },
   { id: 'tide_passive',   god: 'tide',   slot: 'passive', name: 'Marea alta',       desc: l => `Los Empapados reciben un ${15 * l}% más de daño (no del continuo), y cualquier empujón los lanza un 50% más lejos. Necesitas algo que los empape.` },
   // Fortuna
   { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada disparo tiene un ${10 + 10 * l}% de ser crítico (250% de daño). Cada disparo que no es crítico sube un 5% la probabilidad hasta que sale uno; entonces vuelve a la base. Solo pueden ser críticos tus disparos directos, no los repetidos.` },
   { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `Tu disparo cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}, que decide su daño: 1, el 60%; 2, el 80%; 3, el 100%; 4, el 130%; 5, el 170%; 6, el triple. Las repeticiones del cargado no tiran dado.` },
   { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara (50%): recuperas la carga de esquive. Cruz: la moneda se queda donde estabas y a los 0,55 s revienta: ${120 * l}% de tu daño en área.` },
-  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si te golpean, las pierdes todas. Necesitas algo que haga críticos, como Dado cargado.` },
+  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si un golpe te quita vida o Reserva, las pierdes todas; si eres invulnerable, lo para la Culata con rodela o se lo lleva tu Reflejo, no. Necesitas algo que haga críticos, como Dado cargado.` },
   // Bosque
   { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) planta una Semilla, que no caduca. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y le hacen ${80 * l}% de tu daño. Luego la cuenta vuelve a empezar. A los jefes las Raíces les duran solo un tercio.` },
   { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de tu daño cada 0,4 s.` },
@@ -238,22 +238,22 @@ const PIECES = [
   { id: 'blood_dodge',    god: 'blood',  slot: 'dodge',   name: 'Transfusión',      desc: l => `Al atravesar a un enemigo con el esquive le haces ${60 * l}% de tu daño y te curas ${4 * l}. Una vez por enemigo en cada esquive.` },
   { id: 'blood_passive',  god: 'blood',  slot: 'passive', name: 'Deuda',            desc: l => `Con menos de la mitad de vida haces un ${20 * l}% más de daño (no del continuo). Además, el primer golpe que te mataría en cada sala te deja a 1 de vida y 1 s invulnerable.` },
   // Final
-  { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Esta técnica pone el efecto Sentencia. Cada impacto de tu disparo (también los que repiten otras técnicas) la pone al enemigo si aún no tiene una; dura 5 s y no se renueva. Al acabar, el enemigo recibe de golpe el ${30 + 10 * l}% del daño de todos los golpes que recibió en ese tiempo (el daño continuo no cuenta). Luego el siguiente impacto pone otra.` },
+  { id: 'end_basic',      god: 'end',    slot: 'basic',   name: 'Sentencia',        desc: l => `Esta técnica pone el efecto Sentencia. Cada impacto de tu disparo (también los que repiten otras técnicas) la pone al enemigo si aún no tiene una; dura 5 s y no se renueva. Al acabar, el enemigo recibe de golpe el ${20 + 20 * l}% del daño de todos los golpes que recibió en ese tiempo (el daño continuo no cuenta). Si muere antes, la Sentencia no se pierde: estalla, y cada enemigo de alrededor recibe lo que le tocaba a él. Luego el siguiente impacto pone otra.` },
   { id: 'end_charge',     god: 'end',    slot: 'charge',  name: 'Punto final',      desc: l => `Tu disparo cargado cumple al instante la Sentencia de cada enemigo que alcanza, con un ${30 * l}% más; el daño del propio cargado ya cuenta. Solo funciona si el enemigo ya tiene una Sentencia: pónsela antes, por ejemplo con la técnica de disparo Sentencia.` },
   { id: 'end_dodge',      god: 'end',    slot: 'dodge',   name: 'Pasar página',     desc: l => `Al esquivar, las Sentencias de los enemigos cercanos se adelantan 2 s y te curas ${l} por cada una. Necesitas que los enemigos ya tengan Sentencia.` },
-  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Necesitas otro enemigo cerca.` },
+  { id: 'end_passive',    god: 'end',    slot: 'passive', name: 'Epitafio',         desc: l => `Si un enemigo muere antes de cumplirse su Sentencia, esta pasa al enemigo más cercano con todo lo acumulado${l > 1 ? ' y un ' + 15 * (l - 1) + '% más' : ''}, sumado a lo que ese ya tuviera. Le queda el tiempo que faltaba, 2 s como mínimo. Lo heredado no cuenta para el estallido si ese enemigo también muere antes de plazo. Necesitas otro enemigo cerca.` },
   // Luz
   { id: 'light_basic',    god: 'light',  slot: 'basic',   name: 'Señalar',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) Ilumina al enemigo 6 s. Cuando un Iluminado recibe un golpe, los demás Iluminados reciben el ${20 + 10 * l}% de ese daño (no se encadena y el daño continuo no cuenta). Necesitas al menos dos Iluminados.` },
   { id: 'light_charge',   god: 'light',  slot: 'charge',  name: 'Destello',         desc: l => `Tu disparo cargado Ilumina 6 s a todos los que alcanza. A los que ya estaban Iluminados, antes los ciega: quedan aturdidos 1 s y reciben un golpe extra del ${40 * l}% de tu daño. Los jefes no se aturden.` },
   { id: 'light_dodge',    god: 'light',  slot: 'dodge',   name: 'Resplandor',       desc: l => `Al esquivar sueltas un destello donde estabas: Ilumina 6 s a los enemigos cercanos y les hace ${50 * l}% de tu daño.` },
-  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Haces un ${5 * l}% más de daño por cada enemigo Iluminado en la sala, contando hasta seis (no al daño continuo). Necesitas algo que Ilumine.` },
+  { id: 'light_passive',  god: 'light',  slot: 'passive', name: 'Sin sombra',       desc: l => `Haces un ${5 * l}% más de daño por cada enemigo Iluminado en la sala, contando hasta seis (no al daño continuo). Un jefe o un elegido Iluminado cuenta por tres. Necesitas algo que Ilumine.` },
   // Sueño
-  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Uno de cada ${Math.max(2, 5 - l)} disparos Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño. Solo cuentan tus disparos directos. Tras despertar, no se le puede dormir otra vez en 4 s. A los jefes no se les duerme: solo se frenan un poco.` },
-  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `Si tu disparo cargado da a un enemigo Dormido, recibe además un golpe extra del 60% de tu daño, aumentado un ${80 * l}%. Si da a uno despierto, lo Duerme 2 s (a los jefes solo los frena).` },
+  { id: 'dream_basic',    god: 'dream',  slot: 'basic',   name: 'Arrullo',          desc: l => `Uno de cada ${Math.max(2, 5 - l)} disparos Duerme al enemigo 3 s. El golpe que lo despierta hace un ${100 * l}% más de daño. Solo cuentan tus disparos directos. Tras despertar, no se le puede dormir otra vez en 4 s. A los jefes no se les duerme: quedan Adormilados 1,5 s (frenados a la mitad), el siguiente golpe se lleva ese mismo extra, y no se les puede adormilar otra vez en 6 s.` },
+  { id: 'dream_charge',   god: 'dream',  slot: 'charge',  name: 'Pesadilla',        desc: l => `Si tu disparo cargado da a un enemigo Dormido, recibe además un golpe extra del 60% de tu daño, aumentado un ${80 * l}%. Un jefe Adormilado cuenta como Dormido. Si da a uno despierto, lo Duerme 2 s (a los jefes los deja Adormilados 1 s).` },
   { id: 'dream_dodge',    god: 'dream',  slot: 'dodge',   name: 'Polvo de sueño',   desc: l => `Tu esquive deja una nube donde estabas durante ${2 + l} s. Duerme 2 s a cada enemigo que entre, una vez por enemigo.` },
-  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (quemaduras, veneno, cortes y zonas del suelo) ya no despierta a los Dormidos y les hace un ${50 * l}% más. Sin esta técnica, ese daño los despierta. Necesitas algo que los duerma.` },
+  { id: 'dream_passive',  god: 'dream',  slot: 'passive', name: 'Sonámbulos',       desc: l => `El daño continuo (quemaduras, veneno, cortes y zonas del suelo) ya no despierta a los Dormidos y les hace un ${50 * l}% más; vale también para los jefes Adormilados. Sin esta técnica, ese daño los despierta. Necesitas algo que los duerma.` },
   // Vacío
-  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada disparo atrae hacia el enemigo alcanzado a los enemigos que tenga cerca${l > 1 ? ', con más fuerza a cada nivel' : ''}. Así se amontonan. Solo cuentan tus disparos directos, y los jefes no se mueven.` },
+  { id: 'void_basic',     god: 'void',   slot: 'basic',   name: 'Gravedad',         desc: l => `Cada disparo atrae hacia el enemigo alcanzado a los enemigos que tenga cerca${l > 1 ? ', con más fuerza a cada nivel' : ''}, y el tirón les hace el ${15 + 5 * l}% del daño de ese disparo (sin tus efectos de disparo). Así se amontonan. Solo cuentan tus disparos directos; los jefes no se mueven, pero el daño sí lo reciben.` },
   { id: 'void_charge',    god: 'void',   slot: 'charge',  name: 'Singularidad',     desc: l => `Tu disparo cargado abre un pozo de 2,5 s donde apuntas: atrae a todos al centro, les hace ${25 * l}% de tu daño cada 0,5 s y al cerrarse estalla (${100 * l}%). Los jefes reciben el daño pero no se mueven.` },
   { id: 'void_dodge',     god: 'void',   slot: 'dodge',   name: 'Hueco',            desc: l => `Tu esquive deja un pozo pequeño donde estabas durante ${1 + l} s, que atrae a los enemigos cercanos. No hace daño, y los jefes no se mueven.` },
   { id: 'void_passive',   god: 'void',   slot: 'passive', name: 'Apiñados',         desc: l => `Cada enemigo recibe un ${8 * l}% más de daño por cada enemigo pegado a él, contando hasta cuatro (no al daño continuo). Necesitas que estén amontonados.` },
@@ -263,12 +263,12 @@ const PIECES = [
   { id: 'mirror_dodge',   god: 'mirror', slot: 'dodge',   name: 'Engaño',           desc: l => `Al esquivar dejas una imagen tuya donde estabas. Los enemigos cercanos se quedan mirándola, aturdidos ${(0.6 + 0.3 * l).toFixed(1)} s. Los jefes no se dejan engañar.` },
   { id: 'mirror_passive', god: 'mirror', slot: 'passive', name: 'Azogue',           desc: l => `Cuando te golpean, el golpe rebota: los enemigos cercanos reciben ${100 * l}% de tu daño. No pasa si eres invulnerable o si paras el golpe.` },
   // Bestias
-  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Un sabueso pelea a tu lado y muerde cada 0,8 s al enemigo al que disparas (si no disparas, al más cercano): ${60 * l}% de tu daño, con los efectos de tu técnica de disparo. Tus disparos hacen un 15% más a su presa.` },
-  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `Tienes un sabueso a tu lado. Tu disparo cargado lo hace saltar adonde apuntas: ${250 * l}% de tu daño en área y aturde 1 s. Los jefes no se aturden.` },
-  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Tienes un sabueso a tu lado. Al esquivar, salta adonde estabas y muerde a los enemigos de alrededor: ${80 * l}% de tu daño, con los efectos de tu técnica de disparo, y los aparta.` },
-  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos con menos del 30% de vida reciben un ${25 * l}% más de daño (no del continuo). No te da sabueso.` },
+  { id: 'beast_basic',    god: 'beast',  slot: 'basic',   name: 'Sabueso',          desc: l => `Te da un perro que pelea a tu lado y muerde cada 0,8 s al enemigo al que disparas (si no disparas, al más cercano): ${15 + 30 * l}% de tu daño, con los efectos de tu técnica de disparo. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza.${packStatus()}` },
+  { id: 'beast_charge',   god: 'beast',  slot: 'charge',  name: '¡A por él!',       desc: l => `Te da un perro, si no lo tienes ya (sin la técnica Sabueso, sus mordiscos hacen el 30% de tu daño; empieza de cachorro y crece con la Caza). Tu disparo cargado hace saltar al primero de la manada adonde apuntas: ${250 * l}% de tu daño en área y aturde 1 s. Los jefes no se aturden.${packStatus()}` },
+  { id: 'beast_dodge',    god: 'beast',  slot: 'dodge',   name: 'Manada',           desc: l => `Te da un perro, si no lo tienes ya (sin la técnica Sabueso, sus mordiscos hacen el 30% de tu daño; empieza de cachorro y crece con la Caza). Al esquivar, el primero de la manada salta adonde estabas y muerde a los enemigos de alrededor: ${80 * l}% de tu daño, sea cachorro o lobo alfa, con los efectos de tu técnica de disparo, y los aparta.${packStatus()}` },
+  { id: 'beast_passive',  god: 'beast',  slot: 'passive', name: 'Olfato',           desc: l => `Los enemigos con menos del 30% de vida reciben un ${25 * l}% más de daño (no del continuo). No te da perro.` },
   // Forja
-  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(3, 9 - l * 2)} disparos ganas 1 de Temple, hasta 10. Cuentan las veces que disparas, no los impactos. Cada punto da +3% de daño. Si te golpean, pierdes la mitad. Se conserva de una sala a otra.` },
+  { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(2, 8 - l * 2)} disparos ganas 1 de Temple, hasta ${8 + 2 * l}. Cuentan las veces que disparas, no los impactos. Cada punto da +3% de daño. Si te golpean, pierdes la mitad. Se conserva de una sala a otra.` },
   { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `Tu disparo cargado añade un martillazo a tu alrededor: ${120 * l}% de tu daño, aturde 0,6 s y te da 1 de Temple por cada enemigo golpeado. Las repeticiones del cargado no dan Temple.` },
   { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Después de esquivar, tus ${1 + l} siguientes disparos salen al rojo: +50% de daño, y cada impacto salpica al enemigo más cercano con la mitad de ese daño.` },
   { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma mejora: +${5 * l}% de daño, de cadencia y de alcance.` },
@@ -306,7 +306,7 @@ const DUOS = [
   { id: 'clockquartz', slot: 'passive', a: 'stone_passive', b: 'time_passive', name: 'Cuarzo de reloj',   desc: 'Además de lo que hacen Veta y Reloj de arena, tus Cristales ralentizan un 40% a los enemigos pegados a ellos (a los jefes, menos), y no se gastan mientras tengan a alguien al lado. Esos enemigos cuentan como ralentizados para Reloj de arena.' },
   { id: 'indigest',  slot: 'passive', a: 'venom_passive', b: 'feast_passive', name: 'Indigestión',        desc: 'Además de lo que hacen Plaga y Glotón, te curas un 10% de todo el daño que hace tu Veneno.' },
   { id: 'longlunch', slot: 'passive', a: 'feast_passive', b: 'time_passive',  name: 'Sobremesa larga',    desc: 'Además de lo que hacen Glotón y Reloj de arena, tu Reserva ya no baja con el tiempo, y ralentiza a los enemigos cercanos a ti un 2% por punto, hasta un 60%.' },
-  { id: 'warthunder', slot: 'passive', a: 'orc_passive',  b: 'storm_passive', name: 'Trueno de guerra',   desc: 'Además de lo que hacen Sed de sangre y Conductor, con la Furia llena, cada disparo lanza además un rayo a otro enemigo cercano: 60% del daño del disparo. Ese rayo no clava Agujas.' },
+  { id: 'warthunder', slot: 'passive', a: 'orc_passive',  b: 'storm_passive', name: 'Trueno de guerra',   desc: 'Además de lo que hacen Sed de sangre y Conductor, con la Furia llena, cada disparo lanza además un rayo a otro enemigo cercano: 60% del daño del disparo. Ese rayo también clava las Agujas de Conductor, aunque no venga de una descarga.' },
   { id: 'chargedshade', slot: 'passive', a: 'shade_passive', b: 'storm_passive', name: 'Sombras cargadas', desc: 'Además de lo que hacen Séquito y Conductor, cada golpe de tus Sombras clava 1 Aguja. Cuando a una Sombra se le acaba el tiempo, descarga a hasta 4 enemigos de su alrededor (80% por Aguja).' },
   // Mareas
   { id: 'steam',     slot: 'basic',   a: 'dragon_basic',  b: 'tide_basic',   name: 'Vapor',              desc: 'Además de lo que hacen Colmillo al rojo y Oleaje, cuando un enemigo choca contra un muro, revientan todas sus Ascuas: 35% de daño por Ascua a los enemigos de alrededor. Él pierde las Ascuas, pero no recibe esa explosión.' },
@@ -351,7 +351,7 @@ const DUOS = [
   { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Además de lo que hacen Orden y Sangría, los enemigos que mueren en los 0,7 s siguientes a tu disparo cargado (los mismos que te curan con Sangría) se levantan como Sombras. Los jefes no.' },
   // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
   { id: 'deadline',  slot: 'basic',   a: 'time_basic',    b: 'end_basic',     name: 'Plazo vencido',     desc: 'Además de lo que hacen Segundero y Sentencia, el daño de tus ecos cuenta el doble para la Sentencia.' },
-  { id: 'verdict',   slot: 'basic',   a: 'luck_basic',    b: 'end_basic',     name: 'Veredicto',         desc: 'Además de lo que hacen Dado cargado y Sentencia, un crítico cumple al instante la Sentencia que ya tuviera el enemigo, sumando el daño de ese crítico.' },
+  { id: 'verdict',   slot: 'basic',   a: 'luck_basic',    b: 'end_basic',     name: 'Veredicto',         desc: 'Además de lo que hacen Dado cargado y Sentencia, un crítico cumple al instante la Sentencia que ya tuviera el enemigo, sumando el daño de ese crítico. Si es el propio crítico el que pone la Sentencia, no la gasta.' },
   { id: 'autodafe',  slot: 'charge',  a: 'dragon_charge', b: 'end_charge',    name: 'Auto de fe',        desc: 'Además de lo que hacen Aliento y Punto final, cuando tu disparo cargado cumple una Sentencia, le clava además 3 Ascuas al enemigo. Llegan después del estallido de Aliento, así que se quedan quemando.' },
   { id: 'obituary',  slot: 'passive', a: 'shade_passive', b: 'end_passive',   name: 'Obituario',         desc: 'Además de lo que hacen Séquito y Epitafio, si un enemigo muere al cumplirse su Sentencia, se levanta como Sombra. Los jefes no.' },
   // Luz (afines: Minerales, Tormenta, Dragones, Sombras)
@@ -360,10 +360,10 @@ const DUOS = [
   { id: 'sunfire',   slot: 'passive', a: 'dragon_passive', b: 'light_passive', name: 'Sol de mediodía',  desc: 'Además de lo que hacen Tesoro y Sin sombra, las Ascuas queman el doble a los Iluminados.' },
   { id: 'eclipse',   slot: 'passive', a: 'shade_passive', b: 'light_passive', name: 'Eclipse',           desc: 'Además de lo que hacen Séquito y Sin sombra, para Sin sombra, cada Sombra viva cuenta como un Iluminado más (el tope sigue en seis). Y los golpes de tus Sombras Iluminan 6 s.' },
   // Sueño (afines: Veneno, Tiempo, Manjares, Hielo)
-  { id: 'poppy',     slot: 'passive', a: 'venom_passive', b: 'dream_passive', name: 'Adormidera',        desc: 'Además de lo que hacen Plaga y Sonámbulos, cuando un enemigo llega a 10 de Veneno, se queda Dormido 3 s. A los jefes solo los ralentiza.' },
+  { id: 'poppy',     slot: 'passive', a: 'venom_passive', b: 'dream_passive', name: 'Adormidera',        desc: 'Además de lo que hacen Plaga y Sonámbulos, cuando un enemigo llega a 10 de Veneno, se queda Dormido 3 s. A los jefes los deja Adormilados 1,5 s.' },
   { id: 'siesta',    slot: 'dodge',   a: 'time_dodge',    b: 'dream_dodge',   name: 'Siesta',            desc: 'Además de lo que hacen Hora muerta y Polvo de sueño, todo lo que Duerme a un enemigo lo Duerme el doble de tiempo, venga de donde venga.' },
   { id: 'digest',    slot: 'charge',  a: 'feast_charge',  b: 'dream_charge',  name: 'Digestión',         desc: 'Además de lo que hacen Banquete y Pesadilla, cada Dormido que alcanza tu disparo cargado te da 4 de Reserva.' },
-  { id: 'hibernate', slot: 'basic',   a: 'frost_basic',   b: 'dream_basic',   name: 'Hibernar',          desc: 'Además de lo que hacen Aliento helado y Arrullo, cuando a un enemigo se le pasa el Congelado (o se lo rompes), se queda Dormido 2 s. A los jefes solo los ralentiza.' },
+  { id: 'hibernate', slot: 'basic',   a: 'frost_basic',   b: 'dream_basic',   name: 'Hibernar',          desc: 'Además de lo que hacen Aliento helado y Arrullo, cuando a un enemigo se le pasa el Congelado (o se lo rompes), se queda Dormido 2 s. A los jefes los deja Adormilados 1 s.' },
   // Vacío (afines: Mareas, Dragones, Orcos, Bosque)
   { id: 'maelstrom', slot: 'charge',  a: 'tide_charge',   b: 'void_charge',   name: 'Vorágine',          desc: 'Además de lo que hacen Maremoto y Singularidad, la ola del Maremoto lanza a los enemigos hacia el centro de la Singularidad (o del último pozo abierto) en vez de alejarlos de ti.' },
   { id: 'collapse',  slot: 'charge',  a: 'dragon_charge', b: 'void_charge',   name: 'Colapso',           desc: 'Además de lo que hacen Aliento y Singularidad, cuando la Singularidad se cierra, revienta las Ascuas de todos los enemigos que ha atrapado: 35% de daño por Ascua, en área.' },
@@ -373,15 +373,15 @@ const DUOS = [
   { id: 'doubles',   slot: 'basic',   a: 'shade_basic',   b: 'mirror_basic',  name: 'Dobles',            desc: 'Además de lo que hacen Marca de tumba y Reflejo, cada vez que tu Reflejo dispara, cada una de tus Sombras dispara también al enemigo más cercano: 30% de daño, con tus efectos de disparo.' },
   { id: 'prismatic', slot: 'basic',   a: 'light_basic',   b: 'mirror_basic',  name: 'Prisma vivo',       desc: 'Además de lo que hacen Señalar y Reflejo, los disparos de tu Reflejo hacen el doble de daño a los Iluminados.' },
   { id: 'afterimage', slot: 'charge', a: 'time_charge',   b: 'mirror_charge', name: 'Imagen tardía',     desc: 'Además de lo que hacen Rebobinar y Doble, cuando Rebobinar repite tu disparo cargado, tu Reflejo también lo repite desde su lado, a la mitad de la fuerza de esa repetición.' },
-  { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Además de lo que hacen Racha y Azogue, cada golpe que recibes tiene un 33% de que se lo lleve el Reflejo: no pierdes vida. Aun así pierdes la Racha, y Azogue no rebota ese golpe.' },
+  { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Además de lo que hacen Racha y Azogue, cada golpe que recibes tiene un 33% de que se lo lleve el Reflejo: no pierdes vida ni la Racha. Azogue no rebota ese golpe.' },
   // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
-  { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Además de lo que hacen Tambor de guerra y Sabueso, cada mordisco te da 4 de Furia. Con la Furia llena, el sabueso muerde el doble de rápido.' },
-  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Dardo y Sabueso, cada mordisco del sabueso aplica 2 de Veneno.' },
+  { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Además de lo que hacen Tambor de guerra y Sabueso, cada mordisco te da 4 de Furia. Con la Furia llena, tus perros muerden el doble de rápido.' },
+  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Dardo y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
   { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'Además de lo que hacen Transfusión y Manada, la embestida de Manada abre 2 Heridas a cada enemigo que alcanza y te cura 2 por cada uno.' },
   { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'Además de lo que hacen Zarzal y ¡A por él!, el salto del sabueso deja enraizados 1,5 s a todos los que alcanza (a los jefes, mucho menos).' },
   // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
   { id: 'forgefire', slot: 'basic',   a: 'dragon_basic',  b: 'forge_basic',   name: 'Fuego de fragua',   desc: 'Además de lo que hacen Colmillo al rojo y Temple, con 5 o más de Temple, cada disparo clava 1 Ascua más.' },
-  { id: 'whetstone', slot: 'passive', a: 'stone_passive', b: 'forge_passive', name: 'Piedra de amolar',  desc: 'Además de lo que hacen Veta y Maestro armero, cada Cristal que haya en la sala cuenta como 1 punto más de Temple para el daño (+3% cada uno). Solo sirve si llevas la técnica Temple o ya tienes algo de Temple.' },
+  { id: 'whetstone', slot: 'passive', a: 'stone_passive', b: 'forge_passive', name: 'Piedra de amolar',  desc: 'Además de lo que hacen Veta y Maestro armero, cada Cristal que haya en la sala cuenta como 1 punto más de Temple (+3% de daño cada uno), aunque no lleves la técnica Temple ni tengas Temple propio, y puede pasar de tu máximo. Cuentan también para Recalentar y para el dúo Fuego de fragua.' },
   { id: 'warhammer', slot: 'charge',  a: 'orc_charge',    b: 'forge_charge',  name: 'Martillo de guerra', desc: 'Además de lo que hacen Grito de guerra y Martillazo, el Martillazo crece con la Furia que tienes al disparar, hasta el doble de tamaño con la Furia llena, y te da 2 de Temple por enemigo golpeado en vez de 1.' },
   { id: 'quench',    slot: 'dodge',   a: 'storm_dodge',   b: 'forge_dodge',   name: 'Templar al rayo',   desc: 'Además de lo que hacen Paso relámpago y Al rojo, cada disparo al rojo clava 2 Agujas al enemigo.' },
 ];
@@ -431,8 +431,8 @@ const TECHS = [
   { id: 'o_crush',   god: 'void',   rar: 2, name: 'Aplastar',          desc: 'Los enemigos en el mismo centro de un pozo reciben el doble de su daño por pulso. Solo sirve con pozos que hacen daño, como Singularidad.' },
   { id: 'q_shard',   god: 'mirror', rar: 1, name: 'Esquirla de espejo', desc: 'Uno de cada cinco disparos se repite contra el mismo enemigo, al 50% de daño y sin tus efectos de disparo.' },
   { id: 'q_break',   god: 'mirror', rar: 2, name: 'Siete años',        desc: 'Cuando te golpean, tu siguiente disparo hace el triple de daño.' },
-  { id: 'a_pup',     god: 'beast',  rar: 1, name: 'Cachorro',          desc: 'Un cachorro te acompaña y muerde al enemigo que disparas: 30% de daño, con tus efectos de disparo. Tus disparos hacen un 15% más a su presa. Si ya tienes sabueso, no se suma.' },
-  { id: 'a_feral',   god: 'beast',  rar: 2, name: 'Sed de caza',       desc: 'Te curas 2 por cada enemigo que remata el sabueso de un mordisco.' },
+  { id: 'a_pup',     god: 'beast',  rar: 1, name: 'Cachorro',          desc: 'Un perro te acompaña y muerde cada 0,8 s al enemigo que disparas: 30% de tu daño, con tus efectos de disparo. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza, como cualquier otro. Si ya tienes perro, no se suma.' },
+  { id: 'a_feral',   god: 'beast',  rar: 2, name: 'Sed de caza',       desc: 'Te curas 2 por cada presa que remata uno de tus perros de un mordisco. Los enemigos de alrededor que alcanza el lobo alfa no cuentan.' },
   { id: 'g_whet',    god: 'forge',  rar: 1, name: 'Bien afilada',      desc: 'Haces un 8% más de daño.' },
   { id: 'g_slag',    god: 'forge',  rar: 2, name: 'Recalentar',        desc: 'Con el Temple al máximo, cada disparo salpica a los enemigos de alrededor del objetivo: 30% del daño, en un área pequeña.' },
   { id: 'r_judge',   god: 'storm',  rar: 3, name: 'Juicio',            desc: 'Cada vez que descargas a un enemigo, cae un rayo del cielo sobre él: 300% de daño en área.' },
@@ -457,8 +457,8 @@ const MASTERY = {
   dream:  { name: 'Sueño profundo',        desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): los Dormidos aguantan un golpe sin despertarse, y ese golpe también se lleva el extra de daño.' },
   void:   { name: 'Horizonte',             desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tus pozos son un 40% más grandes y duran un segundo más.' },
   mirror: { name: 'Sala de espejos',       desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tienes un segundo Reflejo, a un lado del enemigo.' },
-  beast:  { name: 'Jauría',                desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tienes un segundo sabueso.' },
-  forge:  { name: 'Obra maestra',          desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): el Temple llega hasta 15 y ya no lo pierdes al recibir golpes.' },
+  beast:  { name: 'Jauría',                desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tienes un segundo perro, y los dos llegan a lobo alfa con 25 de Caza (sin la maestría, solo el primero).' },
+  forge:  { name: 'Obra maestra',          desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tu máximo de Temple sube 5 puntos y ya no lo pierdes al recibir golpes.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): si un rayo de descarga alcanza a un enemigo con Agujas, también se las descarga, en cadena (cada enemigo, una vez por cadena).' },
 };
 // Planos: mejoras del arma que salen durante la partida (jefes y tienda).
@@ -484,7 +484,7 @@ const PARTS = [
   { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Cada disparo da a tu objetivo y, casi a la vez, al enemigo más cercano a ti que tengas a tiro, con el 55% del daño a cada uno. Si solo hay un enemigo a tiro, recibe los dos (110% en total). Un 25% menos de alcance.', cost: { iron: 1, storm: 2 } },
   { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Dispara seis postas en abanico; cada una da al primer enemigo que encuentre, con el 36% del daño. La mitad de alcance. Cada posta empuja: si al menos dos dan al mismo enemigo y choca contra un muro, recibe el golpe (90% del daño) y queda aturdido. No empuja a los jefes.', cost: { iron: 2, feast: 2 } },
   { id: 'b_pierce',  slot: 'barrel',  name: 'Culebrina',            tag: 'Atraviesa y rebota', desc: 'El disparo sigue en línea recta y da a todos los enemigos que cruza hasta chocar con un muro. Si el muro está dentro de su alcance, rebota una vez y da a los que encuentre de vuelta, así que un enemigo puede recibir dos golpes. +30% de alcance, pero todos tus disparos hacen un 10% menos de daño.', cost: { iron: 2, stone: 2 } },
-  { id: 'b_bomb',    slot: 'barrel',  name: 'Bombarda',             tag: 'Bombas en arco',  desc: 'Lanza una bomba en arco que cae donde estaba tu objetivo al disparar; tarda un momento en llegar, así que puede fallar si se mueve. Al caer, hace el 80% del daño a cada enemigo cercano, con todos tus efectos de disparo, también a los que estén detrás de un muro. Para disparar necesitas ver a tu objetivo. Un 10% más de alcance, pero disparas un 35% más despacio.', cost: { iron: 2, dragon: 2 } },
+  { id: 'b_bomb',    slot: 'barrel',  name: 'Bombarda',             tag: 'Bombas en arco',  desc: 'Lanza una bomba en arco que cae donde estaba tu objetivo al disparar; tarda un momento en llegar, así que puede fallar si se mueve. Al caer, hace el 80% del daño a cada enemigo cercano, con todos tus efectos de disparo, también a los que estén detrás de un muro. No necesitas ver a tu objetivo: como la bomba pasa por encima de los muros, puedes apuntar a enemigos que estén detrás de uno, siempre que estén dentro de tu alcance. Un 10% más de alcance, pero disparas un 35% más despacio.', cost: { iron: 2, dragon: 2 } },
   { id: 'b_spike',   slot: 'barrel',  name: 'Asta',                 tag: 'Estocada que atraviesa', desc: 'No dispara: cada ataque es una estocada que hace el 180% del daño y te lanza a través de tu objetivo, sin recibir daño mientras dura. Cuenta como un esquive que lo atraviesa, pero no gasta esquive ni activa casi nada de lo que pasa al esquivar. La mitad de alcance: tienes que estar cerca. Frena menos que un disparo, y si la estocada mata, puedes atacar otra vez al instante.', cost: { iron: 2, shade: 2 } },
   { id: 'b_fork',    slot: 'barrel',  name: 'Espingarda triple',    tag: 'Tres en abanico',         desc: 'Dispara tres veces a la vez: uno a tu objetivo y dos en diagonal a los lados, que dan al primer enemigo que encuentren en su línea (si no hay ninguno, se pierden). Cada uno hace el 60% del daño. Un 10% menos de alcance.', cost: { iron: 2, luck: 2 } },
   { id: 'b_harpoon', slot: 'barrel',  name: 'Arpón',                tag: 'Atrae al enemigo',    desc: 'El disparo engancha a tu objetivo y lo arrastra hacia ti; cuanto más lejos está, más fuerte tira. No arrastra a los jefes ni a los que ya tienes pegados, y mientras lo arrastras no puede chocar contra un muro. Todos tus disparos hacen un 15% más de daño.', cost: { iron: 1, tide: 2 } },
@@ -503,7 +503,7 @@ const PARTS = [
   { id: 'b_icicle',  slot: 'barrel',  name: 'Carámbano',            tag: 'Pone Escarcha',      desc: 'Cada disparo pone 1 de Escarcha al enemigo si sobrevive (2 si llevas alguna técnica de Hielo), aunque no lleves técnicas de Hielo. Contra enemigos Congelados hace un 30% más de daño; mientras siguen Congelados, no acumulan más Escarcha.', cost: { iron: 1, frost: 3 }, theme: 'frost' },
   { id: 'b_horn',    slot: 'barrel',  name: 'Bocina de trueno',     tag: 'Aturde en cono',     desc: 'Suelta un bramido en cono que da a todos los enemigos que tienes delante (40% del daño a cada uno) y los deja aturdidos un instante (0,35 s). No pasa los muros y no aturde a los jefes. Un 45% menos de alcance.', cost: { iron: 1, dream: 2 } },
   { id: 'b_drill',   slot: 'barrel',  name: 'Berbiquí',             tag: 'Insistir pega más',  desc: 'Cada disparo seguido al mismo enemigo hace un 15% más de daño que el anterior, hasta +150% tras diez seguidos. Si disparas a otro enemigo, vuelve a empezar.', cost: { iron: 2, forge: 2 } },
-  { id: 'b_ghost',   slot: 'barrel',  name: 'Cañón fantasma',       tag: 'Atraviesa muros',    desc: 'Puedes apuntar y disparar a enemigos que están al otro lado de los muros, sin verlos. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 2, shade: 3 } },
+  { id: 'b_ghost',   slot: 'barrel',  name: 'Cañón fantasma',       tag: 'Atraviesa muros',    desc: 'Puedes apuntar y disparar a enemigos que están al otro lado de los muros, sin verlos, tanto si el arma los elige sola como si los fijas tú. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 2, shade: 3 } },
   { id: 'b_net',     slot: 'barrel',  name: 'Lanzarredes',          tag: 'Enraíza al enemigo',             desc: 'Cada disparo hace el 65% del daño y lanza una red que deja al enemigo enraizado 0,9 s. Cada enemigo solo puede quedar atrapado una vez cada 3 s; a los jefes los atrapa solo un tercio de ese tiempo.', cost: { iron: 1, beast: 2 } },
   { id: 'b_ends',    slot: 'barrel',  name: 'Cañón de dos distancias', tag: 'Cerca y lejos',   desc: 'Cada disparo da a la vez al enemigo más cercano y al más lejano que tengas a tiro, con el 80% del daño a cada uno, apuntes a quien apuntes. Si solo hay un enemigo, recibe un único disparo (80%).', cost: { iron: 2, light: 2 } },
   { id: 'a_fuse',    slot: 'action',  name: 'Mecha lenta',          tag: 'Sale con retraso',   desc: 'El disparo sale solo medio segundo después de pulsar, sin frenazo, contra el enemigo al que apuntabas (o el más cercano si ya ha muerto). Todos tus disparos hacen un 45% más de daño. Si estás esquivando justo cuando sale, se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, wood: 2 } },
@@ -518,7 +518,7 @@ const PARTS = [
   { id: 'a_drum',    slot: 'action',  name: 'Llave de tambor',      tag: 'Da Furia',           desc: 'Cada disparo te da 8 de Furia (12 si llevas alguna técnica de Orcos). Con esta llave tienes Furia aunque no lleves técnicas de Orcos, y también la ganas al golpear. Con la Furia llena (100), disparas un 25% más rápido. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, orc: 3 }, theme: 'orc' },
   { id: 'a_glass',   slot: 'action',  name: 'Llave de clepsidra',   tag: 'Deja ecos',          desc: 'Uno de cada tres disparos (uno de cada dos si llevas alguna técnica de Tiempo) deja un eco que vuelve a golpear al mismo enemigo un segundo después con el 60% del daño del disparo. Si el enemigo ha muerto, el eco se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, time: 3 }, theme: 'time' },
   { id: 'a_dice',    slot: 'action',  name: 'Llave de tahúr',       tag: 'Da críticos',   desc: 'Cada golpe de tus disparos tiene un 15% más de probabilidad de ser crítico (25% si llevas alguna técnica de Fortuna), sumado a la que ya tengas. Cuenta para cada golpe por separado: cada posta, dardo o salto puede ser crítico. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, luck: 3 }, theme: 'luck' },
-  { id: 'a_nana',    slot: 'action',  name: 'Llave de nana',        tag: 'Duerme enemigos',             desc: 'Uno de cada seis disparos (uno de cada cuatro si llevas alguna técnica de Sueño) Duerme a tu objetivo 2 segundos. A los jefes no los duerme: solo los frena un poco durante 1 s. Un enemigo que acaba de despertar no puede volver a dormirse en 4 s. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, dream: 3 }, theme: 'dream' },
+  { id: 'a_nana',    slot: 'action',  name: 'Llave de nana',        tag: 'Duerme enemigos',             desc: 'Uno de cada seis disparos (uno de cada cuatro si llevas alguna técnica de Sueño) Duerme a tu objetivo 2 segundos. A los jefes no los duerme: los deja Adormilados 1 s. Un enemigo que acaba de despertar no puede volver a dormirse en 4 s. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, dream: 3 }, theme: 'dream' },
   { id: 'a_fly',     slot: 'action',  name: 'Llave de volante',     tag: 'Cadencia que sube',       desc: 'Mientras sigas disparando, disparas cada vez más rápido: hasta un 60% más a los cinco segundos. Si pasas 1,5 s sin disparar, se pierde todo. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, void: 2 } },
   { id: 'a_fin',     slot: 'action',  name: 'Llave de remate',      tag: 'Remata sin frenar',  desc: 'Si tu objetivo tiene menos de un cuarto de vida, el disparo sale sin frenazo y el arma vuelve a estar lista en una décima de segundo, así que puedes rematarlo casi al instante. También funciona con jefes. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, end: 2 } },
   { id: 'a_firm',    slot: 'action',  name: 'Llave de pie firme',   tag: 'Quieto, más rápido', desc: 'Si llevas un tercio de segundo sin moverte, disparas un 50% más rápido. Mientras te mueves o esquivas, disparas un 20% más despacio. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, frost: 2 } },
@@ -551,13 +551,13 @@ const PARTS = [
   { id: 's_venge',   slot: 'stock',   name: 'Culata de rencor',     tag: 'Venganza doble',    desc: 'Cuando te golpean, tus tres siguientes disparos hacen el doble de daño. Un golpe que para la rodela o que llega mientras eres invulnerable no cuenta.', cost: { iron: 1, blood: 2 } },
   { id: 's_gasp',    slot: 'stock',   name: 'Culata del último aliento', tag: 'Casi muerto, corres', desc: 'Mientras tengas menos de un cuarto de tu vida, te mueves un 30% más rápido y tus esquives se recargan el doble de rápido.', cost: { iron: 1, end: 2 } },
   { id: 'm_seed',    slot: 'mag',     name: 'Bala de bellota',      tag: 'Planta Semillas',    desc: 'Cada disparo planta una Semilla en el enemigo; a la tercera, brotan Raíces. Si llevas en tus ranuras alguna técnica de Bosque, brotan a la segunda.', cost: { iron: 1, wood: 3 }, theme: 'wood' },
-  { id: 'm_salt',    slot: 'mag',     name: 'Bala de sal',          tag: 'Empapa y empuja',    desc: 'Cada disparo deja Empapado al enemigo 3 s y lo empuja un poco. A los que ya estaban Empapados les hace un 15% más de daño. Si llevas en tus ranuras alguna técnica de Mareas, empuja el doble. No empuja a los jefes.', cost: { iron: 1, tide: 3 }, theme: 'tide' },
+  { id: 'm_salt',    slot: 'mag',     name: 'Bala de sal',          tag: 'Empapa y empuja',    desc: 'Cada disparo deja Empapado al enemigo 3 s y lo empuja un poco. A los que ya estaban Empapados les hace un 15% más de daño. Si llevas en tus ranuras alguna técnica de Mareas, empuja el doble. No empuja a los jefes; con una técnica de Mareas, el empujón sí basta para darles el golpe de los jefes Empapados.', cost: { iron: 1, tide: 3 }, theme: 'tide' },
   { id: 'm_saw',     slot: 'mag',     name: 'Bala serrada',         tag: 'Abre Heridas',       desc: 'Cada disparo abre una Herida (hasta 6 por enemigo). Si llevas en tus ranuras alguna técnica de Sangre, abre dos.', cost: { iron: 1, blood: 3 }, theme: 'blood' },
   { id: 'm_quick',   slot: 'mag',     name: 'Bala de azogue',       tag: 'Repite desde detrás',  desc: 'Cada cuarto disparo vuelve desde el otro lado del enemigo y le da otra vez, con la mitad del daño y sin efectos. Si llevas en tus ranuras alguna técnica de Espejos, cada segundo disparo.', cost: { iron: 1, mirror: 3 }, theme: 'mirror' },
   { id: 'm_star',    slot: 'mag',     name: 'Bala de lucero',       tag: 'Ilumina enemigos',            desc: 'Cada disparo deja Iluminado al enemigo 4 s, y tus disparos hacen un 12% más a los Iluminados. Si llevas en tus ranuras alguna técnica de Luz, un 25%. El reparto de daño entre Iluminados solo ocurre si llevas la técnica Señalar.', cost: { iron: 1, light: 3 }, theme: 'light' },
   { id: 's_grave',   slot: 'stock',   name: 'Culata de lápida',     tag: 'Levanta Sombras',    desc: 'Cada ocho enemigos que matas, el octavo se levanta como Sombra y pelea por ti. Si llevas en tus ranuras alguna técnica de Sombras, cada cinco. Los jefes no cuentan. Puedes tener 2 Sombras a la vez, más si tus técnicas suben el tope.', cost: { iron: 1, shade: 3 }, theme: 'shade' },
   { id: 's_wine',    slot: 'stock',   name: 'Culata de bota de vino', tag: 'Cura al matar',   desc: 'Cada enemigo que muere te cura 1; si ya tienes la vida llena, ese punto va a tu Reserva. Si llevas en tus ranuras alguna técnica de Manjares, 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
-  { id: 's_kennel',  slot: 'stock',   name: 'Culata de perrera',    tag: 'Cachorro que muerde',   desc: 'Un sabueso te acompaña y muerde cada 0,8 s al enemigo al que disparas, con el 30% de tu daño base y los efectos de tus técnicas. Tus disparos hacen un 15% más a su presa. Si llevas en tus ranuras alguna técnica de Bestias, tienes un sabueso más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
+  { id: 's_kennel',  slot: 'stock',   name: 'Culata de perrera',    tag: 'Cachorro que muerde',   desc: 'Un perro te acompaña y muerde cada 0,8 s al enemigo al que disparas, con el 30% de tu daño base (o lo que diga tu técnica Sabueso, si la llevas) y los efectos de tus técnicas. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza. Si llevas en tus ranuras alguna técnica de Bestias, tienes un perro más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
   { id: 's_geode',   slot: 'stock',   name: 'Culata de geoda',      tag: 'Deja Cristales',     desc: 'Cada esquive deja un Cristal donde estabas. Cada vez que disparas, hasta cuatro de tus Cristales cercanos al blanco le lanzan una esquirla con el 20% del daño, sin efectos. Si llevas en tus ranuras alguna técnica de Minerales, el 40%.', cost: { iron: 1, stone: 3 }, theme: 'stone' },
   { id: 'm_blunt',   slot: 'mag',     name: 'Bala roma',            tag: 'El quinto aturde',   desc: 'Cada quinto disparo deja aturdido al enemigo 0,6 s. A los jefes no los aturde.', cost: { iron: 1, dream: 2 } },
   { id: 'm_grow',    slot: 'mag',     name: 'Bala voraz',           tag: 'Más daño al matar',      desc: 'Cada enemigo que matas de un disparo sube un 2% el daño de tus disparos hasta el final de la partida, hasta +60% (30 bajas). Los jefes no cuentan.', cost: { iron: 2, blood: 2 } },
@@ -565,7 +565,7 @@ const PARTS = [
   { id: 'm_timed',   slot: 'mag',     name: 'Bala de mecha',        tag: 'Explota después',    desc: 'El disparo se queda clavado y explota 1 s después, con la mitad del daño, al blanco y a los que tenga muy cerca. Si el blanco muere antes, explota donde cayó.', cost: { iron: 1, void: 2 } },
   { id: 'm_leech',   slot: 'mag',     name: 'Bala sanguijuela',     tag: 'Cura cada 8 impactos',     desc: 'Cada 8 impactos de tus disparos te curas 2 de vida. Cada impacto cuenta por separado, también los de un disparo que da a varios enemigos.', cost: { iron: 1, frost: 2 } },
   { id: 's_sapper',  slot: 'stock',   name: 'Culata de zapador',    tag: 'Pegado al muro',     desc: 'Mientras estés pegado a un muro, tus disparos hacen un 30% más de daño.', cost: { iron: 1, dream: 2 } },
-  { id: 's_dance',   slot: 'stock',   name: 'Culata de bailarín',   tag: 'Atravesar devuelve esquive',  desc: 'Atravesar a un enemigo con el esquive te devuelve la carga de ese esquive al momento. Solo una vez por esquive.', cost: { iron: 1, mirror: 2 } },
+  { id: 's_dance',   slot: 'stock',   name: 'Culata de bailarín',   tag: 'Atravesar devuelve esquive',  desc: 'Atravesar a un enemigo con el esquive te devuelve una carga de esquive al momento (sin pasar de tu máximo). Solo una vez por esquive. Las estocadas del Asta y las embestidas de las Recámaras de embestida y de trueno cuentan como un esquive cada una: no gastan carga, así que te recargan una gastada.', cost: { iron: 1, mirror: 2 } },
   { id: 's_tower',   slot: 'stock',   name: 'Culata de torre',      tag: 'Sin esquive, más duro',        desc: 'No puedes esquivar. A cambio, recibes un 30% menos de daño y tus disparos hacen un 25% más. Tus técnicas de Esquive y las piezas que dependen de esquivar dejan de servirte.', cost: { iron: 2, forge: 2 } },
   { id: 's_loot',    slot: 'stock',   name: 'Culata de saqueador',  tag: 'Más oro',            desc: 'Todo el oro que ganas aumenta un 50%: el de las bajas, el de las salas y el de los premios.', cost: { iron: 1, light: 2 } },
   { id: 's_wind',    slot: 'stock',   name: 'Culata de segundo aire', tag: 'Cura de emergencia', desc: 'Una vez por sala, si un golpe te deja por debajo del 30% de tu vida, recuperas de golpe el 20% de tu vida máxima.', cost: { iron: 1, void: 2 } },
@@ -596,7 +596,7 @@ const PARTS = [
   { id: 'c_volley',  slot: 'chamber', name: 'Recámara de salva',    tag: 'Ocho seguidos',      desc: 'El disparo cargado suelta ocho disparos seguidos contra tu objetivo, o contra el enemigo más cercano a donde apuntas. Cada uno hace el 20% del daño del cargado y lleva tus efectos de disparo.', cost: { iron: 2, beast: 2 } },
   { id: 'c_sima',    slot: 'chamber', name: 'Recámara de sima',     tag: 'Abre un pozo',       desc: 'El disparo cargado abre un pozo de 2 s donde apuntas: arrastra a los enemigos cercanos, les hace el 15% del daño del cargado cada medio segundo y al cerrarse estalla con el 80%. Si llevas en tus ranuras alguna técnica de Vacío, dura 4 s. A los jefes no los arrastra.', cost: { iron: 2, void: 3 }, theme: 'void' },
   { id: 'c_doom',    slot: 'chamber', name: 'Recámara de sentencia', tag: 'Pone Sentencias',   desc: 'El disparo cargado es un rayo en línea que pone una Sentencia de 5 s a todos los que atraviesa y les hace el 60% del daño del cargado. No necesita ninguna técnica de Final: al cumplirse, cada Sentencia devuelve el 40% del daño que le hiciste. Si llevas en tus ranuras alguna técnica de Final, todas tus Sentencias devuelven un 50% más. No renueva una Sentencia que ya esté en marcha.', cost: { iron: 2, end: 3 }, theme: 'end' },
-  { id: 'c_anvil',   slot: 'chamber', name: 'Recámara de yunque',   tag: 'Da Temple',          desc: 'El disparo cargado es un martillazo a tu alrededor: el 90% del daño del cargado, y aturde 0,5 s. Cada enemigo golpeado te da 1 de Temple (hasta 10); si llevas en tus ranuras alguna técnica de Forja, 2. El Temple te suma daño aunque no lleves técnicas de Forja.', cost: { iron: 2, forge: 3 }, theme: 'forge' },
+  { id: 'c_anvil',   slot: 'chamber', name: 'Recámara de yunque',   tag: 'Da Temple',          desc: 'El disparo cargado es un martillazo a tu alrededor: el 90% del daño del cargado, y aturde 0,5 s. Cada enemigo golpeado te da 1 de Temple (hasta tu máximo, 10 sin más ayudas); si llevas en tus ranuras alguna técnica de Forja, 2. El Temple te suma daño aunque no lleves técnicas de Forja.', cost: { iron: 2, forge: 3 }, theme: 'forge' },
   { id: 'c_ward',    slot: 'chamber', name: 'Recámara de baluarte', tag: 'Invulnerable 2 s', desc: 'El disparo cargado no ataca: eres invulnerable 2 s y apartas a los enemigos que tienes encima. Tus técnicas de Cargado sí se aplican a esos enemigos.', cost: { iron: 2, frost: 2 } },
   { id: 'c_blink',   slot: 'chamber', name: 'Recámara de salto',    tag: 'Te lleva allí',      desc: 'El disparo cargado te lleva al instante junto a tu objetivo, o a donde apuntas, y revienta al llegar: el 80% del daño del cargado en área. Al aparecer eres invulnerable un instante.', cost: { iron: 2, mirror: 2 } },
   { id: 'c_drain',   slot: 'chamber', name: 'Recámara de sanguijuela', tag: 'Rayo que cura',   desc: 'El disparo cargado es un rayo en línea que hace el 90% del daño del cargado. Recuperas como vida el 30% de todo el daño que hace, hasta un 25% de tu vida máxima.', cost: { iron: 2, blood: 2 } },
@@ -615,11 +615,11 @@ const LEGENDS = [
   { id: 'widow',    name: 'La Viuda',            parts: ['b_blow', 'm_saw', 's_spikes'],    lore: 'Una cerbatana de hueso que nadie ha visto usar dos veces contra el mismo hombre.', desc: 'Necesitas montar a la vez Cerbatana, Bala serrada y Culata de púas. Cada Herida que abres pone también 1 de Veneno. A los enemigos que tienen Heridas y Veneno a la vez, las dos cosas les hacen el doble de daño.' },
   { id: 'winter',   name: 'Invierno del Norte',  parts: ['b_icicle', 'm_ice', 'c_nova'],    lore: 'Forjada en una fragua que se apagó sola. El hierro nunca volvió a calentarse.', desc: 'Necesitas montar a la vez Carámbano, Bala de escarcha y Recámara de anillo. La onda del disparo cargado deja Congelados al instante a todos los que alcanza. A los jefes solo los frena.' },
   { id: 'choir',    name: 'El Coro',             parts: ['a_glass', 'm_quick', 'c_volley'], lore: 'Dispara una vez y se oyen nueve. Los que la han oído dicen que canta.', desc: 'Necesitas montar a la vez Llave de clepsidra, Bala de azogue y Recámara de salva. Cada uno de los ocho disparos de la salva cargada deja un eco que vuelve a dar 0,8 s después, con el 15% del daño del cargado y los efectos de tus técnicas.' },
-  { id: 'pack',     name: 'La Jauría',           parts: ['s_kennel', 'b_swarm', 'a_rider'], lore: 'El maestro de Alec decía que un arma con perros no necesita puntería.', desc: 'Necesitas montar a la vez Culata de perrera, Avispero y Llave de jinete. Tienes dos sabuesos más luchando a tu lado, además del de la Culata de perrera.' },
+  { id: 'pack',     name: 'La Jauría',           parts: ['s_kennel', 'b_swarm', 'a_rider'], lore: 'El maestro de Alec decía que un arma con perros no necesita puntería.', desc: 'Necesitas montar a la vez Culata de perrera, Avispero y Llave de jinete. Tienes dos perros más luchando a tu lado, además del de la Culata de perrera. Crecen con la Caza como los demás, y la manada nunca pasa de seis.' },
   { id: 'blacksun', name: 'Sol Negro',           parts: ['c_sima', 'm_star', 'b_far'],      lore: 'Una luz que no alumbra: solo señala dónde va a caer todo.', desc: 'Necesitas montar a la vez Recámara de sima, Bala de lucero y Largavista. Los enemigos que estén dentro de cualquiera de tus pozos quedan Iluminados y reciben un 50% más de todo el daño directo mientras sigan dentro.' },
   { id: 'master',   name: 'Martillo del Maestro', parts: ['c_anvil', 'a_kick', 'm_big'],    lore: 'Lo último que forjó el herrero que crio a Alec. No llegó a templarlo.', desc: 'Necesitas montar a la vez Recámara de yunque, Llave de trueno y Bala de calibre. El Temple puede subir 10 puntos más, y cada cañonazo de la Llave de trueno revienta alrededor del blanco con el 100% de tu daño base.' },
   { id: 'lastword', name: 'La Última Palabra',   parts: ['c_doom', 'a_spring', 'm_last'],   lore: 'Seis balas. La sexta no falla porque ya está escrito.', desc: 'Necesitas montar a la vez Recámara de sentencia, Llave de resorte y Última bala. El sexto disparo de la Última bala cumple al instante todas las Sentencias que haya en la sala.' },
-  { id: 'tempest',  name: 'Tempestad',           parts: ['b_rod', 'a_rotary', 'm_chain'],   lore: 'Hay que sujetarla con guantes. Aun así, muerde.', desc: 'Necesitas montar a la vez Vara de cobre, Manivela de ribadoquín y Bala enramada. Los enemigos se descargan solos al juntar 3 Agujas de la Vara de cobre, en vez de 6. No funciona si llevas la técnica Sobrecarga (Tormenta).' },
+  { id: 'tempest',  name: 'Tempestad',           parts: ['b_rod', 'a_rotary', 'm_chain'],   lore: 'Hay que sujetarla con guantes. Aun así, muerde.', desc: 'Necesitas montar a la vez Vara de cobre, Manivela de ribadoquín y Bala enramada. Los enemigos se descargan solos al juntar 3 Agujas de la Vara de cobre, en vez de 6. Funciona también con la técnica Sobrecarga (Tormenta): se descargan a las 3 y no llegan a las 6 de Sobrecarga.' },
   { id: 'breaker',  name: 'La Rompemuros',       parts: ['b_pierce', 'm_heavy', 's_heavy'], lore: 'Dicen que el herrero la forjó en una vida anterior y que aún recuerda cada muro.', desc: 'Necesitas montar a la vez Culebrina, Bala de cañón y Culata herrada. El disparo de la Culebrina rebota hasta cuatro veces en vez de una, y cada rebote hace un 25% más de daño que el anterior.' },
 ];
 const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id)) || null;
@@ -678,7 +678,7 @@ const RESO = [
   { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'Necesitas la Bala de sangre en el arma y la técnica Sangría (Cargado de Sangre, o un dúo con ella). El disparo cargado de Sangría ya no te cuesta el 10% de tu vida y conserva su daño extra. La Bala de sangre te sigue costando 1 de vida por disparo.' },
   { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'Necesitas la Recámara de meteoro en el arma y la técnica Singularidad (Cargado de Vacío, o un dúo con ella). Al lanzar el meteoro se abre durante 1 s un pozo en el punto de impacto, que arrastra a todos hacia él antes de que caiga.' },
   { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Necesitas la Largavista en el arma y la técnica Señalar (Disparo de Luz, o un dúo con ella). Cada disparo lejano de la Largavista (el que hace el doble) deja también Iluminados a los enemigos de alrededor del blanco.' },
-  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'Necesitas la Mecha lenta en el arma y la técnica Arrullo (Disparo de Sueño, o un dúo con ella). Cada disparo de la Mecha lenta Duerme 3 s al enemigo, salvo que se haya despertado hace menos de 4 s. A los jefes solo los frena.' },
+  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'Necesitas la Mecha lenta en el arma y la técnica Arrullo (Disparo de Sueño, o un dúo con ella). Cada disparo de la Mecha lenta Duerme 3 s al enemigo, salvo que se haya despertado hace menos de 4 s. A los jefes los deja Adormilados 1,5 s.' },
   { id: 'anvilsong',    name: 'Canto del yunque',    parts: ['a_kick'],    techs: ['forge_basic'],  desc: 'Necesitas la Llave de trueno en el arma y la técnica Temple (Disparo de Forja, o un dúo con ella). Cada cañonazo de la Llave de trueno te da 2 de Temple.' },
   { id: 'tidalhook',    name: 'Resaca',              parts: ['b_harpoon'], techs: ['tide_basic'],   desc: 'Necesitas el Arpón en el arma y la técnica Oleaje (Disparo de Mareas, o un dúo con ella). El enemigo que engancha el Arpón queda Empapado 5 s y aturdido 0,6 s. A los jefes no los aturde.' },
   { id: 'thornmine',    name: 'Semillero',           parts: ['c_mine'],    techs: ['wood_charge'],  desc: 'Necesitas la Recámara de minas en el arma y la técnica Zarzal (Cargado de Bosque, o un dúo con ella). Cada mina deja al estallar un zarzal de 4 s que frena a la mitad y hace el 25% de tu daño base cada 0,4 s a quien esté dentro.' },
@@ -765,25 +765,26 @@ const GLOSS = [
   [/\becos?\b/, 'Eco', 'repetición del disparo que llega sola 1,5 s después al mismo enemigo (técnicas del Tiempo). Aplica tus efectos de disparo y puede ser crítico.'],
   [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y luchan a tu lado 9 s (técnicas de Sombras). Como mucho tienes 2 más el nivel de tu técnica de disparo de Sombras; si sale otra, se va la más vieja.'],
   [/Agujas?|descarg/, 'Agujas', 'se clavan en un enemigo sin hacer daño, hasta 6 (técnicas de Tormenta). Se caen a los 6 s si no le clavas más. Al descargarlas, recibe tu daño por cada Aguja y salta un rayo por Aguja (60% de tu daño) a enemigos cercanos.'],
-  [/Empapad|empapa/, 'Empapado', 'mojado unos segundos (técnicas de Mareas). Solo no hace nada: algunas técnicas de Mareas y dúos hacen más contra enemigos Empapados.'],
+  [/Empapad|empapa/, 'Empapado', 'mojado unos segundos (técnicas de Mareas). A un Empapado le basta un empujón más flojo para chocar contra un muro. Un jefe Empapado, que no se deja empujar, recibe ese golpe con cada empujón fuerte, sin aturdirse y una vez cada 3 s. Además, algunas técnicas de Mareas y dúos hacen más contra Empapados.'],
   [/Semillas?/, 'Semillas', 'se plantan en un enemigo (técnicas de Bosque). Al juntar 3 (2 si tu técnica de disparo de Bosque está a nivel 2 o más), brotan: recibe el 80% de tu daño por nivel de esa técnica y queda Enraizado 1,5 s.'],
   [/Raíces|enraíza|enraizad|Enraizad/, 'Enraizado', 'el enemigo no puede moverse del sitio, pero sí atacar. En los jefes dura un tercio.'],
   [/Escarcha|Congelad|congela/, 'Escarcha', 'puntos de frío (técnicas de Hielo). Cada punto frena al enemigo un 12% más. Al quinto queda Congelado 1,5 s: ni se mueve ni ataca. Los jefes solo quedan muy frenados, la mitad de tiempo. Si pasan 4 s sin ponerle más, se va.'],
   [/Heridas?\b|sangra/, 'Heridas', 'cortes que sangran (técnicas de Sangre), hasta 6. Cada medio segundo el enemigo pierde el 5% de tu daño por Herida, y hasta el triple cuanta menos vida te quede a ti. Duran 5 s desde la última.'],
-  [/Sentencias?/, 'Sentencia', 'cuenta atrás de 5 s sobre un enemigo (la ponen las técnicas del Final y la Recámara de sentencia). Mientras dura, apunta todo el daño que le haces. Al acabar, recibe de golpe un porcentaje de ese daño: del 40% al 80% según el nivel de la técnica Sentencia. Solo una por enemigo.'],
+  [/Sentencias?/, 'Sentencia', 'cuenta atrás de 5 s sobre un enemigo (la ponen las técnicas del Final y la Recámara de sentencia). Mientras dura, apunta el daño de tus golpes (el continuo no cuenta). Al acabar, recibe de golpe un porcentaje de ese daño: del 40% al 120% según el nivel de la técnica Sentencia. Si muere antes, estalla: cada enemigo de alrededor recibe lo que le tocaba a él. Solo una por enemigo.'],
   [/Ilumina/, 'Iluminado', 'marcado con luz 6 s (técnicas de Luz). Solo no hace nada. Si llevas la técnica Señalar (disparo de Luz), cuando un Iluminado recibe daño, los demás Iluminados reciben también del 30% al 70% (según su nivel).'],
-  [/Dormid|\bduerme/, 'Dormido', 'ni se mueve ni ataca (técnicas del Sueño). El primer golpe hace más daño y lo despierta; el daño continuo también lo despierta. Los jefes no se duermen: quedan frenados a la mitad. Tras despertar no puede volver a dormirse en 4 s.'],
+  [/Dormid|\bduerme|Adormilad/, 'Dormido', 'ni se mueve ni ataca (técnicas del Sueño). El primer golpe le hace el doble de daño (más con la técnica Arrullo) y lo despierta; el daño continuo también lo despierta. Los jefes no se duermen: quedan Adormilados la mitad de ese tiempo, frenados a la mitad, y cuentan como Dormidos para todo el daño extra. Tras despertar no puede volver a dormirse en 4 s (un jefe, en 6 s desde que lo adormilas).'],
   [/pozo|Singularidad/, 'Pozo', 'punto del suelo que arrastra hacia él a los enemigos cercanos unos segundos (técnicas del Vacío y algunas piezas). No arrastra a los jefes.'],
   [/\bReflejo\b/, 'Reflejo', 'copia tuya que aparece al otro lado de tu objetivo y repite tus disparos (técnicas de Espejos).'],
-  [/sabueso/, 'Sabueso', 'perro que te acompaña y muerde al enemigo al que disparas (técnicas de Bestias o la Culata de perrera).'],
-  [/Temple/, 'Temple', 'puntos que gana el arma al disparar (técnicas de Forja), hasta 10. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.'],
+  [/sabueso|cachorro|\bperros?\b|[Mm]anada|lobo alfa/, 'Manada', 'los perros que te acompañan y muerden cada 0,8 s al enemigo al que disparas (técnicas de Bestias o la Culata de perrera). Empiezan de cachorros, que muerden al 60% de su fuerza; crecen a sabuesos (100%) y el primero llega a lobo alfa: 130%, corre más y cada mordisco alcanza también, con el 30% de su daño, a hasta 3 enemigos pegados a su presa. Seis perros como mucho.'],
+  [/\bCaza\b/, 'Caza', 'bajas de la misión con algún perro a tu lado; un elegido o un jefe cuentan por 5. No se pierde al cambiar de sala. Con 6 de Caza, los cachorros crecen a sabuesos; con 25, el primero se hace lobo alfa; con 60 se une un cachorro más, que crece a sabueso con 120. Bajo el primer perro, una barra marca lo que falta.'],
+  [/Temple/, 'Temple', 'puntos que gana el arma al disparar (técnicas de Forja), hasta 10; la técnica Temple sube ese máximo 2 por nivel a partir del segundo. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.'],
   [/crític/, 'Crítico', 'disparo que hace el 250% del daño. Solo hay probabilidad de crítico si llevas algo que la dé (técnicas de Fortuna, la Llave de dados…).'],
   [/aturd/, 'Aturdido', 'ni se mueve ni ataca durante el tiempo indicado.'],
   [/Compás/, 'Compás', 'pulsar el disparo justo cuando se llena el anillo que te rodea (Llaves de compás).'],
   [/frenazo|te frena/, 'Frenazo', 'el instante en que te quedas quieto al disparar. Algunas piezas lo acortan o lo quitan.'],
   [/esquive que lo atraviesa|[Aa]travesar a un enemigo con el esquive|[Ee]mbestir a un enemigo|Atravesar/, 'Atravesar', 'esquivar pasando a través de un enemigo.'],
   [/zarzal|zarzas/, 'Zarzal', 'espinas en el suelo que frenan y dañan a quien las pisa.'],
-  [/contra (un|el) muro/, 'Golpe contra el muro', 'si empujas fuerte a un enemigo contra un muro o el borde de la sala, recibe un golpe extra y queda aturdido. No funciona con jefes.'],
+  [/contra (un|el) muro/, 'Golpe contra el muro', 'si empujas fuerte a un enemigo contra un muro o el borde de la sala, recibe un golpe del 90% de tu daño y queda aturdido 0,7 s. A los jefes no se les empuja: solo lo reciben si están Empapados.'],
   [/Maestría/, 'Maestría', 'efecto extra de una deidad: se activa si llevas técnicas suyas en 3 de tus 4 acciones (disparo, cargado, esquive y pasiva).'],
   [/\b[Dd]úos?\b/, 'Dúo', 'técnica que mezcla dos. Te la ofrecen si llevas una técnica de una deidad en una acción y otra deidad te da la suya para esa misma acción. Sustituye a las dos.'],
   [/[Rr]esonancia/, 'Resonancia', 'efecto extra que se activa solo al llevar a la vez una pieza concreta del arma y una técnica concreta.'],
@@ -3031,12 +3032,13 @@ const periodOf = () => {
   return 1 / (p.as * (has('h_frenzy') && p.hp < p.maxHp * 0.3 ? 1.4 : 1) * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
+const overWalls = () => G('b_ghost') || G('b_bomb');   // el Cañón fantasma atraviesa los muros y la Bombarda tira por encima: no necesitan ver al objetivo
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
     if (!active(e)) continue;
     const d = dist(p, e) - e.r;
-    if (d <= rng && d < bd && (G('b_ghost') || !blocked(p, e))) { bd = d; bestE = e; }
+    if (d <= rng && d < bd && (overWalls() || !blocked(p, e))) { bd = d; bestE = e; }
   }
   return bestE;
 }
@@ -3067,6 +3069,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
+  if (S.pets.length) S.build.caza = caza() + (e.boss || e.champ ? 5 : 1);                         // Bestias: la Caza de la manada
   { const ck = charKey(e), m = ATLAS[ck]; if (m && m.a.die && !e.boss) S.fx.push({ k: 'corpse', key: ck, x: e.x, y: e.y + e.r + 2, flip: Math.cos(e.dir) < 0, t: 0, life: 1.4 }); }   // se desploma
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
@@ -3074,7 +3077,8 @@ function kill(e) {
   if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
   if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
   if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
-  { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
+  if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
+  { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Culata de lápida
   if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Culata de bota de vino
@@ -3127,13 +3131,13 @@ function hit(e, dmg, ux, uy, big, col) {
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
     { const fb3 = lv('forge_basic'), bp3 = lv('beast_passive');
-      if (fb3 || p.temper > 0) dmg *= 1 + 0.03 * temperNow();                                   // Temple
+      { const tn = temperNow(); if (tn > 0) dmg *= 1 + 0.03 * tn; }                              // Temple (y los Cristales del dúo Piedra de amolar)
       if (bp3 && e.hp / e.maxHp < 0.3) dmg *= 1 + 0.25 * bp3;                                   // Olfato
       if (has('g_whet')) dmg *= 1.08; }
     { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
       if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
       if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
-      if (e.sleep > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
+      if (e.sleep > 0 || e.doze > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
@@ -3164,7 +3168,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
-  if (e.sleep > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
+  if (e.sleep > 0 || e.doze > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
   e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
@@ -3202,31 +3206,64 @@ function explode(x, y, r, dmg, o) {
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min((mastery('dragon') ? 20 : 8) + (G('b_wyrm') && th('dragon') ? 4 : 0), e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
-// Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
+// Espejos, Bestias y Forja: el Reflejo, la manada y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
-const petN = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
-const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge') + (leg('master') ? 10 : 0);
+// Bestias: la manada crece con la Caza, las bajas de la misión con algún perro a tu lado (elegidos y jefes cuentan 5).
+// Va guardada dentro de S.build (que nadie recorre entero) para que no se pierda de una sala a otra ni al continuar una partida.
+const PACK = { grow: [6, 25], join: [60, 120], k: [0.6, 1, 1.3], name: ['cachorro', 'sabueso', 'lobo alfa'], names: ['cachorros', 'sabuesos', 'lobos alfa'], max: 6 };
+const caza = () => (S.build && S.build.caza) || 0;
+const petBase = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const petN = () => { const n = petBase(); return n ? Math.min(PACK.max, n + (caza() >= PACK.join[0] ? 1 : 0)) : 0; };   // con 60 de Caza se une un cachorro (si caben: seis perros como mucho)
+// Etapa de cada perro: 0 cachorro, 1 sabueso, 2 lobo alfa. Solo el primero llega a alfa (los dos primeros con la maestría Jauría).
+// El de la camada es el último y va por detrás: cachorro desde 60 de Caza, sabueso desde 120.
+function packStage(i) {
+  const c = caza();
+  if (c >= PACK.join[0] && i >= petBase()) return c >= PACK.join[1] ? 1 : 0;
+  return c >= PACK.grow[1] && i < (mastery('beast') ? 2 : 1) ? 2 : c >= PACK.grow[0] ? 1 : 0;
+}
+const biteK = () => { const lb = lv('beast_basic'); return lb ? 0.15 + 0.3 * lb : 0.3; };   // mordisco de un sabueso adulto
+// Avisa cuando la manada crece (y no al cargar una partida ni al conseguir el primer perro)
+function packWatch() {
+  const n = S.pets.length;
+  if (!n) { S.packSeen = null; return; }
+  const c = caza(), now = { st: packStage(0), lit: n > petBase() ? 1 + packStage(n - 1) : 0 }, was = S.packSeen; S.packSeen = now;
+  if (!was) return;
+  const pt = S.pets[0], col = GODS.beast.color, tell = (pet, short, long) => { note(pet.x, pet.y - 16, short, col, true); S.fx.push({ k: 'ring', x: pet.x, y: pet.y, r: 26, t: 0, life: 0.5, col }); sayRaw('[' + long + ' Caza: ' + c + '.]', col); blip(330, 0.35, 'triangle', 0.06, 500); };
+  if (now.st > was.st) tell(pt, now.st === 2 ? '¡Lobo alfa!' : '¡Ya es un sabueso!', now.st === 2 ? 'Tu sabueso es ahora un lobo alfa: muerde un 30% más fuerte, corre más y su mordisco alcanza a los enemigos pegados a su presa.' : 'Tu cachorro ha crecido: ya es un sabueso y muerde con toda su fuerza.');
+  if (now.lit > was.lit) tell(S.pets[n - 1], now.lit === 2 ? '¡Ya es un sabueso!' : '¡Un cachorro!', now.lit === 2 ? 'El cachorro de la camada ha crecido: ya es un sabueso.' : 'Un cachorro se une a tu manada.');
+}
+// «Ahora: …» al final de las descripciones de Bestias, para ver cómo va la manada desde la pausa
+function packStatus() {
+  if (!S || !M.run || !S.pets || !S.pets.length || ['title', 'town', 'forge', 'dead', 'win'].includes(S.mode)) return '';
+  const c = caza(), cnt = [0, 0, 0], next = PACK.grow.concat(PACK.join).find(x => c < x); S.pets.forEach((_, i) => cnt[packStage(i)]++);
+  const parts = [2, 1, 0].filter(k => cnt[k]).map(k => cnt[k] + ' ' + (cnt[k] > 1 ? PACK.names[k] : PACK.name[k]));
+  return ` Tu manada ahora: ${parts.length > 1 ? parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1] : parts[0]}. Caza: ${c}${next ? ' (el siguiente cambio llega con ' + next + ')' : ''}.`;
+}
+const temperMax = () => (lv('forge_basic') ? 8 + 2 * lv('forge_basic') : 10) + (mastery('forge') ? 5 : 0) + aff('forge') + (leg('master') ? 10 : 0);
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
-function bite(pet, e, k) {
-  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1; S.stat.bite++;
-  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 4, t: 0, life: 0.1, col: GODS.beast.color });
-  onHit(e, p.dmg * k * (1 + 0.12 * aff('beast')), (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
+// Un mordisco. order: lo manda una técnica (Manada, Montería) con su propio porcentaje, sin contar la etapa del perro.
+function bite(pet, e, k, order) {
+  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1, st = order ? 1 : pet.st || 0, ux = (e.x - pet.x) / d, uy = (e.y - pet.y) / d; S.stat.bite++;
+  const dmg = p.dmg * k * PACK.k[st] * (1 + 0.12 * aff('beast'));
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + (st === 2 ? 14 : 4), t: 0, life: st === 2 ? 0.16 : 0.1, col: GODS.beast.color });
+  onHit(e, dmg, ux, uy, false, GODS.beast.color, 'pet');
+  if (st === 2) { let n = 0; for (const o of S.enemies.slice()) { if (o === e || !active(o) || dist(e, o) > e.r + o.r + 12) continue; hit(o, dmg * 0.3, ux, uy, false, GODS.beast.color); if (++n >= 3) break; } }   // lobo alfa: alcanza a los pegados a la presa
   if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
   if (!active(e) && has('a_feral')) heal(2);
 }
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 const shareK = () => 0.2 + 0.1 * lv('light_basic') + 0.04 * aff('light');
 function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
-const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
+const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? (e.boss || e.champ ? 3 : 1) : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
 function sleep(e, t) {
   if (!active(e) || (e.sleepCd || 0) > S.t) return;
   t = (t + 0.4 * aff('dream')) * (duoOn('siesta') ? 2 : 1);
-  if (e.boss) { slow(e, t * 0.5, 0.5); e.sleepCd = S.t + 6; return; }
+  if (e.boss) { slow(e, t * 0.5, 0.5); e.doze = t * 0.5; e.sleepHits = mastery('dream') ? 1 : 0; e.sleepCd = S.t + 6; S.stat.sleep++; note(e.x, e.y - e.r - 10, 'Adormilado', GODS.dream.color); return; }   // los jefes no se duermen: Adormilados (frenados), pero cuentan como Dormidos para el daño
   e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
   note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
 }
-function wake(e) { e.sleep = 0; e.wokeT = S.t; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function wake(e) { e.sleep = 0; e.doze = 0; e.wokeT = S.t; e.sleepCd = Math.max(e.sleepCd || 0, S.t + 4); if (has('z_night')) slow(e, 2, 0.5); }
 function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
 function addWell(x, y, r, life, pulse, end, o) { const k = (mastery('void') ? 1.4 : 1) * (1 + 0.1 * aff('void')); S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
 const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
@@ -3246,7 +3283,7 @@ function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.fr
 function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
-const doomK = () => (0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
+const doomK = () => (0.2 + 0.2 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
 function fulfil(e, bonus) {
   const d = e.doom; if (!d || !active(e)) return;
@@ -3257,7 +3294,23 @@ function fulfil(e, bonus) {
 }
 // Mareas: empapar y empujar. Bosque: semillas que brotan en raíces. Fortuna: críticos.
 function soak(e, t) { if (active(e)) e.wet = Math.max(e.wet || 0, t); }
-function push(e, ux, uy, f) { if (!active(e) || e.boss) return; e.kx += ux * f; e.ky += uy * f; }
+const slamV = e => (e.wet > 0 ? 90 : 170);   // a un Empapado le basta un empujón más flojo para estamparse
+function push(e, ux, uy, f) {
+  if (!active(e)) return;
+  if (e.boss) { if (e.wet > 0 && f >= 100 && (e.slamCd || 0) <= 0) { e.slamCd = 3; wallSlam(e, ux, uy, null); } return; }   // un jefe Empapado no se mueve, pero el empujón lo golpea igual
+  e.kx += ux * f; e.ky += uy * f;
+}
+// Golpe contra el muro (o, en un jefe Empapado, el empujón que no puede moverlo)
+function wallSlam(e, ux, uy, reef) {
+  const p = S.p; S.stat.slam++;
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
+  if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
+  if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
+  if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
+  if (has('w_deep')) addGold(1);                                         // Mar de fondo
+  if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
+  note(e.x, e.y - e.r - 6, e.boss ? '¡Golpe de mar!' : '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), ux, uy, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+}
 function root(e, t) {
   if (!active(e)) return;
   t *= (1 + 0.15 * aff('wood')) * (mastery('wood') ? 2 : 1) * (duoOn('mangrove') && e.wet > 0 ? 2 : 1) * (e.boss ? 0.35 : 1);
@@ -3283,7 +3336,7 @@ function onCrit(e) {
   if (duoOn('facet')) addCrystal(e.x + rnd(-14, 14), e.y + rnd(-14, 14));             // dúo Faceta
   if (duoOn('snakeeyes') && e.venom > 0) e.venom = Math.min(30, e.venom * 2);         // dúo Ojos de serpiente
   if (duoOn('clover') && active(e) && e.seed > 0) sprout(e);                          // dúo Trébol
-  if (duoOn('verdict') && active(e) && e.doom) fulfil(e);                             // dúo Veredicto
+  if (duoOn('verdict') && active(e) && e.doom && e.doom.acc > 0) fulfil(e);           // dúo Veredicto (si el crítico acaba de ponerla, aún está vacía y no se gasta)
   if (has('l_jack') && !active(e)) { explode(e.x, e.y, 48, p.dmg * 1.5, { col: GODS.luck.color }); addGold(3); }   // Premio gordo
 }
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
@@ -3370,7 +3423,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   { const lb2 = lv('light_basic'), db2 = lv('dream_basic'), vb2 = lv('void_basic');
     if (lb2 || (src === 'shade' && duoOn('eclipse'))) light(e);                                // Señalar (y dúo Eclipse)
     if (db2 && src === 'player' && p.shotN % Math.max(2, 5 - db2) === 0 && active(e)) sleep(e, 3);   // Arrullo
-    if (vb2 && src === 'player' && active(e)) tug(e, 70, 55 + 25 * vb2); }                     // Gravedad
+    if (vb2 && src === 'player' && active(e)) { tug(e, 70, 55 + 25 * vb2); for (const o of others(e, 70, 8)) hit(o, dmg * (0.15 + 0.05 * vb2), 0, 0, false, GODS.void.color); } }   // Gravedad: junta a los de alrededor y el tirón les hace daño
   if (src === 'player') {   // ofrendas y resonancia Vigilia
     if (res('vigil') && braced()) slow(e, 1, 0.4);
     if (has('d_warm') && p.shotN % 4 === 0) addEmber(e, 1);
@@ -3383,7 +3436,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
     if (has('q_shard') && p.shotN % 5 === 0 && active(e) && !S._shard) { S._shard = true; S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 6, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, ux, uy, false, GODS.mirror.color); S._shard = false; }
     if (S.pets.length && S.pets.some(pt => pt.prey === e)) hit(e, dmg * 0.15, 0, 0, false, GODS.beast.color);   // Sabueso: +15% a su presa
     if (p.redhot > 0) { const o = others(e, 60, 1)[0]; if (o) { S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.1, col: GODS.forge.color }); hit(o, dmg * 0.5, 0, 0, false, GODS.forge.color); } if (duoOn('quench')) addNeedles(e, 2); }   // Al rojo (y dúo Templar al rayo)
-    if (has('g_slag') && p.temper >= temperMax()) explode(e.x, e.y, 30, dmg * 0.3, { col: GODS.forge.color, soft: true, skip: e });
+    if (has('g_slag') && temperNow() >= temperMax()) explode(e.x, e.y, 30, dmg * 0.3, { col: GODS.forge.color, soft: true, skip: e });
     if (duoOn('forgefire') && temperNow() >= 5) addEmber(e, 1);
     if (has('e_ink') && p.shotN % 4 === 0) addDoom(e);
   }
@@ -3452,7 +3505,7 @@ function shot(e, dmg, ux, uy, big, col) {
       onHit(e, dmg * 0.3 * sp * (res('crossfire') ? 2 : 1), (e.x - c.x) / (d || 1), (e.y - c.y) / (d || 1), false, GODS.stone.color, 'crystal');   // Veta (y resonancia Fuego cruzado)
     }
   }
-  if (duoOn('warthunder') && furyFull()) bolt(e, others(e, 120, 1)[0], dmg * 0.6, null);          // dúo Trueno de guerra
+  if (duoOn('warthunder') && furyFull()) { const o = others(e, 120, 1)[0]; bolt(e, o, dmg * 0.6, null); if (o && active(o)) addNeedles(o, lv('storm_passive')); }   // dúo Trueno de guerra: su rayo clava las Agujas de Conductor, que es una de sus dos técnicas
   if (G('m_chain')) {                                                                          // Bala enramada: salta al más cercano
     const o = others(e, 95, 1)[0];
     if (o) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
@@ -3465,7 +3518,7 @@ function fireBasic(target) {
   const p = S.p, g = S.gun, draw = g.action === 'a_draw';
   if (!target || !active(target)) target = nearestInRange();
   if (g.action === 'a_rota' && target) {   // Llave de ronda: cada disparo a un enemigo distinto del anterior
-    const alt = S.enemies.filter(e => active(e) && e !== p.rotaT && dist(p, e) - e.r <= rangeOf() && (G('b_ghost') || !blocked(p, e))).sort((a, b) => dist(p, a) - dist(p, b))[0];
+    const alt = S.enemies.filter(e => active(e) && e !== p.rotaT && dist(p, e) - e.r <= rangeOf() && (overWalls() || !blocked(p, e))).sort((a, b) => dist(p, a) - dist(p, b))[0];
     if (alt) target = alt; p.rotaT = target;
   }
   if (!target && !draw) { p.cd = 0.12; p.crit = false; return; }   // tensando se puede soltar sin objetivo
@@ -3533,7 +3586,7 @@ function fireBasic(target) {
       onHit(target, p.dmg * mult * 0.3 * mb * (1 + 0.1 * aff('mirror')) * (duoOn('prismatic') && target.lit > 0 ? 2 : 1), (target.x - m.x) / d, (target.y - m.y) / d, false, GODS.mirror.color, 'mirror');
       if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
     }
-    if (fb3 && p.shotN % Math.max(3, 9 - fb3 * 2) === 0) addTemper(1);         // Temple
+    if (fb3 && p.shotN % Math.max(2, 8 - fb3 * 2) === 0) addTemper(1);         // Temple
     if (g.stock === 's_geode' && target && active(target)) for (const c of S.crystals.slice(0, 4)) { const d = Math.hypot(target.x - c.x, target.y - c.y) || 1; if (d > 220) continue; S.stat.themed++; S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.stone.color }); hit(target, p.dmg * mult * (th('stone') ? 0.4 : 0.2), (target.x - c.x) / d, (target.y - c.y) / d, false, GODS.stone.color); }   // Culata de geoda
     if (p.redhot > 0) p.redhot -= 1;
     for (const pt of S.pets) if (target && active(target)) pt.prey = target; }  // el sabueso va a por quien disparas
@@ -3627,7 +3680,7 @@ function barrelFire(target, m, big, col, reach) {
     tracer(target.x, target.y, k > 1 ? 2 : 0); shot(target, p.dmg * m * k, ux, uy, big || k > 1, col);
   } else if (B === 'b_swarm') {          // tres dardos a tres enemigos al azar
     const pool = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort(() => Math.random() - 0.5).slice(0, 3); while (pool.length < 3) pool.push(target);
-    if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6); }   // resonancia Montería
+    if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6, true); }   // resonancia Montería
     pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: S.p.x, y1: S.p.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
   } else if (B === 'b_fork') {           // tres bocas: centro al objetivo, dos a los lados a lo primero que pillen
     for (const off of [0, -0.34, 0.34]) {
@@ -3676,7 +3729,7 @@ function barrelFire(target, m, big, col, reach) {
     if (active(target)) {                // cañones temáticos: lo suyo, aunque no lleves a esa deidad
       if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
       if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }
-      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= (leg('tempest') ? 3 : 6) && !has('r_over')) discharge(target, 1, null); }
+      if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= (leg('tempest') ? 3 : 6)) discharge(target, 1, null); }   // con Sobrecarga, a las 6 ya se han descargado solas y aquí no queda nada
       if (B === 'b_icicle') { addFrost(target, th('frost') ? 2 : 1); S.stat.themed++; }
     }
     if (B === 'b_long') {                // Remate: si mata, la bala sigue
@@ -3696,7 +3749,7 @@ function lunge(a, d) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.dodgeT = d / (p.speed * T.dodge.mult); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
-  p.dodgeFrom = { x: p.x, y: p.y }; p.dodgeHit = new Set(); p.isLunge = true; p.fly = false;
+  p.dodgeFrom = { x: p.x, y: p.y }; p.dodgeHit = new Set(); p.isLunge = true; p.fly = false; p.danced = false;
 }
 
 // ───────────────────────── Esquive ─────────────────────────
@@ -3739,7 +3792,7 @@ function endDodge() {
   { const md = lv('mirror_dodge'), bd3 = lv('beast_dodge'), fd3 = lv('forge_dodge');
     if (md && !p.isLunge) { S.fx.push({ k: 'ghost', x: from.x, y: from.y, t: 0, life: 0.6 + 0.3 * md }); S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 70, t: 0, life: 0.25, col: GODS.mirror.color }); for (const e of S.enemies) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 70 + e.r) stun(e, 0.6 + 0.3 * md); }   // Engaño
     if (bd3 && !p.isLunge && S.pets.length) { const pt = S.pets[0]; pt.x = from.x; pt.y = from.y; S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 50, t: 0, life: 0.2, col: GODS.beast.color });
-      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(2); } } } }   // Manada (y dúo Rastro de sangre)
+      for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 50 + e.r) { const d = Math.hypot(e.x - from.x, e.y - from.y) || 1; bite(pt, e, 0.8 * bd3, true); if (active(e)) { push(e, (e.x - from.x) / d, (e.y - from.y) / d, 200); if (duoOn('bloodhound')) { addBleed(e, 2); heal(2); } } } }   // Manada (y dúo Rastro de sangre)
     if (fd3 && !p.isLunge) p.redhot = 1 + fd3; }                              // Al rojo
   { const ld2 = lv('light_dodge'), dd2 = lv('dream_dodge'), vd2 = lv('void_dodge');
     if (ld2 && !p.isLunge) { S.fx.push({ k: 'ring', x: from.x, y: from.y, r: 90, t: 0, life: 0.3, col: GODS.light.color }); for (const e of S.enemies.slice()) if (active(e) && Math.hypot(e.x - from.x, e.y - from.y) < 90 + e.r) { light(e); hit(e, p.dmg * 0.5 * ld2, 0, 0, false, GODS.light.color); } }   // Resplandor
@@ -3787,7 +3840,7 @@ function chargePayoff(e) {
   if (rc && active(e)) discharge(e, 0.7 + 0.2 * (rc - 1), null);            // Sobretensión
   { const lc2 = lv('light_charge'), dc2 = lv('dream_charge');
     if (lc2 && active(e)) { if (e.lit > 0) { stun(e, 1); hit(e, p.dmg * 0.4 * lc2, 0, 0, false, GODS.light.color); } light(e); }   // Destello
-    if (dc2 && active(e)) { if (e.sleep > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; }
+    if (dc2 && active(e)) { if (e.sleep > 0 || e.doze > 0) { if (duoOn('digest')) addReserve(4); S._night = true; hit(e, p.dmg * 0.6, 0, 0, true, GODS.dream.color); S._night = false; }
       else if (e.wokeT === S.t) { if (duoOn('digest')) addReserve(4); hit(e, p.dmg * 0.6 * (1 + 0.8 * dc2), 0, 0, true, GODS.dream.color); }   // el propio cargado lo acaba de despertar: el golpe extra entra igual
       else sleep(e, 2); } }   // Pesadilla (y dúo Digestión)
   const fc = lv('frost_charge'), ec = lv('end_charge');
@@ -3873,7 +3926,8 @@ function castCharged(snap, mult, echo) {
     for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 76 + e.r) continue; strike(e, dmg * 0.9, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) stun(e, 0.5); if (!echo) { S.stat.themed++; addTemper(th('forge') ? 2 : 1); } }
   } else if (CH === 'c_meteor') {        // meteoro: cae un segundo después
     const tx = snap.tx, ty = snap.ty; S.fx.push({ k: 'ring', x: tx, y: ty, r: 70, t: 0, life: 1, col });
-    if (res('eventide')) addWell(tx, ty, 100, 1, 0, 0);                    // resonancia Horizonte de sucesos S.fx.push({ k: 'lob', x1: tx + 60, y1: ty - 160, x2: tx, y2: ty, t: 0, life: 1, col: '#3a3440' });
+    if (res('eventide')) addWell(tx, ty, 100, 1, 0, 0);                    // resonancia Horizonte de sucesos
+    S.fx.push({ k: 'lob', x1: tx + 60, y1: ty - 160, x2: tx, y2: ty, t: 0, life: 1, col: '#3a3440' });   // la roca, cayendo
     S.timers.push({ t: 1, fn: () => { S.shake = Math.max(S.shake, 10); S.stat.meteor++; explode(tx, ty, 70, dmg * 1.6, { col, payoff: true, stun: 0.5 }); } });
   } else if (CH === 'c_chain') {         // rayo que salta entre seis
     let from = o, cur = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < 260).sort((a, b) => Math.abs(angDiff(Math.atan2(a.y - o.y, a.x - o.x), snap.dir)) - Math.abs(angDiff(Math.atan2(b.y - o.y, b.x - o.x), snap.dir)))[0]; const seen = new Set();
@@ -4010,11 +4064,11 @@ function fireCharged(am) {
 }
 
 function hurtPlayer(dmg) {
-  if (S.p.inv <= 0) S.p.streak = 0;   // Racha: se pierde al recibir un golpe
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
   if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
+  p.streak = 0;                                                               // Racha: se pierde al recibir un golpe (no si lo para la rodela o se lo lleva el Reflejo)
   { const mp = lv('mirror_passive'); if (mp) explode(p.x, p.y, 64, p.dmg * mp, { col: GODS.mirror.color }); }   // Azogue
   if (G('s_tower')) dmg *= 0.7;                                               // Culata de torre
   if (G('s_anchor') && p.charging) dmg *= 0.5;                                // Culata de ancla
@@ -4025,7 +4079,8 @@ function hurtPlayer(dmg) {
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
   if (G('s_wind') && !S.windUsed && p.hp > 0 && p.hp < p.maxHp * 0.3) { S.windUsed = true; S.stat.wind++; heal(p.maxHp * 0.2); note(p.x, p.y - 20, '¡Segundo aire!', '#8fe08a', true); }   // Culata de segundo aire
-  if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata S.shake = Math.max(S.shake, 6);
+  if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata
+  S.shake = Math.max(S.shake, 6);
   gainFury(15);
   blip(110, 0.18, 'sawtooth', 0.07, -50);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento
@@ -4170,7 +4225,7 @@ function update(dt) {
     if (bestE) { S.lock = bestE; blip(900, 0.04, 'triangle', 0.03); }
   }
   if (am < 0.3) aimLatch = false;
-  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && !blocked(p, S.lock)) ? S.lock : nearestInRange();
+  const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && (overWalls() || !blocked(p, S.lock))) ? S.lock : nearestInRange();
   S.target = target;
 
   // Disparo cargado
@@ -4208,17 +4263,20 @@ function update(dt) {
       if (tg) { const dx = tg.x - p.x, dy = tg.y - p.y, d = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx) + (i ? Math.PI / 2 : 0), r = Math.min(70, d); wx = tg.x + Math.cos(a) * r; wy = tg.y + Math.sin(a) * r; }
       else { wx = p.x - Math.cos(p.face) * 30 * (i ? -1 : 1); wy = p.y - Math.sin(p.face) * 30; }
       const at = unstick(clamp(wx, 12, T.room.w - 12), clamp(wy, 12, T.room.h - 12)); m.x += (at.x - m.x) * Math.min(1, dt * 9); m.y += (at.y - m.y) * Math.min(1, dt * 9); }); }
-  // Sabuesos: van a por la presa (quien disparas) y muerden
-  { const n = petN(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5, prey: null, dir: 0 }); S.pets.length = n;
-    const lb = lv('beast_basic'), k = lb ? 0.6 * lb : 0.3;
-    for (const pt of S.pets) {
+  // La manada: cada perro va a por la presa (quien disparas) por su lado y muerde. Crece con la Caza.
+  { const n = petN(), k = biteK(); while (S.pets.length < n) S.pets.push({ x: p.x + 12, y: p.y + 8, cd: 0.5 + 0.13 * S.pets.length, prey: null, dir: 0, st: 0 }); S.pets.length = n;
+    packWatch();
+    S.pets.forEach((pt, i) => {
+      pt.st = packStage(i);
       if (!pt.prey || !active(pt.prey)) { pt.prey = null; let bd = 170; for (const e of S.enemies) { if (!active(e)) continue; const d = dist(p, e); if (d < bd) { bd = d; pt.prey = e; } } }
-      const goal = pt.prey || { x: p.x + 14, y: p.y + 10, r: 0 }, dx = goal.x - pt.x, dy = goal.y - pt.y, d = Math.hypot(dx, dy) || 1, reach = (goal.r || 0) + 8;
-      if (d > reach) { const sp = Math.min(d - reach + 1, 150 * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; pt.dir = dx; }
+      const a = i * 2.4 + 0.6, pr = pt.prey, gx = pr ? pr.x + Math.cos(a) * (pr.r + 10) : p.x + Math.cos(a) * 17, gy = pr ? pr.y + Math.sin(a) * (pr.r + 10) * 0.8 : p.y + 8 + Math.sin(a) * 10;
+      const dx = gx - pt.x, dy = gy - pt.y, d = Math.hypot(dx, dy) || 1;
+      if (d > 1.5) { const sp = Math.min(d, (pt.st === 2 ? 210 : 150) * dt); pt.x += dx / d * sp; pt.y += dy / d * sp; }
+      pt.dir = pr ? pr.x - pt.x : dx; pt.run = d > 3;
       if (dist(pt, p) > 300) { pt.x = p.x; pt.y = p.y; }
       pt.cd -= dt * (duoOn('warhound') && furyFull() ? 2 : 1);
-      if (pt.prey && d <= reach + 4 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pt.prey, k); }
-    } }
+      if (pr && dist(pt, pr) <= pr.r + 15 && pt.cd <= 0) { pt.cd = 0.8; bite(pt, pr, k); }
+    }); }
   for (const w of S.wells) {      // pozos del Vacío: arrastran, pulsan y al cerrarse estallan
     w.life -= dt; w.acc += dt; const pulse = w.acc >= 0.5; if (pulse) w.acc = 0;
     for (const e of S.enemies.slice()) {
@@ -4399,6 +4457,7 @@ function update(dt) {
     if (!mastery('light')) e.lit = Math.max(0, (e.lit || 0) - dt);
     if (e.napAfter && !(e.frozen > 0)) { e.napAfter = false; sleep(e, 2); }                     // dúo Hibernar
     e.traced = Math.max(0, (e.traced || 0) - dt); e.inWell = Math.max(0, (e.inWell || 0) - dt);
+    e.doze = Math.max(0, (e.doze || 0) - dt);
     e.frozen = Math.max(0, (e.frozen || 0) - dt); if (e.frost > 0 && !(e.frozen > 0)) { e.frostT -= dt; if (e.frostT <= 0) e.frost = 0; }
     if (e.bleed > 0) {                 // Heridas: sangran más cuanta menos vida tengas
       e.bleedT -= dt; e.bleedAcc = (e.bleedAcc || 0) + dt;
@@ -4409,16 +4468,10 @@ function update(dt) {
     if (e.doom) { e.doom.t -= dt; if (e.doom.t <= 0) { fulfil(e); if (e.hp <= 0) continue; } }
     e.slamCd = Math.max(0, (e.slamCd || 0) - dt);
     let reef = null;
-    if (duoOn('reef') && Math.hypot(e.kx, e.ky) > 170) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
-    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > 170 && (reef || touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
-      e.slamCd = 0.9; S.stat.slam++; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
-      S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
-      if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
-      if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
-      if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
-      if (has('w_deep')) addGold(1);                                         // Mar de fondo
-      if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
-      note(e.x, e.y - e.r - 6, '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), kx / kl, ky / kl, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+    if (duoOn('reef') && Math.hypot(e.kx, e.ky) > slamV(e)) for (const c of S.crystals) if (Math.hypot(e.x - c.x, e.y - c.y) < e.r + 8) reef = c;   // dúo Arrecife
+    if (e.slamCd <= 0 && !e.boss && Math.hypot(e.kx, e.ky) > slamV(e) && (reef || touchesWall(e, e.r + 1.5) || e.x < e.r + 3 || e.y < e.r + 3 || e.x > T.room.w - e.r - 3 || e.y > T.room.h - e.r - 3)) {   // empujado contra un muro
+      e.slamCd = 0.9; const kx = e.kx, ky = e.ky, kl = Math.hypot(kx, ky); e.kx = e.ky = 0;
+      wallSlam(e, kx / kl, ky / kl, reef);
       if (e.hp <= 0) continue;
     }
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
@@ -5279,7 +5332,7 @@ function renderWorld() {
 
   // Alcance
   ctx.beginPath(); ctx.arc(p.x, p.y, rangeOf(), 0, Math.PI * 2);
-  ctx.strokeStyle = C.energy; ctx.globalAlpha = S.noTarget > 0 ? 0.55 : 0.13; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  ctx.strokeStyle = C.energy; ctx.globalAlpha = S.noTarget > 0 ? 0.5 : 0; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;   // el alcance solo se enseña cuando disparas sin nadie a tiro
 
   // Previsualización del disparo cargado: cono, o rayo cortado por las columnas
   if (p.charging) {
@@ -5379,7 +5432,6 @@ function renderWorld() {
     ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.25; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.arc(k.x, k.y, 26, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   for (const m of S.mirrors) { const fl = S.target ? S.target.x < m.x : false; ctx.globalAlpha = 0.55 + 0.1 * Math.sin(S.t * 7); if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, true)) drawSprite(SPR.player, m.x, m.y + 8, fl, true); ctx.globalAlpha = 0.6; if (!drawChar(heroKey(), 'idle', S.t, m.x, m.y + 9, fl, false)) drawSprite(SPR.player, m.x, m.y + 8, fl, false); ctx.globalAlpha = 1; }
-  for (const pt of S.pets) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; drawSprite(SPR.hound, pt.x, pt.y + 5, pt.dir < 0, false, Math.floor(S.t * 10) % 2 === 1); }
   // Sombras
   for (const s of S.shades) {
     ctx.fillStyle = GODS.shade.color; ctx.globalAlpha = Math.min(0.85, 0.3 + s.life * 0.4);
@@ -5443,7 +5495,7 @@ function renderWorld() {
     if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
     if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
     if (e.lit > 0) { ctx.fillStyle = GODS.light.color; const y0 = Math.round(e.y - e.r * 1.7 - 5), x0 = Math.round(e.x); ctx.fillRect(x0 - 1, y0 - 2, 2, 5); ctx.fillRect(x0 - 2, y0 - 1, 5, 2); ctx.globalAlpha = 0.5; ctx.fillRect(x0 - 3, y0, 7, 1); ctx.fillRect(x0, y0 - 3, 1, 7); ctx.globalAlpha = 1; }
-    if (e.sleep > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
+    if (e.sleep > 0 || e.doze > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
     if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
     else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
     if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
@@ -5457,6 +5509,20 @@ function renderWorld() {
       const w = e.r * 2 + 4; ctx.fillStyle = C.wall; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w, 2.5);
       ctx.fillStyle = C.ink; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w * clamp(e.hp / e.maxHp, 0, 1), 2.5);
     }
+  }
+
+  // La manada, por delante de los enemigos para que no la tapen: el cachorro es pequeño y claro; el sabueso, el de siempre; el lobo alfa, grande, gris y con un halo a los pies.
+  if (S.pets.length) {
+    if (!SPR.pup) { SPR.pup = mkArt(ART.hound, { c: '#d79a58', C: '#a56a30' }); SPR.wolf = mkArt(ART.hound, { c: '#9aa3b2', C: '#566072', e: '#ff7a3c' }); }
+    S.pets.forEach((pt, i) => {
+      const st = pt.st || 0, sc = [0.8, 1.1, 1.7][st], sp = [SPR.pup, SPR.hound, SPR.wolf][st], im = pt.run !== false && Math.floor(S.t * 10 + i * 0.5) % 2 === 1 ? sp.b.c : sp.c;
+      ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 7 * sc, 2.5 * sc, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      if (st === 2) { ctx.strokeStyle = GODS.beast.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.55 + 0.25 * Math.sin(S.t * 6); ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 4, 14, 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+      ctx.save(); ctx.translate(Math.round(pt.x), Math.round(pt.y + 5)); ctx.scale(pt.dir < 0 ? -sc : sc, sc); ctx.drawImage(im, -sp.w / 2, -sp.h); ctx.restore();
+    });
+    // Bajo el primero de la manada, lo que lleva de Caza hacia el siguiente cambio (crecer o sumar un perro)
+    { const c = caza(), marks = [0].concat(PACK.grow, PACK.join), k = marks.findIndex(x => c < x), pt = S.pets[0];
+      if (k > 0) { const f = (c - marks[k - 1]) / (marks[k] - marks[k - 1]); ctx.globalAlpha = 0.55; ctx.fillStyle = '#000000'; ctx.fillRect(Math.round(pt.x) - 8, Math.round(pt.y) + 8, 16, 2); ctx.globalAlpha = 1; ctx.fillStyle = GODS.beast.color; ctx.fillRect(Math.round(pt.x) - 8, Math.round(pt.y) + 8, Math.round(16 * f), 2); } }
   }
 
   // Marca de objetivo
@@ -5497,7 +5563,6 @@ function renderWorld() {
   // Jugador
   const flying = p.dodgeT > 0 && p.fly, pr = flying ? p.r * 1.35 : p.r, py = flying ? p.y - 5 : p.y;
   if (flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-  if (p.fury > 0) { ctx.strokeStyle = GODS.orc.color; ctx.globalAlpha = 0.25 + 0.5 * p.fury / 100; ctx.lineWidth = 1 + 2.5 * p.fury / 100; ctx.beginPath(); ctx.arc(p.x, py, pr + 2, 0, Math.PI * 2 * p.fury / 100); ctx.stroke(); ctx.globalAlpha = 1; }
   const blink = p.inv > 0 && p.dodgeT <= 0 && Math.floor(S.t * 30) % 2 === 0;
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
@@ -5512,13 +5577,15 @@ function renderWorld() {
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
-  if (p.heat > 0.02) { ctx.strokeStyle = p.over > 0 ? '#ffffff' : C.blood; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * p.heat); ctx.stroke(); }
-  if (S.gun.action === 'a_rotary') { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.35 + 0.5 * p.spin; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, S.t * 14 * p.spin, S.t * 14 * p.spin + Math.PI * 1.4); ctx.stroke(); ctx.globalAlpha = 1; }
+  // Barrita bajo los pies en vez de anillos: fila 0 el ritmo de disparo, fila 1 calor, reserva y espera del cargado
+  const pbar = (f, row, col) => { const w = 14, x = Math.round(p.x - w / 2), y = Math.round(p.y + p.r + 5 + row * 3); ctx.save(); ctx.globalAlpha = Math.min(1, ctx.globalAlpha + 0.2); ctx.fillStyle = '#0b080d'; ctx.fillRect(x - 1, y - 1, w + 2, 4); ctx.fillStyle = col || ctx.strokeStyle; ctx.fillRect(x, y, Math.round(w * clamp(f, 0, 1)), 2); ctx.restore(); };
+  if (p.fury > 0) pbar(p.fury / 100, 3, GODS.orc.color);
+  if (p.heat > 0.02) { ctx.strokeStyle = p.over > 0 ? '#ffffff' : C.blood; ctx.lineWidth = 2.4; pbar(p.heat, 1); }
   else if (p.drawing && S.gun.action === 'a_hold') { const n = 1 + Math.floor(p.draw * 2 + 0.001); for (let i = 0; i < 3; i++) { ctx.fillStyle = i < n ? C.ember : C.edge; ctx.fillRect(Math.round(p.x) - 6 + i * 5, Math.round(p.y - p.r - 13), 3, 5); } }
-  else if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * p.draw); ctx.stroke(); }
-  else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * (1 - p.windup / p.windupTotal)); ctx.stroke(); }
-  else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, a0, a0 + Math.PI * 2 * clamp(1 - p.cd / period, 0, 1)); ctx.stroke(); ctx.globalAlpha = 1; }
-  else { ctx.strokeStyle = C.energy; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2); ctx.stroke(); }
+  else if (p.drawing) { ctx.strokeStyle = p.draw >= 1 ? '#ffffff' : C.ember; ctx.lineWidth = p.draw >= 1 ? 2.6 : 2; pbar(p.draw, 0); }
+  else if (p.windup > 0) { ctx.strokeStyle = C.ember; ctx.lineWidth = 2; pbar((1 - p.windup / p.windupTotal), 0); }
+  else if (p.cd > 0) { ctx.strokeStyle = C.energy; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4; pbar(clamp(1 - p.cd / period, 0, 1), 0); ctx.globalAlpha = 1; }
+  else pbar(1, 0, C.energy);
   if (S.gun.barrel === 'b_flail' && p.orbAway <= 0) {   // la bola del mangual y su cadena
     const bx = Math.round(p.x + Math.cos(p.orbA) * 34), by = Math.round(p.y + Math.sin(p.orbA) * 34);
     ctx.fillStyle = PAL.I; for (let i = 1; i < 5; i++) ctx.fillRect(Math.round(p.x + (bx - p.x) * i / 5), Math.round(p.y + (by - p.y) * i / 5), 1, 1);
@@ -5526,15 +5593,15 @@ function renderWorld() {
     ctx.fillStyle = PAL.i; ctx.fillRect(bx - 5, by, 1, 1); ctx.fillRect(bx + 4, by - 1, 1, 1); ctx.fillRect(bx, by - 5, 1, 1); ctx.fillRect(bx - 1, by + 4, 1, 1);
   }
   if (S.gun.stock === 's_shield' && p.wardCd <= 0) { const a = S.t * 2.4, sx = Math.round(p.x + Math.cos(a) * 13), sy = Math.round(p.y - 2 + Math.sin(a) * 7); ctx.fillStyle = '#16101a'; ctx.fillRect(sx - 3, sy - 4, 6, 8); ctx.fillStyle = PAL.i; ctx.fillRect(sx - 2, sy - 3, 4, 6); ctx.fillStyle = PAL.g; ctx.fillRect(sx - 1, sy - 1, 2, 2); }
-  if (p.temper > 0) { const n = Math.min(15, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
+  if (p.temper > 0) { const n = Math.min(33, p.temper); for (let i = 0; i < n; i++) { ctx.fillStyle = p.redhot > 0 ? '#ffe08a' : GODS.forge.color; ctx.fillRect(Math.round(p.x) - n + i * 2, Math.round(p.y + p.r + 18), 1, 2); } }
   if (S.gun.mag === 'm_last') for (let i = 0; i < 6; i++) { ctx.fillStyle = i < 6 - (p.clip || 0) ? (i === 0 ? C.ember : C.ink) : C.edge; ctx.fillRect(Math.round(p.x) - 9 + (5 - i) * 3, Math.round(p.y - p.r - 12), 2, 4); }
   if (S.gun.action === 'a_over') { ctx.fillStyle = p.overT >= 10 ? C.ember : C.edge; ctx.fillRect(Math.round(p.x) - 5, Math.round(p.y + p.r + 14), Math.round(10 * p.overT / 10), 2); }
   if (S.gun.action === 'a_pend' && p.pend > 0) for (let i = 0; i < p.pend; i++) { ctx.fillStyle = C.ember; ctx.fillRect(Math.round(p.x) - p.pend * 2 + i * 4, Math.round(p.y + p.r + 14), 2, 2); }
   if (S.gun.mag === 'm_drum') for (let i = 0; i < 2; i++) { ctx.fillStyle = i < p.shells && !(p.cd > 0.3 && p.shells === 2) ? C.ember : C.edge; ctx.fillRect(p.x - 5 + i * 6, p.y - p.r - 12, 4, 5); }
   const dm = dodgeMax();
   if (dm > 1) for (let i = 0; i < dm; i++) { ctx.fillStyle = i < p.dodgeN ? C.ink : C.edge; ctx.fillRect(p.x - dm * 2.5 + i * 5, p.y + p.r + 10, 3, 3); }
-  if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 11, a0, a0 + Math.PI * 2 * Math.min(1, p.reserve / resMax())); ctx.stroke(); }
-  if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 8.5, a0, a0 + Math.PI * 2 * (1 - p.chargeCd / p.chargeCdMax)); ctx.stroke(); ctx.globalAlpha = 1; }
+  if (p.reserve > 0.5) { ctx.strokeStyle = GODS.feast.color; ctx.lineWidth = 1.6; pbar(Math.min(1, p.reserve / resMax()), 2); }
+  if (p.chargeCd > 0) { ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; pbar((1 - p.chargeCd / p.chargeCdMax), 1); ctx.globalAlpha = 1; }
 
   // Efectos sobre todo
   for (const f of S.fx) {

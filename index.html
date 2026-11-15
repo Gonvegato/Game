@@ -102,6 +102,11 @@ button:focus-visible{outline:2px solid var(--energy);outline-offset:2px}
 .ctl{align-self:stretch;text-align:left;border:1px solid var(--line);padding:6px 12px;background:rgba(11,8,13,.4)}.ctl summary{cursor:pointer;font:600 13px/1.6 var(--display);color:var(--energy)}.ctl .keys{margin-top:6px}
 #app:has(.titlebox) #hud{visibility:hidden}
 
+/* El HUD del jugador va abajo a la izquierda y algo más pequeño */
+#hud .row>.stack:first-child{position:absolute;left:max(14px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));flex-direction:column-reverse;gap:5px;transform:scale(.84);transform-origin:left bottom;max-width:70%}
+#hud .row{justify-content:flex-end}
+#wave{margin-top:0}
+
 /* Botones táctiles */
 #touch{display:flex;align-items:flex-end;justify-content:flex-end;padding-bottom:28px}
 .pad{display:grid;grid-template-columns:auto auto;gap:12px;align-items:end;justify-items:end}
