@@ -819,7 +819,7 @@ const cam = { x: 0, y: 0, fx: 0, fy: 0, shx: 0, shy: 0, pl: false };   // x, y: 
 
 // ───────────────────────── Sonido (efectos grabados y música) ─────────────────────────
 // Versión del juego (la pone build.sh: el número de commits) y dónde está corriendo
-const GAME_V = +'112' || 0, IN_APP = location.hostname === 'kiteo.app';
+const GAME_V = +'__GAME_V__' || 0, IN_APP = location.hostname === 'kiteo.app';
 // Ajustes del jugador: se guardan aparte de la partida, así que sobreviven a «Nueva partida»
 const CFG = { sound: 1, music: 3, sfx: 3, blend: 1 };
 try { Object.assign(CFG, JSON.parse(localStorage.getItem('kiteo.cfg') || '{}')); } catch (e) { /* sin ajustes guardados */ }

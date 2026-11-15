@@ -6,7 +6,8 @@ cd "$(dirname "$0")/.."
 ./build.sh >/dev/null
 V=$(git rev-list --count HEAD)
 rm -rf dist/www && mkdir -p dist/www/assets/audio
-cp index.html game.js dist/www/
+cp index.html dist/www/
+sed "s/__GAME_V__/$V/" game.js > dist/www/game.js   # la versión va solo en la copia que se distribuye
 for f in $(grep -o "assets/[a-z_]*\.png" game.js index.html | sed 's/^[^:]*://' | sort -u); do cp "$f" dist/www/assets/; done
 cp assets/pc_*.png dist/www/assets/
 cp assets/audio/*.mp3 dist/www/assets/audio/
