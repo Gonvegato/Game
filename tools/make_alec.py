@@ -90,11 +90,11 @@ SIDE = grid([
     '..khHwhhrtrrrk....',
     '..khHwHhRrrrk.....',
     '..khwHhkcRRrk.....',
-    '.khHwhkcdccCcdk...',
-    '..khHhkcdccCcdk...',
-    '..khhkkcdccCcdk...',
-    '...kk.kcdccCcdk...',
-    '......kgGgggGgk...',
+    '..khHwkcdccCcdk...',
+    '..khwHkcdccCcdk...',
+    '...khHkcdccCcdk...',
+    '...khhkcdccCcdk...',
+    '....kkkgGgggGgk...',
     '......kdcCCccdk...',
     '......kdccCCcdk...',
     '......kdccCCccdk..',
@@ -141,7 +141,7 @@ def frame(view, legs, bob=0, gl=(0, 0), gr=(0, 0), hot=0, lean=0, sway=0):
     side = view == 'side'
     stamp(im, (LEGS_SIDE if side else LEGS_FRONT)[legs], ox, H - 2)
     if side and sway:      # la punta de la melena se queda atrás al andar
-        if sway > 0: stamp(im, ['kh', 'kh', 'kk'], ox + 1 + lean, top + 13 + bob)
+        pass               # la melena cae recta por la espalda; no se abre hacia fuera
     stamp(im, {'down': DOWN, 'up': UP, 'side': SIDE}[view], ox + lean, top + bob)
     if sway:               # el bajo de la túnica ondea hacia un lado
         if side: stamp(im, ['kd', 'kk'], ox + 3 + lean, top + 22 + bob)
