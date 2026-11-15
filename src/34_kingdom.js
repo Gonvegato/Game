@@ -32,6 +32,7 @@ function missionOf(id) {
 const isDone = id => !!(M.done || {})[id];
 const zoneOpen = (K, z) => [0, 1, 2].every(i => isDone(`${K.id}:${z}:${i}`));
 const godOpen = K => K.zones.every((_, z) => isDone(`${K.id}:${z}:b`));
+const REPEAT = 0.5;   // repetir un encargo ya cumplido paga la mitad: se puede farmear, pero cumplir uno nuevo sigue valiendo más
 const payOf = ms => (ms.type === 'god' ? 400 : ms.type === 'boss' ? 150 + 40 * ms.z : 60 + 25 * ms.z);
 const roomsOf = ms => MTYPES[ms.type].rooms;
 const shopAfter = (ms, r) => MTYPES[ms.type].shops.includes(r);
@@ -45,8 +46,12 @@ function missionWin() {
   const ms = S.mission, first = !isDone(ms.id), n0 = godsOpenN();
   M.done = M.done || {}; M.done[ms.id] = 1;
   S.newGod = godsOpenN() > n0 ? GOD_UNLOCK[godsOpenN() - 1] : null;   // cada encargo cumplido por primera vez hace que otra deidad se fije en ti
-  S.pay = first ? payOf(ms) : Math.round(payOf(ms) * 0.3); S.soulsRun += S.pay; S.first = first;
-  if (ms.type === 'boss' || ms.type === 'god') { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } }
+  S.pay = first ? payOf(ms) : Math.round(payOf(ms) * REPEAT); S.soulsRun += S.pay; S.first = first;
+  { // Cada encargo cumplido deja al menos una pieza nueva para la forja; los guardianes y el dios, dos
+    const found = [];
+    for (let i = 0; i < (ms.type === 'boss' || ms.type === 'god' ? 2 : 1); i++) { const left = PARTS.filter(x => !M.parts[x.id]); if (!left.length) break; const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); found.push(x.name); }
+    S.found = found.join(' y ');
+  }
   endRun(true); setMode('win');
 }
 function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode('dead'); }

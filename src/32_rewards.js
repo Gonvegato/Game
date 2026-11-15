@@ -1,6 +1,6 @@
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null, pickTip = null;
-const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
+const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.4 ? 0 : r < 0.78 ? 1 : 2; };   // 40% comunes, 38% raras, 22% épicas: las técnicas llegan con más nivel
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
 // Una pieza de guantelete: la montas ahora y, además, queda descubierta para siempre
@@ -28,9 +28,16 @@ function roomCleared() {
   if (ms.type === 'defend') {
     S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.18);   // entre oleadas los aldeanos apuntalan la campana
     if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay una reliquia'));
-  } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
+    // cada oleada paga: almas, un material de una deidad y, cada cuatro, Hierro Místico
+    const k = Math.round((10 + 4 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)), g = lootGod(); S.soulsRun += k; S.matsRun[g] += W;
+    got = '+' + k + ' almas, +' + W + ' ' + GODS[g].mat; if (S.room % 4 === 0) { S.ironRun += 1; got += ', +1 de Hierro Místico'; }
+  } else if (ms.type === 'assault') {   // cada campamento arrasado: hierro, almas y dos materiales
+    const k = W >= 3 ? 2 : 1, s2 = Math.round((28 + 10 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)), g1 = lootGod(), g2 = lootGod();
+    S.ironRun += k; S.soulsRun += s2; S.matsRun[g1] += W; S.matsRun[g2] += W;
+    got = '+' + s2 + ' almas, +' + k + ' de Hierro Místico, +' + W + ' ' + GODS[g1].mat + (g2 === g1 ? ' (×2)' : ', +' + W + ' ' + GODS[g2].mat); if (g2 === g1) S.matsRun[g1] += 0;
+  }
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
-  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
+  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: la mitad)' : ''); }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
   else if (S.roomType === 'heart') { const up = Math.round(p.maxHp * 0.2); p.maxHp += up; p.hp = Math.min(p.maxHp, p.hp + up); got = '+20% de vida máxima (+' + up + ')'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }

@@ -9,7 +9,7 @@ const T = {
   room: { w: 880, h: 580 },
   viewArea: 520 * 300,          // unidades de mundo visibles (área constante)
   player: {
-    r: 7, speed: 82, hp: 85, dmg: 15,   // menos vida y más pegada que al principio (antes 100 y 12): los primeros enemigos caen en dos golpes, no en tres
+    r: 7, speed: 82, hp: 85, dmg: 19,   // menos vida y más pegada que al principio (antes 100 y 12): el trasgo cae en dos disparos y los grandes no son esponjas
     as: 0.95,                   // disparos por segundo
     range: 185,
     windupFrac: 0.22,           // parte del ciclo de ataque en la que te frenas
@@ -20,4 +20,4 @@ const T = {
   dodge: { time: 0.16, mult: 3.4, cd: 1.0 },
   charge: { min: 0.3, full: 0.85, cd: 2.2, range: 380, dmgMult: 4.5, width: 7, slow: 0.08 },
 };
-
+const POW_STEP = 0.05;   // daño extra por cada nivel de técnica, técnica suelta o plano que llevas

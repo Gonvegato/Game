@@ -10,7 +10,7 @@ const TYPES = {
   shaman:  { name: 'Seta bruja',  r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
   lancer:  { name: 'Embestidor',  r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
   bat:     { name: 'Diablillo',   r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
-  champ:   { name: 'Elegido',     r: 9,  hp: 400, speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  champ:   { name: 'Elegido',     r: 9,  hp: 220, speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   post:    { name: 'Estandarte',  r: 10, hp: 230, speed: 0,   dmg: 0,  shape: 'square',  color: '#c0392b', cost: 99, post: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
@@ -31,9 +31,9 @@ const TOTAL = WORLDS.length * (RPW + 1);
 
 // Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Nudillos sueltos', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
-  { name: 'Brasa avivada',    desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
-  { name: 'Palma pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
-  { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
+  { name: 'Nudillos sueltos', desc: '+28% de cadencia',                 apply: p => { p.as *= 1.28; } },
+  { name: 'Brasa avivada',    desc: '+40% de daño',                     apply: p => { p.dmg *= 1.4; } },
+  { name: 'Palma pulida',     desc: '+22% de alcance',                  apply: p => { p.range *= 1.22; } },
+  { name: 'Botas de forja',   desc: '+14% de velocidad de movimiento',  apply: p => { p.speed *= 1.14; } },
 ];
 

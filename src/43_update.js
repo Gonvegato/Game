@@ -84,6 +84,9 @@ function update(dt) {
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
+    // Poder: cada nivel de técnica que llevas y cada técnica suelta o plano suma un 5% a todo tu daño
+    const pm = 1 + POW_STEP * pow, pm0 = p.powMul || 1;
+    if (pm !== pm0) { p.dmg *= pm / pm0; p.powMul = pm; if (pm > pm0 && S.t > 0.5) note(p.x, p.y - 34, '+' + Math.round((pm - pm0) * 100) + '% de daño', C.ember, true); }
     if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); sfx('fanfare', 0.5,1.1); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);

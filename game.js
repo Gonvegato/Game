@@ -9,7 +9,7 @@ const T = {
   room: { w: 880, h: 580 },
   viewArea: 520 * 300,          // unidades de mundo visibles (área constante)
   player: {
-    r: 7, speed: 82, hp: 85, dmg: 15,   // menos vida y más pegada que al principio (antes 100 y 12): los primeros enemigos caen en dos golpes, no en tres
+    r: 7, speed: 82, hp: 85, dmg: 19,   // menos vida y más pegada que al principio (antes 100 y 12): el trasgo cae en dos disparos y los grandes no son esponjas
     as: 0.95,                   // disparos por segundo
     range: 185,
     windupFrac: 0.22,           // parte del ciclo de ataque en la que te frenas
@@ -20,7 +20,7 @@ const T = {
   dodge: { time: 0.16, mult: 3.4, cd: 1.0 },
   charge: { min: 0.3, full: 0.85, cd: 2.2, range: 380, dmgMult: 4.5, width: 7, slow: 0.08 },
 };
-
+const POW_STEP = 0.05;   // daño extra por cada nivel de técnica, técnica suelta o plano que llevas
 // ───────────────────────── Enemigos ─────────────────────────
 const TYPES = {
   stalker: { name: 'Trasgo',      r: 7,  hp: 30,  speed: 58,  dmg: 10, wind: 0.38, reach: 9,  shape: 'circle',  color: '#8fa58c', cost: 1 },
@@ -33,7 +33,7 @@ const TYPES = {
   shaman:  { name: 'Seta bruja',  r: 7,  hp: 34,  speed: 48,  dmg: 0,  ai: 'heal',            shape: 'circle',  color: '#5fd4c4', cost: 2.5 },
   lancer:  { name: 'Embestidor',  r: 7,  hp: 40,  speed: 54,  dmg: 18, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e6dfc6', cost: 2.5, lunge: true },
   bat:     { name: 'Diablillo',   r: 4,  hp: 9,   speed: 118, dmg: 6,  wind: 0.16, reach: 6,  shape: 'tri',     color: '#8a6aa8', cost: 0.7, fly: true },
-  champ:   { name: 'Elegido',     r: 9,  hp: 400, speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
+  champ:   { name: 'Elegido',     r: 9,  hp: 220, speed: 60,  dmg: 16, wind: 0.4,  reach: 10, shape: 'circle',  color: '#e9dcc3', champ: true },
   post:    { name: 'Estandarte',  r: 10, hp: 230, speed: 0,   dmg: 0,  shape: 'square',  color: '#c0392b', cost: 99, post: true },
   // Jefes: un kit de ataques con aviso. phases: cuántas veces se enfurece.
   guardian:  { name: 'El Guardián',            r: 22, hp: 1100, speed: 44, dmg: 30, shape: 'circle',  color: '#8a3a55', boss: true, phases: 2, kit: ['slam', 'charge', 'ring'],                 sum: 'runner' },
@@ -54,10 +54,10 @@ const TOTAL = WORLDS.length * (RPW + 1);
 
 // Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Nudillos sueltos', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
-  { name: 'Brasa avivada',    desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
-  { name: 'Palma pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
-  { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
+  { name: 'Nudillos sueltos', desc: '+28% de cadencia',                 apply: p => { p.as *= 1.28; } },
+  { name: 'Brasa avivada',    desc: '+40% de daño',                     apply: p => { p.dmg *= 1.4; } },
+  { name: 'Palma pulida',     desc: '+22% de alcance',                  apply: p => { p.range *= 1.22; } },
+  { name: 'Botas de forja',   desc: '+14% de velocidad de movimiento',  apply: p => { p.speed *= 1.14; } },
 ];
 
 // ───────────────────────── Deidades ─────────────────────────
@@ -1054,7 +1054,7 @@ function saveRun() {
   const p = S.p;
   // Copia completa: lo que ganes después en esta sala no se cuela en el guardado; al continuar, la sala se repite sin cobrar nada dos veces
   M.run = JSON.parse(JSON.stringify({ keepHp: S.keepHp == null ? null : S.keepHp, mission: S.mission, wave: S.wave - 1, next: S.next, gun: S.gun, build: S.build, techs: [...S.techs], plans: [...S.plans], kills: S.kills, soulsRun: S.soulsRun, ironRun: S.ironRun, matsRun: S.matsRun,
-    p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve } }));
+    p: { hp: p.hp, maxHp: p.maxHp, dmg: p.dmg, as: p.as, range: p.range, speed: p.speed, revive: p.revive, gold: p.gold, reserve: p.reserve, powMul: p.powMul || 1 } }));
   save();
 }
 function resumeRun() {
@@ -1212,7 +1212,7 @@ function sysTick() {
 
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null, pickTip = null;
-const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
+const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.4 ? 0 : r < 0.78 ? 1 : 2; };   // 40% comunes, 38% raras, 22% épicas: las técnicas llegan con más nivel
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
 // Una pieza de guantelete: la montas ahora y, además, queda descubierta para siempre
@@ -1240,9 +1240,16 @@ function roomCleared() {
   if (ms.type === 'defend') {
     S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.18);   // entre oleadas los aldeanos apuntalan la campana
     if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay una reliquia'));
-  } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
+    // cada oleada paga: almas, un material de una deidad y, cada cuatro, Hierro Místico
+    const k = Math.round((10 + 4 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)), g = lootGod(); S.soulsRun += k; S.matsRun[g] += W;
+    got = '+' + k + ' almas, +' + W + ' ' + GODS[g].mat; if (S.room % 4 === 0) { S.ironRun += 1; got += ', +1 de Hierro Místico'; }
+  } else if (ms.type === 'assault') {   // cada campamento arrasado: hierro, almas y dos materiales
+    const k = W >= 3 ? 2 : 1, s2 = Math.round((28 + 10 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)), g1 = lootGod(), g2 = lootGod();
+    S.ironRun += k; S.soulsRun += s2; S.matsRun[g1] += W; S.matsRun[g2] += W;
+    got = '+' + s2 + ' almas, +' + k + ' de Hierro Místico, +' + W + ' ' + GODS[g1].mat + (g2 === g1 ? ' (×2)' : ', +' + W + ' ' + GODS[g2].mat); if (g2 === g1) S.matsRun[g1] += 0;
+  }
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
-  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
+  else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? REPEAT : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: la mitad)' : ''); }
   else if (S.roomType === 'iron') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; pickQueue.push(partScreen(here + ' · entre el hierro hay algo')); }
   else if (S.roomType === 'heart') { const up = Math.round(p.maxHp * 0.2); p.maxHp += up; p.hp = Math.min(p.maxHp, p.hp + up); got = '+20% de vida máxima (+' + up + ')'; }
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
@@ -1647,6 +1654,7 @@ function missionOf(id) {
 const isDone = id => !!(M.done || {})[id];
 const zoneOpen = (K, z) => [0, 1, 2].every(i => isDone(`${K.id}:${z}:${i}`));
 const godOpen = K => K.zones.every((_, z) => isDone(`${K.id}:${z}:b`));
+const REPEAT = 0.5;   // repetir un encargo ya cumplido paga la mitad: se puede farmear, pero cumplir uno nuevo sigue valiendo más
 const payOf = ms => (ms.type === 'god' ? 400 : ms.type === 'boss' ? 150 + 40 * ms.z : 60 + 25 * ms.z);
 const roomsOf = ms => MTYPES[ms.type].rooms;
 const shopAfter = (ms, r) => MTYPES[ms.type].shops.includes(r);
@@ -1660,8 +1668,12 @@ function missionWin() {
   const ms = S.mission, first = !isDone(ms.id), n0 = godsOpenN();
   M.done = M.done || {}; M.done[ms.id] = 1;
   S.newGod = godsOpenN() > n0 ? GOD_UNLOCK[godsOpenN() - 1] : null;   // cada encargo cumplido por primera vez hace que otra deidad se fije en ti
-  S.pay = first ? payOf(ms) : Math.round(payOf(ms) * 0.3); S.soulsRun += S.pay; S.first = first;
-  if (ms.type === 'boss' || ms.type === 'god') { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } }
+  S.pay = first ? payOf(ms) : Math.round(payOf(ms) * REPEAT); S.soulsRun += S.pay; S.first = first;
+  { // Cada encargo cumplido deja al menos una pieza nueva para la forja; los guardianes y el dios, dos
+    const found = [];
+    for (let i = 0; i < (ms.type === 'boss' || ms.type === 'god' ? 2 : 1); i++) { const left = PARTS.filter(x => !M.parts[x.id]); if (!left.length) break; const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); found.push(x.name); }
+    S.found = found.join(' y ');
+  }
   endRun(true); setMode('win');
 }
 function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode('dead'); }
@@ -4494,6 +4506,9 @@ function update(dt) {
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
+    // Poder: cada nivel de técnica que llevas y cada técnica suelta o plano suma un 5% a todo tu daño
+    const pm = 1 + POW_STEP * pow, pm0 = p.powMul || 1;
+    if (pm !== pm0) { p.dmg *= pm / pm0; p.powMul = pm; if (pm > pm0 && S.t > 0.5) note(p.x, p.y - 34, '+' + Math.round((pm - pm0) * 100) + '% de daño', C.ember, true); }
     if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); sfx('fanfare', 0.5,1.1); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
@@ -6559,7 +6574,7 @@ function renderOverlay() {
   let h = '';
   if (m === 'title') h = titleHtml();
   else if (m === 'pause') {
-    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
+    h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo (poder +${Math.round(((S.p.powMul || 1) - 1) * 100)}%: cada nivel de técnica y cada técnica suelta suma un ${Math.round(POW_STEP * 100)}%) · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
   else if (m === 'dead') {
     h = `<p class="eyebrow">Encargo fallido</p><h1>Alec se retira</h1>
@@ -6567,7 +6582,7 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">A la plaza</button>`;
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
-      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
+      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cumplido: repetirlo paga la mitad)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
       <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
