@@ -2119,7 +2119,8 @@ function roomHtml() {
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
     <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
-    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${M.seenEnding ? `
+    <button class="fi" data-act="ending"><b>Recordar el final de ${K.name}</b><span>La caída de ${TYPES[K.god].name}, el pago del rey y el camino que sigue.</span></button>` : ''}`;
 }
 
 // ───────────────────────── Conversaciones con bocadillos ─────────────────────────
@@ -2200,7 +2201,10 @@ function kingExplain() {
 }
 function kingProgress() {
   const K = kingdomNow(), god = TYPES[K.god].name, down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
-  if (isDone(K.id + ':g')) return [{ who: 'king', text: `${god} ha caído. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar.` }, { who: 'queen', text: 'Otros reyes ya preguntan por ti.' }];
+  if (isDone(K.id + ':g')) return [   // el reino es libre: de momento no hay más encargos que los que ya conoce
+    { who: 'king', text: `${god} ha caído y ${K.name} es libre. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar.` },
+    { who: 'king', text: 'Por ahora no tengo encargos nuevos que darte. Los del tablón siguen ahí: repite los que quieras. Pagan menos, pero pagan.' },
+    { who: 'queen', text: 'Otros reyes ya preguntan por ti. Cuando llegue su carta, serás el primero en saberlo.' }];
   if (down === 4) return [{ who: 'king', text: `Los cuatro guardianes han caído. ${god} ya no tiene tras quién esconderse: búscalo en el tablón antes de que venga él.` }];
   if (down) return [{ who: 'king', text: `${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis soldados vuelven a mirar a los ojos.` }, { who: 'king', text: `Quedan ${4 - down}. Mientras sigan en pie, ${god} no dará la cara.` }];
   if (jobs) return [{ who: 'king', text: `${jobs === 1 ? 'Un encargo cumplido' : jobs + ' encargos cumplidos'}. Bien. Cumple los tres de una zona y saldrá su guardián.` }];
@@ -2244,6 +2248,7 @@ const FIRST_TALK = {
 // con personajes del atlas que andan, entran y caen, y bocadillos del sistema de conversación de la plaza.
 // Disparar (A, Espacio, tocar) pasa de línea · Esquivar (B, Shift) salta la escena · Start (Esc, el botón de arriba) salta todo.
 // Se ve la primera vez que se pulsa Empezar (M.seenIntro) y después desde la habitación de la posada.
+// El mismo motor cuenta el final de cada reino (ENDING, M.seenEnding) al matar a su dios.
 const IC = n => n * CELL;
 const ihash = (a, b) => { let h = (Math.floor(a) * 374761393 + Math.floor(b) * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 
@@ -2388,19 +2393,12 @@ const INTRO = [
   { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
     setup(R) {
       const r = NAV.rows, cx = NAV.cols >> 1;
-      for (const n of R.room.out.npcs) R.add(null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
-      for (const w of R.room.out.wander || []) { const [ax, ay, aw, ah] = w.area; R.add(null, w.key, ax + Math.random() * aw, ay + Math.random() * ah, { amb: true, area: w.area, waitT: Math.random() * 2 }); }
+      introPlazaFolk(R);
       const a = R.add('alec', null, cx, r - 4.6, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);
       R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
       const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
     },
-    tick(R, dt) {   // los vecinos pasean como en la plaza de verdad
-      for (const n of R.actors) {
-        if (!n.area || n.path.length) continue;
-        n.waitT -= dt; if (n.waitT > 0) continue;
-        const [ax, ay, aw, ah] = n.area; n.waitT = 1 + Math.random() * 3; R.go(n, [[ax + Math.random() * aw, ay + Math.random() * ah]], 22);
-      }
-    },
+    tick(R, dt) { introPlazaStroll(R, dt); },   // los vecinos pasean como en la plaza de verdad
     beats: [
       { wait: 1.2, who: 'alec', text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
         ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
@@ -2409,24 +2407,100 @@ const INTRO = [
     ] },
 ];
 
+// ── El final de Valdehierro: el dios cae, el rey paga, la plaza respira y Alec sigue su camino ──
+// Vecinos de la plaza como en la última escena del principio: los fijos en su sitio y los paseantes dando vueltas
+function introPlazaFolk(R) {
+  for (const n of R.room.out.npcs) R.add(null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+  for (const w of R.room.out.wander || []) { const [ax, ay, aw, ah] = w.area; R.add(null, w.key, ax + Math.random() * aw, ay + Math.random() * ah, { amb: true, area: w.area, waitT: Math.random() * 2 }); }
+}
+function introPlazaStroll(R, dt) {
+  for (const n of R.actors) {
+    if (!n.area || n.path.length) continue;
+    n.waitT -= dt; if (n.waitT > 0) continue;
+    const [ax, ay, aw, ah] = n.area; n.waitT = 1 + Math.random() * 3; R.go(n, [[ax + Math.random() * aw, ay + Math.random() * ah]], 22);
+  }
+}
+const ENDING = [
+  { cap: 'El Umbral', room: ['arena', 'boss', true], world: 4, amb: '#a08a96',
+    setup(R) {
+      R.cam.x = IC(23.5); R.cam.y = IC(12);
+      R.add('god', 'firstfist', 27.5, 13.2, { flip: true, glow: '255,120,60' });
+      R.add('alec', null, 12.5, 13.6, { hero: true, face: 0 });
+    },
+    beats: [
+      { wait: 4.3, min: 3.2, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
+        on(R) { R.go('alec', [[18.5, 13.6]], 44, a => { a.face = 0; }); },
+        ev: [[2.5, R => R.shoot('alec', 'god')],
+          [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }]] },
+      { who: 'alec', text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
+    ] },
+  { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
+    setup(R) {
+      const cx = NAV.cols >> 1;
+      for (const n of R.room.out.npcs) R.add(n.key === 'king' || n.key === 'queen' ? n.key : null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+      R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
+    },
+    beats: [
+      { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[kingdomNow().god].name} ha muerto. Aquí tienes tu hierro, mercenario: lo prometido y algo más.` },
+      { who: 'king', text: () => `${kingdomNow().name} es libre. Y te lo debe a ti.` },
+      { who: 'alec', text: () => `No lo he hecho por ${kingdomNow().name}.` },
+      { who: 'queen', text: 'Lo sabemos. Por eso te pagamos.' },
+    ] },
+  { cap: 'La plaza', room: ['plaza', 'plaza'], amb: null,
+    setup(R) {
+      const cx = NAV.cols >> 1, c = NAV.cols;
+      introPlazaFolk(R);
+      const a = R.add('alec', null, cx, 7.4, { hero: true, face: Math.PI / 2 }); R.follow = a; R.followOff = [0, IC(1)]; R.cam.x = a.x; R.cam.y = a.y + IC(1);
+      R.go(a, [[cx, 12.8]], 46, q => { q.face = Math.PI / 2; });
+      // la herrera y la posadera dejan lo suyo y salen a su encuentro
+      for (const [key, pts] of [['smith', [[11, 14.4], [cx - 2.7, 13.3]]], ['keeper', [[c - 11, 14.4], [cx + 2.7, 13.4]]]]) { const n = R.actors.find(q => q.key === key); if (n) { n.id = key; n.amb = false; R.go(n, pts, 84); } }
+    },
+    tick(R, dt) {   // los vecinos pasean; de vez en cuando alguno da un brinco
+      introPlazaStroll(R, dt);
+      R.acc += dt; if (R.acc > 0.45) { R.acc = 0; const f = R.actors.filter(q => q.area); if (f.length) f[Math.floor(Math.random() * f.length)].hop = 0.14; }
+    },
+    beats: [
+      { wait: 3.4, min: 0.8, who: 'alec', text: 'En la plaza ya nadie miraba al camino con miedo.' },
+      { who: 'smith', text: 'Esos guanteletes han matado a un dios. Quien los forjó sabía lo que hacía.', on(R) { R.a('alec').face = Math.PI; } },
+      { who: 'alec', text: 'Lo sabía.' },
+      { who: 'keeper', text: 'Tu cama sigue donde estaba, mercenario. Y esta noche invita la casa.', on(R) { R.a('alec').face = 0; } },
+    ] },
+  { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
+    setup(R) {
+      const a = R.add('alec', null, 5, 10.9, { hero: true, face: 0 }); R.follow = a; R.followOff = [IC(5), -IC(1)]; R.cam.x = a.x + IC(5); R.cam.y = a.y - IC(1);
+      R.go(a, [[17, 10.9]], 50);
+    },
+    beats: [
+      { wait: 1.6, who: 'alec', text: 'No me quedé a la fiesta. No era mía.' },
+      { wait: 0.9, who: 'alec', text: 'Queda uno menos. Faltan los demás.', on(R) { R.go('alec', [[25, 10.9]], 44); } },
+      { wait: 5.2, min: 2.6, on(R) { R.follow = null; R.camTo = null; R.go('alec', [[46, 10.9]], 50); R.endCard(`${kingdomNow().name} es libre`, 'Continuará'); } },
+    ] },
+];
+
 // ── Poner en marcha, pasar de escena y acabar ──
 let introHudOn = false, introTap = false, INTRO_LM = null;
-function playIntro() {
+// El motor reproduce una lista de escenas: la del principio (INTRO) o el final de un reino (ENDING). «seen» es la marca que deja en el guardado.
+function playScenes(L, seen) {
   newGame(); S.gun = Object.assign({}, M.gun);
-  S.mode = 'intro'; modeT = 0; S.intro = { i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
+  S.mode = 'intro'; modeT = 0; S.intro = { L, seen, i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
   introTap = false; renderOverlay(); introScene(0); sfx('ok', 0.3,0.7);
 }
+function playIntro() { playScenes(INTRO, 'seenIntro'); }
+function playEnding() { playScenes(ENDING, 'seenEnding'); }
+// El final se debe la primera vez que cae el dios del reino (o, en guardados de antes de que existiera, la próxima vez que caiga)
+const endingDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'god' && !M.seenEnding;
 function introEnd() {
+  const seen = S.intro && S.intro.seen;
   S.dialog = null; S.intro = null;
-  if (!M.seenIntro) { M.seenIntro = 1; save(); }
+  if (seen && !M[seen]) { M[seen] = 1; save(); }
   openTown();
 }
 function introScene(i) {
-  const N = S.intro, sc = INTRO[i], room = buildRoom(false, sc.room[0], sc.room[1]);
-  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = []; S.world = 1; S.dialog = null;
+  const N = S.intro, sc = N.L[i], room = buildRoom(!!sc.room[2], sc.room[0], sc.room[1]);   // room: [generador, tamaño, ¿arena de jefe?]
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = []; S.world = sc.world || 1; S.dialog = null;
   const R = N.R = {
     t: 0, room, actors: [], fx: [], fires: [], houses: [], props: [], cam: { x: room.w / 2, y: room.h / 2 }, camTo: null, camV: 1.6, follow: null, followOff: [0, 0],
-    fade: 1, dip: null, shk: 0, flash: 0, cap: typeof sc.cap === 'function' ? sc.cap() : sc.cap, capT: 0, burnt: false, amb: sc.amb, stage: 0, acc: 0, hitT: 0,
+    fade: 1, dip: null, shk: 0, flash: 0, cap: typeof sc.cap === 'function' ? sc.cap() : sc.cap, capT: 0, burnt: false, amb: sc.amb, stage: 0, acc: 0, hitT: 0, card: null,
     a: id => R.actors.find(q => q.id === id),
     add(id, key, x, y, o) { const a = Object.assign({ id, key, x: IC(x), y: IC(y), flip: false, path: [], speed: 60, walking: false, fall: null, fallDir: 1, hidden: false, ph: Math.random() * 3, once: null, flash: 0, hop: 0, kick: 0, then: null }, o); R.actors.push(a); return a; },
     go(a, pts, speed, then) { if (typeof a === 'string') a = R.a(a); if (!a || a.fall != null) return a; a.path = pts.map(p => [IC(p[0]), IC(p[1])]); a.speed = speed || 60; a.then = then || null; return a; },
@@ -2435,6 +2509,7 @@ function introScene(i) {
     shake(n) { R.shk = Math.max(R.shk, n); },
     dipTo(fn) { R.dip = { t: 0, fn, done: false }; },
     setCap(txt) { R.cap = txt; R.capT = 0; },
+    endCard(big, small) { R.card = { t: 0, big, small }; },   // rótulo final a pantalla completa, sobre negro
     shoot(from, to) {   // un conjuro de los guanteletes: sale, llega y derriba
       const a = R.a(from), b = R.a(to); if (!a || !b || b.fall != null) return;
       a.aim = Math.atan2(b.y - a.y, b.x - a.x); a.kick = 3;
@@ -2442,12 +2517,12 @@ function introScene(i) {
       sfx('cast', 0.4);
     },
   };
-  for (const o of room.out.obs) if (o.kind === 'ihouse') { const s = HOUSES[o.hs], cx = (o.x + o.w / 2) * CELL, by = (o.y + o.h) * CELL; R.houses.push({ hs: o.hs, s, cx, by, sx: Math.round(cx - s[2] / 2), sy: by + 2 - s[3], fire: 0, fireTo: 0, char: 0, smoke: 0 }); }
+  for (const o of (room.out && room.out.obs) || []) if (o.kind === 'ihouse') { const s = HOUSES[o.hs], cx = (o.x + o.w / 2) * CELL, by = (o.y + o.h) * CELL; R.houses.push({ hs: o.hs, s, cx, by, sx: Math.round(cx - s[2] / 2), sy: by + 2 - s[3], fire: 0, fireTo: 0, char: 0, smoke: 0 }); }
   N.i = i; sc.setup(R); introBeat(0, true);
 }
 // Cerrar el tiempo en curso: lo programado que no haya pasado, pasa; quien iba andando, llega
 function introFinishBeat() {
-  const N = S.intro, R = N.R, B = INTRO[N.i].beats[N.b];
+  const N = S.intro, R = N.R, B = N.L[N.i].beats[N.b];
   if (B && B.ev) while (N.evi < B.ev.length) B.ev[N.evi++][1](R);
   if (R.dip) { if (!R.dip.done) R.dip.fn(R); R.dip = null; R.fade = 0; }
   for (const f of R.fx) if (f.k === 'bolt' && f.hit) { f.hit(); f.hit = null; }
@@ -2455,7 +2530,7 @@ function introFinishBeat() {
   S.dialog = null;
 }
 function introBeat(k, fresh) {
-  const N = S.intro, sc = INTRO[N.i];
+  const N = S.intro, sc = N.L[N.i];
   if (!fresh) introFinishBeat();
   if (k >= sc.beats.length) { N.phase = 'hold'; N.bt = 0; return; }
   N.b = k; N.bt = 0; N.evi = 0; N.phase = 'wait';
@@ -2467,9 +2542,9 @@ function introUpdate(dt) {
   S.t += dt;
   const adv = I.atkP || introTap; introTap = false;
   if (I.startP && modeT > 0.2) { introEnd(); return; }
-  const R = N.R, sc = INTRO[N.i]; R.t += dt;
+  const R = N.R, sc = N.L[N.i]; R.t += dt;
   introSim(R, sc, dt);
-  if (N.phase === 'out') { R.fade = Math.min(1, R.fade + dt / 0.45); if (R.fade >= 1) { if (N.i + 1 < INTRO.length) introScene(N.i + 1); else introEnd(); } return; }
+  if (N.phase === 'out') { R.fade = Math.min(1, R.fade + dt / 0.45); if (R.fade >= 1) { if (N.i + 1 < N.L.length) introScene(N.i + 1); else introEnd(); } return; }
   if (R.dip) {   // un fundido corto a negro para saltar en el tiempo dentro de la misma escena
     const d = R.dip; d.t += dt; R.fade = d.t < 0.35 ? d.t / 0.35 : Math.max(0, 1 - (d.t - 0.35) / 0.45);
     if (d.t >= 0.35 && !d.done) { d.done = true; d.fn(R); }
@@ -2516,7 +2591,7 @@ function introSim(R, sc, dt) {
   }
   if (R.follow) R.camTo = { x: R.follow.x + R.followOff[0], y: R.follow.y + R.followOff[1] };
   if (R.camTo) { const k = Math.min(1, dt * R.camV); R.cam.x += (R.camTo.x - R.cam.x) * k; R.cam.y += (R.camTo.y - R.cam.y) * k; }
-  R.shk = Math.max(0, R.shk - dt * 18); R.flash = Math.max(0, R.flash - dt * 2.4); R.capT += dt;
+  R.shk = Math.max(0, R.shk - dt * 18); R.flash = Math.max(0, R.flash - dt * 2.4); R.capT += dt; if (R.card) R.card.t += dt;
 }
 function introSpeakerPos(who) {
   const R = S.intro && S.intro.R, a = R && R.actors.find(q => q.id === who && !q.hidden);
@@ -2658,10 +2733,20 @@ function introDraw() {
   const ca = clamp(Math.min(R.capT / 0.5, (4.6 - R.capT) / 0.7), 0, 1);
   if (ca > 0 && R.cap) { scr.globalAlpha = ca; scr.font = `600 ${Math.round(17 * dp)}px ${FONT}`; scr.fillStyle = '#efe6c8'; scr.fillText(R.cap, cv.width / 2, bar / 2 + dp); }
   scr.globalAlpha = 1; scr.font = `500 ${Math.round(11.5 * dp)}px ${FONT}`; scr.fillStyle = 'rgba(239,230,200,0.62)'; scr.fillText(introHint(), cv.width / 2, cv.height - bar / 2);
+  if (R.card) {   // el rótulo final: negro, el título y, un poco después, la línea pequeña
+    const c = R.card, a = clamp(c.t / 0.9, 0, 1);
+    scr.globalAlpha = a; scr.fillStyle = '#07050a'; scr.fillRect(0, 0, cv.width, cv.height);
+    scr.globalAlpha = clamp((c.t - 0.5) / 0.8, 0, 1); scr.font = `600 ${Math.round(30 * dp)}px ${FONT}`; scr.fillStyle = '#efe6c8'; scr.fillText(c.big, cv.width / 2, cv.height * 0.46);
+    if (c.small) { scr.globalAlpha = clamp((c.t - 1.7) / 0.8, 0, 1) * 0.8; scr.font = `500 ${Math.round(15 * dp)}px ${FONT}`; scr.fillText(c.small, cv.width / 2, cv.height * 0.46 + 34 * dp); }
+    scr.globalAlpha = 1;
+  }
   scr.restore();
   if (S.dialog) drawDialog(k);
   return true;
 }
+
+// El botón «Recordar el final» de la habitación de la posada (data-act="ending"): se atiende aquí, delante de forgeAct
+{ const act0 = forgeAct; forgeAct = function (act) { if (act === 'ending') { playEnding(); return; } act0(act); }; }
 // ───────────────────────── El mapa del reino (tablón de encargos) ─────────────────────────
 // En el tablón no hay una lista: hay un mapa dibujado del reino. Cada territorio se tiñe del color del guardián que lo tiene
 // tomado y, cuando cae, pasa al color del reino. Los encargos son marcadores (.fi) puestos sobre el mapa: la navegación
@@ -6195,7 +6280,7 @@ function renderOverlay() {
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
       <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
-      <button id="ovBtn" class="primary">A la plaza</button>`;
+      <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
@@ -6216,7 +6301,7 @@ function primaryAction(force) {
   if (S.mode === 'title') { if (M.seenIntro) openForge(); else playIntro(); }   // la primera vez, Alec cuenta su historia antes de llegar a la plaza
   else if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
-  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
+  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else openForge(); }   // tras matar al dios por primera vez, el final del reino
 }
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
 $('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); musicTick(); });
@@ -6289,5 +6374,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();
