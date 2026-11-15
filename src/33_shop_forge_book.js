@@ -191,7 +191,8 @@ const glossShut = ([re, name]) => !!GLOSS_GOD[name] && !godIsOpen(GLOSS_GOD[name
 let bookPage = 0;
 // Las deidades van en el orden en que se fijan en ti; las que aún no lo han hecho salen como «???», sin enseñar nada suyo.
 const BOOK_SHUT = '#6b5a4e';
-const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_UNLOCK.map(g => (godIsOpen(g) ? [g, GODS[g].theme, GODS[g].color] : [g, '???', BOOK_SHUT])), [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
+const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_UNLOCK.filter(godIsOpen).map(g => [g, GODS[g].theme, GODS[g].color]), GOD_UNLOCK.filter(g => !godIsOpen(g)).slice(0, 1).map(g => [g, '??? · quedan ' + GOD_UNLOCK.filter(x => !godIsOpen(x)).length, BOOK_SHUT]),   // las que aún no se han fijado en ti, en una sola pestaña
+  [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
 function bookHtml() {
   const P = bookPages(); bookPage = ((bookPage % P.length) + P.length) % P.length;
   const [id, , col] = P[bookPage];

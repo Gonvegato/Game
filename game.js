@@ -166,6 +166,14 @@ const GODS = {
     take:  ['examina tus guanteletes y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
+// Las deidades se van fijando en Alec poco a poco. Al principio solo cuatro, las que se entienden a la primera
+// (quemar, congelar, curarse, críticos) y cuya técnica de disparo ya hace algo por sí sola. Cada encargo cumplido
+// por primera vez (los doce normales y los cuatro guardianes) abre la siguiente de GOD_ORDER, de la más directa a la
+// más enrevesada: al final quedan las que piden combinar dos técnicas (Agujas, Cristales) o pensar con retraso (Sentencia).
+// Orcos va la primera porque el dios del reino es el Primer Puño. Cuáles están abiertas se calcula con M.done (godsOpen, en 30_meta.js).
+const GOD_START = ['dragon', 'frost', 'feast', 'luck'];
+const GOD_ORDER = ['orc', 'venom', 'wood', 'tide', 'forge', 'blood', 'beast', 'void', 'time', 'dream', 'light', 'mirror', 'shade', 'storm', 'stone', 'end'];
+const GOD_UNLOCK = GOD_START.concat(GOD_ORDER);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
 const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
@@ -714,7 +722,7 @@ const TREE = [
     { id: 'luck',    name: 'Favor robado',    max: 5, cost: C5,  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
     { id: 'reroll',  name: 'Regateo',         max: 3, cost: [30, 60, 130],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
     { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [120],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
-    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
+    { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [200],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad que ya se haya fijado en ti' },
     { id: 'door',    name: 'Otra puerta',     max: 1, cost: [180],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
 ];
 const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce((a, n) => a + n.cost.reduce((x, y) => x + y, 0), 0);
@@ -1015,6 +1023,13 @@ for (const x of PARTS) if (x.base) M.parts[x.id] = 2;
 }
 save();
 function save() { try { localStorage.setItem('kiteo.save3', JSON.stringify(M)); } catch (e) {} }
+// Deidades abiertas: las cuatro del principio más una por cada encargo previo al dios ya cumplido. Sale de M.done, así que
+// un guardado anterior a este sistema tiene las que le tocan sin migrar nada.
+const jobsDone = () => Object.keys(M.done || {}).filter(id => M.done[id] && /^[a-z]+:\d+:(\d+|b)$/.test(id)).length;
+const godsOpenN = () => Math.min(GOD_UNLOCK.length, GOD_START.length + jobsDone());
+const godsOpen = () => GOD_UNLOCK.slice(0, godsOpenN());
+const godIsOpen = g => GOD_UNLOCK.indexOf(g) < godsOpenN();
+const randGod = () => { const L = godsOpen(); return L[Math.floor(Math.random() * L.length)]; };
 const tr = id => +M.tree[id] || 0;   // rangos comprados de un nodo concreto
 const tk = id => tr(id) + (TREE_EXT[id] ? tr(TREE_EXT[id]) : 0);   // rango efectivo de una habilidad: lo del primer árbol más lo del segundo
 const tree2Open = () => KINGDOMS.length > 1 && !!(M.done || {})['valdehierro:g'];   // el segundo árbol llega con el segundo reino; mientras no exista, ni se enseña
@@ -1043,8 +1058,9 @@ function saveRun() {
   save();
 }
 function resumeRun() {
-  const r = M.run; newGame(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
+  const r = M.run; newGame(); tipClear(); S.mission = r.mission; S.repeat = isDone(r.mission.id); S.keepHp = r.keepHp;
   S.gun = Object.assign({}, BASE_GUN, r.gun); S.build = JSON.parse(JSON.stringify(r.build)); S.techs = new Set(r.techs); S.plans = new Set(r.plans); S.next = r.next;
+  if (S.next && S.next.type === 'god' && !godIsOpen(S.next.god)) S.next.god = randGod();   // una sala guardada con una deidad que aún no se ha fijado en ti
   S.kills = r.kills; S.soulsRun = r.soulsRun; S.ironRun = r.ironRun; Object.assign(S.matsRun, r.matsRun); Object.assign(S.p, r.p); S.wave = r.wave;
   S.p.dodgeN = dodgeMax(); S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
 }
@@ -1072,15 +1088,15 @@ function newGame() {
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
-  newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
+  newGame(); tipClear(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
   const p = S.p;   // lo que traes de otras vidas: tus guanteletes y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
-  S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
+  S.next = { type: 'god', god: randGod() };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
-    const opts = PIECES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
-    pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts })];
+    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
+    pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts, tip: 'relic' })];
     advancePick(); return;
   }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -1122,6 +1138,7 @@ function nextWave() {
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
   checkRes();   // lo que tus guanteletes y tus técnicas despiertan juntos se anuncia al entrar
+  tip('shoot', ms.type === 'defend' ? 'defend' : ms.type === 'assault' ? 'assault' : S.bossRoom ? 'boss' : '', 'dodge', 'charge');   // avisos de ayuda: solo salen los que no se hayan visto
   saveRun();
 }
 
@@ -1153,7 +1170,7 @@ function skinOf(k, e) {
 function spawn(typeKey, q) {
   const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
-  const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
+  const god = ty.champ ? (S.god || randGod()) : null;
   const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 3.2 : 2 + 0.4 * S.mission.z) : 1 + 0.18 * (S.lvl - 1)));
   { const at = q.pos ? q.pos : q.near ? unstick(clamp(q.near.x + rnd(-46, 46), 20, T.room.w - 20), clamp(q.near.y + rnd(-46, 46), 20, T.room.h - 20)) : S.keep ? freeSpot(S.keep, Math.min(T.room.w, T.room.h) * 0.42) : freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
@@ -1183,6 +1200,10 @@ function sayRaw(text, color) { sysQ.push({ text, color }); if (sysQ.length > 3) 
 function say(god, kind) { const g = GODS[god], arr = g.lines[kind]; if (arr) sayRaw(`[La deidad «${g.title}» ${arr[Math.floor(Math.random() * arr.length)]}]`, g.color); }
 function sysTick() {
   const now = performance.now(), dt = Math.min(0.1, (now - sysLast) / 1000); sysLast = now;
+  if (tipNow && !tipEl.hidden) {   // mientras hay un aviso de ayuda en pantalla, los mensajes esperan su turno (el que estaba a medias vuelve a salir después)
+    if (!sysEl.hidden) { if (sysT > 0.5) sysQ.unshift({ text: sysEl.textContent, color: sysEl.style.borderColor }); sysEl.hidden = true; sysT = 0; }
+    return;
+  }
   sysT -= dt;
   if (sysT > 0) return;
   if (sysQ.length) { const m = sysQ.shift(); sysEl.textContent = m.text; sysEl.style.borderColor = m.color; sysEl.hidden = false; sysT = 3.2; }
@@ -1190,7 +1211,7 @@ function sysTick() {
 }
 
 // ───────────────────────── Al limpiar una sala ─────────────────────────
-let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
+let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null, pickTip = null;
 const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
@@ -1205,7 +1226,7 @@ const partScreen = eyebrow => () => {
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
-const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
+const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god), tip: 'relic' } : statScreen(); };
 
 // Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
@@ -1239,13 +1260,13 @@ function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) ||
 function doorScreen() {
   const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), kinds = [];
   // Las deidades de las que ya llevas alguna técnica salen un poco más (peso 1,3 frente a 1): lo justo para que una build pueda cerrarse
-  const gods = GOD_KEYS.map(g => [Math.pow(Math.random(), 1 / (godCount(g) > 0 ? 1.3 : 1)), g]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const gods = godsOpen().map(g => [Math.pow(Math.random(), 1 / (godCount(g) > 0 ? 1.3 : 1)), g]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
   const bag = ['souls', 'souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
   const res = () => { const k = bag.find(x => !kinds.some(d => d.type === x)); return { type: k || 'gold' }; };
-  kinds.push(Math.random() < (n === 1 ? 0.5 : 0.3) ? res() : { type: 'god', god: gods.pop() });
-  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.22 ? { type: 'god', god: gods.pop() } : res());
+  kinds.push(Math.random() < (n === 1 ? 0.5 : 0.3) || !gods.length ? res() : { type: 'god', god: gods.pop() });
+  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.22 && gods.length ? { type: 'god', god: gods.pop() } : res());
   kinds.sort(() => Math.random() - 0.5);
-  return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
+  return { tip: 'doors', eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
       return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Te espera su elegido. Mátalo y elige una de sus técnicas. Suelta ${G.mat}.`, note: `Técnicas suyas: ${k} de 4 · Maestría «${MASTERY[d.god].name}»: ${Math.min(k, 3)}/3`, color: G.color, ico: ['sword', 1], apply: () => { S.next = d; } }; }
     const R = ROOMS[d.type];
@@ -1257,6 +1278,7 @@ function advancePick() {
     const scr = pickQueue.shift()();
     if (!scr || !scr.opts.length) continue;
     pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
+    pickTip = scr.tip ? tipTake(scr.tip) : null;   // la primera vez que sale esta clase de pantalla, lleva su aviso de ayuda
     setMode('pick'); ov.scrollTop = 0; return;
   }
   if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
@@ -1299,7 +1321,7 @@ function pieceCard(pc) {
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color;
     return up(D.name, l => duoText(D, l));
   }
-  const lvl = 1 + rar, duo = cur && !D ? duoFor(cur.id, pc.id) : null;
+  const lvl = 1 + rar, duo0 = cur && !D ? duoFor(cur.id, pc.id) : null, duo = duo0 && duoIsOpen(duo0) ? duo0 : null;   // un dúo con una deidad sin abrir no se ofrece
   if (duo) {   // la técnica que llevas se funde con esta
     const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
@@ -1318,6 +1340,7 @@ const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : SOLO.includes(t.id) ? 'nada, sirve sola' : 'cualquier técnica de esta deidad');
 // Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
+const duoIsOpen = D => godIsOpen(PIECE[D.a].god) && godIsOpen(PIECE[D.b].god);
 const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
 function pieceOptions(god) {
   const cands = [];
@@ -1339,9 +1362,9 @@ function pieceOptions(god) {
 function openShop() {
   if (!S.shop || S.shop.wave !== S.wave) {
     const k = 1 + 0.25 * (S.world - 1), pr = n => Math.round(n * k / 5) * 5;
-    const god = GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+    const god = randGod();
     const plan = PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5)[0];
-    S.shop = { wave: S.wave, items: [
+    S.shop = { wave: S.wave, tip: tipTake('shop'), items: [
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
       { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
@@ -1357,7 +1380,7 @@ function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
   const icoOf = it => ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0);
-  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}${tipBox(S.shop.tip)}
     <div class="shopwrap"><div><div class="stalls">` +
     S.shop.items.map((it, i) => `<button class="fi stall${it.sold ? ' on sold' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><em class="tile">${icoOf(it)}</em><b>${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Vendido' : `<u class="coin">${it.price}</u>`}</i></button>`).join('') +
     `</div><p class="fine">El oro solo sirve en este encargo: lo que no gastes aquí se pierde al terminar.</p><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button></div>
@@ -1413,7 +1436,8 @@ function forgeHtml() {
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
     const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tus guanteletes no llevan ninguna pieza afín a una deidad.</span></li>';
-    const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
+    const reso = RESO.map(R => { if (!resoIsOpen(R)) return `<li><em>Resonancia</em><b>???</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con una técnica de una deidad que aún no se ha fijado en ti</span></li>`;
+      const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
       return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
     body = `<p class="fine">Combinaciones que dan efectos extra. Lo que aún no has descubierto sale como «???».</p>
       <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
@@ -1519,9 +1543,16 @@ function buildHtml(full) {
   else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
   return rows.join('');
 }
+const resoIsOpen = R => R.techs.every(id => godIsOpen(PIECE[id].god));
+// Palabras del glosario que son de una deidad: no salen mientras esté cerrada, salvo que las nombre una pieza que ya has descubierto
+const GLOSS_GOD = { Ascuas: 'dragon', Veneno: 'venom', Cristales: 'stone', Reserva: 'feast', Furia: 'orc', Eco: 'time', Sombras: 'shade', Agujas: 'storm', Empapado: 'tide', Semillas: 'wood', Enraizado: 'wood', Zarzal: 'wood', Escarcha: 'frost', Heridas: 'blood', Sentencia: 'end', Iluminado: 'light', Dormido: 'dream', Pozo: 'void', Reflejo: 'mirror', Manada: 'beast', Caza: 'beast', Temple: 'forge', 'Golpe contra el muro': 'tide' };
+const glossShut = ([re, name]) => !!GLOSS_GOD[name] && !godIsOpen(GLOSS_GOD[name]) && !PARTS.some(x => M.parts[x.id] && re.test(x.desc));
 // El recetario va por páginas: una por deidad y unas pocas más. LB y RB (o Q y R) pasan de página; también se puede tocar la pestaña.
 let bookPage = 0;
-const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_KEYS.map(g => [g, GODS[g].theme, GODS[g].color]), [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
+// Las deidades van en el orden en que se fijan en ti; las que aún no lo han hecho salen como «???», sin enseñar nada suyo.
+const BOOK_SHUT = '#6b5a4e';
+const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_UNLOCK.filter(godIsOpen).map(g => [g, GODS[g].theme, GODS[g].color]), GOD_UNLOCK.filter(g => !godIsOpen(g)).slice(0, 1).map(g => [g, '??? · quedan ' + GOD_UNLOCK.filter(x => !godIsOpen(x)).length, BOOK_SHUT]),   // las que aún no se han fijado en ti, en una sola pestaña
+  [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
 function bookHtml() {
   const P = bookPages(); bookPage = ((bookPage % P.length) + P.length) % P.length;
   const [id, , col] = P[bookPage];
@@ -1529,30 +1560,34 @@ function bookHtml() {
   let body = '';
   if (id === 'llevo') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Lo que llevas en este encargo</h2><p>Solo cabe una técnica por acción: disparo, cargado, esquive y pasiva. Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p></div><ul class="build full carrylist">${buildHtml(true) || '<li><span>Todavía no llevas nada.</span></li>'}</ul>`;
+  } else if (GODS[id] && !godIsOpen(id)) {
+    const n = godsOpenN(), all = GOD_UNLOCK.length;
+    body = `<div class="bkhead" style="--c:${col}"><h2>???</h2><p><b>Esta deidad aún no se ha fijado en ti: cumple otro encargo.</b> Cada encargo del tablón que cumples por primera vez, guardianes incluidos, atrae a una deidad nueva. Hasta entonces no verás a sus elegidos ni sus reliquias.</p><p>Te conocen ${n} de ${all} deidades${n < all ? '; ' + (all - n === 1 ? 'falta 1 encargo' : 'faltan ' + (all - n) + ' encargos') + ' para que te conozcan todas' : ''}.</p></div>`;
   } else if (GODS[id]) {
     const G = GODS[id], n = godCount(id);
     body = `<div class="bkhead" style="--c:${col}"><h2>${G.title}</h2><p><b>${G.theme}.</b> ${G.key}</p><p class="mast"><u>${'<i class="on"></i>'.repeat(Math.min(n, 3))}${'<i></i>'.repeat(Math.max(0, 3 - n))}</u> Maestría ${Math.min(n, 3)}/3 · <b>${MASTERY[id].name}:</b> ${MASTERY[id].desc}</p></div><ul class="bklist">` +
       PIECES.filter(x => x.god === id).map(pc => { const l = lv(pc.id); return card(l, SLOTS[pc.slot], col, pic(pc.id, 't'), pc.name + (l ? ' ' + ROMAN[l] : ''), pc.desc(Math.max(1, l))); }).join('') +
       TECHS.filter(t => t.god === id).map(t => card(S.techs.has(t.id), 'Técnica · ' + RAR[t.rar].name, RAR[t.rar].color, pic(t.id, 't'), t.name, `${t.desc} Necesita: ${techNeeds(t)}.`)).join('') + '</ul>';
   } else if (id === 'duos') {
-    body = `<div class="bkhead" style="--c:${col}"><h2>Dúos</h2><p>Dos técnicas de deidades distintas para la misma acción se funden en una. Te lo ofrecen al quebrar una reliquia si ya llevas una de las dos.</p></div>` +
-      SLOT_KEYS.map(k => `<h3>Dúos de ${SLOTS[k].toLowerCase()}</h3><ul class="bklist">` + DUOS.filter(d => d.slot === k).map(d => card(duoOn(d.id), GODS[PIECE[d.a].god].theme + ' + ' + GODS[PIECE[d.b].god].theme, null, pic(d.a, 't'), d.name, `Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}`)).join('') + '</ul>').join('');
+    body = `<div class="bkhead" style="--c:${col}"><h2>Dúos</h2><p>Dos técnicas de deidades distintas para la misma acción se funden en una. Te lo ofrecen al quebrar una reliquia si ya llevas una de las dos.${DUOS.some(d => !duoIsOpen(d)) ? ' Aquí salen solo los de las deidades que ya se han fijado en ti: quedan ' + DUOS.filter(d => !duoIsOpen(d)).length + ' por conocer.' : ''}</p></div>` +
+      SLOT_KEYS.map(k => `<h3>Dúos de ${SLOTS[k].toLowerCase()}</h3><ul class="bklist">` + DUOS.filter(d => d.slot === k && duoIsOpen(d)).map(d => card(duoOn(d.id), GODS[PIECE[d.a].god].theme + ' + ' + GODS[PIECE[d.b].god].theme, null, pic(d.a, 't'), d.name, `Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}`)).join('') + '</ul>').join('');
   } else if (id === 'reso') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Resonancias</h2><p>Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p></div><ul class="bklist">` +
-      RESO.map(R => card(res(R.id), R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, pic(R.parts[0], 't'), R.name, `${R.parts.map(pid => (M.parts[pid] ? PART[pid].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(tid => PIECE[tid].name + ' (' + GODS[PIECE[tid].god].theme + ')').join(' + ')}. ${R.desc}`)).join('') + '</ul>' +
+      RESO.map(R => (resoIsOpen(R) ? card(res(R.id), R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, pic(R.parts[0], 't'), R.name, `${R.parts.map(pid => (M.parts[pid] ? PART[pid].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(tid => PIECE[tid].name + ' (' + GODS[PIECE[tid].god].theme + ')').join(' + ')}. ${R.desc}`)
+        : card(false, R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, '', '???', 'Pide una técnica de una deidad que aún no se ha fijado en ti.'))).join('') + '</ul>' +
       `<h3>Planos</h3><ul class="bklist">` + PLANS.map(x => card(S.plans.has(x.id), 'Plano', null, '', x.name, x.desc)).join('') + '</ul>';
   } else if (id === 'piezas') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Piezas de los guanteletes</h2><p>Las que has descubierto. Quedan ${PARTS.filter(x => !M.parts[x.id]).length} por descubrir.</p></div>` +
       GSLOT_KEYS.map(sk => { const L = PARTS.filter(x => x.slot === sk && M.parts[x.id]); return L.length ? `<h3>${GSLOTS[sk]} · ${GSLOT_WHAT[sk]}</h3><ul class="bklist">` + L.map(x => card(G(x.id), x.tag, null, pic(x.id, 't'), x.name, x.desc)).join('') + '</ul>' : ''; }).join('');
   } else {
-    body = `<div class="bkhead" style="--c:${col}"><h2>Glosario</h2><p>Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…), explicadas.</p></div><ul class="bklist gl">` + GLOSS.map(([, n, w]) => `<li class="bk own"><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('') + '</ul>';
+    body = `<div class="bkhead" style="--c:${col}"><h2>Glosario</h2><p>Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…), explicadas.${GLOSS.some(glossShut) ? ' Faltan ' + GLOSS.filter(glossShut).length + ' palabras de deidades que aún no se han fijado en ti.' : ''}</p></div><ul class="bklist gl">` + GLOSS.filter(x => !glossShut(x)).map(([, n, w]) => `<li class="bk own"><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('') + '</ul>';
   }
   return `<p class="eyebrow">Recetario del herrero · página ${bookPage + 1} de ${P.length}</p><h1>Lo que se les puede robar</h1>
     <div class="bktabs">${P.map(([pid, nm, c], i) => `<button class="bkt${i === bookPage ? ' on' : ''}" data-bk="${i}" style="--c:${c}">${nm}</button>`).join('')}</div>
     <div class="bkpage">${body}</div><p class="fine keyhint">LB y RB (o Q y R) pasan de página. El stick mueve la página. Cualquier otro botón vuelve.</p><button id="ovBtn" class="primary">Volver</button>`;
 }
 function bookTurn(d) { bookPage += d; renderOverlay(); ov.scrollTop = 0; sfx('tick', 0.25); }
-function openBook() { bookFrom = S.mode; if (S.god && S.mode === 'pick') bookPage = 1 + GOD_KEYS.indexOf(S.god); S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
+function openBook() { bookFrom = S.mode; if (S.god && S.mode === 'pick') bookPage = Math.max(0, bookPages().findIndex(x => x[0] === S.god)); S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 
@@ -1622,15 +1657,16 @@ const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · 
 
 // Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado
 function missionWin() {
-  const ms = S.mission, first = !isDone(ms.id);
+  const ms = S.mission, first = !isDone(ms.id), n0 = godsOpenN();
   M.done = M.done || {}; M.done[ms.id] = 1;
+  S.newGod = godsOpenN() > n0 ? GOD_UNLOCK[godsOpenN() - 1] : null;   // cada encargo cumplido por primera vez hace que otra deidad se fije en ti
   S.pay = first ? payOf(ms) : Math.round(payOf(ms) * 0.3); S.soulsRun += S.pay; S.first = first;
   if (ms.type === 'boss' || ms.type === 'god') { const left = PARTS.filter(x => !M.parts[x.id]); if (left.length) { const x = left[Math.floor(Math.random() * left.length)]; discover(x.id); S.found = x.name; } }
   endRun(true); setMode('win');
 }
 function missionFail(why) { S.failTxt = why; S.p.hp = 0; endRun(false); setMode('dead'); }
 const resumePlay = () => { S.mode = 'play'; modeT = 0; renderOverlay(); };
-const lootGod = () => GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+const lootGod = () => randGod();
 
 // ── Defensa de una aldea: cada oleada es un tramo; parte de los enemigos va a por la campana en vez de a por ti ──
 function fillDefWave() {
@@ -2072,7 +2108,8 @@ function openTown(from) {
   S.p.x = room.start.x; S.p.y = room.start.y; S.p.face = Math.PI / 2; S.world = 1;
   const back = { castle: 'king', forgeOut: 'forge', innOut: 'inn' }[from];
   if (back) { const k = room.out.spots.find(s => s.id === back); S.p.x = k.x; S.p.y = k.y + 22; S.p.face = Math.PI / 2; }
-  S.mode = 'town'; modeT = 0; renderOverlay();
+  S.mode = 'town'; modeT = 0; renderOverlay(); tipClear();
+  if (kind[0] === 'plaza') { if (M.souls > 0) tip('souls'); if (M.iron > 0) tip('iron'); }   // la primera vez que vuelves con algo, para qué sirve
   if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
   else if (from === 'forge') sayRaw('[La forja. Huele a hierro y a carbón.]', C.energy);
   else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
@@ -2225,7 +2262,8 @@ function kingExplain() {
     { who: 'king', text: `El ${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).join(', ')} y ${zones[3]}.` },
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
-    { who: 'king', text: 'Por el camino, los dioses menores te ofrecerán sus técnicas. Úsalas sin miedo: solo te duran ese encargo.' },
+    { who: 'king', text: 'Por el camino robarás técnicas a los dioses menores. Úsalas sin miedo: solo te duran ese encargo.' },
+    { who: 'king', text: 'Al principio solo cuatro de ellos se fijarán en ti. Cada encargo que cumplas atraerá la mirada de otro, hasta veinte.' },
     { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tus guanteletes en la forja.' },
     { who: 'king', text: 'Y si caes, te retiras y vuelves a intentarlo. En la posada tienes cama y siempre habrá otro encargo.' },
   ];
@@ -3142,6 +3180,49 @@ function kmSelect(mk) {
     const go = e.target.closest ? e.target.closest('.kgo') : null;
     if (go) { audioInit(); forgeAct('m:' + go.dataset.go); }
   }, true);
+}
+// ───────────────────────── Avisos de ayuda ─────────────────────────
+// No es un tutorial: son avisos cortos que salen una sola vez cada uno, justo cuando hacen falta, y que se pueden ignorar.
+// Los que se han visto se guardan en M.tips; Ajustes → «Volver a ver los avisos de ayuda» lo vacía.
+// Hay dos formas de enseñarlos: en partida y en la plaza, un cartel arriba (tip), en el sitio de los mensajes de deidad,
+// que esperan a que el aviso se vaya para no salir uno encima del otro (sysTick); dentro de un menú
+// (puertas, reliquia, tienda), un recuadro en la cabecera de ese menú (tipTake + tipBox).
+const tipEl = $('tip'); let tipQ = [], tipNow = null, tipT = 0, tipGap = 0, tipAge = 0;
+const devKey = (pad, kb, touch) => (lastDev === 'pad' ? pad : lastDev === 'touch' ? touch : kb);
+const TIPS = {
+  shoot:   () => `Dispara con ${devKey('<b>A</b> o <b>RT</b>', '<b>Espacio</b>', 'el botón <b>Disparar</b>')}: Alec apunta solo al enemigo más cercano. Cada disparo te frena un instante, así que dispara, da un paso y vuelve a disparar.`,
+  dodge:   () => `Esquiva con ${devKey('<b>B</b> o <b>RB</b>', '<b>Shift</b>', 'el botón <b>Esquivar</b>')}, hacia donde te estés moviendo. Mientras dura no te pueden dañar; luego tarda un segundo en recargarse.`,
+  charge:  () => `Mantén ${devKey('<b>X</b> o <b>LT</b>', '<b>E</b>', 'el botón <b>Cargar</b>')} y suelta: el <b>disparo cargado</b> pega mucho más fuerte. Después tarda un par de segundos en volver.`,
+  doors:   () => `Cada puerta dice lo que hay detrás. Tras la de una <b>deidad</b> espera su elegido: lo matas, quiebras su reliquia y le robas una técnica para este encargo. Las demás salas no tienen elegido y dan otra cosa: almas, oro, vida, hierro o un ajuste.`,
+  relic:   () => `Solo cabe <b>una técnica por acción</b>: disparo, cargado, esquive y pasiva. Si eliges una que ya llevas, sube de nivel. El <b>Recetario</b> (botón de abajo) explica todas.`,
+  status:  () => `Los iconos sobre un enemigo indican qué estados lleva encima (Ascuas, Escarcha, Veneno…). Qué hace cada uno lo dice el Glosario: Pausa → Recetario → Glosario.`,
+  shop:    () => `Aquí se gasta el oro que has ido recogiendo; hay dos tiendas por encargo. La <b>Reliquia de contrabando</b> te da a elegir una técnica sin tener que matar a un elegido.`,
+  defend:  () => `Protege la <b>campana</b> del centro de la aldea: su vida es la barra de abajo y, si llega a cero, pierdes el encargo.`,
+  assault: () => `Busca los <b>estandartes</b> del campamento y derríbalos a disparos. Cuando caigan todos y no quede nadie, pasas al siguiente campamento.`,
+  boss:    () => `Este es el <b>guardián</b> de la zona; su vida es la barra de abajo. Fíjate en sus ataques y esquívalos. Si caes, conservas lo ganado y puedes volver a intentarlo.`,
+  souls:   () => { const min = Math.min(...TREE_NODES.map(n => n.cost[tr(n.id)]).filter(c => c > 0)); return `Traes <b>${M.souls} almas</b>. Se gastan en el <b>patio de armas</b>, en mejoras que valen para todos los encargos${M.souls >= min ? ': ya te llega para alguna' : ''}.`; },
+  iron:    () => `Traes <b>Hierro Místico</b>. En la <b>forja</b>, cada pieza de guantelete que has encontrado dice lo que cuesta forjarla; una vez forjada, puedes montarla siempre.`,
+};
+const tipSeen = id => !!(M.tips || {})[id];
+function tipMark(id) { M.tips = M.tips || {}; M.tips[id] = 1; save(); }
+// Pide un aviso (o varios, en orden): se pone a la cola si no se ha visto ya. Se da por visto cuando llega a salir en pantalla.
+function tip(...ids) { for (const id of ids) if (TIPS[id] && !tipSeen(id) && tipNow !== id && !tipQ.includes(id)) tipQ.push(id); }
+// Para los avisos que van dentro de un menú: devuelve el id si toca enseñarlo (y lo da por visto), o null
+function tipTake(id) { if (!TIPS[id] || tipSeen(id)) return null; tipMark(id); return id; }
+const tipBox = id => (id && TIPS[id] ? `<div class="tipbox"><em>Ayuda</em><span>${TIPS[id]()}</span></div>` : '');
+function tipClear() { tipQ = []; tipNow = null; tipT = 0; tipGap = 0; tipEl.hidden = true; }
+function tipsReset() { M.tips = {}; save(); tipClear(); }
+const statusOn = e => e.spawn <= 0 && (e.ember > 0 || e.venom > 0 || e.needles > 0 || e.mark > 0 || e.frost > 0 || e.frozen > 0 || e.bleed > 0 || !!e.doom || e.lit > 0 || e.sleep > 0 || e.seed > 0 || e.root > 0 || e.wet > 0);
+function tipTick(dt) {
+  const m = S.mode, live = (m === 'play' || m === 'town') && !S.dialog;
+  if (m === 'play' && !tipSeen('status') && S.enemies.some(statusOn)) tip('status');
+  if (!live) { tipEl.hidden = true; if (tipNow && tipAge > 4) tipNow = null; return; }   // en los menús no se ve ni corre el tiempo; si se abrió uno cuando apenas había salido, al volver sigue donde estaba
+  if (tipNow) { tipT -= dt; tipAge += dt; if (tipT <= 0) { tipNow = null; tipGap = 0.8; } }
+  else if ((tipGap -= dt) <= 0) {
+    while (tipQ.length && !tipNow) { const id = tipQ.shift(); if (!tipSeen(id)) tipNow = id; }
+    if (tipNow) { const h = TIPS[tipNow](); tipMark(tipNow); tipAge = 0; tipEl.innerHTML = '<em>Ayuda</em>' + h; tipT = clamp(h.replace(/<[^>]+>/g, '').length / 15, 7, 11); sfx('tick', 0.3, 0.8); }
+  }
+  tipEl.hidden = !tipNow;
 }
 // ───────────────────────── Combate: consultas ─────────────────────────
 const active = e => e.spawn <= 0 && e.hp > 0;
@@ -6431,7 +6512,7 @@ function titleItems() {
   if (titleView === 'confirm') return [['no', 'No, volver'], ['wipe', 'Sí, borrar y empezar de cero']];
   if (titleView === 'settings') { const lv = n => ['Apagado', 'Bajo', 'Medio', 'Normal', 'Alto'][n]; return [
     ['sound', 'Sonido', CFG.sound ? 'Encendido' : 'Apagado'], ['music', 'Volumen de la música', lv(CFG.music)], ['sfx', 'Volumen de los efectos', lv(CFG.sfx)],
-    ['blend', 'Suavizado de animaciones', CFG.blend ? 'Sí' : 'No'], ['ctl', 'Controles'], ['cred', 'Créditos'], ['back', 'Volver']]; }
+    ['blend', 'Suavizado de animaciones', CFG.blend ? 'Sí' : 'No'], ['tips', 'Volver a ver los avisos de ayuda', Object.keys(M.tips || {}).length ? '' : 'Activados'], ['ctl', 'Controles'], ['cred', 'Créditos'], ['back', 'Volver']]; }
   if (titleView === 'ctl' || titleView === 'cred') return [['settings', 'Volver']];
   return (hasSave() ? [['cont', M.run ? 'Continuar · ' + M.run.mission.name : 'Continuar']] : []).concat([['new', 'Nueva partida'], ['settings', 'Ajustes']]);
 }
@@ -6462,6 +6543,7 @@ function titleAct(id) {
   else if (id === 'music') cyc('music', 5);
   else if (id === 'sfx') cyc('sfx', 5);
   else if (id === 'blend') cyc('blend', 2);
+  else if (id === 'tips') tipsReset();
   audioInit(); musicTick(); sfx('tick', 0.3); renderOverlay();
 }
 function titleInput() {
@@ -6485,12 +6567,12 @@ function renderOverlay() {
       <button id="ovBtn" class="primary">A la plaza</button>`;
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
-      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>
+      <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cobrado entero: repetirlo paga menos)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
       <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
-    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1><div class="cards rows">` +
+    h = `<p class="eyebrow">${pickHead.eyebrow}</p><h1>${pickHead.title}</h1>${tipBox(pickTip)}<div class="cards rows">` +
       pickOpts.map((u, i) => `<button class="card${i === pickSel ? ' sel' : ''}" data-i="${i}" id="card${i}" style="--fam:${u.color}"><div class="ch"><em>${u.tag}${u.rar ? `<i style="color:${RAR[u.rar].color}"> · ${RAR[u.rar].name}</i>` : ''}</em><strong>${u.pic ? pic(u.pic) : u.ico ? ico(u.ico[0], u.ico[1]) : ''}${u.name}</strong></div><div class="cb"><span>${u.desc}</span>${u.note ? `<small>${u.note}</small>` : ''}</div>${u.tag === 'Vender' ? '' : gloss(u.desc + ' ' + (u.note || ''), 4)}</button>`).join('') +
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
@@ -6503,6 +6585,13 @@ function renderOverlay() {
   const b = $('ovBtn'); if (b) b.addEventListener('click', () => { audioInit(); primaryAction(true); });
   ovBody.querySelectorAll('[data-tm]').forEach((b, i) => b.addEventListener('click', () => { titleSel = i; titleAct(b.dataset.tm); }));
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
+}
+// En la pantalla de victoria: la deidad que se acaba de fijar en ti, con su color, su tema y lo que hace
+function newGodHtml(g) {
+  const G = GODS[g]; if (!G) return '';
+  const n = godsOpenN(), all = GOD_UNLOCK.length;
+  return `<div class="bkhead newgod" style="--c:${G.color}"><em>Una deidad nueva se ha fijado en ti</em><h2>${G.title}</h2><p><b>${G.theme}.</b> ${G.key}</p>
+    <p class="fine">Desde el próximo encargo puedes encontrarte a sus elegidos y robarle técnicas. Su página del Recetario ya está abierta. ${n >= all ? 'Ya te conocen las ' + all + ' deidades.' : 'Te conocen ' + n + ' de ' + all + ' deidades: cada encargo que cumplas por primera vez atrae a otra.'}</p></div>`;
 }
 function primaryAction(force) {
   if (S.mode === 'title') return;   // el menú principal tiene sus propios botones
@@ -6577,7 +6666,7 @@ function frame(now) {
   else if (m === 'title') titleInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
   if (!introDraw()) render();
-  renderHud();
+  renderHud(); tipTick(dt);
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
 
@@ -6585,5 +6674,5 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { spawn, godsOpen,godsOpenN, lootGod, pieceOptions, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();
