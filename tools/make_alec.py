@@ -145,8 +145,8 @@ def frame(view, legs, bob=0, gl=(0, 0), gr=(0, 0), hot=0, lean=0, sway=0):
     stamp(im, {'down': DOWN, 'up': UP, 'side': SIDE}[view], ox + lean, top + bob)
     if sway:               # el bajo de la túnica ondea hacia un lado
         if side: stamp(im, ['kd', 'kk'], ox + 3 + lean, top + 22 + bob)
-        elif sway < 0: stamp(im, ['kd', 'kc', 'kk'], ox + 0, top + 21 + bob)
-        else: stamp(im, ['dk', 'ck', 'kk'], ox + 16, top + 21 + bob)
+        elif sway < 0: stamp(im, ['kd', 'kk'], ox + 1, top + 22 + bob)
+        else: stamp(im, ['dk', 'kk'], ox + 15, top + 22 + bob)
     hands = []
     if side:
         x, y = ox + 9 + gr[0], top + 13 + bob + gr[1]
