@@ -79,6 +79,12 @@ for k, d, sub in [('pc_skel', FP + 'Skeleton Crew/Skeleton - Base', 1), ('pc_ske
                   ('pc_rat', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Base', 1), ('pc_rat_rogue', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Rogue', 1), ('pc_rat_mage', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Mage', 1), ('pc_rat_war', 'Pixel_Crawler_-_Sewer/Enemy/Rat - Warrior', 1),
                   ('pc_stone', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Base', 1), ('pc_stone_broken', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Broken', 1), ('pc_stone_lava', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Lava', 1), ('pc_golem', 'Pixel_Crawler_-_Forge_1.2/Enemy/Stone - Golem', 1)]:
     pcmob(k, d, sub)
+# ── La cinemática del principio (src/37_intro.js): Alec de niño y de muchacho, y el herrero que lo crio. Van al final para no mover a nadie de sitio en el atlas ──
+CAST.update({
+  'alec_kid': ('Knight_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Move', 10, 14)}),
+  'alec_teen': ('Knight_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 14), 'atk': ('Dash', 10, 14)}),
+  'oldsmith': ('@Pixel_Crawler_-_Hideout_1.0/Enemies/Baldits/Sorcerer', {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Run/Run-Sheet.png', 6, 10)}),
+})
 PC = 'assets/library/packs/'
 def frames_of(folder, suffix):
     if folder.startswith('%'):   # tiras «Nombre_Nx1.png» del RPG HEROES & ENEMIES de overboy

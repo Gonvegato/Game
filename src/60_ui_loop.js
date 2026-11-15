@@ -8,8 +8,8 @@ const HINTS = {
 };
 function renderOverlay() {
   const m = S.mode;
-  ov.hidden = m === 'play' || m === 'town';
-  if (m === 'play' || m === 'town') { ovBody.innerHTML = ''; return; }
+  ov.hidden = m === 'play' || m === 'town' || m === 'intro';
+  if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
     h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
@@ -50,7 +50,7 @@ function renderOverlay() {
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
 }
 function primaryAction(force) {
-  if (S.mode === 'title') openForge();
+  if (S.mode === 'title') { if (M.seenIntro) openForge(); else playIntro(); }   // la primera vez, Alec cuenta su historia antes de llegar a la plaza
   else if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
   else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
@@ -93,6 +93,7 @@ function frame(now) {
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'town') townUpdate(dt);
+  else if (m === 'intro') introUpdate(dt);
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
@@ -102,11 +103,12 @@ function frame(now) {
     if (I.backP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
-  render(); renderHud();
+  if (!introDraw()) render();
+  renderHud();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { place: openPlace, town: openTown, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

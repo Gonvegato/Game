@@ -79,7 +79,8 @@ function roomHtml() {
   const forged = PARTS.filter(x => M.parts[x.id] === 2).length, known = PARTS.filter(x => M.parts[x.id]).length;
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
-    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>`;
+    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
 }
 
 // ───────────────────────── Conversaciones con bocadillos ─────────────────────────
@@ -102,6 +103,7 @@ function talkUpdate(dt) {
   }
 }
 function speakerPos(who) {
+  if (S.intro) return introSpeakerPos(who);   // en la cinemática hablan sus actores
   if (who === 'alec') return { x: S.p.x, y: S.p.y - 26 };
   const n = S.town && S.town.npcs.find(q => q.key === who);
   return n ? { x: n.x * CELL, y: n.y * CELL - 30 } : { x: S.p.x, y: S.p.y - 26 };
@@ -134,7 +136,7 @@ function drawDialog(k) {
     lines.forEach((t, i) => { if (left <= 0) return; const part = t.slice(0, left); g.fillText(part, bx + pad, by + pad + fs * 1.1 + i * lh); left -= t.length + 1; });
     if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.fillText('▸', bx + w - pad - fs * 0.6, by + h - pad - fs * 0.9); }
     g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)'; g.textAlign = 'center';
-    g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);
+    if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);   // la cinemática pone su propia ayuda
   } else if (d.choices) {   // opciones de respuesta de Alec
     g.font = `500 ${fs}px ${FONT}`;
     const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
