@@ -108,7 +108,7 @@ const INTRO = [
     beats: [
       { wait: 1.2, who: 'kid', text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
       { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
-      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja un arma y no sabe usarla solo fabrica chatarra.',
+      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
         on(R) {
           R.dipTo(() => {
             R.a('kid').hidden = true; R.stage = 1; R.acc = 0.9; R.setCap('Años después');
@@ -129,7 +129,7 @@ const INTRO = [
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
         ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); blip(110, 0.25, 'sawtooth', 0.06, -70); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
-      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -137,7 +137,7 @@ const INTRO = [
       R.go(a, [[19, 10.9]], 54);
     },
     beats: [
-      { wait: 1, who: 'alec', text: 'Con su martillo forjé esta ballesta. No he vuelto a soltarla.' },
+      { wait: 1, who: 'alec', text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
       { wait: 0.6, who: 'alec', text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
@@ -194,7 +194,7 @@ function introScene(i) {
     shake(n) { R.shk = Math.max(R.shk, n); },
     dipTo(fn) { R.dip = { t: 0, fn, done: false }; },
     setCap(txt) { R.cap = txt; R.capT = 0; },
-    shoot(from, to) {   // un virote de la ballesta: sale, llega y derriba
+    shoot(from, to) {   // un conjuro de los guanteletes: sale, llega y derriba
       const a = R.a(from), b = R.a(to); if (!a || !b || b.fall != null) return;
       a.aim = Math.atan2(b.y - a.y, b.x - a.x); a.kick = 3;
       R.fx.push({ k: 'bolt', x1: a.x + 12, y1: a.y - 11, x2: b.x, y2: b.y - 14, t: 0, life: 0.1, hit() { R.fall(b, 1); R.burst(b.x, b.y - 14, 6, ['#efe6c8', '#c9b98a'], 60); blip(200, 0.08, 'square', 0.04, -90); } });

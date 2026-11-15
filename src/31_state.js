@@ -22,7 +22,7 @@ function newGame() {
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
   newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
-  const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
+  const p = S.p;   // lo que traes de otras vidas: tus guanteletes y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
@@ -70,7 +70,7 @@ function nextWave() {
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
-  checkRes();   // lo que tu arma y tus técnicas despiertan juntas se anuncia al entrar
+  checkRes();   // lo que tus guanteletes y tus técnicas despiertan juntos se anuncia al entrar
   saveRun();
 }
 

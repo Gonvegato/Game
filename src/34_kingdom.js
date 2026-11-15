@@ -1,7 +1,7 @@
 // ───────────────────────── Reinos, zonas y misiones ─────────────────────────
 // Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
-// Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
+// Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda son los guanteletes forjados y el árbol.
 // Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
 const MTYPES = {
   doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas. Al acabar cada una eliges puerta. Hay dos tiendas.' },

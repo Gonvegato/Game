@@ -1,18 +1,18 @@
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
 const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
-const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el arma', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
-const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tu arma', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
-// Una pieza de arma: la montas ahora y, además, queda descubierta para siempre
+const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
+const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
+// Una pieza de guantelete: la montas ahora y, además, queda descubierta para siempre
 function mountPart(id) { discover(id); S.gun[PART[id].slot] = id; S.p.shells = 2; S.p.heat = 0; S.p.drawing = false; S.p.spin = 0; checkRes(); }
 const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
-  opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tu arma como está. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tu arma como está.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
-  return { eyebrow, title: 'Una pieza para tu ' + gunName(S.gun).toLowerCase(), opts };
+  opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
+  return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 

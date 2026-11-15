@@ -81,16 +81,16 @@ function update(dt) {
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
   const g = S.gun, A = g.action, want = p.buffer > 0 || I.atk || A === 'a_auto';
   if (p.over > 0) p.over -= dt;
-  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
+  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
     if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se arma', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
-  p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Llave de volante
+  p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Dedos de volante
   if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); blip(1400, 0.1, 'sine', 0.04, 300); } }
-  if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
-  if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
+  if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con los guanteletes listos (Dedos de resorte, Brazal de corredor)
+  if (g.barrel === 'b_flail') {   // Palma de mangual: la bola gira y golpea lo que toca
     p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
@@ -129,23 +129,23 @@ function update(dt) {
   }
   S.wells = S.wells.filter(w => w.life > 0);
   if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
-  for (const mn of S.mines) {     // minas de la Recámara de minas
+  for (const mn of S.mines) {     // minas de la Brasa de minas
     mn.life -= dt;
     if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; if (res('thornmine')) S.zones.push({ x: mn.x, y: mn.y, r: 40, life: 4, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.25, bram: true, col: GODS.wood.color }); explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
   }
   S.mines = S.mines.filter(mn => mn.life > 0);
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
-  if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
+  if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Brazal herrado: codazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
     if (near.length) {
-      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Culatazo!', C.ember, true);
+      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Codazo!', C.ember, true);
       S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 26, t: 0, life: 0.18, col: C.ink });
       for (const e of near) { const d = dist(p, e) || 1; hit(e, p.dmg * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, true, C.ink); if (active(e)) { e.kx += (e.x - p.x) / d * 300; e.ky += (e.y - p.y) / d * 300; stun(e, 0.6); } }
     }
   }
   p.heatT -= dt; if (p.heatT <= 0) p.heat = Math.max(0, p.heat - dt * 0.45);
   const canFire = p.over <= 0 && !p.charging && p.dodgeT <= 0;
-  if (A === 'a_hold') {   // Llave de retén: guardar hasta tres balas y soltarlas
+  if (A === 'a_hold') {   // Dedos de retén: guardar hasta tres disparos y soltarlos
     if (I.atk && canFire && p.cd <= 0) { p.drawing = true; p.draw = Math.min(1, p.draw + dt / (periodOf() * 2.2)); if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x); }
     else if (p.drawing) {
       p.drawing = false; const n = 1 + Math.floor(p.draw * 2 + 0.001); p.draw = 0; p.cd = periodOf() * 0.5; S.stat.hold = (S.stat.hold || 0) + n;
@@ -175,9 +175,9 @@ function update(dt) {
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;
-    if (A === 'a_fin' && target.hp / target.maxHp < 0.25) p.windupTotal = p.windup = 0.03;   // Llave de remate: sin frenazo   // Pistolete: desenfundar no tiene frenazo
+    if (A === 'a_fin' && target.hp / target.maxHp < 0.25) p.windupTotal = p.windup = 0.03;   // Dedos de remate: sin frenazo   // Palma presta: el golpe tras esquivar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Mecha lenta: sale sola medio segundo después
+    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Dedos de rescoldo: sale sola medio segundo después
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -194,8 +194,8 @@ function update(dt) {
   else if (p.windup > 0) mult = free || A === 'a_semi' ? 1 : P.windupSlow;
   else if (I.atk && A === 'a_rotary') mult = free ? 1 : p.over > 0 ? 0.8 : 0.3 + 0.35 * (1 - p.spin);
   else if (I.atk && target) mult = free || A === 'a_semi' ? 1 : P.holdSlow;
-  if (g.stock === 's_sprint' && (p.idle || 0) > 2) mult *= 1.35;                // Culata de corredor
-  if (g.stock === 's_gasp' && p.hp < p.maxHp * 0.25) mult *= 1.3;              // Culata del último aliento
+  if (g.stock === 's_sprint' && (p.idle || 0) > 2) mult *= 1.35;                // Brazal de corredor
+  if (g.stock === 's_gasp' && p.hp < p.maxHp * 0.25) mult *= 1.3;              // Brazal del último aliento
   p.still = Math.hypot(I.mx, I.my) < 0.2 && p.dodgeT <= 0 ? p.still + dt : 0;   // para el Bípode
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
@@ -214,7 +214,7 @@ function update(dt) {
     collide(p, p.r);
   }
 
-  // Armas gemelas
+  // Guanteletes gemelos
   for (const tu of S.turrets) {
     tu.life -= dt; tu.cd -= dt;
     if (tu.cd > 0) continue;
@@ -267,7 +267,7 @@ function update(dt) {
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
       const d = dist(c, e) - e.r;
-      if (obs && d < 42) addEmber(e, 1);                                   // dúo Bala de obsidiana
+      if (obs && d < 42) addEmber(e, 1);                                   // dúo Filo de obsidiana
       if (tox && d < 42) addVenom(e, 2);                                   // dúo Estela de cristal
       if (cq && d < 50) { slow(e, 0.6, 0.6); fed = true; }                 // dúo Cuarzo de reloj
       if (tab && d < 60 && !e.boss && e.hp / e.maxHp < (e.champ ? 0.1 : 0.2)) {   // dúo Mesa puesta
@@ -315,7 +315,7 @@ function update(dt) {
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
     e.autoCd = Math.max(0, e.autoCd - dt); e.mark = Math.max(0, e.mark - dt);
     if (e.slowT > 0) e.slowT -= dt; else e.slowF = 1;
-    if (e.iceT > 0) e.iceT -= dt;   // la marca de la Bala de escarcha caduca con su frenado
+    if (e.iceT > 0) e.iceT -= dt;   // la marca de la Gema de escarcha caduca con su frenado
     if (lunch < 1 && dist(p, e) < 90) slow(e, 0.15, lunch);                // dúo Sobremesa larga
     if (e.needles > 0 && !(duoOn('syringe') && e.venom > 0)) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
     if (e.fling > 0) {                   // dúo Avalancha: enemigo lanzado

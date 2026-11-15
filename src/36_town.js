@@ -79,7 +79,7 @@ function roomHtml() {
   const forged = PARTS.filter(x => M.parts[x.id] === 2).length, known = PARTS.filter(x => M.parts[x.id]).length;
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
-    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>
+    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
     <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
 }
 
@@ -155,7 +155,7 @@ function kingExplain() {
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
     { who: 'king', text: 'Por el camino, los dioses menores te ofrecerán sus técnicas. Úsalas sin miedo: solo te duran ese encargo.' },
-    { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tu ballesta en la forja.' },
+    { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tus guanteletes en la forja.' },
     { who: 'king', text: 'Y si caes, te retiras y vuelves a intentarlo. En la posada tienes cama y siempre habrá otro encargo.' },
   ];
 }
@@ -186,8 +186,8 @@ function talkKing() {
 // La primera vez que usas la forja, la posada o el patio de armas, quien lo atiende te explica para qué sirve
 const FIRST_TALK = {
   forge: [
-    { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esa ballesta.' },
-    { who: 'smith', text: 'Tu arma tiene cinco partes: Cañón, Llave, Munición, Culata y Recámara. Cada una cambia una cosa de cómo disparas.' },
+    { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esos guanteletes.' },
+    { who: 'smith', text: 'Tienen cinco partes: Palma, Dedos, Gema, Brazal y Brasa. Cada una cambia una cosa de cómo lanzas tus conjuros.' },
     { who: 'smith', text: 'En los encargos encontrarás piezas nuevas. Tráeme Hierro Místico y materiales y te las forjo. Una vez forjada, la pieza es tuya para siempre.' },
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],

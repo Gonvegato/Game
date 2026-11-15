@@ -9,7 +9,7 @@ const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0)
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
 const fillRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (g[j] && i >= 0 && i < g[j].length) g[j][i] = 1; };
 const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-// Exteriores: en la rejilla, 1 es un obstáculo (roca, árbol, casa: para el paso y las balas) y 2 es agua (para el paso, no las balas).
+// Exteriores: en la rejilla, 1 es un obstáculo (roca, árbol, casa: para el paso y los disparos) y 2 es agua (para el paso, no los disparos).
 // El generador deja en OUT qué es cada obstáculo, para dibujarlo con el paquete de biomas.
 let OUT = null;
 const ob = (g, x, y, w, h, kind, extra) => { fillRect(g, x, y, w, h); OUT.obs.push(Object.assign({ x, y, w, h, kind }, extra)); };
