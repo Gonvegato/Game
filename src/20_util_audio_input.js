@@ -41,14 +41,17 @@ function sfxLoad() {
     fetch('assets/audio/' + n + '.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { SFX[n] = buf; }).catch(() => {});
 }
 function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
-  if (!AC || muted || AC.state !== 'running') return;
+  if (!AC || muted || hushed || AC.state !== 'running') return;
   const buf = SFX[name], t = AC.currentTime; if (!buf || t - (SFXT[name] || -1) < gap) return;
   SFXT[name] = t;
   try { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol; src.connect(g); g.connect(AC.destination); src.start(t); } catch (e) { /* sin sonido */ }
 }
 // La música va por pantalla: título, aldea, mazmorra, campo abierto, jefe y victoria. En los menús de dentro de una misión sigue la que sonaba.
+let hushed = false;   // la app está en segundo plano o la pestaña oculta: ni música ni efectos
+function hush(on) { hushed = !!on; if (hushed && musNow && MUS[musNow]) { MUS[musNow].pause(); } else if (!hushed) musicTick(); }
+document.addEventListener('visibilitychange', () => hush(document.hidden));
 function musicWant() {
-  if (muted || !S) return null;
+  if (muted || hushed || !S) return null;
   const m = S.mode;
   if (m === 'intro') return S.intro && S.intro.L === ENDING ? 'm_end' : 'm_title';   // el final del reino tiene su propia música
   if (m === 'title') return 'm_title';
