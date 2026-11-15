@@ -43,12 +43,13 @@ const periodOf = () => {
   return 1 / (p.as * (has('h_frenzy') && p.hp < p.maxHp * 0.3 ? 1.4 : 1) * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
+const overWalls = () => G('b_ghost') || G('b_bomb');   // el Cañón fantasma atraviesa los muros y la Bombarda tira por encima: no necesitan ver al objetivo
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
     if (!active(e)) continue;
     const d = dist(p, e) - e.r;
-    if (d <= rng && d < bd && (G('b_ghost') || !blocked(p, e))) { bd = d; bestE = e; }
+    if (d <= rng && d < bd && (overWalls() || !blocked(p, e))) { bd = d; bestE = e; }
   }
   return bestE;
 }
@@ -79,6 +80,7 @@ function kill(e) {
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
+  if (S.pets.length) S.build.caza = caza() + (e.boss || e.champ ? 5 : 1);                         // Bestias: la Caza de la manada
   { const ck = charKey(e), m = ATLAS[ck]; if (m && m.a.die && !e.boss) S.fx.push({ k: 'corpse', key: ck, x: e.x, y: e.y + e.r + 2, flip: Math.cos(e.dir) < 0, t: 0, life: 1.4 }); }   // se desploma
   if (e.type.post) { S.postsDown = (S.postsDown || 0) + 1; addGold(20); sayRaw('[Estandarte derribado: ' + S.postsDown + ' de ' + (S.postsAll || 3) + ']', C.ink); if (S.postsDown < (S.postsAll || 3)) S.pendingLoot = true; }
   if (lv('frost_passive') && e.frozen > 0) for (const o of others(e, 90, 4)) addFrost(o, 2);    // Cero absoluto
@@ -86,7 +88,8 @@ function kill(e) {
   if (mastery('blood') && e.bleed > 0) heal(2);                                                // maestría Cobro final
   if (has('h_warm') && p.hp < p.maxHp / 2) heal(2);                                            // Sangre caliente
   if (S.t < (S.bloodT || 0)) { heal(5); if (duoOn('bloodrite') && !e.boss) raiseShade(e.x, e.y); }   // Sangría (y dúo Rito rojo)
-  { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { o.doom = { t: Math.max(2, e.doom.t), acc: e.doom.acc * (1 + 0.15 * (ep - 1)) + (o.doom ? o.doom.acc : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
+  if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
+  { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
   if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Culata de lápida
   if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Culata de bota de vino
@@ -139,13 +142,13 @@ function hit(e, dmg, ux, uy, big, col) {
     if (bp && (e.root > 0 || e.bram > 0)) dmg *= 1 + 0.2 * bp;                                 // Savia
     if (lp) dmg *= 1 + 0.06 * lp * p.streak;                                                   // Racha
     { const fb3 = lv('forge_basic'), bp3 = lv('beast_passive');
-      if (fb3 || p.temper > 0) dmg *= 1 + 0.03 * temperNow();                                   // Temple
+      { const tn = temperNow(); if (tn > 0) dmg *= 1 + 0.03 * tn; }                              // Temple (y los Cristales del dúo Piedra de amolar)
       if (bp3 && e.hp / e.maxHp < 0.3) dmg *= 1 + 0.25 * bp3;                                   // Olfato
       if (has('g_whet')) dmg *= 1.08; }
     { const lp2 = lv('light_passive'), vp2 = lv('void_passive'), db = lv('dream_basic');
       if (lp2) dmg *= 1 + 0.05 * lp2 * Math.min(6, litCount());                                 // Sin sombra
       if (vp2) dmg *= 1 + 0.08 * vp2 * packed(e) * (duoOn('thicket') && (e.root > 0 || e.bram > 0) ? 2 : 1);   // Apiñados (y dúo Espesura)
-      if (e.sleep > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
+      if (e.sleep > 0 || e.doze > 0) { dmg *= 1 + Math.max(1, db) * (S._night ? 0 : 1) + (S._night ? 0.8 * lv('dream_charge') : 0); if (!S._night) { if (e.sleepHits > 0) e.sleepHits--; else wake(e); } } }   // Arrullo / Pesadilla
     { const fp = lv('frost_passive'), bp2 = lv('blood_passive');
       if (fp && e.frozen > 0) dmg *= 1 + 0.25 * fp;                                            // Cero absoluto
       if (bp2 && p.hp < p.maxHp / 2) dmg *= 1 + 0.2 * bp2; }                                   // Deuda
@@ -176,7 +179,7 @@ function dot(e, dmg, col) {
   const ti = lv('time_passive');
   if (ti && isSlow(e)) dmg *= 1 + 0.3 * ti;
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);
-  if (e.sleep > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
+  if (e.sleep > 0 || e.doze > 0) { const dp = lv('dream_passive'); if (dp) dmg *= 1 + 0.5 * dp; else wake(e); }   // Sonámbulos: el daño continuo no despierta
   e.hp -= dmg; S.dealt = (S.dealt || 0) + dmg; S.lastHitT = S.t;
   S.fx.push({ k: 'num', x: e.x + rnd(-6, 6), y: e.y - e.r - 2, t: 0, life: 0.4, txt: String(Math.max(1, Math.round(dmg))), col });
   if (e.hp <= 0) kill(e);
@@ -214,31 +217,64 @@ function explode(x, y, r, dmg, o) {
 // ───────────────────────── Lo que se acumula ─────────────────────────
 function addEmber(e, n) { if (!active(e) || n <= 0) return; e.ember = Math.min((mastery('dragon') ? 20 : 8) + (G('b_wyrm') && th('dragon') ? 4 : 0), e.ember + n); e.emberT = 4; }
 function addVenom(e, n) { if (active(e) && n > 0) { const was = e.venom; e.venom = Math.min(30, e.venom + n * (duoOn('brine') && e.wet > 0 ? 2 : 1)); if (duoOn('poppy') && was < 10 && e.venom >= 10) sleep(e, 3); } }   // (dúos Salmuera y Adormidera)   // (dúo Salmuera)
-// Espejos, Bestias y Forja: el Reflejo, el sabueso y el Temple
+// Espejos, Bestias y Forja: el Reflejo, la manada y el Temple
 const mirrorN = () => (lv('mirror_basic') || lv('mirror_charge') ? (mastery('mirror') ? 2 : 1) : 0);
-const petN = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
-const temperMax = () => (mastery('forge') ? 15 : 10) + aff('forge') + (leg('master') ? 10 : 0);
+// Bestias: la manada crece con la Caza, las bajas de la misión con algún perro a tu lado (elegidos y jefes cuentan 5).
+// Va guardada dentro de S.build (que nadie recorre entero) para que no se pierda de una sala a otra ni al continuar una partida.
+const PACK = { grow: [6, 25], join: [60, 120], k: [0.6, 1, 1.3], name: ['cachorro', 'sabueso', 'lobo alfa'], names: ['cachorros', 'sabuesos', 'lobos alfa'], max: 6 };
+const caza = () => (S.build && S.build.caza) || 0;
+const petBase = () => (leg('pack') ? 2 : 0) + (lv('beast_basic') || lv('beast_charge') || lv('beast_dodge') ? (mastery('beast') ? 2 : 1) + (G('s_kennel') ? 1 : 0) : G('s_kennel') ? (th('beast') ? 2 : 1) : has('a_pup') ? 1 : 0);
+const petN = () => { const n = petBase(); return n ? Math.min(PACK.max, n + (caza() >= PACK.join[0] ? 1 : 0)) : 0; };   // con 60 de Caza se une un cachorro (si caben: seis perros como mucho)
+// Etapa de cada perro: 0 cachorro, 1 sabueso, 2 lobo alfa. Solo el primero llega a alfa (los dos primeros con la maestría Jauría).
+// El de la camada es el último y va por detrás: cachorro desde 60 de Caza, sabueso desde 120.
+function packStage(i) {
+  const c = caza();
+  if (c >= PACK.join[0] && i >= petBase()) return c >= PACK.join[1] ? 1 : 0;
+  return c >= PACK.grow[1] && i < (mastery('beast') ? 2 : 1) ? 2 : c >= PACK.grow[0] ? 1 : 0;
+}
+const biteK = () => { const lb = lv('beast_basic'); return lb ? 0.15 + 0.3 * lb : 0.3; };   // mordisco de un sabueso adulto
+// Avisa cuando la manada crece (y no al cargar una partida ni al conseguir el primer perro)
+function packWatch() {
+  const n = S.pets.length;
+  if (!n) { S.packSeen = null; return; }
+  const c = caza(), now = { st: packStage(0), lit: n > petBase() ? 1 + packStage(n - 1) : 0 }, was = S.packSeen; S.packSeen = now;
+  if (!was) return;
+  const pt = S.pets[0], col = GODS.beast.color, tell = (pet, short, long) => { note(pet.x, pet.y - 16, short, col, true); S.fx.push({ k: 'ring', x: pet.x, y: pet.y, r: 26, t: 0, life: 0.5, col }); sayRaw('[' + long + ' Caza: ' + c + '.]', col); blip(330, 0.35, 'triangle', 0.06, 500); };
+  if (now.st > was.st) tell(pt, now.st === 2 ? '¡Lobo alfa!' : '¡Ya es un sabueso!', now.st === 2 ? 'Tu sabueso es ahora un lobo alfa: muerde un 30% más fuerte, corre más y su mordisco alcanza a los enemigos pegados a su presa.' : 'Tu cachorro ha crecido: ya es un sabueso y muerde con toda su fuerza.');
+  if (now.lit > was.lit) tell(S.pets[n - 1], now.lit === 2 ? '¡Ya es un sabueso!' : '¡Un cachorro!', now.lit === 2 ? 'El cachorro de la camada ha crecido: ya es un sabueso.' : 'Un cachorro se une a tu manada.');
+}
+// «Ahora: …» al final de las descripciones de Bestias, para ver cómo va la manada desde la pausa
+function packStatus() {
+  if (!S || !M.run || !S.pets || !S.pets.length || ['title', 'town', 'forge', 'dead', 'win'].includes(S.mode)) return '';
+  const c = caza(), cnt = [0, 0, 0], next = PACK.grow.concat(PACK.join).find(x => c < x); S.pets.forEach((_, i) => cnt[packStage(i)]++);
+  const parts = [2, 1, 0].filter(k => cnt[k]).map(k => cnt[k] + ' ' + (cnt[k] > 1 ? PACK.names[k] : PACK.name[k]));
+  return ` Tu manada ahora: ${parts.length > 1 ? parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1] : parts[0]}. Caza: ${c}${next ? ' (el siguiente cambio llega con ' + next + ')' : ''}.`;
+}
+const temperMax = () => (lv('forge_basic') ? 8 + 2 * lv('forge_basic') : 10) + (mastery('forge') ? 5 : 0) + aff('forge') + (leg('master') ? 10 : 0);
 const temperNow = () => S.p.temper + (duoOn('whetstone') ? S.crystals.length : 0);
 function addTemper(n) { const p = S.p; if (n > 0 && p.temper < temperMax()) { p.temper = Math.min(temperMax(), p.temper + n); S.stat.temper++; } }
-function bite(pet, e, k) {
-  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1; S.stat.bite++;
-  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 4, t: 0, life: 0.1, col: GODS.beast.color });
-  onHit(e, p.dmg * k * (1 + 0.12 * aff('beast')), (e.x - pet.x) / d, (e.y - pet.y) / d, false, GODS.beast.color, 'pet');
+// Un mordisco. order: lo manda una técnica (Manada, Montería) con su propio porcentaje, sin contar la etapa del perro.
+function bite(pet, e, k, order) {
+  if (!active(e)) return; const p = S.p, d = Math.hypot(e.x - pet.x, e.y - pet.y) || 1, st = order ? 1 : pet.st || 0, ux = (e.x - pet.x) / d, uy = (e.y - pet.y) / d; S.stat.bite++;
+  const dmg = p.dmg * k * PACK.k[st] * (1 + 0.12 * aff('beast'));
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + (st === 2 ? 14 : 4), t: 0, life: st === 2 ? 0.16 : 0.1, col: GODS.beast.color });
+  onHit(e, dmg, ux, uy, false, GODS.beast.color, 'pet');
+  if (st === 2) { let n = 0; for (const o of S.enemies.slice()) { if (o === e || !active(o) || dist(e, o) > e.r + o.r + 12) continue; hit(o, dmg * 0.3, ux, uy, false, GODS.beast.color); if (++n >= 3) break; } }   // lobo alfa: alcanza a los pegados a la presa
   if (duoOn('rabid')) addVenom(e, 2); if (duoOn('warhound')) gainFury(4);
   if (!active(e) && has('a_feral')) heal(2);
 }
 // Luz: Iluminar. Sueño: dormir. Vacío: pozos que arrastran.
 const shareK = () => 0.2 + 0.1 * lv('light_basic') + 0.04 * aff('light');
 function light(e, t) { if (active(e)) e.lit = Math.max(e.lit || 0, t || 6); }
-const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? 1 : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
+const litCount = () => S.enemies.reduce((n, e) => n + (active(e) && e.lit > 0 ? (e.boss || e.champ ? 3 : 1) : 0), 0) + (duoOn('eclipse') ? S.shades.length : 0);
 function sleep(e, t) {
   if (!active(e) || (e.sleepCd || 0) > S.t) return;
   t = (t + 0.4 * aff('dream')) * (duoOn('siesta') ? 2 : 1);
-  if (e.boss) { slow(e, t * 0.5, 0.5); e.sleepCd = S.t + 6; return; }
+  if (e.boss) { slow(e, t * 0.5, 0.5); e.doze = t * 0.5; e.sleepHits = mastery('dream') ? 1 : 0; e.sleepCd = S.t + 6; S.stat.sleep++; note(e.x, e.y - e.r - 10, 'Adormilado', GODS.dream.color); return; }   // los jefes no se duermen: Adormilados (frenados), pero cuentan como Dormidos para el daño
   e.sleep = Math.max(e.sleep || 0, t); e.sleepHits = mastery('dream') ? 1 : 0; e.wind = 0; e.cast = 0; e.lungeWind = 0; S.stat.sleep++;
   note(e.x, e.y - e.r - 10, 'Zzz', GODS.dream.color);
 }
-function wake(e) { e.sleep = 0; e.wokeT = S.t; e.sleepCd = S.t + 4; if (has('z_night')) slow(e, 2, 0.5); }
+function wake(e) { e.sleep = 0; e.doze = 0; e.wokeT = S.t; e.sleepCd = Math.max(e.sleepCd || 0, S.t + 4); if (has('z_night')) slow(e, 2, 0.5); }
 function tug(e, r, f) { for (const o of others(e, r, 8)) { if (o.boss || o.type.post) continue; const d = dist(e, o) || 1; o.kx += (e.x - o.x) / d * f; o.ky += (e.y - o.y) / d * f; o.slamCd = Math.max(o.slamCd || 0, 0.4); } }
 function addWell(x, y, r, life, pulse, end, o) { const k = (mastery('void') ? 1.4 : 1) * (1 + 0.1 * aff('void')); S.wells.push(Object.assign({ x, y, r: r * k, life: life + (mastery('void') ? 1 : 0), acc: 0, pulse, end, got: new Set() }, o || {})); S.stat.well++; }
 const packed = e => { let n = 0; for (const o of S.enemies) if (o !== e && active(o) && dist(e, o) < e.r + o.r + 26) n++; return Math.min(4, n); };
@@ -258,7 +294,7 @@ function addFrost(e, n) { if (!active(e) || e.frozen > 0 || n <= 0) return; e.fr
 function addBleed(e, n) { if (!active(e) || n <= 0) return; if (leg('widow')) addVenom(e, n); e.bleed = Math.min(6, (e.bleed || 0) + n); e.bleedT = 5; if (duoOn('warwound')) gainFury(3 * n); }
 function payLife(n) { const p = S.p; n = Math.min(n, p.hp - 1); if (n <= 0) return 0; p.hp -= n; if (duoOn('bloodwine')) addReserve(n); return n; }   // (dúo Vino de sangre)
 // Final: Sentencias que devuelven de golpe parte del daño acumulado
-const doomK = () => (0.3 + 0.1 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
+const doomK = () => (0.2 + 0.2 * Math.max(1, lv('end_basic')) + 0.06 * aff('end')) * (G('c_doom') && th('end') ? 1.5 : 1);
 function addDoom(e) { if (active(e) && !e.doom) e.doom = { t: mastery('end') ? 3 : 5, acc: 0 }; }
 function fulfil(e, bonus) {
   const d = e.doom; if (!d || !active(e)) return;
@@ -269,7 +305,23 @@ function fulfil(e, bonus) {
 }
 // Mareas: empapar y empujar. Bosque: semillas que brotan en raíces. Fortuna: críticos.
 function soak(e, t) { if (active(e)) e.wet = Math.max(e.wet || 0, t); }
-function push(e, ux, uy, f) { if (!active(e) || e.boss) return; e.kx += ux * f; e.ky += uy * f; }
+const slamV = e => (e.wet > 0 ? 90 : 170);   // a un Empapado le basta un empujón más flojo para estamparse
+function push(e, ux, uy, f) {
+  if (!active(e)) return;
+  if (e.boss) { if (e.wet > 0 && f >= 100 && (e.slamCd || 0) <= 0) { e.slamCd = 3; wallSlam(e, ux, uy, null); } return; }   // un jefe Empapado no se mueve, pero el empujón lo golpea igual
+  e.kx += ux * f; e.ky += uy * f;
+}
+// Golpe contra el muro (o, en un jefe Empapado, el empujón que no puede moverlo)
+function wallSlam(e, ux, uy, reef) {
+  const p = S.p; S.stat.slam++;
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
+  if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
+  if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
+  if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
+  if (has('w_deep')) addGold(1);                                         // Mar de fondo
+  if (mastery('tide')) { explode(e.x, e.y, 50, p.dmg * 1.5, { col: GODS.tide.color, skip: e }); for (const o of others(e, 50, 9)) soak(o, 4); }   // maestría Señor del abismo
+  note(e.x, e.y - e.r - 6, e.boss ? '¡Golpe de mar!' : '¡Contra el muro!', C.ink); hit(e, p.dmg * 0.9 * (1 + 0.5 * lv('tide_basic')) * (1 + 0.2 * aff('tide')) * (ens('ram') ? 1.6 : 1), ux, uy, true, C.ink); stun(e, has('w_deep') ? 1.4 : 0.7);
+}
 function root(e, t) {
   if (!active(e)) return;
   t *= (1 + 0.15 * aff('wood')) * (mastery('wood') ? 2 : 1) * (duoOn('mangrove') && e.wet > 0 ? 2 : 1) * (e.boss ? 0.35 : 1);
@@ -295,7 +347,7 @@ function onCrit(e) {
   if (duoOn('facet')) addCrystal(e.x + rnd(-14, 14), e.y + rnd(-14, 14));             // dúo Faceta
   if (duoOn('snakeeyes') && e.venom > 0) e.venom = Math.min(30, e.venom * 2);         // dúo Ojos de serpiente
   if (duoOn('clover') && active(e) && e.seed > 0) sprout(e);                          // dúo Trébol
-  if (duoOn('verdict') && active(e) && e.doom) fulfil(e);                             // dúo Veredicto
+  if (duoOn('verdict') && active(e) && e.doom && e.doom.acc > 0) fulfil(e);           // dúo Veredicto (si el crítico acaba de ponerla, aún está vacía y no se gasta)
   if (has('l_jack') && !active(e)) { explode(e.x, e.y, 48, p.dmg * 1.5, { col: GODS.luck.color }); addGold(3); }   // Premio gordo
 }
 function stun(e, t) { if (!active(e) || e.boss) return; e.stun = Math.max(e.stun, t); e.wind = 0; e.cast = 0; e.lungeWind = 0; e.lungeT = 0; }
