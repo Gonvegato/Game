@@ -21,15 +21,15 @@ function newGame() {
 }
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
-  newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
+  newGame(); tipClear(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
   const p = S.p;   // lo que traes de otras vidas: tus guanteletes y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
-  S.next = { type: 'god', god: GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)] };   // la primera sala siempre es de una deidad
+  S.next = { type: 'god', god: randGod() };   // la primera sala siempre es de una deidad
   if (tk('recall')) {   // Recuerdo vivo: empiezas eligiendo una técnica
-    const opts = PIECES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
-    pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts })];
+    const opts = PIECES.filter(x => godIsOpen(x.god)).sort(() => Math.random() - 0.5).slice(0, 3).map(pieceCard).filter(Boolean);
+    pickQueue = [() => ({ eyebrow: 'Lección del maestro', title: 'Recuerdas una técnica que te enseñó el herrero', opts, tip: 'relic' })];
     advancePick(); return;
   }
   S.mode = 'play'; modeT = 0; nextWave(); renderOverlay();
@@ -71,6 +71,7 @@ function nextWave() {
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
   checkRes();   // lo que tus guanteletes y tus técnicas despiertan juntos se anuncia al entrar
+  tip('shoot', ms.type === 'defend' ? 'defend' : ms.type === 'assault' ? 'assault' : S.bossRoom ? 'boss' : '', 'dodge', 'charge');   // avisos de ayuda: solo salen los que no se hayan visto
   saveRun();
 }
 
@@ -102,7 +103,7 @@ function skinOf(k, e) {
 function spawn(typeKey, q) {
   const ty = TYPES[typeKey], p = S.p; q = q || {};
   let x = 0, y = 0;
-  const god = ty.champ ? (S.god || GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)]) : null;
+  const god = ty.champ ? (S.god || randGod()) : null;
   const hp = Math.round(ty.hp * (ty.boss ? (S.mission.type === 'god' ? 3.2 : 2 + 0.4 * S.mission.z) : 1 + 0.18 * (S.lvl - 1)));
   { const at = q.pos ? q.pos : q.near ? unstick(clamp(q.near.x + rnd(-46, 46), 20, T.room.w - 20), clamp(q.near.y + rnd(-46, 46), 20, T.room.h - 20)) : S.keep ? freeSpot(S.keep, Math.min(T.room.w, T.room.h) * 0.42) : freeSpot(p, Math.min(230, Math.hypot(T.room.w, T.room.h) * 0.3)); x = at.x; y = at.y; }
   const e = { type: ty, champ: !!ty.champ, boss: !!ty.boss, god, color: god ? GODS[god].color : ty.color, x, y, r: ty.r, hp, maxHp: hp, speed: ty.speed, dmg: ty.dmg,
@@ -132,6 +133,10 @@ function sayRaw(text, color) { sysQ.push({ text, color }); if (sysQ.length > 3) 
 function say(god, kind) { const g = GODS[god], arr = g.lines[kind]; if (arr) sayRaw(`[La deidad «${g.title}» ${arr[Math.floor(Math.random() * arr.length)]}]`, g.color); }
 function sysTick() {
   const now = performance.now(), dt = Math.min(0.1, (now - sysLast) / 1000); sysLast = now;
+  if (tipNow && !tipEl.hidden) {   // mientras hay un aviso de ayuda en pantalla, los mensajes esperan su turno (el que estaba a medias vuelve a salir después)
+    if (!sysEl.hidden) { if (sysT > 0.5) sysQ.unshift({ text: sysEl.textContent, color: sysEl.style.borderColor }); sysEl.hidden = true; sysT = 0; }
+    return;
+  }
   sysT -= dt;
   if (sysT > 0) return;
   if (sysQ.length) { const m = sysQ.shift(); sysEl.textContent = m.text; sysEl.style.borderColor = m.color; sysEl.hidden = false; sysT = 3.2; }

@@ -1,5 +1,5 @@
 // ───────────────────────── Al limpiar una sala ─────────────────────────
-let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
+let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null, pickTip = null;
 const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
 const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
 const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
@@ -14,7 +14,7 @@ const partScreen = eyebrow => () => {
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
-const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
+const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god), tip: 'relic' } : statScreen(); };
 
 // Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
@@ -48,13 +48,13 @@ function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) ||
 function doorScreen() {
   const roll = Math.random(), n = (roll < 0.22 ? 1 : roll < 0.68 ? 2 : 3) + tk('door'), kinds = [];
   // Las deidades de las que ya llevas alguna técnica salen un poco más (peso 1,3 frente a 1): lo justo para que una build pueda cerrarse
-  const gods = GOD_KEYS.map(g => [Math.pow(Math.random(), 1 / (godCount(g) > 0 ? 1.3 : 1)), g]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const gods = godsOpen().map(g => [Math.pow(Math.random(), 1 / (godCount(g) > 0 ? 1.3 : 1)), g]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
   const bag = ['souls', 'souls', 'souls', 'souls', 'gold', 'gold', 'gold', 'heart', 'heart', 'iron', 'iron', 'anvil', 'anvil'].sort(() => Math.random() - 0.5);
   const res = () => { const k = bag.find(x => !kinds.some(d => d.type === x)); return { type: k || 'gold' }; };
-  kinds.push(Math.random() < (n === 1 ? 0.5 : 0.3) ? res() : { type: 'god', god: gods.pop() });
-  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.22 ? { type: 'god', god: gods.pop() } : res());
+  kinds.push(Math.random() < (n === 1 ? 0.5 : 0.3) || !gods.length ? res() : { type: 'god', god: gods.pop() });
+  while (kinds.length < n) kinds.push(kinds.length === n - 1 && !kinds.some(d => d.type !== 'god') ? res() : Math.random() < 0.22 && gods.length ? { type: 'god', god: gods.pop() } : res());
   kinds.sort(() => Math.random() - 0.5);
-  return { eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
+  return { tip: 'doors', eyebrow: S.cleared || 'Siguiente sala', title: kinds.length > 1 ? '¿Qué puerta cruzas?' : 'Solo hay una puerta', opts: kinds.map(d => {
     if (d.type === 'god') { const G = GODS[d.god], k = godCount(d.god);
       return { tag: 'Deidad · ' + G.theme, name: G.title, desc: `Te espera su elegido. Mátalo y elige una de sus técnicas. Suelta ${G.mat}.`, note: `Técnicas suyas: ${k} de 4 · Maestría «${MASTERY[d.god].name}»: ${Math.min(k, 3)}/3`, color: G.color, ico: ['sword', 1], apply: () => { S.next = d; } }; }
     const R = ROOMS[d.type];
@@ -66,6 +66,7 @@ function advancePick() {
     const scr = pickQueue.shift()();
     if (!scr || !scr.opts.length) continue;
     pickHead = { eyebrow: scr.eyebrow, title: scr.title }; pickOpts = scr.opts; pickSel = scr.opts.length > 2 ? 1 : 0; pickReroll = scr.reroll || null;
+    pickTip = scr.tip ? tipTake(scr.tip) : null;   // la primera vez que sale esta clase de pantalla, lleva su aviso de ayuda
     setMode('pick'); ov.scrollTop = 0; return;
   }
   if (afterPicks) { const f = afterPicks; afterPicks = null; f(); return; }
@@ -108,7 +109,7 @@ function pieceCard(pc) {
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color;
     return up(D.name, l => duoText(D, l));
   }
-  const lvl = 1 + rar, duo = cur && !D ? duoFor(cur.id, pc.id) : null;
+  const lvl = 1 + rar, duo0 = cur && !D ? duoFor(cur.id, pc.id) : null, duo = duo0 && duoIsOpen(duo0) ? duo0 : null;   // un dúo con una deidad sin abrir no se ofrece
   if (duo) {   // la técnica que llevas se funde con esta
     const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
@@ -127,6 +128,7 @@ const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
 const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : SOLO.includes(t.id) ? 'nada, sirve sola' : 'cualquier técnica de esta deidad');
 // Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
+const duoIsOpen = D => godIsOpen(PIECE[D.a].god) && godIsOpen(PIECE[D.b].god);
 const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
 function pieceOptions(god) {
   const cands = [];

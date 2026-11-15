@@ -2,9 +2,9 @@
 function openShop() {
   if (!S.shop || S.shop.wave !== S.wave) {
     const k = 1 + 0.25 * (S.world - 1), pr = n => Math.round(n * k / 5) * 5;
-    const god = GOD_KEYS[Math.floor(Math.random() * GOD_KEYS.length)];
+    const god = randGod();
     const plan = PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5)[0];
-    S.shop = { wave: S.wave, items: [
+    S.shop = { wave: S.wave, tip: tipTake('shop'), items: [
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
       { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
@@ -20,7 +20,7 @@ function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
   const icoOf = it => ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0);
-  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}${tipBox(S.shop.tip)}
     <div class="shopwrap"><div><div class="stalls">` +
     S.shop.items.map((it, i) => `<button class="fi stall${it.sold ? ' on sold' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><em class="tile">${icoOf(it)}</em><b>${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Vendido' : `<u class="coin">${it.price}</u>`}</i></button>`).join('') +
     `</div><p class="fine">El oro solo sirve en este encargo: lo que no gastes aquí se pierde al terminar.</p><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button></div>
@@ -76,7 +76,8 @@ function forgeHtml() {
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
     const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tus guanteletes no llevan ninguna pieza afín a una deidad.</span></li>';
-    const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
+    const reso = RESO.map(R => { if (!resoIsOpen(R)) return `<li><em>Resonancia</em><b>???</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con una técnica de una deidad que aún no se ha fijado en ti</span></li>`;
+      const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
       return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
     body = `<p class="fine">Combinaciones que dan efectos extra. Lo que aún no has descubierto sale como «???».</p>
       <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
@@ -182,9 +183,15 @@ function buildHtml(full) {
   else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
   return rows.join('');
 }
+const resoIsOpen = R => R.techs.every(id => godIsOpen(PIECE[id].god));
+// Palabras del glosario que son de una deidad: no salen mientras esté cerrada, salvo que las nombre una pieza que ya has descubierto
+const GLOSS_GOD = { Ascuas: 'dragon', Veneno: 'venom', Cristales: 'stone', Reserva: 'feast', Furia: 'orc', Eco: 'time', Sombras: 'shade', Agujas: 'storm', Empapado: 'tide', Semillas: 'wood', Enraizado: 'wood', Zarzal: 'wood', Escarcha: 'frost', Heridas: 'blood', Sentencia: 'end', Iluminado: 'light', Dormido: 'dream', Pozo: 'void', Reflejo: 'mirror', Manada: 'beast', Caza: 'beast', Temple: 'forge', 'Golpe contra el muro': 'tide' };
+const glossShut = ([re, name]) => !!GLOSS_GOD[name] && !godIsOpen(GLOSS_GOD[name]) && !PARTS.some(x => M.parts[x.id] && re.test(x.desc));
 // El recetario va por páginas: una por deidad y unas pocas más. LB y RB (o Q y R) pasan de página; también se puede tocar la pestaña.
 let bookPage = 0;
-const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_KEYS.map(g => [g, GODS[g].theme, GODS[g].color]), [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
+// Las deidades van en el orden en que se fijan en ti; las que aún no lo han hecho salen como «???», sin enseñar nada suyo.
+const BOOK_SHUT = '#6b5a4e';
+const bookPages = () => [['llevo', 'Lo que llevas', C.energy]].concat(GOD_UNLOCK.map(g => (godIsOpen(g) ? [g, GODS[g].theme, GODS[g].color] : [g, '???', BOOK_SHUT])), [['duos', 'Dúos', RAR[3].color], ['reso', 'Resonancias', RAR[3].color], ['piezas', 'Piezas', C.energy], ['glos', 'Glosario', C.ink]]);
 function bookHtml() {
   const P = bookPages(); bookPage = ((bookPage % P.length) + P.length) % P.length;
   const [id, , col] = P[bookPage];
@@ -192,30 +199,34 @@ function bookHtml() {
   let body = '';
   if (id === 'llevo') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Lo que llevas en este encargo</h2><p>Solo cabe una técnica por acción: disparo, cargado, esquive y pasiva. Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p></div><ul class="build full carrylist">${buildHtml(true) || '<li><span>Todavía no llevas nada.</span></li>'}</ul>`;
+  } else if (GODS[id] && !godIsOpen(id)) {
+    const n = godsOpenN(), all = GOD_UNLOCK.length;
+    body = `<div class="bkhead" style="--c:${col}"><h2>???</h2><p><b>Esta deidad aún no se ha fijado en ti: cumple otro encargo.</b> Cada encargo del tablón que cumples por primera vez, guardianes incluidos, atrae a una deidad nueva. Hasta entonces no verás a sus elegidos ni sus reliquias.</p><p>Te conocen ${n} de ${all} deidades${n < all ? '; ' + (all - n === 1 ? 'falta 1 encargo' : 'faltan ' + (all - n) + ' encargos') + ' para que te conozcan todas' : ''}.</p></div>`;
   } else if (GODS[id]) {
     const G = GODS[id], n = godCount(id);
     body = `<div class="bkhead" style="--c:${col}"><h2>${G.title}</h2><p><b>${G.theme}.</b> ${G.key}</p><p class="mast"><u>${'<i class="on"></i>'.repeat(Math.min(n, 3))}${'<i></i>'.repeat(Math.max(0, 3 - n))}</u> Maestría ${Math.min(n, 3)}/3 · <b>${MASTERY[id].name}:</b> ${MASTERY[id].desc}</p></div><ul class="bklist">` +
       PIECES.filter(x => x.god === id).map(pc => { const l = lv(pc.id); return card(l, SLOTS[pc.slot], col, pic(pc.id, 't'), pc.name + (l ? ' ' + ROMAN[l] : ''), pc.desc(Math.max(1, l))); }).join('') +
       TECHS.filter(t => t.god === id).map(t => card(S.techs.has(t.id), 'Técnica · ' + RAR[t.rar].name, RAR[t.rar].color, pic(t.id, 't'), t.name, `${t.desc} Necesita: ${techNeeds(t)}.`)).join('') + '</ul>';
   } else if (id === 'duos') {
-    body = `<div class="bkhead" style="--c:${col}"><h2>Dúos</h2><p>Dos técnicas de deidades distintas para la misma acción se funden en una. Te lo ofrecen al quebrar una reliquia si ya llevas una de las dos.</p></div>` +
-      SLOT_KEYS.map(k => `<h3>Dúos de ${SLOTS[k].toLowerCase()}</h3><ul class="bklist">` + DUOS.filter(d => d.slot === k).map(d => card(duoOn(d.id), GODS[PIECE[d.a].god].theme + ' + ' + GODS[PIECE[d.b].god].theme, null, pic(d.a, 't'), d.name, `Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}`)).join('') + '</ul>').join('');
+    body = `<div class="bkhead" style="--c:${col}"><h2>Dúos</h2><p>Dos técnicas de deidades distintas para la misma acción se funden en una. Te lo ofrecen al quebrar una reliquia si ya llevas una de las dos.${DUOS.some(d => !duoIsOpen(d)) ? ' Aquí salen solo los de las deidades que ya se han fijado en ti: quedan ' + DUOS.filter(d => !duoIsOpen(d)).length + ' por conocer.' : ''}</p></div>` +
+      SLOT_KEYS.map(k => `<h3>Dúos de ${SLOTS[k].toLowerCase()}</h3><ul class="bklist">` + DUOS.filter(d => d.slot === k && duoIsOpen(d)).map(d => card(duoOn(d.id), GODS[PIECE[d.a].god].theme + ' + ' + GODS[PIECE[d.b].god].theme, null, pic(d.a, 't'), d.name, `Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}`)).join('') + '</ul>').join('');
   } else if (id === 'reso') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Resonancias</h2><p>Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p></div><ul class="bklist">` +
-      RESO.map(R => card(res(R.id), R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, pic(R.parts[0], 't'), R.name, `${R.parts.map(pid => (M.parts[pid] ? PART[pid].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(tid => PIECE[tid].name + ' (' + GODS[PIECE[tid].god].theme + ')').join(' + ')}. ${R.desc}`)).join('') + '</ul>' +
+      RESO.map(R => (resoIsOpen(R) ? card(res(R.id), R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, pic(R.parts[0], 't'), R.name, `${R.parts.map(pid => (M.parts[pid] ? PART[pid].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(tid => PIECE[tid].name + ' (' + GODS[PIECE[tid].god].theme + ')').join(' + ')}. ${R.desc}`)
+        : card(false, R.parts.map(pid => GSLOTS[PART[pid].slot]).join(' + '), null, '', '???', 'Pide una técnica de una deidad que aún no se ha fijado en ti.'))).join('') + '</ul>' +
       `<h3>Planos</h3><ul class="bklist">` + PLANS.map(x => card(S.plans.has(x.id), 'Plano', null, '', x.name, x.desc)).join('') + '</ul>';
   } else if (id === 'piezas') {
     body = `<div class="bkhead" style="--c:${col}"><h2>Piezas de los guanteletes</h2><p>Las que has descubierto. Quedan ${PARTS.filter(x => !M.parts[x.id]).length} por descubrir.</p></div>` +
       GSLOT_KEYS.map(sk => { const L = PARTS.filter(x => x.slot === sk && M.parts[x.id]); return L.length ? `<h3>${GSLOTS[sk]} · ${GSLOT_WHAT[sk]}</h3><ul class="bklist">` + L.map(x => card(G(x.id), x.tag, null, pic(x.id, 't'), x.name, x.desc)).join('') + '</ul>' : ''; }).join('');
   } else {
-    body = `<div class="bkhead" style="--c:${col}"><h2>Glosario</h2><p>Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…), explicadas.</p></div><ul class="bklist gl">` + GLOSS.map(([, n, w]) => `<li class="bk own"><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('') + '</ul>';
+    body = `<div class="bkhead" style="--c:${col}"><h2>Glosario</h2><p>Las palabras en mayúscula de las técnicas y piezas (Ascuas, Sentencia, Eco…), explicadas.${GLOSS.some(glossShut) ? ' Faltan ' + GLOSS.filter(glossShut).length + ' palabras de deidades que aún no se han fijado en ti.' : ''}</p></div><ul class="bklist gl">` + GLOSS.filter(x => !glossShut(x)).map(([, n, w]) => `<li class="bk own"><b>${n}</b><span>${w.charAt(0).toUpperCase() + w.slice(1)}</span></li>`).join('') + '</ul>';
   }
   return `<p class="eyebrow">Recetario del herrero · página ${bookPage + 1} de ${P.length}</p><h1>Lo que se les puede robar</h1>
     <div class="bktabs">${P.map(([pid, nm, c], i) => `<button class="bkt${i === bookPage ? ' on' : ''}" data-bk="${i}" style="--c:${c}">${nm}</button>`).join('')}</div>
     <div class="bkpage">${body}</div><p class="fine keyhint">LB y RB (o Q y R) pasan de página. El stick mueve la página. Cualquier otro botón vuelve.</p><button id="ovBtn" class="primary">Volver</button>`;
 }
 function bookTurn(d) { bookPage += d; renderOverlay(); ov.scrollTop = 0; sfx('tick', 0.25); }
-function openBook() { bookFrom = S.mode; if (S.god && S.mode === 'pick') bookPage = 1 + GOD_KEYS.indexOf(S.god); S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
+function openBook() { bookFrom = S.mode; if (S.god && S.mode === 'pick') bookPage = Math.max(0, bookPages().findIndex(x => x[0] === S.god)); S.mode = 'book'; modeT = 0; renderOverlay(); ov.scrollTop = 0; }
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 
