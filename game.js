@@ -54,9 +54,9 @@ const TOTAL = WORLDS.length * (RPW + 1);
 
 // Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Llave engrasada', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
-  { name: 'Pólvora fina',     desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
-  { name: 'Ánima pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
+  { name: 'Nudillos sueltos', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
+  { name: 'Brasa avivada',    desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
+  { name: 'Palma pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
   { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
 ];
 
@@ -161,20 +161,20 @@ const GODS = {
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
   forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
     key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10 (y 2 más por cada nivel de la técnica a partir del segundo); cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
-    enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
+    enter: ['da un golpe de martillo. Tus guanteletes vibran.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
-    take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
+    take:  ['examina tus guanteletes y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
 const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 
-// Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a balas, explosiones, esquives y bajas.
+// Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a disparos, explosiones, esquives y bajas.
 const PIECES = [
   // Dragones
   { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Ascua')} en el enemigo. Se acumulan hasta 8 por enemigo y cada una quema un 12% de tu daño cada medio segundo.` },
-  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Cada enemigo que alcanza tu disparo cargado recibe ${1 + l} Ascuas y, acto seguido, todas sus Ascuas estallan: ${35 + 10 * (l - 1)}% de tu daño por Ascua, en un área pequeña que deja 1 Ascua a quien toca. Las Ascuas estalladas se gastan. Con la Recámara de rayo, el rayo se convierte en un cono de fuego.` },
+  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Cada enemigo que alcanza tu disparo cargado recibe ${1 + l} Ascuas y, acto seguido, todas sus Ascuas estallan: ${35 + 10 * (l - 1)}% de tu daño por Ascua, en un área pequeña que deja 1 Ascua a quien toca. Las Ascuas estalladas se gastan. Con la Brasa de rayo, el rayo se convierte en un cono de fuego.` },
   { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `Tu esquive se convierte en un salto casi el doble de largo que pasa por encima de los muros. Al aterrizar, explota a tu alrededor: ${150 * l}% de tu daño en área.` },
   { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Haces un ${l}% más de daño por cada 10 de oro que lleves, hasta +${30 + 10 * l}% (no afecta al daño continuo). Además, los enemigos que mueren con Ascuas sueltan ${pl(l, 'moneda')}; para eso necesitas algo que clave Ascuas.` },
   // Minerales
@@ -221,7 +221,7 @@ const PIECES = [
   { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada disparo tiene un ${10 + 10 * l}% de ser crítico (250% de daño). Cada disparo que no es crítico sube un 5% la probabilidad hasta que sale uno; entonces vuelve a la base. Solo pueden ser críticos tus disparos directos, no los repetidos.` },
   { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `Tu disparo cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}, que decide su daño: 1, el 60%; 2, el 80%; 3, el 100%; 4, el 130%; 5, el 170%; 6, el triple. Las repeticiones del cargado no tiran dado.` },
   { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara (50%): recuperas la carga de esquive. Cruz: la moneda se queda donde estabas y a los 0,55 s revienta: ${120 * l}% de tu daño en área.` },
-  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si un golpe te quita vida o Reserva, las pierdes todas; si eres invulnerable, lo para la Culata con rodela o se lo lleva tu Reflejo, no. Necesitas algo que haga críticos, como Dado cargado.` },
+  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si un golpe te quita vida o Reserva, las pierdes todas; si eres invulnerable, lo para el Brazal con rodela o se lo lleva tu Reflejo, no. Necesitas algo que haga críticos, como Dado cargado.` },
   // Bosque
   { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) planta una Semilla, que no caduca. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y le hacen ${80 * l}% de tu daño. Luego la cuenta vuelve a empezar. A los jefes las Raíces les duran solo un tercio.` },
   { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de tu daño cada 0,4 s.` },
@@ -271,13 +271,13 @@ const PIECES = [
   { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(2, 8 - l * 2)} disparos ganas 1 de Temple, hasta ${8 + 2 * l}. Cuentan las veces que disparas, no los impactos. Cada punto da +3% de daño. Si te golpean, pierdes la mitad. Se conserva de una sala a otra.` },
   { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `Tu disparo cargado añade un martillazo a tu alrededor: ${120 * l}% de tu daño, aturde 0,6 s y te da 1 de Temple por cada enemigo golpeado. Las repeticiones del cargado no dan Temple.` },
   { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Después de esquivar, tus ${1 + l} siguientes disparos salen al rojo: +50% de daño, y cada impacto salpica al enemigo más cercano con la mitad de ese daño.` },
-  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma mejora: +${5 * l}% de daño, de cadencia y de alcance.` },
+  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tus guanteletes mejoran: +${5 * l}% de daño, de cadencia y de alcance.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
 const DUOS = [
   // Disparo
-  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Bala de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
+  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Filo de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
   { id: 'eternal',   slot: 'basic',   a: 'dragon_basic',  b: 'time_basic',   name: 'Brasa eterna',       desc: 'Además de lo que hacen Colmillo al rojo y Segundero, las Ascuas ya no se apagan con el tiempo: siguen quemando hasta que el enemigo muere o las haces estallar. Además, cada eco clava el doble de Ascuas que un disparo normal.' },
   { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Además de lo que hacen Esquirla y Marca de tumba, cuando a un Cristal se le acaba el tiempo, se levanta una Sombra en su sitio. Cuenta para tu límite de Sombras: si ya estás al máximo, sustituye a la más antigua.' },
   { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Dardo y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
@@ -286,7 +286,7 @@ const DUOS = [
   { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Además de lo que hacen Segundero y Marca de tumba, cuando un enemigo marcado muere y se levanta como Sombra, 1,5 s después se levanta otra en el mismo sitio. Solo con las Sombras de Marca de tumba, y los jefes no se levantan.' },
   // Cargado
   { id: 'rot',       slot: 'charge',  a: 'dragon_charge', b: 'venom_charge', name: 'Aliento podrido',    desc: 'Además de lo que hacen Aliento y Purga, antes de nada, tu disparo cargado suma las Ascuas y el Veneno de cada enemigo que alcanza y sube los dos a ese total (las Ascuas hasta su tope; el Veneno, hasta 30). Después Aliento hace estallar las Ascuas y Purga convierte el Veneno.' },
-  { id: 'roar',      slot: 'charge',  a: 'dragon_charge', b: 'orc_charge',   name: 'Rugido',             desc: 'Además de lo que hacen Aliento y Grito de guerra, el cono de fuego de Aliento crece con la Furia que tienes al disparar: hasta el doble de largo y de ancho con la Furia llena. El grito solo gasta la mitad de tu Furia. El cono solo sale con la Recámara de rayo.' },
+  { id: 'roar',      slot: 'charge',  a: 'dragon_charge', b: 'orc_charge',   name: 'Rugido',             desc: 'Además de lo que hacen Aliento y Grito de guerra, el cono de fuego de Aliento crece con la Furia que tienes al disparar: hasta el doble de largo y de ancho con la Furia llena. El grito solo gasta la mitad de tu Furia. El cono solo sale con la Brasa de rayo.' },
   { id: 'rod',       slot: 'charge',  a: 'stone_charge',  b: 'storm_charge', name: 'Pararrayos',         desc: 'Además de lo que hacen Prisma y Sobretensión, cada vez que descargas a un enemigo que tiene un Cristal cerca, los rayos salen desde el Cristal y son el doble (hasta 14). Vale para cualquier descarga, no solo la del cargado.' },
   { id: 'table',     slot: 'charge',  a: 'stone_charge',  b: 'feast_charge', name: 'Mesa puesta',        desc: 'Además de lo que hacen Prisma y Banquete, cada medio segundo, tus Cristales rematan a los enemigos cercanos con menos del 20% de vida (los elegidos, con menos del 10%). Cada remate te da 4 de Reserva. No funciona con jefes.' },
   { id: 'cortege',   slot: 'charge',  a: 'venom_charge',  b: 'shade_charge', name: 'Cortejo fúnebre',    desc: 'Además de lo que hacen Purga y Orden, cada Sombra que estalla con Orden aplica 6 de Veneno a los que alcanza y deja un charco tóxico de 5 s que aplica 1 de Veneno por pulso.' },
@@ -347,7 +347,7 @@ const DUOS = [
   // Sangre (afines: Manjares, Orcos, Veneno, Sombras)
   { id: 'warwound',  slot: 'basic',   a: 'orc_basic',     b: 'blood_basic',   name: 'Herida de guerra',  desc: 'Además de lo que hacen Tambor de guerra y Herida abierta, cada Herida que abres te da 3 de Furia. Con la Furia llena, las Heridas sangran el doble.' },
   { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Dardo y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
-  { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con el cargador Bala de sangre.' },
+  { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con la Gema de sangre.' },
   { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Además de lo que hacen Orden y Sangría, los enemigos que mueren en los 0,7 s siguientes a tu disparo cargado (los mismos que te curan con Sangría) se levantan como Sombras. Los jefes no.' },
   // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
   { id: 'deadline',  slot: 'basic',   a: 'time_basic',    b: 'end_basic',     name: 'Plazo vencido',     desc: 'Además de lo que hacen Segundero y Sentencia, el daño de tus ecos cuenta el doble para la Sentencia.' },
@@ -461,228 +461,203 @@ const MASTERY = {
   forge:  { name: 'Obra maestra',          desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tu máximo de Temple sube 5 puntos y ya no lo pierdes al recibir golpes.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): si un rayo de descarga alcanza a un enemigo con Agujas, también se las descarga, en cadena (cada enemigo, una vez por cadena).' },
 };
-// Planos: mejoras del arma que salen durante la partida (jefes y tienda).
+// Planos: mejoras de los guanteletes que salen durante la partida (jefes y tienda).
 const PLANS = [
-  { id: 'echo',    name: 'Arma gemela',   desc: 'Al esquivar dejas una copia del arma donde estabas durante 3 s. Dispara sola al enemigo más cercano a tu cadencia, al 50% de tu daño base y con tus efectos de disparo, pero sin críticos, ecos ni Sentencias.' },
-  { id: 'tempo',   name: 'Compás',        desc: 'El ¡Compás! funciona con cualquier llave que dispare a pulsaciones (no con la Llave de retén, el Torno de ballesta ni la Manivela de ribadoquín) y duplica el daño de ese disparo en vez de darle +50%. Tienes que pulsar justo cuando el arma vuelve a estar lista: mantener pulsado o machacar el botón no cuenta.' },
-  { id: 'mortar',  name: 'Mortero',       desc: 'Solo con la Recámara de rayo. Tu disparo cargado ya no es un rayo: lanza un proyectil que pasa por encima de los muros y explota donde apuntas, con el 80% de su daño en área y todos sus efectos. Con Aliento ya no se abre en cono.', only: 'c_beam' },
-  { id: 'recoil',  name: 'Retroceso',     desc: 'Tu disparo cargado te lanza hacia atrás con un esquive gratis: no gasta carga, te hace intocable y activa tus técnicas de esquive (salvo Cara o cruz). Además, se recarga un 35% antes. No funciona con la Recámara de embestida ni con la de trueno.' },
+  { id: 'echo',    name: 'Guantelete gemelo', desc: 'Al esquivar dejas un guantelete gemelo donde estabas durante 3 s. Dispara solo al enemigo más cercano a tu cadencia, al 50% de tu daño base y con tus efectos de disparo, pero sin críticos, ecos ni Sentencias.' },
+  { id: 'tempo',   name: 'Compás',        desc: 'El ¡Compás! funciona con cualesquiera dedos que disparen a pulsaciones (no con los Dedos de retén, los Dedos tensos ni los Dedos de molinete) y duplica el daño de ese disparo en vez de darle +50%. Tienes que pulsar justo cuando los guanteletes vuelven a estar listos: mantener pulsado o machacar el botón no cuenta.' },
+  { id: 'mortar',  name: 'Mortero',       desc: 'Solo con la Brasa de rayo. Tu disparo cargado ya no es un rayo: lanza un proyectil que pasa por encima de los muros y explota donde apuntas, con el 80% de su daño en área y todos sus efectos. Con Aliento ya no se abre en cono.', only: 'c_beam' },
+  { id: 'recoil',  name: 'Retroceso',     desc: 'Tu disparo cargado te lanza hacia atrás con un esquive gratis: no gasta carga, te hace intocable y activa tus técnicas de esquive (salvo Cara o cruz). Además, se recarga un 35% antes. No funciona con la Brasa de embestida ni con la de trueno.' },
   { id: 'double',  name: 'Doble esquive', desc: 'Tienes una carga más de esquive.' },
 ];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
 
-// ───────────────────────── Lo permanente: el arma por piezas y el árbol ─────────────────────────
-// El arma es un montaje de cinco piezas. Cada una decide una cosa distinta, así que cualquier combinación funciona.
+// ───────────────────────── Lo permanente: los guanteletes por piezas y el árbol ─────────────────────────
+// Los guanteletes de Alec (así lanza sus conjuros) son un montaje de cinco piezas. Las claves internas (barrel, action, mag, stock, chamber) son las de antes.
+// Cada una decide una cosa distinta, así que cualquier combinación funciona.
 // Las piezas se descubren jugando (jefes, vetas de hierro, tienda). Al encontrarlas puedes montarlas en esa partida;
 // para empezar las partidas con ellas hay que forjarlas una vez. base: las que tienes desde el principio.
-const GSLOTS = { barrel: 'Cañón', action: 'Llave', mag: 'Munición', stock: 'Culata', chamber: 'Recámara' };
-const GSLOT_KEYS = Object.keys(GSLOTS), GSLOT_WHAT = { barrel: 'a quién disparas', action: 'cómo disparas', mag: 'qué hace cada disparo', stock: 'cómo te mueves y aguantas', chamber: 'qué hace el disparo cargado' };
+const GSLOTS = { barrel: 'Palma', action: 'Dedos', mag: 'Gema', stock: 'Brazal', chamber: 'Brasa' };
+const GSLOT_KEYS = Object.keys(GSLOTS), GSLOT_WHAT = { barrel: 'a quién alcanza el conjuro', action: 'cómo lanzas', mag: 'qué hace cada disparo', stock: 'cómo te mueves y aguantas', chamber: 'qué hace el disparo cargado' };
 // tag: lo que esa pieza tiene de especial, en tres palabras. Se enseña en la forja y al encontrarla.
 const PARTS = [
-  { id: 'b_long',    slot: 'barrel',  name: 'Arco de ballesta',      tag: 'Remata y salta',     desc: 'Un disparo a tu objetivo. Si está a más de la mitad de tu alcance, hace un 40% más de daño. Si lo mata, el disparo salta al enemigo más cercano al caído con el daño normal (sin ese 40%), y si también lo mata vuelve a saltar, hasta tres saltos. Solo salta a enemigos que estén a poca distancia del que cae.', base: true },
-  { id: 'b_short',   slot: 'barrel',  name: 'Pistolete',            tag: 'Desenfunda tras esquivar',        desc: 'Disparas un 25% más rápido, pero con un 30% menos de alcance. Al terminar un esquive, el arma queda recargada: si disparas en los 1,2 s siguientes, ese disparo sale sin frenazo y hace el doble de daño.', cost: { iron: 1, orc: 2 } },
-  { id: 'b_twin',    slot: 'barrel',  name: 'Pistoletes gemelos',   tag: 'Dos blancos a la vez', desc: 'Cada disparo da a tu objetivo y, casi a la vez, al enemigo más cercano a ti que tengas a tiro, con el 55% del daño a cada uno. Si solo hay un enemigo a tiro, recibe los dos (110% en total). Un 25% menos de alcance.', cost: { iron: 1, storm: 2 } },
-  { id: 'b_scatter', slot: 'barrel',  name: 'Trabuco',              tag: 'Empuja contra el muro', desc: 'Dispara seis postas en abanico; cada una da al primer enemigo que encuentre, con el 36% del daño. La mitad de alcance. Cada posta empuja: si al menos dos dan al mismo enemigo y choca contra un muro, recibe el golpe (90% del daño) y queda aturdido. No empuja a los jefes.', cost: { iron: 2, feast: 2 } },
-  { id: 'b_pierce',  slot: 'barrel',  name: 'Culebrina',            tag: 'Atraviesa y rebota', desc: 'El disparo sigue en línea recta y da a todos los enemigos que cruza hasta chocar con un muro. Si el muro está dentro de su alcance, rebota una vez y da a los que encuentre de vuelta, así que un enemigo puede recibir dos golpes. +30% de alcance, pero todos tus disparos hacen un 10% menos de daño.', cost: { iron: 2, stone: 2 } },
-  { id: 'b_bomb',    slot: 'barrel',  name: 'Bombarda',             tag: 'Bombas en arco',  desc: 'Lanza una bomba en arco que cae donde estaba tu objetivo al disparar; tarda un momento en llegar, así que puede fallar si se mueve. Al caer, hace el 80% del daño a cada enemigo cercano, con todos tus efectos de disparo, también a los que estén detrás de un muro. No necesitas ver a tu objetivo: como la bomba pasa por encima de los muros, puedes apuntar a enemigos que estén detrás de uno, siempre que estén dentro de tu alcance. Un 10% más de alcance, pero disparas un 35% más despacio.', cost: { iron: 2, dragon: 2 } },
-  { id: 'b_spike',   slot: 'barrel',  name: 'Asta',                 tag: 'Estocada que atraviesa', desc: 'No dispara: cada ataque es una estocada que hace el 180% del daño y te lanza a través de tu objetivo, sin recibir daño mientras dura. Cuenta como un esquive que lo atraviesa, pero no gasta esquive ni activa casi nada de lo que pasa al esquivar. La mitad de alcance: tienes que estar cerca. Frena menos que un disparo, y si la estocada mata, puedes atacar otra vez al instante.', cost: { iron: 2, shade: 2 } },
-  { id: 'b_fork',    slot: 'barrel',  name: 'Espingarda triple',    tag: 'Tres en abanico',         desc: 'Dispara tres veces a la vez: uno a tu objetivo y dos en diagonal a los lados, que dan al primer enemigo que encuentren en su línea (si no hay ninguno, se pierden). Cada uno hace el 60% del daño. Un 10% menos de alcance.', cost: { iron: 2, luck: 2 } },
-  { id: 'b_harpoon', slot: 'barrel',  name: 'Arpón',                tag: 'Atrae al enemigo',    desc: 'El disparo engancha a tu objetivo y lo arrastra hacia ti; cuanto más lejos está, más fuerte tira. No arrastra a los jefes ni a los que ya tienes pegados, y mientras lo arrastras no puede chocar contra un muro. Todos tus disparos hacen un 15% más de daño.', cost: { iron: 1, tide: 2 } },
-  { id: 'b_flame',   slot: 'barrel',  name: 'Sifón de fuego',       tag: 'Chorro que quema',     desc: 'Lanza un chorro en cono que da a todos los enemigos que tienes delante (la mitad del daño a cada uno) y les clava 1 Ascua. No pasa los muros. Disparas un 40% más rápido, pero con un 58% menos de alcance.', cost: { iron: 2, dragon: 3 } },
-  { id: 'b_back',    slot: 'barrel',  name: 'Cañón de dos bocas',   tag: 'Cubre tu espalda',   desc: 'Cada disparo da a tu objetivo y, a la vez, al enemigo más cercano que tengas a tiro detrás de ti (en sentido contrario a donde apuntas). Los dos reciben todo el daño. Si no hay nadie detrás, solo das a tu objetivo.', cost: { iron: 2, shade: 2 } },
-  { id: 'b_flail',   slot: 'barrel',  name: 'Mangual',              tag: 'Bola que te rodea',  desc: 'Una bola de hierro gira siempre pegada a ti y golpea a cada enemigo que toca (70% del daño, como mucho una vez cada medio segundo al mismo). Esos golpes no reciben las bonificaciones de tu llave. Al disparar, lanzas la bola contra tu objetivo (150%) y durante un segundo deja de girar a tu alrededor. Disparas un 20% más despacio.', cost: { iron: 2, orc: 3 } },
-  { id: 'b_boom',    slot: 'barrel',  name: 'Hoz arrojadiza',       tag: 'Va y vuelve',        desc: 'Lanzas una hoz en línea recta hasta un poco más allá de tu objetivo (o hasta un muro), y vuelve un instante después. Daña a todos los que cruza, a la ida y a la vuelta (70% cada pasada), así que un mismo enemigo puede recibir dos golpes. Disparas un 20% más despacio y con un 15% menos de alcance.', cost: { iron: 2, wood: 2 } },
-  { id: 'b_nail',    slot: 'barrel',  name: 'Clavera',              tag: 'Cuarto clavo revienta', desc: 'Dispara clavos (75% del daño) que se quedan clavados en el enemigo y no caducan. Al cuarto clavo en el mismo enemigo, revientan: recibe un golpe extra del triple del daño del disparo, sin tus efectos de disparo. Disparas un 20% más rápido.', cost: { iron: 1, storm: 2 } },
-  { id: 'b_arc',     slot: 'barrel',  name: 'Cañón de eslabones',   tag: 'Salta entre cuatro', desc: 'El disparo da a tu objetivo y salta al enemigo más cercano que esté a poca distancia, y así hasta dar a cuatro distintos. Cada salto hace un 20% menos que el anterior (100%, 80%, 64% y 51%). Los saltos pasan por encima de los muros.', cost: { iron: 2, storm: 3 } },
-  { id: 'b_far',     slot: 'barrel',  name: 'Largavista',           tag: 'De lejos, el doble', desc: 'El doble de daño a los enemigos lejanos (a más de dos tercios de tu alcance) y la mitad a los cercanos (a menos del 30% de tu alcance). Entre medias, daño normal. +25% de alcance.', cost: { iron: 1, light: 2 } },
-  { id: 'b_swarm',   slot: 'barrel',  name: 'Avispero',             tag: 'Tres dardos al azar', desc: 'Cada disparo lanza tres dardos seguidos, cada uno a un enemigo distinto elegido al azar entre los que tienes a tiro (45% del daño cada uno). Si hay menos de tres enemigos, los dardos que sobran van a tu objetivo.', cost: { iron: 1, beast: 2 } },
+  { id: 'b_long',    slot: 'barrel',  name: 'Palma de fragua',      tag: 'Remata y salta',     desc: 'Un disparo a tu objetivo. Si está a más de la mitad de tu alcance, hace un 40% más de daño. Si lo mata, el disparo salta al enemigo más cercano al caído con el daño normal (sin ese 40%), y si también lo mata vuelve a saltar, hasta tres saltos. Solo salta a enemigos que estén a poca distancia del que cae.', base: true },
+  { id: 'b_short',   slot: 'barrel',  name: 'Palma presta',            tag: 'Golpea tras esquivar',        desc: 'Disparas un 25% más rápido, pero con un 30% menos de alcance. Al terminar un esquive, los guanteletes quedan listos: si disparas en los 1,2 s siguientes, ese disparo sale sin frenazo y hace el doble de daño.', cost: { iron: 1, orc: 2 } },
+  { id: 'b_twin',    slot: 'barrel',  name: 'Palmas gemelas',   tag: 'Dos blancos a la vez', desc: 'Cada disparo da a tu objetivo y, casi a la vez, al enemigo más cercano a ti que tengas a tiro, con el 55% del daño a cada uno. Si solo hay un enemigo a tiro, recibe los dos (110% en total). Un 25% menos de alcance.', cost: { iron: 1, storm: 2 } },
+  { id: 'b_scatter', slot: 'barrel',  name: 'Palma de abanico',              tag: 'Empuja contra el muro', desc: 'Dispara seis chispas en abanico; cada una da al primer enemigo que encuentre, con el 36% del daño. La mitad de alcance. Cada chispa empuja: si al menos dos dan al mismo enemigo y choca contra un muro, recibe el golpe (90% del daño) y queda aturdido. No empuja a los jefes.', cost: { iron: 2, feast: 2 } },
+  { id: 'b_pierce',  slot: 'barrel',  name: 'Palma de venablo',            tag: 'Atraviesa y rebota', desc: 'El disparo sigue en línea recta y da a todos los enemigos que cruza hasta chocar con un muro. Si el muro está dentro de su alcance, rebota una vez y da a los que encuentre de vuelta, así que un enemigo puede recibir dos golpes. +30% de alcance, pero todos tus disparos hacen un 10% menos de daño.', cost: { iron: 2, stone: 2 } },
+  { id: 'b_bomb',    slot: 'barrel',  name: 'Palma de volcán',             tag: 'Orbes por lo alto',  desc: 'Lanza por lo alto un orbe que cae donde estaba tu objetivo al disparar; tarda un momento en llegar, así que puede fallar si se mueve. Al caer, hace el 80% del daño a cada enemigo cercano, con todos tus efectos de disparo, también a los que estén detrás de un muro. No necesitas ver a tu objetivo: como el orbe pasa por encima de los muros, puedes apuntar a enemigos que estén detrás de uno, siempre que estén dentro de tu alcance. Un 10% más de alcance, pero disparas un 35% más despacio.', cost: { iron: 2, dragon: 2 } },
+  { id: 'b_spike',   slot: 'barrel',  name: 'Palma de lanza',                 tag: 'Estocada que atraviesa', desc: 'No dispara: cada ataque es una estocada que hace el 180% del daño y te lanza a través de tu objetivo, sin recibir daño mientras dura. Cuenta como un esquive que lo atraviesa, pero no gasta esquive ni activa casi nada de lo que pasa al esquivar. La mitad de alcance: tienes que estar cerca. Frena menos que un disparo, y si la estocada mata, puedes atacar otra vez al instante.', cost: { iron: 2, shade: 2 } },
+  { id: 'b_fork',    slot: 'barrel',  name: 'Palma de tridente',    tag: 'Tres en abanico',         desc: 'Dispara tres veces a la vez: uno a tu objetivo y dos en diagonal a los lados, que dan al primer enemigo que encuentren en su línea (si no hay ninguno, se pierden). Cada uno hace el 60% del daño. Un 10% menos de alcance.', cost: { iron: 2, luck: 2 } },
+  { id: 'b_harpoon', slot: 'barrel',  name: 'Palma de arpón',                tag: 'Atrae al enemigo',    desc: 'El disparo engancha a tu objetivo y lo arrastra hacia ti; cuanto más lejos está, más fuerte tira. No arrastra a los jefes ni a los que ya tienes pegados, y mientras lo arrastras no puede chocar contra un muro. Todos tus disparos hacen un 15% más de daño.', cost: { iron: 1, tide: 2 } },
+  { id: 'b_flame',   slot: 'barrel',  name: 'Palma de fuelle',       tag: 'Chorro que quema',     desc: 'Lanza un chorro en cono que da a todos los enemigos que tienes delante (la mitad del daño a cada uno) y les clava 1 Ascua. No pasa los muros. Disparas un 40% más rápido, pero con un 58% menos de alcance.', cost: { iron: 2, dragon: 3 } },
+  { id: 'b_back',    slot: 'barrel',  name: 'Palma de dos caras',   tag: 'Cubre tu espalda',   desc: 'Cada disparo da a tu objetivo y, a la vez, al enemigo más cercano que tengas a tiro detrás de ti (en sentido contrario a donde apuntas). Los dos reciben todo el daño. Si no hay nadie detrás, solo das a tu objetivo.', cost: { iron: 2, shade: 2 } },
+  { id: 'b_flail',   slot: 'barrel',  name: 'Palma de mangual',              tag: 'Bola que te rodea',  desc: 'Una bola de hierro gira siempre pegada a ti y golpea a cada enemigo que toca (70% del daño, como mucho una vez cada medio segundo al mismo). Esos golpes no reciben las bonificaciones de tus dedos. Al disparar, lanzas la bola contra tu objetivo (150%) y durante un segundo deja de girar a tu alrededor. Disparas un 20% más despacio.', cost: { iron: 2, orc: 3 } },
+  { id: 'b_boom',    slot: 'barrel',  name: 'Palma de hoz',       tag: 'Va y vuelve',        desc: 'Lanzas una hoz en línea recta hasta un poco más allá de tu objetivo (o hasta un muro), y vuelve un instante después. Daña a todos los que cruza, a la ida y a la vuelta (70% cada pasada), así que un mismo enemigo puede recibir dos golpes. Disparas un 20% más despacio y con un 15% menos de alcance.', cost: { iron: 2, wood: 2 } },
+  { id: 'b_nail',    slot: 'barrel',  name: 'Palma de espinas',              tag: 'Cuarta espina revienta', desc: 'Dispara espinas (75% del daño) que se quedan clavadas en el enemigo y no caducan. A la cuarta espina en el mismo enemigo, revientan: recibe un golpe extra del triple del daño del disparo, sin tus efectos de disparo. Disparas un 20% más rápido.', cost: { iron: 1, storm: 2 } },
+  { id: 'b_arc',     slot: 'barrel',  name: 'Palma de eslabones',   tag: 'Salta entre cuatro', desc: 'El disparo da a tu objetivo y salta al enemigo más cercano que esté a poca distancia, y así hasta dar a cuatro distintos. Cada salto hace un 20% menos que el anterior (100%, 80%, 64% y 51%). Los saltos pasan por encima de los muros.', cost: { iron: 2, storm: 3 } },
+  { id: 'b_far',     slot: 'barrel',  name: 'Palma de vigía',           tag: 'De lejos, el doble', desc: 'El doble de daño a los enemigos lejanos (a más de dos tercios de tu alcance) y la mitad a los cercanos (a menos del 30% de tu alcance). Entre medias, daño normal. +25% de alcance.', cost: { iron: 1, light: 2 } },
+  { id: 'b_swarm',   slot: 'barrel',  name: 'Palma de avispero',             tag: 'Tres centellas al azar', desc: 'Cada disparo lanza tres centellas seguidas, cada una a un enemigo distinto elegido al azar entre los que tienes a tiro (45% del daño cada una). Si hay menos de tres enemigos, las centellas que sobran van a tu objetivo.', cost: { iron: 1, beast: 2 } },
   // Piezas temáticas: cada una hace por sí sola un poco de lo que hace una deidad, y con técnicas de esa deidad va a más
-  { id: 'b_blow',    slot: 'barrel',  name: 'Cerbatana',            tag: 'Dardos con Veneno',  desc: 'Cada disparo pone 1 de Veneno al enemigo si sobrevive, aunque no lleves técnicas de Veneno. Si llevas la técnica Dardo, el Veneno que pone en cada disparo se duplica. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 1, venom: 3 }, theme: 'venom' },
-  { id: 'b_wyrm',    slot: 'barrel',  name: 'Boca de sierpe',       tag: 'Clava Ascuas',       desc: 'Cada disparo clava 1 Ascua al enemigo si sobrevive, aunque no lleves técnicas de Dragones. Si llevas alguna técnica de Dragones, los enemigos aguantan 4 Ascuas más antes de llegar al tope (12 en vez de 8).', cost: { iron: 1, dragon: 3 }, theme: 'dragon' },
-  { id: 'b_rod',     slot: 'barrel',  name: 'Vara de cobre',        tag: 'Clava Agujas',       desc: 'Cada disparo clava 1 Aguja al enemigo si sobrevive (2 si llevas alguna técnica de Tormenta), aunque no lleves técnicas de Tormenta. Al juntar 6, el enemigo se descarga solo.', cost: { iron: 1, storm: 3 }, theme: 'storm' },
-  { id: 'b_icicle',  slot: 'barrel',  name: 'Carámbano',            tag: 'Pone Escarcha',      desc: 'Cada disparo pone 1 de Escarcha al enemigo si sobrevive (2 si llevas alguna técnica de Hielo), aunque no lleves técnicas de Hielo. Contra enemigos Congelados hace un 30% más de daño; mientras siguen Congelados, no acumulan más Escarcha.', cost: { iron: 1, frost: 3 }, theme: 'frost' },
-  { id: 'b_horn',    slot: 'barrel',  name: 'Bocina de trueno',     tag: 'Aturde en cono',     desc: 'Suelta un bramido en cono que da a todos los enemigos que tienes delante (40% del daño a cada uno) y los deja aturdidos un instante (0,35 s). No pasa los muros y no aturde a los jefes. Un 45% menos de alcance.', cost: { iron: 1, dream: 2 } },
-  { id: 'b_drill',   slot: 'barrel',  name: 'Berbiquí',             tag: 'Insistir pega más',  desc: 'Cada disparo seguido al mismo enemigo hace un 15% más de daño que el anterior, hasta +150% tras diez seguidos. Si disparas a otro enemigo, vuelve a empezar.', cost: { iron: 2, forge: 2 } },
-  { id: 'b_ghost',   slot: 'barrel',  name: 'Cañón fantasma',       tag: 'Atraviesa muros',    desc: 'Puedes apuntar y disparar a enemigos que están al otro lado de los muros, sin verlos, tanto si el arma los elige sola como si los fijas tú. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 2, shade: 3 } },
-  { id: 'b_net',     slot: 'barrel',  name: 'Lanzarredes',          tag: 'Enraíza al enemigo',             desc: 'Cada disparo hace el 65% del daño y lanza una red que deja al enemigo enraizado 0,9 s. Cada enemigo solo puede quedar atrapado una vez cada 3 s; a los jefes los atrapa solo un tercio de ese tiempo.', cost: { iron: 1, beast: 2 } },
-  { id: 'b_ends',    slot: 'barrel',  name: 'Cañón de dos distancias', tag: 'Cerca y lejos',   desc: 'Cada disparo da a la vez al enemigo más cercano y al más lejano que tengas a tiro, con el 80% del daño a cada uno, apuntes a quien apuntes. Si solo hay un enemigo, recibe un único disparo (80%).', cost: { iron: 2, light: 2 } },
-  { id: 'a_fuse',    slot: 'action',  name: 'Mecha lenta',          tag: 'Sale con retraso',   desc: 'El disparo sale solo medio segundo después de pulsar, sin frenazo, contra el enemigo al que apuntabas (o el más cercano si ya ha muerto). Todos tus disparos hacen un 45% más de daño. Si estás esquivando justo cuando sale, se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, wood: 2 } },
-  { id: 'a_auto',    slot: 'action',  name: 'Gatillo de pelo',      tag: 'Dispara sola',       desc: 'El arma dispara sola, sin pulsar, siempre que tienes un enemigo a tiro. Cada disparo te frena igual que si pulsaras. Todos tus disparos hacen un 20% menos de daño. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, luck: 2 } },
-  { id: 'a_pend',    slot: 'action',  name: 'Llave de péndulo',     tag: 'Racha de Compás',   desc: 'Cada disparo a Compás suma un 15% de daño por cada Compás seguido que llevas, contando ese: +15%, +30%… hasta +90% al sexto. Sustituye al +50% normal del Compás, así que los primeros pegan menos que con la Llave de mecha. Un disparo fuera de Compás no tiene bonificación y reinicia la racha.', cost: { iron: 2, time: 3 } },
-  { id: 'a_hold',    slot: 'action',  name: 'Llave de retén',       tag: 'Guarda y suelta',    desc: 'Mantén pulsado para guardar disparos: 1 al empezar, 2 a media carga y 3 con la carga llena (unos 2,3 s con la cadencia base). Al soltar, salen todos seguidos, cada uno con todo el daño y sin frenazo. Mientras cargas andas al 40%. Nunca hace Compás.', cost: { iron: 2, feast: 2 } },
-  { id: 'a_spring',  slot: 'action',  name: 'Llave de resorte',     tag: 'Esperar pega más',   desc: 'Cuanto más tiempo tienes el arma lista sin disparar, más daño hace el siguiente disparo: +50% por segundo, hasta el triple a los 4 s. Empieza a contar cuando el arma ha recargado y vuelve a cero con cada disparo. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, end: 2 } },
-  { id: 'a_alt',     slot: 'action',  name: 'Llave alterna',        tag: 'Uno flojo, uno fuerte', desc: 'Alterna dos disparos, empezando por el flojo: uno flojo (60% del daño) que casi no te frena y uno fuerte (180%) con el doble de frenazo. La cadencia no cambia. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, mirror: 2 } },
-  { id: 'a_combo',   slot: 'action',  name: 'Llave de insistencia', tag: 'Mismo blanco, más rápido', desc: 'Cada disparo seguido al mismo enemigo hace que el siguiente salga un 8% más rápido, hasta +64% tras ocho seguidos. Si disparas a otro enemigo, vuelve a empezar. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, beast: 2 } },
-  { id: 'a_rider',   slot: 'action',  name: 'Llave de jinete',      tag: 'Dispara al esquivar', desc: 'Cada vez que esquivas, el arma dispara sola al enemigo más cercano a tiro con un 30% más de daño. No gasta tu disparo ni espera a que recargue. Ese disparo no cuenta para el Compás ni para lo que cuenta disparos. Sin enemigo a tiro, no dispara.', cost: { iron: 1, void: 2 } },
-  { id: 'a_kick',    slot: 'action',  name: 'Llave de trueno',      tag: 'Cada tercero, cañonazo', desc: 'Cada tercer disparo es un cañonazo: hace el 220% del daño y empuja lejos al enemigo. Si choca contra un muro, recibe el golpe y queda aturdido. No empuja a los jefes. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, forge: 2 } },
-  { id: 'a_drum',    slot: 'action',  name: 'Llave de tambor',      tag: 'Da Furia',           desc: 'Cada disparo te da 8 de Furia (12 si llevas alguna técnica de Orcos). Con esta llave tienes Furia aunque no lleves técnicas de Orcos, y también la ganas al golpear. Con la Furia llena (100), disparas un 25% más rápido. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, orc: 3 }, theme: 'orc' },
-  { id: 'a_glass',   slot: 'action',  name: 'Llave de clepsidra',   tag: 'Deja ecos',          desc: 'Uno de cada tres disparos (uno de cada dos si llevas alguna técnica de Tiempo) deja un eco que vuelve a golpear al mismo enemigo un segundo después con el 60% del daño del disparo. Si el enemigo ha muerto, el eco se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, time: 3 }, theme: 'time' },
-  { id: 'a_dice',    slot: 'action',  name: 'Llave de tahúr',       tag: 'Da críticos',   desc: 'Cada golpe de tus disparos tiene un 15% más de probabilidad de ser crítico (25% si llevas alguna técnica de Fortuna), sumado a la que ya tengas. Cuenta para cada golpe por separado: cada posta, dardo o salto puede ser crítico. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, luck: 3 }, theme: 'luck' },
-  { id: 'a_nana',    slot: 'action',  name: 'Llave de nana',        tag: 'Duerme enemigos',             desc: 'Uno de cada seis disparos (uno de cada cuatro si llevas alguna técnica de Sueño) Duerme a tu objetivo 2 segundos. A los jefes no los duerme: los deja Adormilados 1 s. Un enemigo que acaba de despertar no puede volver a dormirse en 4 s. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, dream: 3 }, theme: 'dream' },
-  { id: 'a_fly',     slot: 'action',  name: 'Llave de volante',     tag: 'Cadencia que sube',       desc: 'Mientras sigas disparando, disparas cada vez más rápido: hasta un 60% más a los cinco segundos. Si pasas 1,5 s sin disparar, se pierde todo. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, void: 2 } },
-  { id: 'a_fin',     slot: 'action',  name: 'Llave de remate',      tag: 'Remata sin frenar',  desc: 'Si tu objetivo tiene menos de un cuarto de vida, el disparo sale sin frenazo y el arma vuelve a estar lista en una décima de segundo, así que puedes rematarlo casi al instante. También funciona con jefes. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, end: 2 } },
-  { id: 'a_firm',    slot: 'action',  name: 'Llave de pie firme',   tag: 'Quieto, más rápido', desc: 'Si llevas un tercio de segundo sin moverte, disparas un 50% más rápido. Mientras te mueves o esquivas, disparas un 20% más despacio. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, frost: 2 } },
-  { id: 'a_rota',    slot: 'action',  name: 'Llave de ronda',       tag: 'Cambia de blanco',  desc: 'Cada disparo va al enemigo más cercano que no sea el del disparo anterior, aunque apuntes a otro, y todos hacen un 30% más de daño. Si solo hay un enemigo a tiro, le disparas a él igualmente, con el mismo +30%. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, mirror: 2 } },
-  { id: 'a_over',    slot: 'action',  name: 'Llave de sobrecarga',  tag: 'Uno enorme cada 10 s', desc: 'Se carga sola en 10 segundos, dispares o no (barra bajo tu personaje). Con la carga llena, tu siguiente disparo hace el cuádruple de daño y la carga vuelve a empezar desde cero. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, blood: 2 } },
-  { id: 'a_bolt',    slot: 'action',  name: 'Llave de mecha',       tag: 'Pulsa a Compás',             desc: 'Disparas al pulsar, o seguido si mantienes pulsado. Cada disparo te frena un instante. Si pulsas justo a Compás, ese disparo hace +50% de daño; mantener pulsado o pulsar demasiado pronto no cuenta.', base: true },
-  { id: 'a_semi',    slot: 'action',  name: 'Llave de chispa',      tag: 'Corre y dispara',         desc: 'Disparar no te frena y el disparo sale antes. Disparas un 20% más rápido, y mientras te mueves la cadencia sigue subiendo durante 3 s, hasta un 68% más rápido en total; si te paras un cuarto de segundo, vuelve al 20%. Cada disparo hace un 25% menos de daño. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, time: 2 } },
-  { id: 'a_burst',   slot: 'action',  name: 'Llave de salvas',      tag: 'Ráfaga de tres',      desc: 'Cada pulsación suelta tres disparos seguidos, cada uno con el 45% del daño y todos tus efectos de disparo (135% en total). El tercero deja aturdido un instante (0,4 s) al enemigo, salvo a los jefes. Disparas un 15% más despacio y el frenazo dura algo más. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, venom: 2 } },
-  { id: 'a_rotary',  slot: 'action',  name: 'Manivela de ribadoquín', tag: 'Chorro continuo',  desc: 'Mantén pulsado: tras medio segundo girando, dispara sin parar a 6,6 veces tu cadencia (unos seis disparos por segundo al principio), cada uno con el 30% del daño. Solo dispara si tienes un enemigo a tiro. Mientras lo mantienes, andas a menos de un tercio de tu velocidad. Nunca hace Compás.', cost: { iron: 2, stone: 2 } },
-  { id: 'a_draw',    slot: 'action',  name: 'Torno de ballesta',    tag: 'Tensar y soltar',    desc: 'Mantén pulsado para tensar y suelta para disparar. Un toque rápido hace el 60% del daño; tensado a tope (unos 1,4 s con la cadencia base), el 220%. Con poca tensión, los cañones que disparan en línea o en abanico llegan menos lejos (desde el 60% de tu alcance). Mientras tensas andas al 40%, y disparas un 35% más despacio. Nunca hace Compás.', cost: { iron: 2, dragon: 2 } },
-  { id: 'm_std',     slot: 'mag',     name: 'Balas de plomo',       tag: 'Básica',             desc: 'La munición de serie. No añade nada a tus disparos ni tiene pegas.', base: true },
-  { id: 'm_drum',    slot: 'mag',     name: 'Doble carga',          tag: 'Dos seguidos',            desc: 'Disparas dos veces casi seguidas y luego recargas: la pausa tras el segundo disparo es un 25% más larga de lo normal. Cada disparo hace un 35% más de daño. Si el segundo da al mismo enemigo que el primero, hace además un 60% más.', cost: { iron: 1, orc: 2 } },
-  { id: 'm_belt',    slot: 'mag',     name: 'Pólvora viva',         tag: 'Rápida, se calienta',        desc: 'Disparas un 30% más rápido, pero cada disparo calienta el arma (arco rojo a tu alrededor): unos 8 disparos seguidos la llenan, o unos 23 con la Manivela de ribadoquín. Si se llena, el arma se bloquea 1,6 s. Se enfría sola cuando dejas de disparar.', cost: { iron: 1, dragon: 2 } },
-  { id: 'm_charged', slot: 'mag',     name: 'Bala bendita',         tag: 'El quinto revienta', desc: 'Cada quinto disparo hace el 250% del daño y revienta en el blanco: una explosión pequeña hace el 120% de tu daño base al blanco y a los que tenga alrededor.', cost: { iron: 1, storm: 2 } },
-  { id: 'm_heavy',   slot: 'mag',     name: 'Bala de cañón',        tag: 'Empuja',             desc: 'Cada disparo hace un 30% más de daño y empuja al enemigo. Si lo estampas contra un muro, recibe un golpe extra y queda aturdido. Disparas un 20% más despacio. No empuja a los jefes.', cost: { iron: 1, stone: 2 } },
-  { id: 'm_chain',   slot: 'mag',     name: 'Bala enramada',        tag: 'Salta a otro',       desc: 'Tras dar en el blanco, el disparo salta al enemigo más cercano a él, si hay uno a poca distancia, y le hace la mitad del daño, con los efectos de tus técnicas.', cost: { iron: 1, venom: 2 } },
-  { id: 'm_silver',  slot: 'mag',     name: 'Bala de plata',        tag: 'Contra élites y jefes',       desc: 'Todo tu daño directo hace un 60% más a élites, elegidos y jefes, y un 10% menos al resto. Cada élite que matas suelta 3 de oro más (el doble).', cost: { iron: 1, shade: 2 } },
-  { id: 'm_frag',    slot: 'mag',     name: 'Bala de metralla',     tag: 'Estalla al matar',   desc: 'Si un disparo mata a su blanco, estalla en esquirlas: una para cada uno de los cinco enemigos más cercanos, con el 30% del daño y los efectos de tus técnicas.', cost: { iron: 1, stone: 2 } },
-  { id: 'm_blood',   slot: 'mag',     name: 'Bala de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo hace un 40% más de daño y te cuesta 1 de vida (nunca te deja por debajo de 1). Cada enemigo que muere, lo mate lo que lo mate, te cura 3.', cost: { iron: 1, feast: 2 } },
-  { id: 'm_last',    slot: 'mag',     name: 'Última bala',          tag: 'El sexto, triple',   desc: 'Cada sexto disparo hace el triple de daño. Después, el arma tarda al menos 1,2 s en volver a disparar.', cost: { iron: 1, luck: 2 } },
-  { id: 'm_ice',     slot: 'mag',     name: 'Bala de escarcha',     tag: 'Frena y hiela',    desc: 'Cada disparo frena al enemigo un 30% durante 1,5 s. Si le das mientras ya va frenado, queda helado y aturdido 0,8 s; como mucho, una vez cada 3 s por enemigo. A los jefes los frena menos y no los aturde.', cost: { iron: 1, tide: 2 } },
-  { id: 'm_fire',    slot: 'mag',     name: 'Bala incendiaria',     tag: 'Fuego en el suelo',         desc: 'Cada disparo deja una llama en el suelo, donde estaba el enemigo, que dura 2 s. Cada 0,4 s clava 1 Ascua a quien esté encima.', cost: { iron: 1, dragon: 2 } },
-  { id: 'm_gold',    slot: 'mag',     name: 'Bala de oro',          tag: 'Gasta oro, pega más',   desc: 'Cada disparo gasta 1 de oro y hace un 35% más de daño. Si no te queda oro, hace un 20% menos. Cada enemigo que muere te da 1 de oro.', cost: { iron: 1, luck: 2 } },
-  { id: 'm_split',   slot: 'mag',     name: 'Bala partida',         tag: 'Se parte en dos',     desc: 'Al dar en el blanco, el disparo se parte en dos trozos que siguen hacia delante en diagonal, uno a cada lado. Cada trozo da al primer enemigo que encuentra a poca distancia, con el 35% del daño y los efectos de tus técnicas.', cost: { iron: 1, mirror: 2 } },
-  { id: 'm_mark',    slot: 'mag',     name: 'Bala trazadora',       tag: 'Marca al tercero',    desc: 'Cada tercer disparo que das al mismo enemigo lo marca durante 5 s: mientras dure, recibe un 30% más de todo el daño directo.', cost: { iron: 1, light: 2 } },
-  { id: 'm_big',     slot: 'mag',     name: 'Bala de calibre',      tag: 'Salpica',            desc: 'Cada disparo hace un 20% más de daño, y hasta cuatro enemigos pegados al blanco reciben la mitad (sin efectos).', cost: { iron: 2, forge: 2 } },
-  { id: 's_roll',    slot: 'stock',   name: 'Culata de volatinero', tag: 'Dos esquives cortos', desc: 'Tienes una carga de esquive más, pero cada esquive llega un 35% menos lejos.', cost: { iron: 1, dream: 2 } },
-  { id: 's_anchor',  slot: 'stock',   name: 'Culata de ancla',      tag: 'Aguanta cargando', desc: 'Mientras mantienes pulsado el disparo cargado, recibes la mitad de daño.', cost: { iron: 1, tide: 2 } },
-  { id: 's_sprint',  slot: 'stock',   name: 'Culata de corredor',   tag: 'Sin disparar, corres', desc: 'Si pasas 2 s con el arma lista sin disparar, corres un 35% más rápido hasta tu siguiente disparo. Con el Gatillo de pelo casi nunca se activa, porque el arma dispara sola.', cost: { iron: 1, frost: 2 } },
-  { id: 's_venge',   slot: 'stock',   name: 'Culata de rencor',     tag: 'Venganza doble',    desc: 'Cuando te golpean, tus tres siguientes disparos hacen el doble de daño. Un golpe que para la rodela o que llega mientras eres invulnerable no cuenta.', cost: { iron: 1, blood: 2 } },
-  { id: 's_gasp',    slot: 'stock',   name: 'Culata del último aliento', tag: 'Casi muerto, corres', desc: 'Mientras tengas menos de un cuarto de tu vida, te mueves un 30% más rápido y tus esquives se recargan el doble de rápido.', cost: { iron: 1, end: 2 } },
-  { id: 'm_seed',    slot: 'mag',     name: 'Bala de bellota',      tag: 'Planta Semillas',    desc: 'Cada disparo planta una Semilla en el enemigo; a la tercera, brotan Raíces. Si llevas en tus ranuras alguna técnica de Bosque, brotan a la segunda.', cost: { iron: 1, wood: 3 }, theme: 'wood' },
-  { id: 'm_salt',    slot: 'mag',     name: 'Bala de sal',          tag: 'Empapa y empuja',    desc: 'Cada disparo deja Empapado al enemigo 3 s y lo empuja un poco. A los que ya estaban Empapados les hace un 15% más de daño. Si llevas en tus ranuras alguna técnica de Mareas, empuja el doble. No empuja a los jefes; con una técnica de Mareas, el empujón sí basta para darles el golpe de los jefes Empapados.', cost: { iron: 1, tide: 3 }, theme: 'tide' },
-  { id: 'm_saw',     slot: 'mag',     name: 'Bala serrada',         tag: 'Abre Heridas',       desc: 'Cada disparo abre una Herida (hasta 6 por enemigo). Si llevas en tus ranuras alguna técnica de Sangre, abre dos.', cost: { iron: 1, blood: 3 }, theme: 'blood' },
-  { id: 'm_quick',   slot: 'mag',     name: 'Bala de azogue',       tag: 'Repite desde detrás',  desc: 'Cada cuarto disparo vuelve desde el otro lado del enemigo y le da otra vez, con la mitad del daño y sin efectos. Si llevas en tus ranuras alguna técnica de Espejos, cada segundo disparo.', cost: { iron: 1, mirror: 3 }, theme: 'mirror' },
-  { id: 'm_star',    slot: 'mag',     name: 'Bala de lucero',       tag: 'Ilumina enemigos',            desc: 'Cada disparo deja Iluminado al enemigo 4 s, y tus disparos hacen un 12% más a los Iluminados. Si llevas en tus ranuras alguna técnica de Luz, un 25%. El reparto de daño entre Iluminados solo ocurre si llevas la técnica Señalar.', cost: { iron: 1, light: 3 }, theme: 'light' },
-  { id: 's_grave',   slot: 'stock',   name: 'Culata de lápida',     tag: 'Levanta Sombras',    desc: 'Cada ocho enemigos que matas, el octavo se levanta como Sombra y pelea por ti. Si llevas en tus ranuras alguna técnica de Sombras, cada cinco. Los jefes no cuentan. Puedes tener 2 Sombras a la vez, más si tus técnicas suben el tope.', cost: { iron: 1, shade: 3 }, theme: 'shade' },
-  { id: 's_wine',    slot: 'stock',   name: 'Culata de bota de vino', tag: 'Cura al matar',   desc: 'Cada enemigo que muere te cura 1; si ya tienes la vida llena, ese punto va a tu Reserva. Si llevas en tus ranuras alguna técnica de Manjares, 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
-  { id: 's_kennel',  slot: 'stock',   name: 'Culata de perrera',    tag: 'Cachorro que muerde',   desc: 'Un perro te acompaña y muerde cada 0,8 s al enemigo al que disparas, con el 30% de tu daño base (o lo que diga tu técnica Sabueso, si la llevas) y los efectos de tus técnicas. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza. Si llevas en tus ranuras alguna técnica de Bestias, tienes un perro más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
-  { id: 's_geode',   slot: 'stock',   name: 'Culata de geoda',      tag: 'Deja Cristales',     desc: 'Cada esquive deja un Cristal donde estabas. Cada vez que disparas, hasta cuatro de tus Cristales cercanos al blanco le lanzan una esquirla con el 20% del daño, sin efectos. Si llevas en tus ranuras alguna técnica de Minerales, el 40%.', cost: { iron: 1, stone: 3 }, theme: 'stone' },
-  { id: 'm_blunt',   slot: 'mag',     name: 'Bala roma',            tag: 'El quinto aturde',   desc: 'Cada quinto disparo deja aturdido al enemigo 0,6 s. A los jefes no los aturde.', cost: { iron: 1, dream: 2 } },
-  { id: 'm_grow',    slot: 'mag',     name: 'Bala voraz',           tag: 'Más daño al matar',      desc: 'Cada enemigo que matas de un disparo sube un 2% el daño de tus disparos hasta el final de la partida, hasta +60% (30 bajas). Los jefes no cuentan.', cost: { iron: 2, blood: 2 } },
-  { id: 'm_awl',     slot: 'mag',     name: 'Bala de punzón',       tag: 'Da al de detrás',    desc: 'El disparo atraviesa al blanco y da también al primer enemigo que tenga justo detrás, a poca distancia, con el 60% del daño y los efectos de tus técnicas.', cost: { iron: 1, end: 2 } },
-  { id: 'm_timed',   slot: 'mag',     name: 'Bala de mecha',        tag: 'Explota después',    desc: 'El disparo se queda clavado y explota 1 s después, con la mitad del daño, al blanco y a los que tenga muy cerca. Si el blanco muere antes, explota donde cayó.', cost: { iron: 1, void: 2 } },
-  { id: 'm_leech',   slot: 'mag',     name: 'Bala sanguijuela',     tag: 'Cura cada 8 impactos',     desc: 'Cada 8 impactos de tus disparos te curas 2 de vida. Cada impacto cuenta por separado, también los de un disparo que da a varios enemigos.', cost: { iron: 1, frost: 2 } },
-  { id: 's_sapper',  slot: 'stock',   name: 'Culata de zapador',    tag: 'Pegado al muro',     desc: 'Mientras estés pegado a un muro, tus disparos hacen un 30% más de daño.', cost: { iron: 1, dream: 2 } },
-  { id: 's_dance',   slot: 'stock',   name: 'Culata de bailarín',   tag: 'Atravesar devuelve esquive',  desc: 'Atravesar a un enemigo con el esquive te devuelve una carga de esquive al momento (sin pasar de tu máximo). Solo una vez por esquive. Las estocadas del Asta y las embestidas de las Recámaras de embestida y de trueno cuentan como un esquive cada una: no gastan carga, así que te recargan una gastada.', cost: { iron: 1, mirror: 2 } },
-  { id: 's_tower',   slot: 'stock',   name: 'Culata de torre',      tag: 'Sin esquive, más duro',        desc: 'No puedes esquivar. A cambio, recibes un 30% menos de daño y tus disparos hacen un 25% más. Tus técnicas de Esquive y las piezas que dependen de esquivar dejan de servirte.', cost: { iron: 2, forge: 2 } },
-  { id: 's_loot',    slot: 'stock',   name: 'Culata de saqueador',  tag: 'Más oro',            desc: 'Todo el oro que ganas aumenta un 50%: el de las bajas, el de las salas y el de los premios.', cost: { iron: 1, light: 2 } },
-  { id: 's_wind',    slot: 'stock',   name: 'Culata de segundo aire', tag: 'Cura de emergencia', desc: 'Una vez por sala, si un golpe te deja por debajo del 30% de tu vida, recuperas de golpe el 20% de tu vida máxima.', cost: { iron: 1, void: 2 } },
-  { id: 's_spring',  slot: 'stock',   name: 'Culata de muelle',     tag: 'Salto tras disparar', desc: 'Tras cada disparo das un salto corto hacia donde mueves el stick. Así disparas y te apartas a la vez. Si no te mueves, no saltas.', cost: { iron: 1, wood: 2 } },
-  { id: 's_shield',  slot: 'stock',   name: 'Culata con rodela',    tag: 'Bloquea un golpe',      desc: 'Una rodela para por completo el siguiente golpe que te llegue. Después tarda 6 s en volver; cuando está lista, la ves girar a tu lado.', cost: { iron: 2, stone: 2 } },
-  { id: 's_scope',   slot: 'stock',   name: 'Culata de catalejo',   tag: 'Primer disparo fuerte',        desc: 'El primer impacto que das a cada enemigo hace un 80% más de daño. Además, tus disparos llegan un 15% más lejos.', cost: { iron: 1, storm: 2 } },
-  { id: 's_spikes',  slot: 'stock',   name: 'Culata de púas',       tag: 'Esquive que hiere',  desc: 'Atravesar a un enemigo con el esquive le hace el 150% de tu daño base y lo deja aturdido 0,5 s. A los jefes no los aturde.', cost: { iron: 1, venom: 2 } },
-  { id: 's_bone',    slot: 'stock',   name: 'Empuñadura de hueso',  tag: 'Herido, dispara más', desc: 'Cuanta menos vida tienes, más rápido disparas: empieza por debajo del 75% de tu vida y llega a un 50% más con un cuarto de vida o menos.', cost: { iron: 1, orc: 2 } },
-  { id: 's_std',     slot: 'stock',   name: 'Culata de nogal',      tag: 'Básica',             desc: 'La culata de serie. No cambia nada al moverte ni al aguantar golpes.', base: true },
-  { id: 's_light',   slot: 'stock',   name: 'Culata de fresno',     tag: 'Esquive mejor',   desc: 'Tu esquive llega un 30% más lejos y se recarga un 35% antes. Al salir del esquive, el arma ya está lista para disparar. A cambio, tus disparos hacen un 10% menos de daño.', cost: { iron: 1, time: 2 } },
-  { id: 's_heavy',   slot: 'stock',   name: 'Culata herrada',       tag: 'Culatazo automático',           desc: 'Tus disparos hacen un 25% más de daño, pero el frenazo de cada disparo dura un 30% más. Si un enemigo se te pega, le das un culatazo: el 80% de tu daño base, lo aparta y lo deja aturdido 0,6 s. Como mucho uno cada 2,5 s. No funciona con jefes.', cost: { iron: 1, orc: 2 } },
-  { id: 's_recoil',  slot: 'stock',   name: 'Culata de coz',        tag: 'Te aleja al disparar',     desc: 'Cada disparo te empuja un paso hacia atrás, lejos del enemigo al que disparas. Te alejas sin mover el stick. No funciona con el Asta ni mientras esquivas.', cost: { iron: 1, feast: 2 } },
-  { id: 's_brace',   slot: 'stock',   name: 'Horquilla',            tag: 'Quieto pega más',    desc: 'Si llevas medio segundo sin moverte, tus disparos hacen un 40% más de daño y llegan un 20% más lejos. En cuanto te mueves o esquivas, se pierde.', cost: { iron: 1, shade: 2 } },
-  { id: 'c_beam',    slot: 'chamber', name: 'Recámara de rayo',     tag: 'Rayo en línea',      desc: 'El disparo cargado es un rayo recto que atraviesa a todos los enemigos en línea, con todo el daño del cargado. Los muros lo cortan. Con la técnica Aliento (Dragones) se abre en cono; con el plano Mortero, se convierte en un proyectil que explota en área.', base: true },
-  { id: 'c_fan',     slot: 'chamber', name: 'Recámara de metralla', tag: 'Abanico de nueve',   desc: 'El disparo cargado suelta nueve disparos en abanico delante de ti, a corta distancia. Cada uno hace el 22% del daño del cargado y lleva tus efectos de disparo.', cost: { iron: 1, storm: 2 } },
-  { id: 'c_rain',    slot: 'chamber', name: 'Recámara de aluvión',  tag: 'Lluvia sobre zona',  desc: 'El disparo cargado hace llover proyectiles tres veces sobre una zona redonda: sobre tu objetivo o, si apuntas con el stick, delante de ti. Cada oleada hace el 45% del daño del cargado a todos los de la zona.', cost: { iron: 1, venom: 2 } },
-  { id: 'c_supp',    slot: 'chamber', name: 'Recámara de torbellino', tag: 'Dispara sola 3 s', desc: 'Tras el disparo cargado, el arma dispara sola casi 3 s desde donde lo lanzaste, mientras tú te mueves: 36 disparos a enemigos al azar que estén a tiro, cada uno con el 9% del daño del cargado y tus efectos de disparo. También enfría del todo el arma.', cost: { iron: 2, stone: 2 } },
-  { id: 'c_dash',    slot: 'chamber', name: 'Recámara de embestida', tag: 'Carga que atraviesa', desc: 'El disparo cargado te lanza en una carga larga hacia donde apuntas. No pueden golpearte durante la carga, y cada enemigo que atraviesas recibe el 60% del daño del cargado. Cuenta como atravesar a un enemigo con el esquive.', cost: { iron: 2, shade: 2 } },
-  { id: 'c_blast',   slot: 'chamber', name: 'Recámara de trueno',   tag: 'Postas y retroceso', desc: 'El disparo cargado suelta quince postas a muy corta distancia, cada una con el 22% del daño del cargado y tus efectos de disparo. Los enemigos alcanzados salen empujados y quedan aturdidos 0,5 s; a los jefes ni los empuja ni los aturde. El retroceso te lanza hacia atrás.', cost: { iron: 2, feast: 2 } },
-  { id: 'c_mine',    slot: 'chamber', name: 'Recámara de minas',    tag: 'Tres minas',         desc: 'El disparo cargado deja tres minas a tu espalda. Duran 12 s y revientan cuando un enemigo las pisa, con el 90% del daño del cargado en área. Los enemigos voladores no las activan.', cost: { iron: 1, wood: 2 } },
-  { id: 'c_nova',    slot: 'chamber', name: 'Recámara de anillo',   tag: 'Onda que aparta',    desc: 'El disparo cargado suelta una onda a tu alrededor que hace el 70% del daño del cargado y lanza lejos a los enemigos cercanos. Si alguno choca contra un muro, recibe el golpe extra. A los jefes no los mueve.', cost: { iron: 2, tide: 2 } },
-  { id: 'c_turret',  slot: 'chamber', name: 'Recámara de centinela', tag: 'Arma fija que dispara', desc: 'El disparo cargado deja clavada una copia de tu arma donde estás. Durante 6 s dispara sola al enemigo más cercano a tiro, a tu cadencia, con el 80% de tu daño base y los efectos de tus técnicas. No lleva los efectos de tus piezas ni pone Sentencia.', cost: { iron: 2, time: 2 } },
-  { id: 'c_snipe',   slot: 'chamber', name: 'Recámara de verdugo',  tag: 'Un tiro al más fuerte', desc: 'El disparo cargado es un único tiro al enemigo con más vida que tengas a la vista, con el doble de daño de un cargado normal. Si lo mata, el cargado vuelve a estar listo al instante.', cost: { iron: 2, luck: 3 } },
-  { id: 'c_meteor',  slot: 'chamber', name: 'Recámara de meteoro',  tag: 'Meteoro',      desc: 'El disparo cargado marca un punto (tu objetivo, o delante de ti si apuntas con el stick) y 1 s después cae allí un meteoro: el 160% del daño del cargado en un área grande, y aturde 0,5 s.', cost: { iron: 2, void: 2 } },
-  { id: 'c_chain',   slot: 'chamber', name: 'Recámara de cadena',   tag: 'Salta entre seis',   desc: 'El disparo cargado es un rayo que da al enemigo más cercano a donde apuntas y salta de enemigo en enemigo, hasta seis. Cada uno recibe el 80% del daño del cargado, sin perder fuerza en los saltos.', cost: { iron: 2, storm: 2 } },
-  { id: 'c_balm',    slot: 'chamber', name: 'Recámara de bálsamo',  tag: 'Te cura',            desc: 'El disparo cargado no dispara: te cura el 10% de tu vida máxima y aparta a los enemigos que tienes encima. Tus técnicas de Cargado sí se aplican a esos enemigos.', cost: { iron: 2, feast: 3 } },
-  { id: 'c_bounce',  slot: 'chamber', name: 'Recámara de carambola', tag: 'Rebota cinco veces', desc: 'El disparo cargado es un rayo que rebota en los muros hasta cinco veces. Hace el 60% del daño del cargado a todo lo que cruza en cada tramo, así que puede dar varias veces al mismo enemigo.', cost: { iron: 2, mirror: 2 } },
-  { id: 'c_volley',  slot: 'chamber', name: 'Recámara de salva',    tag: 'Ocho seguidos',      desc: 'El disparo cargado suelta ocho disparos seguidos contra tu objetivo, o contra el enemigo más cercano a donde apuntas. Cada uno hace el 20% del daño del cargado y lleva tus efectos de disparo.', cost: { iron: 2, beast: 2 } },
-  { id: 'c_sima',    slot: 'chamber', name: 'Recámara de sima',     tag: 'Abre un pozo',       desc: 'El disparo cargado abre un pozo de 2 s donde apuntas: arrastra a los enemigos cercanos, les hace el 15% del daño del cargado cada medio segundo y al cerrarse estalla con el 80%. Si llevas en tus ranuras alguna técnica de Vacío, dura 4 s. A los jefes no los arrastra.', cost: { iron: 2, void: 3 }, theme: 'void' },
-  { id: 'c_doom',    slot: 'chamber', name: 'Recámara de sentencia', tag: 'Pone Sentencias',   desc: 'El disparo cargado es un rayo en línea que pone una Sentencia de 5 s a todos los que atraviesa y les hace el 60% del daño del cargado. No necesita ninguna técnica de Final: al cumplirse, cada Sentencia devuelve el 40% del daño que le hiciste. Si llevas en tus ranuras alguna técnica de Final, todas tus Sentencias devuelven un 50% más. No renueva una Sentencia que ya esté en marcha.', cost: { iron: 2, end: 3 }, theme: 'end' },
-  { id: 'c_anvil',   slot: 'chamber', name: 'Recámara de yunque',   tag: 'Da Temple',          desc: 'El disparo cargado es un martillazo a tu alrededor: el 90% del daño del cargado, y aturde 0,5 s. Cada enemigo golpeado te da 1 de Temple (hasta tu máximo, 10 sin más ayudas); si llevas en tus ranuras alguna técnica de Forja, 2. El Temple te suma daño aunque no lleves técnicas de Forja.', cost: { iron: 2, forge: 3 }, theme: 'forge' },
-  { id: 'c_ward',    slot: 'chamber', name: 'Recámara de baluarte', tag: 'Invulnerable 2 s', desc: 'El disparo cargado no ataca: eres invulnerable 2 s y apartas a los enemigos que tienes encima. Tus técnicas de Cargado sí se aplican a esos enemigos.', cost: { iron: 2, frost: 2 } },
-  { id: 'c_blink',   slot: 'chamber', name: 'Recámara de salto',    tag: 'Te lleva allí',      desc: 'El disparo cargado te lleva al instante junto a tu objetivo, o a donde apuntas, y revienta al llegar: el 80% del daño del cargado en área. Al aparecer eres invulnerable un instante.', cost: { iron: 2, mirror: 2 } },
-  { id: 'c_drain',   slot: 'chamber', name: 'Recámara de sanguijuela', tag: 'Rayo que cura',   desc: 'El disparo cargado es un rayo en línea que hace el 90% del daño del cargado. Recuperas como vida el 30% de todo el daño que hace, hasta un 25% de tu vida máxima.', cost: { iron: 2, blood: 2 } },
-  { id: 'c_brand',   slot: 'chamber', name: 'Recámara de condena',  tag: 'Marca a todos',      desc: 'El disparo cargado marca a todos los enemigos que tienes a la vista y les hace el 30% del daño del cargado. Durante 6 s, los marcados reciben un 30% más de todo el daño directo.', cost: { iron: 2, light: 2 } },
-  { id: 'c_quake',   slot: 'chamber', name: 'Recámara de terremoto', tag: 'Aturde la sala',    desc: 'El disparo cargado sacude toda la sala: cada enemigo que pisa el suelo recibe un 30% del daño del cargado y queda aturdido 1 s. No afecta a los voladores, y a los jefes no los aturde.', cost: { iron: 2, beast: 2 } },
+  { id: 'b_blow',    slot: 'barrel',  name: 'Palma de víbora',            tag: 'Disparos con Veneno',  desc: 'Cada disparo pone 1 de Veneno al enemigo si sobrevive, aunque no lleves técnicas de Veneno. Si llevas la técnica Dardo, el Veneno que pone en cada disparo se duplica. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 1, venom: 3 }, theme: 'venom' },
+  { id: 'b_wyrm',    slot: 'barrel',  name: 'Palma de sierpe',       tag: 'Clava Ascuas',       desc: 'Cada disparo clava 1 Ascua al enemigo si sobrevive, aunque no lleves técnicas de Dragones. Si llevas alguna técnica de Dragones, los enemigos aguantan 4 Ascuas más antes de llegar al tope (12 en vez de 8).', cost: { iron: 1, dragon: 3 }, theme: 'dragon' },
+  { id: 'b_rod',     slot: 'barrel',  name: 'Palma de cobre',        tag: 'Clava Agujas',       desc: 'Cada disparo clava 1 Aguja al enemigo si sobrevive (2 si llevas alguna técnica de Tormenta), aunque no lleves técnicas de Tormenta. Al juntar 6, el enemigo se descarga solo.', cost: { iron: 1, storm: 3 }, theme: 'storm' },
+  { id: 'b_icicle',  slot: 'barrel',  name: 'Palma de carámbano',            tag: 'Pone Escarcha',      desc: 'Cada disparo pone 1 de Escarcha al enemigo si sobrevive (2 si llevas alguna técnica de Hielo), aunque no lleves técnicas de Hielo. Contra enemigos Congelados hace un 30% más de daño; mientras siguen Congelados, no acumulan más Escarcha.', cost: { iron: 1, frost: 3 }, theme: 'frost' },
+  { id: 'b_horn',    slot: 'barrel',  name: 'Palma de bramido',     tag: 'Aturde en cono',     desc: 'Suelta un bramido en cono que da a todos los enemigos que tienes delante (40% del daño a cada uno) y los deja aturdidos un instante (0,35 s). No pasa los muros y no aturde a los jefes. Un 45% menos de alcance.', cost: { iron: 1, dream: 2 } },
+  { id: 'b_drill',   slot: 'barrel',  name: 'Palma de berbiquí',             tag: 'Insistir pega más',  desc: 'Cada disparo seguido al mismo enemigo hace un 15% más de daño que el anterior, hasta +150% tras diez seguidos. Si disparas a otro enemigo, vuelve a empezar.', cost: { iron: 2, forge: 2 } },
+  { id: 'b_ghost',   slot: 'barrel',  name: 'Palma fantasma',       tag: 'Atraviesa muros',    desc: 'Puedes apuntar y disparar a enemigos que están al otro lado de los muros, sin verlos, tanto si los guanteletes los eligen solos como si los fijas tú. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 2, shade: 3 } },
+  { id: 'b_net',     slot: 'barrel',  name: 'Palma de red',          tag: 'Enraíza al enemigo',             desc: 'Cada disparo hace el 65% del daño y lanza una red que deja al enemigo enraizado 0,9 s. Cada enemigo solo puede quedar atrapado una vez cada 3 s; a los jefes los atrapa solo un tercio de ese tiempo.', cost: { iron: 1, beast: 2 } },
+  { id: 'b_ends',    slot: 'barrel',  name: 'Palma de dos distancias', tag: 'Cerca y lejos',   desc: 'Cada disparo da a la vez al enemigo más cercano y al más lejano que tengas a tiro, con el 80% del daño a cada uno, apuntes a quien apuntes. Si solo hay un enemigo, recibe un único disparo (80%).', cost: { iron: 2, light: 2 } },
+  { id: 'a_fuse',    slot: 'action',  name: 'Dedos de rescoldo',          tag: 'Sale con retraso',   desc: 'El disparo sale solo medio segundo después de pulsar, sin frenazo, contra el enemigo al que apuntabas (o el más cercano si ya ha muerto). Todos tus disparos hacen un 45% más de daño. Si estás esquivando justo cuando sale, se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, wood: 2 } },
+  { id: 'a_auto',    slot: 'action',  name: 'Dedos inquietos',      tag: 'Disparan solos',       desc: 'Los guanteletes disparan solos, sin pulsar, siempre que tienes un enemigo a tiro. Cada disparo te frena igual que si pulsaras. Todos tus disparos hacen un 20% menos de daño. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, luck: 2 } },
+  { id: 'a_pend',    slot: 'action',  name: 'Dedos de péndulo',     tag: 'Racha de Compás',   desc: 'Cada disparo a Compás suma un 15% de daño por cada Compás seguido que llevas, contando ese: +15%, +30%… hasta +90% al sexto. Sustituye al +50% normal del Compás, así que los primeros pegan menos que con los Dedos de compás. Un disparo fuera de Compás no tiene bonificación y reinicia la racha.', cost: { iron: 2, time: 3 } },
+  { id: 'a_hold',    slot: 'action',  name: 'Dedos de retén',       tag: 'Guarda y suelta',    desc: 'Mantén pulsado para guardar disparos: 1 al empezar, 2 a media carga y 3 con la carga llena (unos 2,3 s con la cadencia base). Al soltar, salen todos seguidos, cada uno con todo el daño y sin frenazo. Mientras cargas andas al 40%. Nunca hace Compás.', cost: { iron: 2, feast: 2 } },
+  { id: 'a_spring',  slot: 'action',  name: 'Dedos de resorte',     tag: 'Esperar pega más',   desc: 'Cuanto más tiempo tienes los guanteletes listos sin disparar, más daño hace el siguiente disparo: +50% por segundo, hasta el triple a los 4 s. Empieza a contar cuando los guanteletes han recargado y vuelve a cero con cada disparo. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, end: 2 } },
+  { id: 'a_alt',     slot: 'action',  name: 'Dedos alternos',        tag: 'Uno flojo, uno fuerte', desc: 'Alterna dos disparos, empezando por el flojo: uno flojo (60% del daño) que casi no te frena y uno fuerte (180%) con el doble de frenazo. La cadencia no cambia. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, mirror: 2 } },
+  { id: 'a_combo',   slot: 'action',  name: 'Dedos de insistencia', tag: 'Mismo blanco, más rápido', desc: 'Cada disparo seguido al mismo enemigo hace que el siguiente salga un 8% más rápido, hasta +64% tras ocho seguidos. Si disparas a otro enemigo, vuelve a empezar. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, beast: 2 } },
+  { id: 'a_rider',   slot: 'action',  name: 'Dedos de jinete',      tag: 'Dispara al esquivar', desc: 'Cada vez que esquivas, los guanteletes disparan solos al enemigo más cercano a tiro con un 30% más de daño. No gasta tu disparo ni espera a que recargue. Ese disparo no cuenta para el Compás ni para lo que cuenta disparos. Sin enemigo a tiro, no dispara.', cost: { iron: 1, void: 2 } },
+  { id: 'a_kick',    slot: 'action',  name: 'Dedos de trueno',      tag: 'Cada tercero, trueno', desc: 'Cada tercer disparo es un trueno: hace el 220% del daño y empuja lejos al enemigo. Si choca contra un muro, recibe el golpe y queda aturdido. No empuja a los jefes. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, forge: 2 } },
+  { id: 'a_drum',    slot: 'action',  name: 'Dedos de tambor',      tag: 'Da Furia',           desc: 'Cada disparo te da 8 de Furia (12 si llevas alguna técnica de Orcos). Con estos dedos tienes Furia aunque no lleves técnicas de Orcos, y también la ganas al golpear. Con la Furia llena (100), disparas un 25% más rápido. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, orc: 3 }, theme: 'orc' },
+  { id: 'a_glass',   slot: 'action',  name: 'Dedos de clepsidra',   tag: 'Deja ecos',          desc: 'Uno de cada tres disparos (uno de cada dos si llevas alguna técnica de Tiempo) deja un eco que vuelve a golpear al mismo enemigo un segundo después con el 60% del daño del disparo. Si el enemigo ha muerto, el eco se pierde. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, time: 3 }, theme: 'time' },
+  { id: 'a_dice',    slot: 'action',  name: 'Dedos de tahúr',       tag: 'Da críticos',   desc: 'Cada golpe de tus disparos tiene un 15% más de probabilidad de ser crítico (25% si llevas alguna técnica de Fortuna), sumado a la que ya tengas. Cuenta para cada golpe por separado: cada chispa, centella o salto puede ser crítico. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, luck: 3 }, theme: 'luck' },
+  { id: 'a_nana',    slot: 'action',  name: 'Dedos de nana',        tag: 'Duerme enemigos',             desc: 'Uno de cada seis disparos (uno de cada cuatro si llevas alguna técnica de Sueño) Duerme a tu objetivo 2 segundos. A los jefes no los duerme: los deja Adormilados 1 s. Un enemigo que acaba de despertar no puede volver a dormirse en 4 s. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, dream: 3 }, theme: 'dream' },
+  { id: 'a_fly',     slot: 'action',  name: 'Dedos de volante',     tag: 'Cadencia que sube',       desc: 'Mientras sigas disparando, disparas cada vez más rápido: hasta un 60% más a los cinco segundos. Si pasas 1,5 s sin disparar, se pierde todo. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, void: 2 } },
+  { id: 'a_fin',     slot: 'action',  name: 'Dedos de remate',      tag: 'Remata sin frenar',  desc: 'Si tu objetivo tiene menos de un cuarto de vida, el disparo sale sin frenazo y los guanteletes vuelven a estar listos en una décima de segundo, así que puedes rematarlo casi al instante. También funciona con jefes. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, end: 2 } },
+  { id: 'a_firm',    slot: 'action',  name: 'Dedos de estatua',   tag: 'Quieto, más rápido', desc: 'Si llevas un tercio de segundo sin moverte, disparas un 50% más rápido. Mientras te mueves o esquivas, disparas un 20% más despacio. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, frost: 2 } },
+  { id: 'a_rota',    slot: 'action',  name: 'Dedos de ronda',       tag: 'Cambia de blanco',  desc: 'Cada disparo va al enemigo más cercano que no sea el del disparo anterior, aunque apuntes a otro, y todos hacen un 30% más de daño. Si solo hay un enemigo a tiro, le disparas a él igualmente, con el mismo +30%. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, mirror: 2 } },
+  { id: 'a_over',    slot: 'action',  name: 'Dedos de sobrecarga',  tag: 'Uno enorme cada 10 s', desc: 'Se cargan solos en 10 segundos, dispares o no (barra bajo tu personaje). Con la carga llena, tu siguiente disparo hace el cuádruple de daño y la carga vuelve a empezar desde cero. Sin Compás, salvo con el plano Compás.', cost: { iron: 2, blood: 2 } },
+  { id: 'a_bolt',    slot: 'action',  name: 'Dedos de compás',       tag: 'Pulsa a Compás',             desc: 'Disparas al pulsar, o seguido si mantienes pulsado. Cada disparo te frena un instante. Si pulsas justo a Compás, ese disparo hace +50% de daño; mantener pulsado o pulsar demasiado pronto no cuenta.', base: true },
+  { id: 'a_semi',    slot: 'action',  name: 'Dedos de chispa',      tag: 'Corre y dispara',         desc: 'Disparar no te frena y el disparo sale antes. Disparas un 20% más rápido, y mientras te mueves la cadencia sigue subiendo durante 3 s, hasta un 68% más rápido en total; si te paras un cuarto de segundo, vuelve al 20%. Cada disparo hace un 25% menos de daño. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, time: 2 } },
+  { id: 'a_burst',   slot: 'action',  name: 'Dedos de salvas',      tag: 'Ráfaga de tres',      desc: 'Cada pulsación suelta tres disparos seguidos, cada uno con el 45% del daño y todos tus efectos de disparo (135% en total). El tercero deja aturdido un instante (0,4 s) al enemigo, salvo a los jefes. Disparas un 15% más despacio y el frenazo dura algo más. Sin Compás, salvo con el plano Compás.', cost: { iron: 1, venom: 2 } },
+  { id: 'a_rotary',  slot: 'action',  name: 'Dedos de molinete', tag: 'Chorro continuo',  desc: 'Mantén pulsado: tras medio segundo girando, dispara sin parar a 6,6 veces tu cadencia (unos seis disparos por segundo al principio), cada uno con el 30% del daño. Solo dispara si tienes un enemigo a tiro. Mientras lo mantienes, andas a menos de un tercio de tu velocidad. Nunca hace Compás.', cost: { iron: 2, stone: 2 } },
+  { id: 'a_draw',    slot: 'action',  name: 'Dedos tensos',    tag: 'Tensar y soltar',    desc: 'Mantén pulsado para tensar y suelta para disparar. Un toque rápido hace el 60% del daño; tensado a tope (unos 1,4 s con la cadencia base), el 220%. Con poca tensión, las palmas que disparan en línea o en abanico llegan menos lejos (desde el 60% de tu alcance). Mientras tensas andas al 40%, y disparas un 35% más despacio. Nunca hace Compás.', cost: { iron: 2, dragon: 2 } },
+  { id: 'm_std',     slot: 'mag',     name: 'Gema en bruto',       tag: 'Básica',             desc: 'La gema de serie. No añade nada a tus disparos ni tiene pegas.', base: true },
+  { id: 'm_drum',    slot: 'mag',     name: 'Gema doble',          tag: 'Dos seguidos',            desc: 'Disparas dos veces casi seguidas y luego recargas: la pausa tras el segundo disparo es un 25% más larga de lo normal. Cada disparo hace un 35% más de daño. Si el segundo da al mismo enemigo que el primero, hace además un 60% más.', cost: { iron: 1, orc: 2 } },
+  { id: 'm_belt',    slot: 'mag',     name: 'Gema candente',         tag: 'Rápida, se calienta',        desc: 'Disparas un 30% más rápido, pero cada disparo calienta los guanteletes (aro rojo a tu alrededor): unos 8 disparos seguidos lo llenan, o unos 23 con los Dedos de molinete. Si se llena, los guanteletes se bloquean 1,6 s. Se enfrían solos cuando dejas de disparar.', cost: { iron: 1, dragon: 2 } },
+  { id: 'm_charged', slot: 'mag',     name: 'Gema bendita',         tag: 'El quinto revienta', desc: 'Cada quinto disparo hace el 250% del daño y revienta en el blanco: una explosión pequeña hace el 120% de tu daño base al blanco y a los que tenga alrededor.', cost: { iron: 1, storm: 2 } },
+  { id: 'm_heavy',   slot: 'mag',     name: 'Gema de plomo',        tag: 'Empuja',             desc: 'Cada disparo hace un 30% más de daño y empuja al enemigo. Si lo estampas contra un muro, recibe un golpe extra y queda aturdido. Disparas un 20% más despacio. No empuja a los jefes.', cost: { iron: 1, stone: 2 } },
+  { id: 'm_chain',   slot: 'mag',     name: 'Gema enramada',        tag: 'Salta a otro',       desc: 'Tras dar en el blanco, el disparo salta al enemigo más cercano a él, si hay uno a poca distancia, y le hace la mitad del daño, con los efectos de tus técnicas.', cost: { iron: 1, venom: 2 } },
+  { id: 'm_silver',  slot: 'mag',     name: 'Gema de plata',        tag: 'Contra élites y jefes',       desc: 'Todo tu daño directo hace un 60% más a élites, elegidos y jefes, y un 10% menos al resto. Cada élite que matas suelta 3 de oro más (el doble).', cost: { iron: 1, shade: 2 } },
+  { id: 'm_frag',    slot: 'mag',     name: 'Gema de esquirlas',     tag: 'Estalla al matar',   desc: 'Si un disparo mata a su blanco, estalla en esquirlas: una para cada uno de los cinco enemigos más cercanos, con el 30% del daño y los efectos de tus técnicas.', cost: { iron: 1, stone: 2 } },
+  { id: 'm_blood',   slot: 'mag',     name: 'Gema de sangre',       tag: 'Pagas con vida',     desc: 'Cada disparo hace un 40% más de daño y te cuesta 1 de vida (nunca te deja por debajo de 1). Cada enemigo que muere, lo mate lo que lo mate, te cura 3.', cost: { iron: 1, feast: 2 } },
+  { id: 'm_last',    slot: 'mag',     name: 'Última gema',          tag: 'El sexto, triple',   desc: 'Cada sexto disparo hace el triple de daño. Después, los guanteletes tardan al menos 1,2 s en volver a disparar.', cost: { iron: 1, luck: 2 } },
+  { id: 'm_ice',     slot: 'mag',     name: 'Gema de escarcha',     tag: 'Frena y hiela',    desc: 'Cada disparo frena al enemigo un 30% durante 1,5 s. Si le das mientras ya va frenado, queda helado y aturdido 0,8 s; como mucho, una vez cada 3 s por enemigo. A los jefes los frena menos y no los aturde.', cost: { iron: 1, tide: 2 } },
+  { id: 'm_fire',    slot: 'mag',     name: 'Gema incendiaria',     tag: 'Fuego en el suelo',         desc: 'Cada disparo deja una llama en el suelo, donde estaba el enemigo, que dura 2 s. Cada 0,4 s clava 1 Ascua a quien esté encima.', cost: { iron: 1, dragon: 2 } },
+  { id: 'm_gold',    slot: 'mag',     name: 'Gema de oro',          tag: 'Gasta oro, pega más',   desc: 'Cada disparo gasta 1 de oro y hace un 35% más de daño. Si no te queda oro, hace un 20% menos. Cada enemigo que muere te da 1 de oro.', cost: { iron: 1, luck: 2 } },
+  { id: 'm_split',   slot: 'mag',     name: 'Gema partida',         tag: 'Se parte en dos',     desc: 'Al dar en el blanco, el disparo se parte en dos trozos que siguen hacia delante en diagonal, uno a cada lado. Cada trozo da al primer enemigo que encuentra a poca distancia, con el 35% del daño y los efectos de tus técnicas.', cost: { iron: 1, mirror: 2 } },
+  { id: 'm_mark',    slot: 'mag',     name: 'Gema de marca',       tag: 'Marca al tercero',    desc: 'Cada tercer disparo que das al mismo enemigo lo marca durante 5 s: mientras dure, recibe un 30% más de todo el daño directo.', cost: { iron: 1, light: 2 } },
+  { id: 'm_big',     slot: 'mag',     name: 'Gema gruesa',      tag: 'Salpica',            desc: 'Cada disparo hace un 20% más de daño, y hasta cuatro enemigos pegados al blanco reciben la mitad (sin efectos).', cost: { iron: 2, forge: 2 } },
+  { id: 's_roll',    slot: 'stock',   name: 'Brazal de volatinero', tag: 'Dos esquives cortos', desc: 'Tienes una carga de esquive más, pero cada esquive llega un 35% menos lejos.', cost: { iron: 1, dream: 2 } },
+  { id: 's_anchor',  slot: 'stock',   name: 'Brazal de ancla',      tag: 'Aguanta cargando', desc: 'Mientras mantienes pulsado el disparo cargado, recibes la mitad de daño.', cost: { iron: 1, tide: 2 } },
+  { id: 's_sprint',  slot: 'stock',   name: 'Brazal de corredor',   tag: 'Sin disparar, corres', desc: 'Si pasas 2 s con los guanteletes listos sin disparar, corres un 35% más rápido hasta tu siguiente disparo. Con los Dedos inquietos casi nunca se activa, porque los guanteletes disparan solos.', cost: { iron: 1, frost: 2 } },
+  { id: 's_venge',   slot: 'stock',   name: 'Brazal de rencor',     tag: 'Venganza doble',    desc: 'Cuando te golpean, tus tres siguientes disparos hacen el doble de daño. Un golpe que para la rodela o que llega mientras eres invulnerable no cuenta.', cost: { iron: 1, blood: 2 } },
+  { id: 's_gasp',    slot: 'stock',   name: 'Brazal del último aliento', tag: 'Casi muerto, corres', desc: 'Mientras tengas menos de un cuarto de tu vida, te mueves un 30% más rápido y tus esquives se recargan el doble de rápido.', cost: { iron: 1, end: 2 } },
+  { id: 'm_seed',    slot: 'mag',     name: 'Gema de bellota',      tag: 'Planta Semillas',    desc: 'Cada disparo planta una Semilla en el enemigo; a la tercera, brotan Raíces. Si llevas en tus ranuras alguna técnica de Bosque, brotan a la segunda.', cost: { iron: 1, wood: 3 }, theme: 'wood' },
+  { id: 'm_salt',    slot: 'mag',     name: 'Gema de sal',          tag: 'Empapa y empuja',    desc: 'Cada disparo deja Empapado al enemigo 3 s y lo empuja un poco. A los que ya estaban Empapados les hace un 15% más de daño. Si llevas en tus ranuras alguna técnica de Mareas, empuja el doble. No empuja a los jefes; con una técnica de Mareas, el empujón sí basta para darles el golpe de los jefes Empapados.', cost: { iron: 1, tide: 3 }, theme: 'tide' },
+  { id: 'm_saw',     slot: 'mag',     name: 'Gema serrada',         tag: 'Abre Heridas',       desc: 'Cada disparo abre una Herida (hasta 6 por enemigo). Si llevas en tus ranuras alguna técnica de Sangre, abre dos.', cost: { iron: 1, blood: 3 }, theme: 'blood' },
+  { id: 'm_quick',   slot: 'mag',     name: 'Gema de azogue',       tag: 'Repite desde detrás',  desc: 'Cada cuarto disparo vuelve desde el otro lado del enemigo y le da otra vez, con la mitad del daño y sin efectos. Si llevas en tus ranuras alguna técnica de Espejos, cada segundo disparo.', cost: { iron: 1, mirror: 3 }, theme: 'mirror' },
+  { id: 'm_star',    slot: 'mag',     name: 'Gema de lucero',       tag: 'Ilumina enemigos',            desc: 'Cada disparo deja Iluminado al enemigo 4 s, y tus disparos hacen un 12% más a los Iluminados. Si llevas en tus ranuras alguna técnica de Luz, un 25%. El reparto de daño entre Iluminados solo ocurre si llevas la técnica Señalar.', cost: { iron: 1, light: 3 }, theme: 'light' },
+  { id: 's_grave',   slot: 'stock',   name: 'Brazal de lápida',     tag: 'Levanta Sombras',    desc: 'Cada ocho enemigos que matas, el octavo se levanta como Sombra y pelea por ti. Si llevas en tus ranuras alguna técnica de Sombras, cada cinco. Los jefes no cuentan. Puedes tener 2 Sombras a la vez, más si tus técnicas suben el tope.', cost: { iron: 1, shade: 3 }, theme: 'shade' },
+  { id: 's_wine',    slot: 'stock',   name: 'Brazal de bota de vino', tag: 'Cura al matar',   desc: 'Cada enemigo que muere te cura 1; si ya tienes la vida llena, ese punto va a tu Reserva. Si llevas en tus ranuras alguna técnica de Manjares, 2.', cost: { iron: 1, feast: 3 }, theme: 'feast' },
+  { id: 's_kennel',  slot: 'stock',   name: 'Brazal de perrera',    tag: 'Cachorro que muerde',   desc: 'Un perro te acompaña y muerde cada 0,8 s al enemigo al que disparas, con el 30% de tu daño base (o lo que diga tu técnica Sabueso, si la llevas) y los efectos de tus técnicas. Tus disparos hacen un 15% más a su presa. Empieza de cachorro y crece con la Caza. Si llevas en tus ranuras alguna técnica de Bestias, tienes un perro más.', cost: { iron: 1, beast: 3 }, theme: 'beast' },
+  { id: 's_geode',   slot: 'stock',   name: 'Brazal de geoda',      tag: 'Deja Cristales',     desc: 'Cada esquive deja un Cristal donde estabas. Cada vez que disparas, hasta cuatro de tus Cristales cercanos al blanco le lanzan una esquirla con el 20% del daño, sin efectos. Si llevas en tus ranuras alguna técnica de Minerales, el 40%.', cost: { iron: 1, stone: 3 }, theme: 'stone' },
+  { id: 'm_blunt',   slot: 'mag',     name: 'Gema roma',            tag: 'El quinto aturde',   desc: 'Cada quinto disparo deja aturdido al enemigo 0,6 s. A los jefes no los aturde.', cost: { iron: 1, dream: 2 } },
+  { id: 'm_grow',    slot: 'mag',     name: 'Gema voraz',           tag: 'Más daño al matar',      desc: 'Cada enemigo que matas de un disparo sube un 2% el daño de tus disparos hasta el final de la partida, hasta +60% (30 bajas). Los jefes no cuentan.', cost: { iron: 2, blood: 2 } },
+  { id: 'm_awl',     slot: 'mag',     name: 'Gema de punzón',       tag: 'Da al de detrás',    desc: 'El disparo atraviesa al blanco y da también al primer enemigo que tenga justo detrás, a poca distancia, con el 60% del daño y los efectos de tus técnicas.', cost: { iron: 1, end: 2 } },
+  { id: 'm_timed',   slot: 'mag',     name: 'Gema de mecha',        tag: 'Explota después',    desc: 'El disparo se queda clavado y explota 1 s después, con la mitad del daño, al blanco y a los que tenga muy cerca. Si el blanco muere antes, explota donde cayó.', cost: { iron: 1, void: 2 } },
+  { id: 'm_leech',   slot: 'mag',     name: 'Gema sanguijuela',     tag: 'Cura cada 8 impactos',     desc: 'Cada 8 impactos de tus disparos te curas 2 de vida. Cada impacto cuenta por separado, también los de un disparo que da a varios enemigos.', cost: { iron: 1, frost: 2 } },
+  { id: 's_sapper',  slot: 'stock',   name: 'Brazal de zapador',    tag: 'Pegado al muro',     desc: 'Mientras estés pegado a un muro, tus disparos hacen un 30% más de daño.', cost: { iron: 1, dream: 2 } },
+  { id: 's_dance',   slot: 'stock',   name: 'Brazal de bailarín',   tag: 'Atravesar devuelve esquive',  desc: 'Atravesar a un enemigo con el esquive te devuelve una carga de esquive al momento (sin pasar de tu máximo). Solo una vez por esquive. Las estocadas de la Palma de lanza y las embestidas de las Brasas de embestida y de trueno cuentan como un esquive cada una: no gastan carga, así que te recargan una gastada.', cost: { iron: 1, mirror: 2 } },
+  { id: 's_tower',   slot: 'stock',   name: 'Brazal de torre',      tag: 'Sin esquive, más duro',        desc: 'No puedes esquivar. A cambio, recibes un 30% menos de daño y tus disparos hacen un 25% más. Tus técnicas de Esquive y las piezas que dependen de esquivar dejan de servirte.', cost: { iron: 2, forge: 2 } },
+  { id: 's_loot',    slot: 'stock',   name: 'Brazal de saqueador',  tag: 'Más oro',            desc: 'Todo el oro que ganas aumenta un 50%: el de las bajas, el de las salas y el de los premios.', cost: { iron: 1, light: 2 } },
+  { id: 's_wind',    slot: 'stock',   name: 'Brazal de segundo aire', tag: 'Cura de emergencia', desc: 'Una vez por sala, si un golpe te deja por debajo del 30% de tu vida, recuperas de golpe el 20% de tu vida máxima.', cost: { iron: 1, void: 2 } },
+  { id: 's_spring',  slot: 'stock',   name: 'Brazal de muelle',     tag: 'Salto tras disparar', desc: 'Tras cada disparo das un salto corto hacia donde mueves el stick. Así disparas y te apartas a la vez. Si no te mueves, no saltas.', cost: { iron: 1, wood: 2 } },
+  { id: 's_shield',  slot: 'stock',   name: 'Brazal con rodela',    tag: 'Bloquea un golpe',      desc: 'Una rodela para por completo el siguiente golpe que te llegue. Después tarda 6 s en volver; cuando está lista, la ves girar a tu lado.', cost: { iron: 2, stone: 2 } },
+  { id: 's_scope',   slot: 'stock',   name: 'Brazal de catalejo',   tag: 'Primer disparo fuerte',        desc: 'El primer impacto que das a cada enemigo hace un 80% más de daño. Además, tus disparos llegan un 15% más lejos.', cost: { iron: 1, storm: 2 } },
+  { id: 's_spikes',  slot: 'stock',   name: 'Brazal de púas',       tag: 'Esquive que hiere',  desc: 'Atravesar a un enemigo con el esquive le hace el 150% de tu daño base y lo deja aturdido 0,5 s. A los jefes no los aturde.', cost: { iron: 1, venom: 2 } },
+  { id: 's_bone',    slot: 'stock',   name: 'Brazal de hueso',  tag: 'Herido, dispara más', desc: 'Cuanta menos vida tienes, más rápido disparas: empieza por debajo del 75% de tu vida y llega a un 50% más con un cuarto de vida o menos.', cost: { iron: 1, orc: 2 } },
+  { id: 's_std',     slot: 'stock',   name: 'Brazal de cuero',      tag: 'Básica',             desc: 'El brazal de serie. No cambia nada al moverte ni al aguantar golpes.', base: true },
+  { id: 's_light',   slot: 'stock',   name: 'Brazal de pluma',     tag: 'Esquive mejor',   desc: 'Tu esquive llega un 30% más lejos y se recarga un 35% antes. Al salir del esquive, los guanteletes ya están listos para disparar. A cambio, tus disparos hacen un 10% menos de daño.', cost: { iron: 1, time: 2 } },
+  { id: 's_heavy',   slot: 'stock',   name: 'Brazal herrado',       tag: 'Codazo automático',           desc: 'Tus disparos hacen un 25% más de daño, pero el frenazo de cada disparo dura un 30% más. Si un enemigo se te pega, le das un codazo: el 80% de tu daño base, lo aparta y lo deja aturdido 0,6 s. Como mucho uno cada 2,5 s. No funciona con jefes.', cost: { iron: 1, orc: 2 } },
+  { id: 's_recoil',  slot: 'stock',   name: 'Brazal de coz',        tag: 'Te aleja al disparar',     desc: 'Cada disparo te empuja un paso hacia atrás, lejos del enemigo al que disparas. Te alejas sin mover el stick. No funciona con la Palma de lanza ni mientras esquivas.', cost: { iron: 1, feast: 2 } },
+  { id: 's_brace',   slot: 'stock',   name: 'Brazal de pilar',            tag: 'Quieto pega más',    desc: 'Si llevas medio segundo sin moverte, tus disparos hacen un 40% más de daño y llegan un 20% más lejos. En cuanto te mueves o esquivas, se pierde.', cost: { iron: 1, shade: 2 } },
+  { id: 'c_beam',    slot: 'chamber', name: 'Brasa de rayo',     tag: 'Rayo en línea',      desc: 'El disparo cargado es un rayo recto que atraviesa a todos los enemigos en línea, con todo el daño del cargado. Los muros lo cortan. Con la técnica Aliento (Dragones) se abre en cono; con el plano Mortero, se convierte en un proyectil que explota en área.', base: true },
+  { id: 'c_fan',     slot: 'chamber', name: 'Brasa de pavesas', tag: 'Abanico de nueve',   desc: 'El disparo cargado suelta nueve disparos en abanico delante de ti, a corta distancia. Cada uno hace el 22% del daño del cargado y lleva tus efectos de disparo.', cost: { iron: 1, storm: 2 } },
+  { id: 'c_rain',    slot: 'chamber', name: 'Brasa de aluvión',  tag: 'Lluvia sobre zona',  desc: 'El disparo cargado hace llover fuego tres veces sobre una zona redonda: sobre tu objetivo o, si apuntas con el stick, delante de ti. Cada oleada hace el 45% del daño del cargado a todos los de la zona.', cost: { iron: 1, venom: 2 } },
+  { id: 'c_supp',    slot: 'chamber', name: 'Brasa de torbellino', tag: 'Dispara sola 3 s', desc: 'Tras el disparo cargado, la brasa sigue disparando sola casi 3 s desde donde lo lanzaste, mientras tú te mueves: 36 disparos a enemigos al azar que estén a tiro, cada uno con el 9% del daño del cargado y tus efectos de disparo. También enfría del todo los guanteletes.', cost: { iron: 2, stone: 2 } },
+  { id: 'c_dash',    slot: 'chamber', name: 'Brasa de embestida', tag: 'Carga que atraviesa', desc: 'El disparo cargado te lanza en una carga larga hacia donde apuntas. No pueden golpearte durante la carga, y cada enemigo que atraviesas recibe el 60% del daño del cargado. Cuenta como atravesar a un enemigo con el esquive.', cost: { iron: 2, shade: 2 } },
+  { id: 'c_blast',   slot: 'chamber', name: 'Brasa de trueno',   tag: 'Chispas y retroceso', desc: 'El disparo cargado suelta quince chispas a muy corta distancia, cada una con el 22% del daño del cargado y tus efectos de disparo. Los enemigos alcanzados salen empujados y quedan aturdidos 0,5 s; a los jefes ni los empuja ni los aturde. El retroceso te lanza hacia atrás.', cost: { iron: 2, feast: 2 } },
+  { id: 'c_mine',    slot: 'chamber', name: 'Brasa de minas',    tag: 'Tres minas',         desc: 'El disparo cargado deja tres minas a tu espalda. Duran 12 s y revientan cuando un enemigo las pisa, con el 90% del daño del cargado en área. Los enemigos voladores no las activan.', cost: { iron: 1, wood: 2 } },
+  { id: 'c_nova',    slot: 'chamber', name: 'Brasa de anillo',   tag: 'Onda que aparta',    desc: 'El disparo cargado suelta una onda a tu alrededor que hace el 70% del daño del cargado y lanza lejos a los enemigos cercanos. Si alguno choca contra un muro, recibe el golpe extra. A los jefes no los mueve.', cost: { iron: 2, tide: 2 } },
+  { id: 'c_turret',  slot: 'chamber', name: 'Brasa de centinela', tag: 'Guantelete fijo que dispara', desc: 'El disparo cargado deja clavado un guantelete gemelo donde estás. Durante 6 s dispara solo al enemigo más cercano a tiro, a tu cadencia, con el 80% de tu daño base y los efectos de tus técnicas. No lleva los efectos de tus piezas ni pone Sentencia.', cost: { iron: 2, time: 2 } },
+  { id: 'c_snipe',   slot: 'chamber', name: 'Brasa de verdugo',  tag: 'Un tiro al más fuerte', desc: 'El disparo cargado es un único tiro al enemigo con más vida que tengas a la vista, con el doble de daño de un cargado normal. Si lo mata, el cargado vuelve a estar listo al instante.', cost: { iron: 2, luck: 3 } },
+  { id: 'c_meteor',  slot: 'chamber', name: 'Brasa de meteoro',  tag: 'Meteoro',      desc: 'El disparo cargado marca un punto (tu objetivo, o delante de ti si apuntas con el stick) y 1 s después cae allí un meteoro: el 160% del daño del cargado en un área grande, y aturde 0,5 s.', cost: { iron: 2, void: 2 } },
+  { id: 'c_chain',   slot: 'chamber', name: 'Brasa de cadena',   tag: 'Salta entre seis',   desc: 'El disparo cargado es un rayo que da al enemigo más cercano a donde apuntas y salta de enemigo en enemigo, hasta seis. Cada uno recibe el 80% del daño del cargado, sin perder fuerza en los saltos.', cost: { iron: 2, storm: 2 } },
+  { id: 'c_balm',    slot: 'chamber', name: 'Brasa de bálsamo',  tag: 'Te cura',            desc: 'El disparo cargado no dispara: te cura el 10% de tu vida máxima y aparta a los enemigos que tienes encima. Tus técnicas de Cargado sí se aplican a esos enemigos.', cost: { iron: 2, feast: 3 } },
+  { id: 'c_bounce',  slot: 'chamber', name: 'Brasa de carambola', tag: 'Rebota cinco veces', desc: 'El disparo cargado es un rayo que rebota en los muros hasta cinco veces. Hace el 60% del daño del cargado a todo lo que cruza en cada tramo, así que puede dar varias veces al mismo enemigo.', cost: { iron: 2, mirror: 2 } },
+  { id: 'c_volley',  slot: 'chamber', name: 'Brasa de salva',    tag: 'Ocho seguidos',      desc: 'El disparo cargado suelta ocho disparos seguidos contra tu objetivo, o contra el enemigo más cercano a donde apuntas. Cada uno hace el 20% del daño del cargado y lleva tus efectos de disparo.', cost: { iron: 2, beast: 2 } },
+  { id: 'c_sima',    slot: 'chamber', name: 'Brasa de sima',     tag: 'Abre un pozo',       desc: 'El disparo cargado abre un pozo de 2 s donde apuntas: arrastra a los enemigos cercanos, les hace el 15% del daño del cargado cada medio segundo y al cerrarse estalla con el 80%. Si llevas en tus ranuras alguna técnica de Vacío, dura 4 s. A los jefes no los arrastra.', cost: { iron: 2, void: 3 }, theme: 'void' },
+  { id: 'c_doom',    slot: 'chamber', name: 'Brasa de sentencia', tag: 'Pone Sentencias',   desc: 'El disparo cargado es un rayo en línea que pone una Sentencia de 5 s a todos los que atraviesa y les hace el 60% del daño del cargado. No necesita ninguna técnica de Final: al cumplirse, cada Sentencia devuelve el 40% del daño que le hiciste. Si llevas en tus ranuras alguna técnica de Final, todas tus Sentencias devuelven un 50% más. No renueva una Sentencia que ya esté en marcha.', cost: { iron: 2, end: 3 }, theme: 'end' },
+  { id: 'c_anvil',   slot: 'chamber', name: 'Brasa de yunque',   tag: 'Da Temple',          desc: 'El disparo cargado es un martillazo a tu alrededor: el 90% del daño del cargado, y aturde 0,5 s. Cada enemigo golpeado te da 1 de Temple (hasta tu máximo, 10 sin más ayudas); si llevas en tus ranuras alguna técnica de Forja, 2. El Temple te suma daño aunque no lleves técnicas de Forja.', cost: { iron: 2, forge: 3 }, theme: 'forge' },
+  { id: 'c_ward',    slot: 'chamber', name: 'Brasa de baluarte', tag: 'Invulnerable 2 s', desc: 'El disparo cargado no ataca: eres invulnerable 2 s y apartas a los enemigos que tienes encima. Tus técnicas de Cargado sí se aplican a esos enemigos.', cost: { iron: 2, frost: 2 } },
+  { id: 'c_blink',   slot: 'chamber', name: 'Brasa de salto',    tag: 'Te lleva allí',      desc: 'El disparo cargado te lleva al instante junto a tu objetivo, o a donde apuntas, y revienta al llegar: el 80% del daño del cargado en área. Al aparecer eres invulnerable un instante.', cost: { iron: 2, mirror: 2 } },
+  { id: 'c_drain',   slot: 'chamber', name: 'Brasa de sanguijuela', tag: 'Rayo que cura',   desc: 'El disparo cargado es un rayo en línea que hace el 90% del daño del cargado. Recuperas como vida el 30% de todo el daño que hace, hasta un 25% de tu vida máxima.', cost: { iron: 2, blood: 2 } },
+  { id: 'c_brand',   slot: 'chamber', name: 'Brasa de condena',  tag: 'Marca a todos',      desc: 'El disparo cargado marca a todos los enemigos que tienes a la vista y les hace el 30% del daño del cargado. Durante 6 s, los marcados reciben un 30% más de todo el daño directo.', cost: { iron: 2, light: 2 } },
+  { id: 'c_quake',   slot: 'chamber', name: 'Brasa de terremoto', tag: 'Aturde la sala',    desc: 'El disparo cargado sacude toda la sala: cada enemigo que pisa el suelo recibe un 30% del daño del cargado y queda aturdido 1 s. No afecta a los voladores, y a los jefes no los aturde.', cost: { iron: 2, beast: 2 } },
 ];
 const PART = Object.fromEntries(PARTS.map(x => [x.id, x]));
 const BASE_GUN = { barrel: 'b_long', action: 'a_bolt', mag: 'm_std', stock: 's_std', chamber: 'c_beam' };
-// Armas legendarias: tres piezas concretas montadas a la vez forman un arma con nombre propio y un poder que ninguna pieza tiene sola.
-// Las cuatro primeras llevan el nombre de armas reales; la última es de este mundo. El plan es que haya muchas más.
+// Guanteletes legendarios: tres piezas concretas montadas a la vez forman unos guanteletes con nombre propio y un poder que ninguna pieza tiene sola.
+// Las cuatro primeras llevaban nombres de armas reales; ahora son de este mundo. Los id no cambian.
 const LEGENDS = [
-  { id: 'monsmeg',  name: 'Mons Meg',            parts: ['b_bomb', 'm_heavy', 's_brace'],   lore: 'Una bombarda de asedio del siglo XV, de las mayores que se forjaron.', desc: 'Necesitas montar a la vez Bombarda, Bala de cañón y Horquilla. Tus bombas revientan en un área un 60% más grande y dejan aturdidos 0,6 s a todos los que alcanzan (a los jefes no).' },
-  { id: 'zhuge',    name: 'Zhuge Nu',            parts: ['a_draw', 'm_drum', 's_light'],    lore: 'La ballesta de repetición china: poco golpe, muchos virotes, a veces envenenados.', desc: 'Necesitas montar a la vez Torno de ballesta, Doble carga y Culata de fresno. Cada vez que sueltas la ballesta salen dos virotes más tras el primero, con el 70% del daño. El primero y cada virote extra ponen 2 de Veneno.' },
-  { id: 'organ',    name: 'Órgano de Leonardo',  parts: ['a_rotary', 'b_twin', 'm_belt'],   lore: 'Treinta y tres cañones en tres filas: una dispara, otra recarga, otra se enfría.', desc: 'Necesitas montar a la vez Manivela de ribadoquín, Pistoletes gemelos y Pólvora viva. El arma ya no se bloquea al recalentarse: cuando el calor se llena, suelta una salva de once disparos repartidos entre los enemigos cercanos (60% de tu daño base cada uno, con tus efectos de disparo) y se enfría del todo.' },
-  { id: 'dragon',   name: 'Dragón',              parts: ['b_scatter', 'a_semi', 's_light'], lore: 'El trabuco corto llamado dragón; según la explicación más repetida, de él tomaron su nombre los dragones de caballería.', desc: 'Necesitas montar a la vez Trabuco, Llave de chispa y Culata de fresno. Cada andanada clava 2 Ascuas a cada enemigo que toca y deja delante de ti, durante 2 s, una franja de llamas que clava 1 Ascua cada 0,4 s a quien la pise.' },
-  { id: 'widow',    name: 'La Viuda',            parts: ['b_blow', 'm_saw', 's_spikes'],    lore: 'Una cerbatana de hueso que nadie ha visto usar dos veces contra el mismo hombre.', desc: 'Necesitas montar a la vez Cerbatana, Bala serrada y Culata de púas. Cada Herida que abres pone también 1 de Veneno. A los enemigos que tienen Heridas y Veneno a la vez, las dos cosas les hacen el doble de daño.' },
-  { id: 'winter',   name: 'Invierno del Norte',  parts: ['b_icicle', 'm_ice', 'c_nova'],    lore: 'Forjada en una fragua que se apagó sola. El hierro nunca volvió a calentarse.', desc: 'Necesitas montar a la vez Carámbano, Bala de escarcha y Recámara de anillo. La onda del disparo cargado deja Congelados al instante a todos los que alcanza. A los jefes solo los frena.' },
-  { id: 'choir',    name: 'El Coro',             parts: ['a_glass', 'm_quick', 'c_volley'], lore: 'Dispara una vez y se oyen nueve. Los que la han oído dicen que canta.', desc: 'Necesitas montar a la vez Llave de clepsidra, Bala de azogue y Recámara de salva. Cada uno de los ocho disparos de la salva cargada deja un eco que vuelve a dar 0,8 s después, con el 15% del daño del cargado y los efectos de tus técnicas.' },
-  { id: 'pack',     name: 'La Jauría',           parts: ['s_kennel', 'b_swarm', 'a_rider'], lore: 'El maestro de Alec decía que un arma con perros no necesita puntería.', desc: 'Necesitas montar a la vez Culata de perrera, Avispero y Llave de jinete. Tienes dos perros más luchando a tu lado, además del de la Culata de perrera. Crecen con la Caza como los demás, y la manada nunca pasa de seis.' },
-  { id: 'blacksun', name: 'Sol Negro',           parts: ['c_sima', 'm_star', 'b_far'],      lore: 'Una luz que no alumbra: solo señala dónde va a caer todo.', desc: 'Necesitas montar a la vez Recámara de sima, Bala de lucero y Largavista. Los enemigos que estén dentro de cualquiera de tus pozos quedan Iluminados y reciben un 50% más de todo el daño directo mientras sigan dentro.' },
-  { id: 'master',   name: 'Martillo del Maestro', parts: ['c_anvil', 'a_kick', 'm_big'],    lore: 'Lo último que forjó el herrero que crio a Alec. No llegó a templarlo.', desc: 'Necesitas montar a la vez Recámara de yunque, Llave de trueno y Bala de calibre. El Temple puede subir 10 puntos más, y cada cañonazo de la Llave de trueno revienta alrededor del blanco con el 100% de tu daño base.' },
-  { id: 'lastword', name: 'La Última Palabra',   parts: ['c_doom', 'a_spring', 'm_last'],   lore: 'Seis balas. La sexta no falla porque ya está escrito.', desc: 'Necesitas montar a la vez Recámara de sentencia, Llave de resorte y Última bala. El sexto disparo de la Última bala cumple al instante todas las Sentencias que haya en la sala.' },
-  { id: 'tempest',  name: 'Tempestad',           parts: ['b_rod', 'a_rotary', 'm_chain'],   lore: 'Hay que sujetarla con guantes. Aun así, muerde.', desc: 'Necesitas montar a la vez Vara de cobre, Manivela de ribadoquín y Bala enramada. Los enemigos se descargan solos al juntar 3 Agujas de la Vara de cobre, en vez de 6. Funciona también con la técnica Sobrecarga (Tormenta): se descargan a las 3 y no llegan a las 6 de Sobrecarga.' },
-  { id: 'breaker',  name: 'La Rompemuros',       parts: ['b_pierce', 'm_heavy', 's_heavy'], lore: 'Dicen que el herrero la forjó en una vida anterior y que aún recuerda cada muro.', desc: 'Necesitas montar a la vez Culebrina, Bala de cañón y Culata herrada. El disparo de la Culebrina rebota hasta cuatro veces en vez de una, y cada rebote hace un 25% más de daño que el anterior.' },
+  { id: 'monsmeg',  name: 'Puño del Volcán',     parts: ['b_bomb', 'm_heavy', 's_brace'],   lore: 'Dicen que quien los forjó quiso meter una montaña entera en un puño.', desc: 'Necesitas montar a la vez Palma de volcán, Gema de plomo y Brazal de pilar. Tus orbes revientan en un área un 60% más grande y dejan aturdidos 0,6 s a todos los que alcanzan (a los jefes no).' },
+  { id: 'zhuge',    name: 'Nido de Áspides',     parts: ['a_draw', 'm_drum', 's_light'],    lore: 'Poco golpe y muchas picaduras, todas envenenadas.', desc: 'Necesitas montar a la vez Dedos tensos, Gema doble y Brazal de pluma. Cada vez que sueltas los Dedos tensos salen dos disparos más tras el primero, con el 70% del daño. El primero y cada disparo extra ponen 2 de Veneno.' },
+  { id: 'organ',    name: 'Órgano de Brasas',    parts: ['a_rotary', 'b_twin', 'm_belt'],   lore: 'Treinta y tres brasas en tres filas: una arde, otra prende, otra se enfría.', desc: 'Necesitas montar a la vez Dedos de molinete, Palmas gemelas y Gema candente. Los guanteletes ya no se bloquean al recalentarse: cuando el calor se llena, sueltan una salva de once disparos repartidos entre los enemigos cercanos (60% de tu daño base cada uno, con tus efectos de disparo) y se enfrían del todo.' },
+  { id: 'dragon',   name: 'Dragón',              parts: ['b_scatter', 'a_semi', 's_light'], lore: 'Guanteletes de escama que escupen fuego en abanico. Quien los ha visto de cerca no pregunta por el nombre.', desc: 'Necesitas montar a la vez Palma de abanico, Dedos de chispa y Brazal de pluma. Cada andanada clava 2 Ascuas a cada enemigo que toca y deja delante de ti, durante 2 s, una franja de llamas que clava 1 Ascua cada 0,4 s a quien la pise.' },
+  { id: 'widow',    name: 'La Viuda',            parts: ['b_blow', 'm_saw', 's_spikes'],    lore: 'Unos guanteletes de hueso que nadie ha visto usar dos veces contra el mismo hombre.', desc: 'Necesitas montar a la vez Palma de víbora, Gema serrada y Brazal de púas. Cada Herida que abres pone también 1 de Veneno. A los enemigos que tienen Heridas y Veneno a la vez, las dos cosas les hacen el doble de daño.' },
+  { id: 'winter',   name: 'Invierno del Norte',  parts: ['b_icicle', 'm_ice', 'c_nova'],    lore: 'Forjados en una fragua que se apagó sola. El hierro nunca volvió a calentarse.', desc: 'Necesitas montar a la vez Palma de carámbano, Gema de escarcha y Brasa de anillo. La onda del disparo cargado deja Congelados al instante a todos los que alcanza. A los jefes solo los frena.' },
+  { id: 'choir',    name: 'El Coro',             parts: ['a_glass', 'm_quick', 'c_volley'], lore: 'Disparan una vez y se oyen nueve. Los que los han oído dicen que cantan.', desc: 'Necesitas montar a la vez Dedos de clepsidra, Gema de azogue y Brasa de salva. Cada uno de los ocho disparos de la salva cargada deja un eco que vuelve a dar 0,8 s después, con el 15% del daño del cargado y los efectos de tus técnicas.' },
+  { id: 'pack',     name: 'La Jauría',           parts: ['s_kennel', 'b_swarm', 'a_rider'], lore: 'El maestro de Alec decía que quien caza con perros no necesita puntería.', desc: 'Necesitas montar a la vez Brazal de perrera, Palma de avispero y Dedos de jinete. Tienes dos perros más luchando a tu lado, además del del Brazal de perrera. Crecen con la Caza como los demás, y la manada nunca pasa de seis.' },
+  { id: 'blacksun', name: 'Sol Negro',           parts: ['c_sima', 'm_star', 'b_far'],      lore: 'Una luz que no alumbra: solo señala dónde va a caer todo.', desc: 'Necesitas montar a la vez Brasa de sima, Gema de lucero y Palma de vigía. Los enemigos que estén dentro de cualquiera de tus pozos quedan Iluminados y reciben un 50% más de todo el daño directo mientras sigan dentro.' },
+  { id: 'master',   name: 'Martillo del Maestro', parts: ['c_anvil', 'a_kick', 'm_big'],    lore: 'Lo último que forjó el herrero que crio a Alec. No llegó a templarlo.', desc: 'Necesitas montar a la vez Brasa de yunque, Dedos de trueno y Gema gruesa. El Temple puede subir 10 puntos más, y cada trueno de los Dedos de trueno revienta alrededor del blanco con el 100% de tu daño base.' },
+  { id: 'lastword', name: 'La Última Palabra',   parts: ['c_doom', 'a_spring', 'm_last'],   lore: 'Seis disparos. El sexto no falla porque ya está escrito.', desc: 'Necesitas montar a la vez Brasa de sentencia, Dedos de resorte y Última gema. El sexto disparo de la Última gema cumple al instante todas las Sentencias que haya en la sala.' },
+  { id: 'tempest',  name: 'Tempestad',           parts: ['b_rod', 'a_rotary', 'm_chain'],   lore: 'Hay que calzárselos con cuidado. Aun así, muerden.', desc: 'Necesitas montar a la vez Palma de cobre, Dedos de molinete y Gema enramada. Los enemigos se descargan solos al juntar 3 Agujas de la Palma de cobre, en vez de 6. Funciona también con la técnica Sobrecarga (Tormenta): se descargan a las 3 y no llegan a las 6 de Sobrecarga.' },
+  { id: 'breaker',  name: 'La Rompemuros',       parts: ['b_pierce', 'm_heavy', 's_heavy'], lore: 'Dicen que el herrero los forjó en una vida anterior y que aún recuerdan cada muro.', desc: 'Necesitas montar a la vez Palma de venablo, Gema de plomo y Brazal herrado. El disparo de la Palma de venablo rebota hasta cuatro veces en vez de una, y cada rebote hace un 25% más de daño que el anterior.' },
 ];
 const legOf = g => LEGENDS.find(L => L.parts.every(id => g[PART[id].slot] === id)) || null;
-// El nombre del arma sale de lo que lleva montado
+// El nombre de los guanteletes sale de lo que llevan montado: «Guanteletes de <palma> y <dedos>»
 function gunName(g) {
   { const L = legOf(g); if (L) return L.name; }
-  const B = g.barrel, A = g.action, suf = { a_semi: ' de chispa', a_burst: ' de salvas', a_fuse: ' de mecha lenta', a_auto: ' de gatillo fino', a_pend: ' de péndulo', a_hold: ' de retén', a_spring: ' de resorte', a_alt: ' alterno', a_combo: ' de insistencia', a_drum: ' de tambor', a_fly: ' de volante', a_fin: ' de remate', a_firm: ' de pie firme', a_rota: ' de ronda', a_over: ' de sobrecarga', a_glass: ' de clepsidra', a_dice: ' de tahúr', a_nana: ' de nana', a_rider: ' de jinete', a_kick: ' de trueno' }[A] || '';
-  if (B === 'b_spike') return A === 'a_rotary' ? 'Berbiquí de guerra' : A === 'a_draw' ? 'Pica de carga' : A === 'a_burst' ? 'Tridente' : A === 'a_semi' ? 'Estoque' : 'Lanza';
-  if (A === 'a_draw') return B === 'b_pierce' ? 'Ballesta de asedio' : B === 'b_twin' ? 'Ballesta doble' : B === 'b_scatter' ? 'Ballesta de virotes' : B === 'b_short' ? 'Ballesta de mano' : B === 'b_bomb' ? 'Onagro' : 'Ballesta';
-  if (A === 'a_rotary') return B === 'b_scatter' ? 'Órgano de metralla' : B === 'b_twin' ? 'Ribadoquines gemelos' : B === 'b_short' ? 'Ribadoquín ligero' : B === 'b_pierce' ? 'Órgano de culebrinas' : B === 'b_bomb' ? 'Batería de bombardas' : 'Ribadoquín';
-  if (B === 'b_scatter') return 'Trabuco' + suf;
-  if (B === 'b_twin') return 'Pistoletes gemelos' + suf;
-  if (B === 'b_short') return 'Pistolete' + suf;
-  if (B === 'b_pierce') return 'Culebrina' + suf;
-  if (B === 'b_bomb') return A === 'a_semi' ? 'Mortero de mano' : 'Bombarda' + suf;
-  if (B === 'b_horn') return 'Bocina de trueno';
-  if (B === 'b_drill') return 'Berbiquí' + suf;
-  if (B === 'b_ghost') return 'Ballesta fantasma' + suf;
-  if (B === 'b_net') return 'Lanzarredes' + suf;
-  if (B === 'b_ends') return 'Ballesta de dos distancias' + suf;
-  if (B === 'b_blow') return 'Cerbatana' + suf;
-  if (B === 'b_wyrm') return 'Boca de sierpe' + suf;
-  if (B === 'b_rod') return 'Vara de cobre' + suf;
-  if (B === 'b_icicle') return 'Carámbano' + suf;
-  if (B === 'b_boom') return 'Hoz arrojadiza';
-  if (B === 'b_nail') return 'Clavera' + suf;
-  if (B === 'b_arc') return 'Cañón de eslabones' + suf;
-  if (B === 'b_far') return 'Largavista' + suf;
-  if (B === 'b_swarm') return 'Avispero' + suf;
-  if (B === 'b_fork') return 'Espingarda triple' + suf;
-  if (B === 'b_harpoon') return 'Arpón' + suf;
-  if (B === 'b_flame') return 'Sifón de fuego';
-  if (B === 'b_back') return 'Ballesta de dos caras' + suf;
-  if (B === 'b_flail') return 'Mangual';
-  return 'Ballesta' + suf;
+  const palm = { b_long: 'fragua', b_short: 'palma presta', b_twin: 'palmas gemelas', b_scatter: 'abanico', b_pierce: 'venablo', b_bomb: 'volcán', b_spike: 'lanza', b_fork: 'tridente', b_harpoon: 'arpón', b_flame: 'fuelle', b_back: 'dos caras', b_flail: 'mangual', b_boom: 'hoz', b_nail: 'espinas', b_arc: 'eslabones', b_far: 'vigía', b_swarm: 'avispero', b_blow: 'víbora', b_wyrm: 'sierpe', b_rod: 'cobre', b_icicle: 'carámbano', b_horn: 'bramido', b_drill: 'berbiquí', b_ghost: 'palma fantasma', b_net: 'red', b_ends: 'dos distancias' }[g.barrel] || 'fragua';
+  const suf = { a_semi: ' y chispa', a_burst: ' y salvas', a_fuse: ' y rescoldo', a_auto: ' y dedos inquietos', a_pend: ' y péndulo', a_hold: ' y retén', a_spring: ' y resorte', a_alt: ' y dedos alternos', a_combo: ' e insistencia', a_drum: ' y tambor', a_fly: ' y volante', a_fin: ' y remate', a_firm: ' y estatua', a_rota: ' y ronda', a_over: ' y sobrecarga', a_glass: ' y clepsidra', a_dice: ' y tahúr', a_nana: ' y nana', a_rider: ' y jinete', a_kick: ' y trueno', a_rotary: ' y molinete', a_draw: ' y dedos tensos' }[g.action] || '';
+  return 'Guanteletes de ' + palm + suf;
 }
-// Resonancias: cierta pieza del arma con cierta técnica de una deidad despiertan algo nuevo. Se activan solas.
+// Resonancias: cierta pieza de los guanteletes con cierta técnica de una deidad despiertan algo nuevo. Se activan solas.
 const RESO = [
-  { id: 'dragonbreath', name: 'Aliento de dragón',   parts: ['b_scatter'], techs: ['dragon_basic'], desc: 'Necesitas el Trabuco en el arma y la técnica Colmillo al rojo (Disparo de Dragones, o un dúo con ella). Cada andanada deja también delante de ti una franja de fuego durante 2,2 s, que clava 1 Ascua cada 0,4 s a quien la pise.' },
-  { id: 'leadstorm',    name: 'Tormenta de plomo',   parts: ['a_rotary'],  techs: ['storm_basic'],  desc: 'Necesitas la Manivela de ribadoquín en el arma y la técnica Aguja estática (Disparo de Tormenta, o un dúo con ella). Cada diez disparos, las Agujas de tu objetivo se descargan solas.' },
-  { id: 'quarry',       name: 'Barreno',             parts: ['b_pierce'],  techs: ['stone_basic'],  desc: 'Necesitas la Culebrina en el arma y la técnica Esquirla (Disparo de Minerales, o un dúo con ella). Cada disparo deja un Cristal junto a cada enemigo que atraviesa, hasta tres por disparo. El tramo del rebote no deja Cristales.' },
-  { id: 'firingline',   name: 'Línea de tiro',       parts: ['b_twin'],    techs: ['shade_basic'],  desc: 'Necesitas los Pistoletes gemelos en el arma y la técnica Marca de tumba (Disparo de Sombras, o un dúo con ella). Cada vez que disparas, cada una de tus Sombras dispara también al enemigo más cercano a ella, con el 30% de tu daño base y los efectos de tus técnicas.' },
-  { id: 'executor',     name: 'Verdugo',             parts: ['b_spike'],   techs: ['orc_dodge'],    desc: 'Necesitas el Asta en el arma y la técnica Embestida (Esquive de Orcos, o un dúo con ella). Cada estocada del Asta deja aturdido al enemigo 0,4 s y te da 15 de Furia.' },
-  { id: 'clockwork',    name: 'Reloj de cuerda',     parts: ['a_draw'],    techs: ['time_basic'],   desc: 'Necesitas el Torno de ballesta en el arma y la técnica Segundero (Disparo de Tiempo, o un dúo con ella). Un disparo tensado a tope deja dos ecos en vez de uno; el segundo llega 0,35 s después del primero.' },
-  { id: 'leadfeast',    name: 'Banquete de plomo',   parts: ['m_drum'],    techs: ['feast_basic'],  desc: 'Necesitas la Doble carga en el arma y la técnica Bocado (Disparo de Manjares, o un dúo con ella). Cada recarga te cura 4, y el primer disparo tras recargar te cura el triple de lo que cura Bocado.' },
-  { id: 'acidrain',     name: 'Lluvia ácida',        parts: ['c_rain'],    techs: ['venom_charge'], desc: 'Necesitas la Recámara de aluvión en el arma y la técnica Purga (Cargado de Veneno, o un dúo con ella). El aluvión deja la zona convertida en un charco tóxico durante 5 s, que pone 2 de Veneno cada 0,4 s a quien esté dentro.' },
-  { id: 'furnace',      name: 'Fragua viva',         parts: ['m_belt'],    techs: ['orc_basic'],    desc: 'Necesitas la Pólvora viva en el arma y la técnica Tambor de guerra (Disparo de Orcos, o un dúo con ella). Cuanto más caliente está el arma, más daño hacen tus disparos: hasta un 40% más con el calor al máximo. Al recalentarse, suelta una explosión a tu alrededor (250% de tu daño base) que aparta a los enemigos.' },
-  { id: 'vigil',        name: 'Vigilia',             parts: ['s_brace'],   techs: ['time_passive'], desc: 'Necesitas la Horquilla en el arma y la técnica Reloj de arena (Pasiva de Tiempo, o un dúo con ella). Mientras la Horquilla está activa (medio segundo quieto), tus disparos frenan un 60% durante 1 s a quien alcanzan.' },
-  { id: 'firerain',     name: 'Lluvia de brasas',    parts: ['b_bomb'],    techs: ['dragon_charge'], desc: 'Necesitas la Bombarda en el arma y la técnica Aliento (Cargado de Dragones, o un dúo con ella). Cada bomba deja un charco de fuego de 2,5 s donde revienta, que clava 1 Ascua cada 0,4 s a quien lo pise.' },
-  { id: 'pinball',      name: 'Carambola',           parts: ['b_pierce'],  techs: ['storm_basic'],  desc: 'Necesitas la Culebrina en el arma y la técnica Aguja estática (Disparo de Tormenta, o un dúo con ella). En el tramo tras el rebote, el disparo descarga las Agujas de cada enemigo al que da.' },
-  { id: 'cavalry',      name: 'Carga de caballería', parts: ['c_dash'],    techs: ['dragon_dodge'], desc: 'Necesitas la Recámara de embestida en el arma y la técnica Vuelo (Esquive de Dragones, o un dúo con ella). La carga del disparo cargado deja un rastro de fuego de 3 s (2 Ascuas cada 0,4 s) y explota al terminar con el 200% de tu daño base.' },
-  { id: 'coldiron',     name: 'Hierro frío',         parts: ['m_ice'],     techs: ['frost_basic'],  desc: 'Necesitas la Bala de escarcha en el arma y la técnica Aliento helado (Disparo de Hielo, o un dúo con ella). Cada disparo pone 1 de Escarcha más.' },
-  { id: 'packhunt',     name: 'Montería',            parts: ['b_swarm'],   techs: ['beast_basic'],  desc: 'Necesitas el Avispero en el arma y la técnica Sabueso (Disparo de Bestias, o un dúo con ella). Con cada andanada del Avispero, tu sabueso salta al primer enemigo alcanzado y lo muerde con el 60% de tu daño base.' },
-  { id: 'deathclock',   name: 'Hora señalada',       parts: ['a_spring'],  techs: ['end_basic'],    desc: 'Necesitas la Llave de resorte en el arma y la técnica Sentencia (Disparo de Final, o un dúo con ella). Si disparas tras esperar 4 s o más con el arma lista (resorte al máximo) a un enemigo con Sentencia, esta se cumple al instante, antes de que llegue el disparo.' },
-  { id: 'mirrorhall',   name: 'Galería de espejos',  parts: ['m_split'],   techs: ['mirror_basic'], desc: 'Necesitas la Bala partida en el arma y la técnica Reflejo (Disparo de Espejos, o un dúo con ella). Los dos trozos de la Bala partida hacen el doble de daño. Se suma al ensamble Astillas.' },
-  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'Necesitas la Bala de sangre en el arma y la técnica Sangría (Cargado de Sangre, o un dúo con ella). El disparo cargado de Sangría ya no te cuesta el 10% de tu vida y conserva su daño extra. La Bala de sangre te sigue costando 1 de vida por disparo.' },
-  { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'Necesitas la Recámara de meteoro en el arma y la técnica Singularidad (Cargado de Vacío, o un dúo con ella). Al lanzar el meteoro se abre durante 1 s un pozo en el punto de impacto, que arrastra a todos hacia él antes de que caiga.' },
-  { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Necesitas la Largavista en el arma y la técnica Señalar (Disparo de Luz, o un dúo con ella). Cada disparo lejano de la Largavista (el que hace el doble) deja también Iluminados a los enemigos de alrededor del blanco.' },
-  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'Necesitas la Mecha lenta en el arma y la técnica Arrullo (Disparo de Sueño, o un dúo con ella). Cada disparo de la Mecha lenta Duerme 3 s al enemigo, salvo que se haya despertado hace menos de 4 s. A los jefes los deja Adormilados 1,5 s.' },
-  { id: 'anvilsong',    name: 'Canto del yunque',    parts: ['a_kick'],    techs: ['forge_basic'],  desc: 'Necesitas la Llave de trueno en el arma y la técnica Temple (Disparo de Forja, o un dúo con ella). Cada cañonazo de la Llave de trueno te da 2 de Temple.' },
-  { id: 'tidalhook',    name: 'Resaca',              parts: ['b_harpoon'], techs: ['tide_basic'],   desc: 'Necesitas el Arpón en el arma y la técnica Oleaje (Disparo de Mareas, o un dúo con ella). El enemigo que engancha el Arpón queda Empapado 5 s y aturdido 0,6 s. A los jefes no los aturde.' },
-  { id: 'thornmine',    name: 'Semillero',           parts: ['c_mine'],    techs: ['wood_charge'],  desc: 'Necesitas la Recámara de minas en el arma y la técnica Zarzal (Cargado de Bosque, o un dúo con ella). Cada mina deja al estallar un zarzal de 4 s que frena a la mitad y hace el 25% de tu daño base cada 0,4 s a quien esté dentro.' },
-  { id: 'crossfire',    name: 'Fuego cruzado',       parts: ['a_semi'],    techs: ['stone_passive'], desc: 'Necesitas la Llave de chispa en el arma y la técnica Veta (Pasiva de Minerales, o un dúo con ella). Los Cristales que repiten tus disparos con Veta hacen el doble de daño.' },
+  { id: 'dragonbreath', name: 'Aliento de dragón',   parts: ['b_scatter'], techs: ['dragon_basic'], desc: 'Necesitas la Palma de abanico en los guanteletes y la técnica Colmillo al rojo (Disparo de Dragones, o un dúo con ella). Cada andanada deja también delante de ti una franja de fuego durante 2,2 s, que clava 1 Ascua cada 0,4 s a quien la pise.' },
+  { id: 'leadstorm',    name: 'Tormenta de centellas', parts: ['a_rotary'],  techs: ['storm_basic'],  desc: 'Necesitas los Dedos de molinete en los guanteletes y la técnica Aguja estática (Disparo de Tormenta, o un dúo con ella). Cada diez disparos, las Agujas de tu objetivo se descargan solas.' },
+  { id: 'quarry',       name: 'Barreno',             parts: ['b_pierce'],  techs: ['stone_basic'],  desc: 'Necesitas la Palma de venablo en los guanteletes y la técnica Esquirla (Disparo de Minerales, o un dúo con ella). Cada disparo deja un Cristal junto a cada enemigo que atraviesa, hasta tres por disparo. El tramo del rebote no deja Cristales.' },
+  { id: 'firingline',   name: 'Línea de tiro',       parts: ['b_twin'],    techs: ['shade_basic'],  desc: 'Necesitas las Palmas gemelas en los guanteletes y la técnica Marca de tumba (Disparo de Sombras, o un dúo con ella). Cada vez que disparas, cada una de tus Sombras dispara también al enemigo más cercano a ella, con el 30% de tu daño base y los efectos de tus técnicas.' },
+  { id: 'executor',     name: 'Verdugo',             parts: ['b_spike'],   techs: ['orc_dodge'],    desc: 'Necesitas la Palma de lanza en los guanteletes y la técnica Embestida (Esquive de Orcos, o un dúo con ella). Cada estocada de la Palma de lanza deja aturdido al enemigo 0,4 s y te da 15 de Furia.' },
+  { id: 'clockwork',    name: 'Reloj de cuerda',     parts: ['a_draw'],    techs: ['time_basic'],   desc: 'Necesitas los Dedos tensos en los guanteletes y la técnica Segundero (Disparo de Tiempo, o un dúo con ella). Un disparo tensado a tope deja dos ecos en vez de uno; el segundo llega 0,35 s después del primero.' },
+  { id: 'leadfeast',    name: 'Banquete de brasas',  parts: ['m_drum'],    techs: ['feast_basic'],  desc: 'Necesitas la Gema doble en los guanteletes y la técnica Bocado (Disparo de Manjares, o un dúo con ella). Cada recarga te cura 4, y el primer disparo tras recargar te cura el triple de lo que cura Bocado.' },
+  { id: 'acidrain',     name: 'Lluvia ácida',        parts: ['c_rain'],    techs: ['venom_charge'], desc: 'Necesitas la Brasa de aluvión en los guanteletes y la técnica Purga (Cargado de Veneno, o un dúo con ella). El aluvión deja la zona convertida en un charco tóxico durante 5 s, que pone 2 de Veneno cada 0,4 s a quien esté dentro.' },
+  { id: 'furnace',      name: 'Fragua viva',         parts: ['m_belt'],    techs: ['orc_basic'],    desc: 'Necesitas la Gema candente en los guanteletes y la técnica Tambor de guerra (Disparo de Orcos, o un dúo con ella). Cuanto más calientes están los guanteletes, más daño hacen tus disparos: hasta un 40% más con el calor al máximo. Al recalentarse, sueltan una explosión a tu alrededor (250% de tu daño base) que aparta a los enemigos.' },
+  { id: 'vigil',        name: 'Vigilia',             parts: ['s_brace'],   techs: ['time_passive'], desc: 'Necesitas el Brazal de pilar en los guanteletes y la técnica Reloj de arena (Pasiva de Tiempo, o un dúo con ella). Mientras el Brazal de pilar está activo (medio segundo quieto), tus disparos frenan un 60% durante 1 s a quien alcanzan.' },
+  { id: 'firerain',     name: 'Lluvia de brasas',    parts: ['b_bomb'],    techs: ['dragon_charge'], desc: 'Necesitas la Palma de volcán en los guanteletes y la técnica Aliento (Cargado de Dragones, o un dúo con ella). Cada orbe deja un charco de fuego de 2,5 s donde revienta, que clava 1 Ascua cada 0,4 s a quien lo pise.' },
+  { id: 'pinball',      name: 'Carambola',           parts: ['b_pierce'],  techs: ['storm_basic'],  desc: 'Necesitas la Palma de venablo en los guanteletes y la técnica Aguja estática (Disparo de Tormenta, o un dúo con ella). En el tramo tras el rebote, el disparo descarga las Agujas de cada enemigo al que da.' },
+  { id: 'cavalry',      name: 'Carga de caballería', parts: ['c_dash'],    techs: ['dragon_dodge'], desc: 'Necesitas la Brasa de embestida en los guanteletes y la técnica Vuelo (Esquive de Dragones, o un dúo con ella). La carga del disparo cargado deja un rastro de fuego de 3 s (2 Ascuas cada 0,4 s) y explota al terminar con el 200% de tu daño base.' },
+  { id: 'coldiron',     name: 'Hierro frío',         parts: ['m_ice'],     techs: ['frost_basic'],  desc: 'Necesitas la Gema de escarcha en los guanteletes y la técnica Aliento helado (Disparo de Hielo, o un dúo con ella). Cada disparo pone 1 de Escarcha más.' },
+  { id: 'packhunt',     name: 'Montería',            parts: ['b_swarm'],   techs: ['beast_basic'],  desc: 'Necesitas la Palma de avispero en los guanteletes y la técnica Sabueso (Disparo de Bestias, o un dúo con ella). Con cada andanada de la Palma de avispero, tu sabueso salta al primer enemigo alcanzado y lo muerde con el 60% de tu daño base.' },
+  { id: 'deathclock',   name: 'Hora señalada',       parts: ['a_spring'],  techs: ['end_basic'],    desc: 'Necesitas los Dedos de resorte en los guanteletes y la técnica Sentencia (Disparo de Final, o un dúo con ella). Si disparas tras esperar 4 s o más con los guanteletes listos (resorte al máximo) a un enemigo con Sentencia, esta se cumple al instante, antes de que llegue el disparo.' },
+  { id: 'mirrorhall',   name: 'Galería de espejos',  parts: ['m_split'],   techs: ['mirror_basic'], desc: 'Necesitas la Gema partida en los guanteletes y la técnica Reflejo (Disparo de Espejos, o un dúo con ella). Los dos trozos de la Gema partida hacen el doble de daño. Se suma al ensamble Astillas.' },
+  { id: 'bloodprice',   name: 'Deuda saldada',       parts: ['m_blood'],   techs: ['blood_charge'], desc: 'Necesitas la Gema de sangre en los guanteletes y la técnica Sangría (Cargado de Sangre, o un dúo con ella). El disparo cargado de Sangría ya no te cuesta el 10% de tu vida y conserva su daño extra. La Gema de sangre te sigue costando 1 de vida por disparo.' },
+  { id: 'eventide',     name: 'Horizonte de sucesos', parts: ['c_meteor'], techs: ['void_charge'],  desc: 'Necesitas la Brasa de meteoro en los guanteletes y la técnica Singularidad (Cargado de Vacío, o un dúo con ella). Al lanzar el meteoro se abre durante 1 s un pozo en el punto de impacto, que arrastra a todos hacia él antes de que caiga.' },
+  { id: 'sunbeam',      name: 'Rayo de sol',         parts: ['b_far'],     techs: ['light_basic'],  desc: 'Necesitas la Palma de vigía en los guanteletes y la técnica Señalar (Disparo de Luz, o un dúo con ella). Cada disparo lejano de la Palma de vigía (el que hace el doble) deja también Iluminados a los enemigos de alrededor del blanco.' },
+  { id: 'lullaby',      name: 'Nana',                parts: ['a_fuse'],    techs: ['dream_basic'],  desc: 'Necesitas los Dedos de rescoldo en los guanteletes y la técnica Arrullo (Disparo de Sueño, o un dúo con ella). Cada disparo de los Dedos de rescoldo Duerme 3 s al enemigo, salvo que se haya despertado hace menos de 4 s. A los jefes los deja Adormilados 1,5 s.' },
+  { id: 'anvilsong',    name: 'Canto del yunque',    parts: ['a_kick'],    techs: ['forge_basic'],  desc: 'Necesitas los Dedos de trueno en los guanteletes y la técnica Temple (Disparo de Forja, o un dúo con ella). Cada trueno de los Dedos de trueno te da 2 de Temple.' },
+  { id: 'tidalhook',    name: 'Resaca',              parts: ['b_harpoon'], techs: ['tide_basic'],   desc: 'Necesitas la Palma de arpón en los guanteletes y la técnica Oleaje (Disparo de Mareas, o un dúo con ella). El enemigo que engancha la Palma de arpón queda Empapado 5 s y aturdido 0,6 s. A los jefes no los aturde.' },
+  { id: 'thornmine',    name: 'Semillero',           parts: ['c_mine'],    techs: ['wood_charge'],  desc: 'Necesitas la Brasa de minas en los guanteletes y la técnica Zarzal (Cargado de Bosque, o un dúo con ella). Cada mina deja al estallar un zarzal de 4 s que frena a la mitad y hace el 25% de tu daño base cada 0,4 s a quien esté dentro.' },
+  { id: 'crossfire',    name: 'Fuego cruzado',       parts: ['a_semi'],    techs: ['stone_passive'], desc: 'Necesitas los Dedos de chispa en los guanteletes y la técnica Veta (Pasiva de Minerales, o un dúo con ella). Los Cristales que repiten tus disparos con Veta hacen el doble de daño.' },
 ];
 const RES = Object.fromEntries(RESO.map(x => [x.id, x]));
 // Afinidad: cada pieza se forja con el material de una deidad. Si llevas alguna técnica de esa deidad, la pieza la potencia.
@@ -695,20 +670,20 @@ const AFFIN = {
   void: 'tus pozos son un 10% más grandes', mirror: 'el Reflejo hace un 10% más de daño', beast: 'el sabueso muerde un 12% más fuerte', forge: 'puedes acumular 1 de Temple más',
 };
 const affGod = id => { const c = PART[id] && PART[id].cost; return c ? Object.keys(c).find(k => k !== 'iron') : null; };
-// Ensambles: dos piezas concretas que se potencian entre sí (un arma legendaria pide tres; esto es el escalón de antes)
+// Ensambles: dos piezas concretas que se potencian entre sí (unos guanteletes legendarios piden tres; esto es el escalón de antes)
 const ENSEMBLES = [
-  { id: 'ram',      name: 'Ariete',            parts: ['b_scatter', 'm_heavy'],  desc: 'Necesitas montar a la vez el Trabuco y la Bala de cañón. Los golpes contra el muro hacen un 60% más de daño.' },
-  { id: 'splinter', name: 'Astillas',          parts: ['b_pierce', 'm_split'],   desc: 'Necesitas montar a la vez la Culebrina y la Bala partida. Los dos trozos de la Bala partida hacen el doble de daño. Se suma a la resonancia Galería de espejos.' },
-  { id: 'trail',    name: 'Reguero',           parts: ['a_rotary', 'm_fire'],    desc: 'Necesitas montar a la vez la Manivela de ribadoquín y la Bala incendiaria. Las llamas de la Bala incendiaria duran 6 s en vez de 2.' },
-  { id: 'cluster',  name: 'Racimo',            parts: ['b_bomb', 'm_frag'],      desc: 'Necesitas montar a la vez la Bombarda y la Bala de metralla. La Bala de metralla suelta ocho esquirlas en vez de cinco, y alcanzan a enemigos más lejanos.' },
-  { id: 'siege',    name: 'Tiro de asedio',    parts: ['a_draw', 's_brace'],     desc: 'Necesitas montar a la vez el Torno de ballesta y la Horquilla. Un disparo tensado a tope con la Horquilla activa (medio segundo quieto) hace un 60% más de daño, además de lo que ya da la Horquilla.' },
-  { id: 'hare',     name: 'Liebre',            parts: ['s_spring', 'a_semi'],    desc: 'Necesitas montar a la vez la Culata de muelle y la Llave de chispa. El salto de la Culata de muelle llega el doble de lejos.' },
-  { id: 'mill',     name: 'Molino',            parts: ['b_flail', 's_spikes'],   desc: 'Necesitas montar a la vez el Mangual y la Culata de púas. Durante 2 s después de cada esquive, la bola del Mangual gira el triple de rápido.' },
-  { id: 'rivet',    name: 'Remaches',          parts: ['b_nail', 'm_big'],       desc: 'Necesitas montar a la vez la Clavera y la Bala de calibre. Cuando los clavos revientan, hasta seis enemigos cercanos al blanco reciben el mismo golpe.' },
-  { id: 'watch',    name: 'Guardia',           parts: ['c_turret', 'a_auto'],    desc: 'Necesitas montar a la vez la Recámara de centinela y el Gatillo de pelo. La copia del arma de la Recámara de centinela dura 12 s en vez de 6.' },
-  { id: 'bastion',  name: 'Bastión',           parts: ['s_shield', 'c_balm'],    desc: 'Necesitas montar a la vez la Culata con rodela y la Recámara de bálsamo. Usar la Recámara de bálsamo deja la rodela lista al instante.' },
-  { id: 'marksman', name: 'Tirador',           parts: ['b_long', 's_scope'],     desc: 'Necesitas montar a la vez el Arco de ballesta y la Culata de catalejo. El primer impacto a cada enemigo hace el triple de daño, en vez de un 80% más.' },
-  { id: 'gambler',  name: 'Tahúr',             parts: ['m_gold', 'a_kick'], desc: 'Necesitas montar a la vez la Bala de oro y la Llave de trueno. Cada cañonazo de la Llave de trueno te da 3 de oro.' },
+  { id: 'ram',      name: 'Ariete',            parts: ['b_scatter', 'm_heavy'],  desc: 'Necesitas montar a la vez la Palma de abanico y la Gema de plomo. Los golpes contra el muro hacen un 60% más de daño.' },
+  { id: 'splinter', name: 'Astillas',          parts: ['b_pierce', 'm_split'],   desc: 'Necesitas montar a la vez la Palma de venablo y la Gema partida. Los dos trozos de la Gema partida hacen el doble de daño. Se suma a la resonancia Galería de espejos.' },
+  { id: 'trail',    name: 'Reguero',           parts: ['a_rotary', 'm_fire'],    desc: 'Necesitas montar a la vez los Dedos de molinete y la Gema incendiaria. Las llamas de la Gema incendiaria duran 6 s en vez de 2.' },
+  { id: 'cluster',  name: 'Racimo',            parts: ['b_bomb', 'm_frag'],      desc: 'Necesitas montar a la vez la Palma de volcán y la Gema de esquirlas. La Gema de esquirlas suelta ocho esquirlas en vez de cinco, y alcanzan a enemigos más lejanos.' },
+  { id: 'siege',    name: 'Tiro de asedio',    parts: ['a_draw', 's_brace'],     desc: 'Necesitas montar a la vez los Dedos tensos y el Brazal de pilar. Un disparo tensado a tope con el Brazal de pilar activo (medio segundo quieto) hace un 60% más de daño, además de lo que ya da el Brazal de pilar.' },
+  { id: 'hare',     name: 'Liebre',            parts: ['s_spring', 'a_semi'],    desc: 'Necesitas montar a la vez el Brazal de muelle y los Dedos de chispa. El salto del Brazal de muelle llega el doble de lejos.' },
+  { id: 'mill',     name: 'Molino',            parts: ['b_flail', 's_spikes'],   desc: 'Necesitas montar a la vez la Palma de mangual y el Brazal de púas. Durante 2 s después de cada esquive, la bola de la Palma de mangual gira el triple de rápido.' },
+  { id: 'rivet',    name: 'Remaches',          parts: ['b_nail', 'm_big'],       desc: 'Necesitas montar a la vez la Palma de espinas y la Gema gruesa. Cuando las espinas revientan, hasta seis enemigos cercanos al blanco reciben el mismo golpe.' },
+  { id: 'watch',    name: 'Guardia',           parts: ['c_turret', 'a_auto'],    desc: 'Necesitas montar a la vez la Brasa de centinela y los Dedos inquietos. El guantelete gemelo de la Brasa de centinela dura 12 s en vez de 6.' },
+  { id: 'bastion',  name: 'Bastión',           parts: ['s_shield', 'c_balm'],    desc: 'Necesitas montar a la vez el Brazal con rodela y la Brasa de bálsamo. Usar la Brasa de bálsamo deja la rodela lista al instante.' },
+  { id: 'marksman', name: 'Tirador',           parts: ['b_long', 's_scope'],     desc: 'Necesitas montar a la vez la Palma de fragua y el Brazal de catalejo. El primer impacto a cada enemigo hace el triple de daño, en vez de un 80% más.' },
+  { id: 'gambler',  name: 'Tahúr',             parts: ['m_gold', 'a_kick'], desc: 'Necesitas montar a la vez la Gema de oro y los Dedos de trueno. Cada trueno de los Dedos de trueno te da 3 de oro.' },
 ];
 const ensOf = g => ENSEMBLES.filter(E => E.parts.every(id => g[PART[id].slot] === id));
 
@@ -727,7 +702,7 @@ const TREE = [
     { id: 'rate',    name: 'Pulso firme',     max: 8, cost: curve(10, 1.78, 8),  desc: r => `Disparas un ${3 * r}% más rápido` },
     { id: 'dmg',     name: 'Golpe certero',   max: 8, cost: curve(10, 1.78, 8),  desc: r => `Todo tu daño sube un ${4 * r}%, también el del disparo cargado` },
     { id: 'eye',     name: 'Ojo de herrero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tus disparos normales llegan un ${5 * r}% más lejos` },
-    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(22, 2.2, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Torno de ballesta, Manivela de ribadoquín, Llave de retén ni Mecha lenta` },
+    { id: 'brake',   name: 'Frenazo corto',   max: 5, cost: curve(22, 2.2, 5),  desc: r => `El frenazo de cada disparo dura un ${6 * r}% menos. No afecta a Dedos tensos, Dedos de molinete, Dedos de retén ni Dedos de rescoldo` },
     { id: 'armorer', name: 'Maestro armero',  max: 5, cost: curve(22, 2.2, 5),  desc: r => `El disparo cargado se carga un ${10 * r}% más rápido. No acorta la espera entre un cargado y el siguiente` },
     { id: 'coup',    name: 'Golpe de gracia', max: 5, cost: curve(22, 2.2, 5),  desc: r => `Tu daño directo hace un ${8 * r}% más a los enemigos con menos del 30% de vida` } ] },
   { name: 'Memoria', sub: 'Oro, almas y más opciones al elegir', nodes: [
@@ -743,10 +718,10 @@ const TREE_NODES = TREE.flatMap(br => br.nodes), TREE_TOTAL = TREE_NODES.reduce(
 // Salas que no son de deidad: lo que dan al limpiarlas.
 const ROOMS = {
   souls: { name: 'Sala de almas',          tag: 'Almas',   color: '#b9c6ff', desc: 'Almas para el árbol de habilidades (también te las paga el reino al cumplir encargos). Si repites un encargo ya cumplido, estas salas dan el 30%.' },
-  iron:  { name: 'Veta de Hierro Místico', tag: 'Hierro',  color: '#c9d2e0', desc: 'Hierro Místico: lo necesitas para forjar cualquier arma y sus mejoras.' },
+  iron:  { name: 'Veta de Hierro Místico', tag: 'Hierro',  color: '#c9d2e0', desc: 'Hierro Místico: lo necesitas para forjar cualquier pieza de los guanteletes.' },
   heart: { name: 'Fuente de vida',         tag: 'Vida',    color: '#ff6f86', desc: '+20 de vida máxima y te curas 20.' },
   gold:  { name: 'Cámara del tesoro',      tag: 'Oro',     color: '#ffd24a', desc: 'Oro para gastar en la tienda que hay antes del jefe.' },
-  anvil: { name: 'Yunque abandonado',      tag: 'Yunque',  color: '#f2c14e', desc: 'Elige una mejora del arma para esta partida: cadencia, daño, alcance o velocidad.' },
+  anvil: { name: 'Yunque abandonado',      tag: 'Yunque',  color: '#f2c14e', desc: 'Elige una mejora de los guanteletes para esta partida: cadencia, daño, alcance o velocidad.' },
 };
 
 const C = {
@@ -761,7 +736,7 @@ const GLOSS = [
   [/Venenos?\b|envenenad/, 'Veneno', 'puntos en un enemigo (técnicas de Veneno). Cada punto le quita el 3,5% de tu daño cada medio segundo. Hasta 30 puntos. No se va nunca: dura hasta que muere.'],
   [/Cristal(es)?/, 'Cristales', 'piedras que se quedan en el suelo 9 s (técnicas de Minerales). Como mucho hay 6 a la vez; si sale otro, se va el más viejo. Solos no hacen nada: otras técnicas y piezas los usan.'],
   [/Reserva/, 'Reserva', 'escudo extra (técnicas de Manjares). La curación que te sobra con la vida llena se guarda aquí, hasta 30. Los golpes la gastan antes que tu vida.'],
-  [/Furia/, 'Furia', 'barra de 0 a 100 (técnicas de Orcos o la Llave de tambor). Sube al golpear y al recibir golpes. Si pasas 2 s sin pelear, baja 8 por segundo. Muchas técnicas de Orcos mejoran con más Furia o con la barra llena.'],
+  [/Furia/, 'Furia', 'barra de 0 a 100 (técnicas de Orcos o los Dedos de tambor). Sube al golpear y al recibir golpes. Si pasas 2 s sin pelear, baja 8 por segundo. Muchas técnicas de Orcos mejoran con más Furia o con la barra llena.'],
   [/\becos?\b/, 'Eco', 'repetición del disparo que llega sola 1,5 s después al mismo enemigo (técnicas del Tiempo). Aplica tus efectos de disparo y puede ser crítico.'],
   [/Sombras?/, 'Sombras', 'enemigos muertos que se levantan y luchan a tu lado 9 s (técnicas de Sombras). Como mucho tienes 2 más el nivel de tu técnica de disparo de Sombras; si sale otra, se va la más vieja.'],
   [/Agujas?|descarg/, 'Agujas', 'se clavan en un enemigo sin hacer daño, hasta 6 (técnicas de Tormenta). Se caen a los 6 s si no le clavas más. Al descargarlas, recibe tu daño por cada Aguja y salta un rayo por Aguja (60% de tu daño) a enemigos cercanos.'],
@@ -770,26 +745,26 @@ const GLOSS = [
   [/Raíces|enraíza|enraizad|Enraizad/, 'Enraizado', 'el enemigo no puede moverse del sitio, pero sí atacar. En los jefes dura un tercio.'],
   [/Escarcha|Congelad|congela/, 'Escarcha', 'puntos de frío (técnicas de Hielo). Cada punto frena al enemigo un 12% más. Al quinto queda Congelado 1,5 s: ni se mueve ni ataca. Los jefes solo quedan muy frenados, la mitad de tiempo. Si pasan 4 s sin ponerle más, se va.'],
   [/Heridas?\b|sangra/, 'Heridas', 'cortes que sangran (técnicas de Sangre), hasta 6. Cada medio segundo el enemigo pierde el 5% de tu daño por Herida, y hasta el triple cuanta menos vida te quede a ti. Duran 5 s desde la última.'],
-  [/Sentencias?/, 'Sentencia', 'cuenta atrás de 5 s sobre un enemigo (la ponen las técnicas del Final y la Recámara de sentencia). Mientras dura, apunta el daño de tus golpes (el continuo no cuenta). Al acabar, recibe de golpe un porcentaje de ese daño: del 40% al 120% según el nivel de la técnica Sentencia. Si muere antes, estalla: cada enemigo de alrededor recibe lo que le tocaba a él. Solo una por enemigo.'],
+  [/Sentencias?/, 'Sentencia', 'cuenta atrás de 5 s sobre un enemigo (la ponen las técnicas del Final y la Brasa de sentencia). Mientras dura, apunta el daño de tus golpes (el continuo no cuenta). Al acabar, recibe de golpe un porcentaje de ese daño: del 40% al 120% según el nivel de la técnica Sentencia. Si muere antes, estalla: cada enemigo de alrededor recibe lo que le tocaba a él. Solo una por enemigo.'],
   [/Ilumina/, 'Iluminado', 'marcado con luz 6 s (técnicas de Luz). Solo no hace nada. Si llevas la técnica Señalar (disparo de Luz), cuando un Iluminado recibe daño, los demás Iluminados reciben también del 30% al 70% (según su nivel).'],
   [/Dormid|\bduerme|Adormilad/, 'Dormido', 'ni se mueve ni ataca (técnicas del Sueño). El primer golpe le hace el doble de daño (más con la técnica Arrullo) y lo despierta; el daño continuo también lo despierta. Los jefes no se duermen: quedan Adormilados la mitad de ese tiempo, frenados a la mitad, y cuentan como Dormidos para todo el daño extra. Tras despertar no puede volver a dormirse en 4 s (un jefe, en 6 s desde que lo adormilas).'],
   [/pozo|Singularidad/, 'Pozo', 'punto del suelo que arrastra hacia él a los enemigos cercanos unos segundos (técnicas del Vacío y algunas piezas). No arrastra a los jefes.'],
   [/\bReflejo\b/, 'Reflejo', 'copia tuya que aparece al otro lado de tu objetivo y repite tus disparos (técnicas de Espejos).'],
-  [/sabueso|cachorro|\bperros?\b|[Mm]anada|lobo alfa/, 'Manada', 'los perros que te acompañan y muerden cada 0,8 s al enemigo al que disparas (técnicas de Bestias o la Culata de perrera). Empiezan de cachorros, que muerden al 60% de su fuerza; crecen a sabuesos (100%) y el primero llega a lobo alfa: 130%, corre más y cada mordisco alcanza también, con el 30% de su daño, a hasta 3 enemigos pegados a su presa. Seis perros como mucho.'],
+  [/sabueso|cachorro|\bperros?\b|[Mm]anada|lobo alfa/, 'Manada', 'los perros que te acompañan y muerden cada 0,8 s al enemigo al que disparas (técnicas de Bestias o el Brazal de perrera). Empiezan de cachorros, que muerden al 60% de su fuerza; crecen a sabuesos (100%) y el primero llega a lobo alfa: 130%, corre más y cada mordisco alcanza también, con el 30% de su daño, a hasta 3 enemigos pegados a su presa. Seis perros como mucho.'],
   [/\bCaza\b/, 'Caza', 'bajas de la misión con algún perro a tu lado; un elegido o un jefe cuentan por 5. No se pierde al cambiar de sala. Con 6 de Caza, los cachorros crecen a sabuesos; con 25, el primero se hace lobo alfa; con 60 se une un cachorro más, que crece a sabueso con 120. Bajo el primer perro, una barra marca lo que falta.'],
-  [/Temple/, 'Temple', 'puntos que gana el arma al disparar (técnicas de Forja), hasta 10; la técnica Temple sube ese máximo 2 por nivel a partir del segundo. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.'],
-  [/crític/, 'Crítico', 'disparo que hace el 250% del daño. Solo hay probabilidad de crítico si llevas algo que la dé (técnicas de Fortuna, la Llave de dados…).'],
+  [/Temple/, 'Temple', 'puntos que ganan los guanteletes al disparar (técnicas de Forja), hasta 10; la técnica Temple sube ese máximo 2 por nivel a partir del segundo. Cada punto da +3% de daño. Si te golpean, pierdes la mitad.'],
+  [/crític/, 'Crítico', 'disparo que hace el 250% del daño. Solo hay probabilidad de crítico si llevas algo que la dé (técnicas de Fortuna, los Dedos de tahúr…).'],
   [/aturd/, 'Aturdido', 'ni se mueve ni ataca durante el tiempo indicado.'],
-  [/Compás/, 'Compás', 'pulsar el disparo justo cuando se llena el anillo que te rodea (Llaves de compás).'],
+  [/Compás/, 'Compás', 'pulsar el disparo justo cuando se llena el anillo que te rodea (Dedos de compás).'],
   [/frenazo|te frena/, 'Frenazo', 'el instante en que te quedas quieto al disparar. Algunas piezas lo acortan o lo quitan.'],
   [/esquive que lo atraviesa|[Aa]travesar a un enemigo con el esquive|[Ee]mbestir a un enemigo|Atravesar/, 'Atravesar', 'esquivar pasando a través de un enemigo.'],
   [/zarzal|zarzas/, 'Zarzal', 'espinas en el suelo que frenan y dañan a quien las pisa.'],
   [/contra (un|el) muro/, 'Golpe contra el muro', 'si empujas fuerte a un enemigo contra un muro o el borde de la sala, recibe un golpe del 90% de tu daño y queda aturdido 0,7 s. A los jefes no se les empuja: solo lo reciben si están Empapados.'],
   [/Maestría/, 'Maestría', 'efecto extra de una deidad: se activa si llevas técnicas suyas en 3 de tus 4 acciones (disparo, cargado, esquive y pasiva).'],
   [/\b[Dd]úos?\b/, 'Dúo', 'técnica que mezcla dos. Te la ofrecen si llevas una técnica de una deidad en una acción y otra deidad te da la suya para esa misma acción. Sustituye a las dos.'],
-  [/[Rr]esonancia/, 'Resonancia', 'efecto extra que se activa solo al llevar a la vez una pieza concreta del arma y una técnica concreta.'],
-  [/[Ee]nsambl/, 'Ensamble', 'efecto extra que se activa al montar a la vez dos piezas concretas del arma.'],
-  [/[Ll]egendari/, 'Arma legendaria', 'tres piezas concretas montadas a la vez: el arma cambia de nombre y gana un efecto propio.'],
+  [/[Rr]esonancia/, 'Resonancia', 'efecto extra que se activa solo al llevar a la vez una pieza concreta de los guanteletes y una técnica concreta.'],
+  [/[Ee]nsambl/, 'Ensamble', 'efecto extra que se activa al montar a la vez dos piezas concretas de los guanteletes.'],
+  [/[Ll]egendari/, 'Guanteletes legendarios', 'tres piezas concretas montadas a la vez: los guanteletes cambian de nombre y ganan un efecto propio.'],
   [/[Aa]fín\b|[Aa]finidad/, 'Afinidad', 'piezas hechas con material de una deidad: si en la misión llevas alguna técnica de esa deidad, la pieza gana un extra.'],
 ];
 function gloss(txt, max) {
@@ -1040,7 +1015,7 @@ function newGame() {
 function setMode(m) { S.mode = m; modeT = 0; renderOverlay(); }
 function startRun(mission) {
   newGame(); M.run = null; S.mission = mission; S.repeat = isDone(mission.id);   // repetir un encargo ya cumplido paga menos
-  const p = S.p;   // lo que traes de otras vidas: tu arma y tu árbol
+  const p = S.p;   // lo que traes de otras vidas: tus guanteletes y tu árbol
   S.gun = Object.assign({}, M.gun);
   p.maxHp += 10 * tk('hp'); p.dmg *= 1 + 0.04 * tk('dmg'); p.speed *= 1 + 0.03 * tk('feet'); p.gold = 25 * tk('purse');
   p.hp = p.maxHp; p.revive = tk('revive') ? 1 : 0; p.dodgeN = dodgeMax();
@@ -1088,7 +1063,7 @@ function nextWave() {
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
   if (ms.type === 'defend') { const mh = 700 + 150 * ms.z; S.keep = { x: T.room.w / 2, y: T.room.h / 2, r: 14, hp: Math.min(mh, S.keepHp == null ? mh : S.keepHp), maxHp: mh, flash: 0 }; fillDefWave(); }
   if (ms.type === 'assault') setupAssault();
-  checkRes();   // lo que tu arma y tus técnicas despiertan juntas se anuncia al entrar
+  checkRes();   // lo que tus guanteletes y tus técnicas despiertan juntos se anuncia al entrar
   saveRun();
 }
 
@@ -1159,18 +1134,18 @@ function sysTick() {
 // ───────────────────────── Al limpiar una sala ─────────────────────────
 let pickHead = { eyebrow: '', title: '' }, pickQueue = [], bookFrom = 'pause', afterPicks = null, pickReroll = null;
 const rollRar = () => { const r = Math.random() + 0.05 * tk('luck'); return r < 0.6 ? 0 : r < 0.88 ? 1 : 2; };
-const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina el arma', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
-const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tu arma', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
-// Una pieza de arma: la montas ahora y, además, queda descubierta para siempre
+const statScreen = () => ({ eyebrow: 'Yunque', title: 'Afina los guanteletes', opts: UPGRADES.slice().sort(() => Math.random() - 0.5).slice(0, 3).map(u => ({ tag: 'Ajuste', name: u.name, desc: u.desc, note: '', color: C.energy, apply: () => u.apply(S.p) })) });
+const planScreen = eyebrow => () => ({ eyebrow, title: 'Un plano para tus guanteletes', opts: PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5).slice(0, 3).map(x => ({ tag: 'Plano', name: x.name, desc: x.desc, note: '', color: C.ink, apply: () => { S.plans.add(x.id); S.p.dodgeN = dodgeMax(); } })) });
+// Una pieza de guantelete: la montas ahora y, además, queda descubierta para siempre
 function mountPart(id) { discover(id); S.gun[PART[id].slot] = id; S.p.shells = 2; S.p.heat = 0; S.p.drawing = false; S.p.spin = 0; checkRes(); }
 const partScreen = eyebrow => () => {
   const pool = PARTS.filter(x => !x.base && !G(x.id)).map(x => [Math.pow(Math.random(), 1 / (M.parts[x.id] ? 0.5 : 1.6)), x]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   if (!pool.length) return null;
   const opts = pool.map(x => { const isNew = !M.parts[x.id], g2 = Object.assign({}, S.gun, { [x.slot]: x.id }), nm = gunName(g2);
-    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · tu arma pasa a ser: ${nm}` : ''), apply: () => mountPart(x.id) }; });
+    return { tag: GSLOTS[x.slot] + ' · ' + x.tag + (isNew ? ' · nueva' : ''), rar: 0, name: x.name, color: C.energy, desc: x.desc, note: (affGod(x.id) ? `Afín a ${GODS[affGod(x.id)].theme}: ${AFFIN[affGod(x.id)]}. ` : '') + `Sustituye a ${PART[S.gun[x.slot]].name}` + (nm !== gunName(S.gun) ? ` · pasan a llamarse: ${nm}` : ''), apply: () => mountPart(x.id) }; });
   const fresh = pool.filter(x => !M.parts[x.id]);
-  opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tu arma como está. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tu arma como está.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
-  return { eyebrow, title: 'Una pieza para tu ' + gunName(S.gun).toLowerCase(), opts };
+  opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
+  return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
 const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
@@ -1311,9 +1286,9 @@ function openShop() {
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
       { id: 'tech',  name: 'Arma de contrabando',    desc: `El ${GODS[god].weapon}, de ${GODS[god].title}: lo desmontas y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
-      { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste del arma: cadencia, daño, alcance o velocidad', price: pr(60) },
+      { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
       { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
-      { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tu arma: eliges entre tres', price: pr(100) },
+      { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tus guanteletes: eliges entre tres', price: pr(100) },
     ].concat(plan ? [{ id: 'plan', name: 'Plano: ' + plan.name, desc: plan.desc, price: pr(110), plan: plan.id }] : []) };
   }
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
@@ -1348,9 +1323,9 @@ function shopAct(act) {
 
 // ───────────────────────── La forja (entre vidas) ─────────────────────────
 const openForge = () => openTown();   // entre encargos se vuelve a la plaza; cada sitio de la plaza abre su menú (openPlace)
-// La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, el arma (un apartado cada vez), las sinergias y el árbol.
+// La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, los guanteletes (un apartado cada vez), las sinergias y el árbol.
 let forgeTab = 'map', forgeSlot = 'barrel';
-const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Arma'], ['syn', 'Sinergias'], ['tree', 'Árbol'], ['room', 'Habitación'], ['king', 'Audiencia']];
+const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Guanteletes'], ['syn', 'Sinergias'], ['tree', 'Árbol'], ['room', 'Habitación'], ['king', 'Audiencia']];
 const placeTabs = () => FORGE_TABS.filter(t => PLACES[forgePlace].tabs.includes(t[0]));
 function forgeHtml() {
   const matChips = GOD_KEYS.filter(g => M.mats[g] > 0).map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`).join(' · ');
@@ -1366,7 +1341,7 @@ function forgeHtml() {
     const rank = x => (M.gun[k] === x.id ? 0 : M.parts[x.id] === 2 ? 1 : canPay(x.cost) ? 2 : 3);
     known.sort((a, b) => rank(a) - rank(b));
     const on = ensOf(M.gun), L = legOf(M.gun);
-    body = `<p class="fine">Tu arma tiene cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Arma legendaria: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
+    body = `<p class="fine">Tus guanteletes tienen cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Guanteletes legendarios: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
       <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
         return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
@@ -1375,11 +1350,11 @@ function forgeHtml() {
       `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
-    const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tu arma no lleva ninguna pieza afín a una deidad.</span></li>';
+    const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tus guanteletes no llevan ninguna pieza afín a una deidad.</span></li>';
     const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
       return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
     body = `<p class="fine">Combinaciones que dan efectos extra. Lo que aún no has descubierto sale como «???».</p>
-      <div class="forge"><section><h3>Afinidades de tu arma · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
+      <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
       <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
   } else {
     const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
@@ -1437,7 +1412,7 @@ function navPick(els, cur, dx, dy) {
 }
 function listInput() {
   if (S.mode === 'forge' && I.backP && modeT > 0.3) { closePlace(); return; }
-  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en el arma, por sus cinco partes
+  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en los guanteletes, por sus cinco partes
     const seq = []; for (const [id] of placeTabs()) { if (id === 'gun') for (const k of GSLOT_KEYS) seq.push(['gun', k]); else seq.push([id, null]); }
     if (seq.length < 2) return;
     const i = seq.findIndex(([t, k]) => t === forgeTab && (t !== 'gun' || k === forgeSlot)), n = seq[(i + (I.tabR ? 1 : seq.length - 1)) % seq.length];
@@ -1490,9 +1465,9 @@ function bookHtml() {
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza del arma más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
+  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Piezas del arma</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
+  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
     `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
@@ -1501,14 +1476,14 @@ function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverl
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 
-// Armas legendarias en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuál llevas montada
+// Guanteletes legendarios en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuáles llevas montados
 function legendsHtml(g) {
   const cur = legOf(g);
-  return `<h3>Armas legendarias · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
+  return `<h3>Guanteletes legendarios · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
     const known = (M.legends || {})[L.id] || L.parts.every(id => M.parts[id]);
-    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montada' : 'Legendaria'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
+    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montados' : 'Legendarios'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
 }
-// En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
+// En cada pieza de la forja: si forma parte de unos guanteletes legendarios cuyas piezas ya conoces, lo dice
 function legHint(id) {
   const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p])), E = ENSEMBLES.filter(E => E.parts.includes(id) && E.parts.every(p => M.parts[p]));
   return (L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '') + (E.length ? `<span class="leg">Ensambla con: ${E.map(x => PART[x.parts.find(p => p !== id)].name + ' (' + x.name + ')').join(', ')}</span>` : '');
@@ -1526,7 +1501,7 @@ function ensHtml(g) {
 // ───────────────────────── Reinos, zonas y misiones ─────────────────────────
 // Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
-// Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
+// Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda son los guanteletes forjados y el árbol.
 // Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
 const MTYPES = {
   doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas. Al acabar cada una eliges puerta. Hay dos tiendas.' },
@@ -1614,7 +1589,7 @@ const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0)
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
 const fillRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (g[j] && i >= 0 && i < g[j].length) g[j][i] = 1; };
 const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-// Exteriores: en la rejilla, 1 es un obstáculo (roca, árbol, casa: para el paso y las balas) y 2 es agua (para el paso, no las balas).
+// Exteriores: en la rejilla, 1 es un obstáculo (roca, árbol, casa: para el paso y los disparos) y 2 es agua (para el paso, no los disparos).
 // El generador deja en OUT qué es cada obstáculo, para dibujarlo con el paquete de biomas.
 let OUT = null;
 const ob = (g, x, y, w, h, kind, extra) => { fillRect(g, x, y, w, h); OUT.obs.push(Object.assign({ x, y, w, h, kind }, extra)); };
@@ -2078,7 +2053,7 @@ function roomHtml() {
   const forged = PARTS.filter(x => M.parts[x.id] === 2).length, known = PARTS.filter(x => M.parts[x.id]).length;
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
-    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>
+    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
     <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
 }
 
@@ -2154,7 +2129,7 @@ function kingExplain() {
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
     { who: 'king', text: 'Por el camino, los dioses menores te ofrecerán sus técnicas. Úsalas sin miedo: solo te duran ese encargo.' },
-    { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tu ballesta en la forja.' },
+    { who: 'king', text: 'Lo que ganes, en cambio, es tuyo: almas para entrenar en el patio de armas, y hierro y materiales para mejorar tus guanteletes en la forja.' },
     { who: 'king', text: 'Y si caes, te retiras y vuelves a intentarlo. En la posada tienes cama y siempre habrá otro encargo.' },
   ];
 }
@@ -2185,8 +2160,8 @@ function talkKing() {
 // La primera vez que usas la forja, la posada o el patio de armas, quien lo atiende te explica para qué sirve
 const FIRST_TALK = {
   forge: [
-    { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esa ballesta.' },
-    { who: 'smith', text: 'Tu arma tiene cinco partes: Cañón, Llave, Munición, Culata y Recámara. Cada una cambia una cosa de cómo disparas.' },
+    { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esos guanteletes.' },
+    { who: 'smith', text: 'Tienen cinco partes: Palma, Dedos, Gema, Brazal y Brasa. Cada una cambia una cosa de cómo lanzas tus conjuros.' },
     { who: 'smith', text: 'En los encargos encontrarás piezas nuevas. Tráeme Hierro Místico y materiales y te las forjo. Una vez forjada, la pieza es tuya para siempre.' },
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],
@@ -2309,7 +2284,7 @@ const INTRO = [
     beats: [
       { wait: 1.2, who: 'kid', text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
       { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
-      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja un arma y no sabe usarla solo fabrica chatarra.',
+      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
         on(R) {
           R.dipTo(() => {
             R.a('kid').hidden = true; R.stage = 1; R.acc = 0.9; R.setCap('Años después');
@@ -2330,7 +2305,7 @@ const INTRO = [
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
         ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); blip(110, 0.25, 'sawtooth', 0.06, -70); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
-      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -2338,7 +2313,7 @@ const INTRO = [
       R.go(a, [[19, 10.9]], 54);
     },
     beats: [
-      { wait: 1, who: 'alec', text: 'Con su martillo forjé esta ballesta. No he vuelto a soltarla.' },
+      { wait: 1, who: 'alec', text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
       { wait: 0.6, who: 'alec', text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
@@ -2395,7 +2370,7 @@ function introScene(i) {
     shake(n) { R.shk = Math.max(R.shk, n); },
     dipTo(fn) { R.dip = { t: 0, fn, done: false }; },
     setCap(txt) { R.cap = txt; R.capT = 0; },
-    shoot(from, to) {   // un virote de la ballesta: sale, llega y derriba
+    shoot(from, to) {   // un conjuro de los guanteletes: sale, llega y derriba
       const a = R.a(from), b = R.a(to); if (!a || !b || b.fall != null) return;
       a.aim = Math.atan2(b.y - a.y, b.x - a.x); a.kick = 3;
       R.fx.push({ k: 'bolt', x1: a.x + 12, y1: a.y - 11, x2: b.x, y2: b.y - 14, t: 0, life: 0.1, hit() { R.fall(b, 1); R.burst(b.x, b.y - 14, 6, ['#efe6c8', '#c9b98a'], 60); blip(200, 0.08, 'square', 0.04, -90); } });
@@ -2999,7 +2974,7 @@ const godCount = g => SLOT_KEYS.filter(k => godsIn(k).includes(g)).length;
 const mastery = g => godCount(g) >= 3;
 const slotColor = slot => { const cur = S.build[slot]; return !cur ? C.energy : DUO[cur.id] ? RAR[3].color : GODS[PIECE[cur.id].god].color; };
 const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
-// ¿Lleva el arma montada esa pieza? ¿Está activa esa resonancia?
+// ¿Llevan los guanteletes montada esa pieza? ¿Está activa esa resonancia?
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
@@ -3015,7 +2990,7 @@ const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
   for (const E of ensOf(S.gun)) if (!S.resSeen.has('ens_' + E.id)) { S.resSeen.add('ens_' + E.id); sayRaw('[Ensamble: ' + E.name + '. ' + E.desc + ']', C.energy); blip(760, 0.3, 'triangle', 0.05, 500); }
   for (const g of GOD_KEYS) { const a = aff(g); if (a > 0 && (S.affSeen || (S.affSeen = {}))[g] !== a) { S.affSeen[g] = a; sayRaw('[Afinidad con ' + GODS[g].theme + ' ×' + a + ': ' + AFFIN[g] + (a > 1 ? ', por cada pieza' : '') + ']', GODS[g].color); } }
-  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Arma legendaria: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
+  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Guanteletes legendarios: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
  for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
 const dodgeMax = () => (G('s_roll') ? 1 : 0) + 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
 const dodgeCdOf = () => (G('s_gasp') && S.p.hp < S.p.maxHp * 0.25 ? 0.5 : 1) * T.dodge.cd * (G('s_light') ? 0.65 : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
@@ -3030,7 +3005,7 @@ const periodOf = () => {
   return 1 / (p.as * (has('h_frenzy') && p.hp < p.maxHp * 0.3 ? 1.4 : 1) * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
-const overWalls = () => G('b_ghost') || G('b_bomb');   // el Cañón fantasma atraviesa los muros y la Bombarda tira por encima: no necesitan ver al objetivo
+const overWalls = () => G('b_ghost') || G('b_bomb');   // la Palma fantasma atraviesa los muros y la Palma de volcán tira por encima: no necesitan ver al objetivo
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
@@ -3078,10 +3053,10 @@ function kill(e) {
   if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
-  if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Culata de lápida
-  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Culata de bota de vino
+  if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Brazal de lápida
+  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Brazal de bota de vino
   if (G('m_gold')) addGold(1);
-  if (G('m_blood')) heal(3);                                                                  // Bala de sangre
+  if (G('m_blood')) heal(3);                                                                  // Gema de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
   if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
@@ -3142,8 +3117,8 @@ function hit(e, dmg, ux, uy, big, col) {
     if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
-  if (e.traced > 0) dmg *= 1.3;                                                               // Bala trazadora
-  if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Bala de plata
+  if (e.traced > 0) dmg *= 1.3;                                                               // Gema de marca
+  if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Gema de plata
   if (e.boss && e.act === 'dazed') dmg *= 2;
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices
@@ -3400,8 +3375,8 @@ function shadeStrike(s, e) {
   if (duoOn('supper') && active(e) && !e.boss && e.hp / e.maxHp < 0.2) hit(e, e.hp + 1, 0, 0, true, GODS.feast.color);   // dúo Última cena
 }
 
-// ───────────────────────── Balas ─────────────────────────
-// Un impacto de bala, venga de ti, de un eco, de un Cristal, de una Sombra o de un arma gemela
+// ───────────────────────── Disparos ─────────────────────────
+// Un impacto de disparo, venga de ti, de un eco, de un Cristal, de una Sombra o de un guantelete gemelo
 function onHit(e, dmg, ux, uy, big, col, src) {
   hit(e, dmg, ux, uy, big, col);
   const p = S.p, db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), rb = lv('storm_basic');
@@ -3441,35 +3416,35 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   if (lv('shade_basic') && active(e)) e.mark = 6;                                              // Marca de tumba
   if (sb && src === 'player') { p.crysN += 1; if (p.crysN % Math.max(1, 4 - sb) === 0) addCrystal(e.x - ux * (e.r + 9), e.y - uy * (e.r + 9)); }   // Esquirla
 }
-// Una bala tuya: además del impacto, deja eco (Segundero), la repiten los Cristales (Veta) y puede soltar un rayo
+// Un disparo tuyo: además del impacto, deja eco (Segundero), la repiten los Cristales (Veta) y puede soltar un rayo
 function shot(e, dmg, ux, uy, big, col) {
   const p = S.p, ox = p.x, oy = p.y, cc = critChance();
   let crit = false;
   if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
   if (G('m_salt') && e.wet > 0) dmg *= 1.15;
   if (G('m_star') && e.lit > 0) dmg *= th('light') ? 1.25 : 1.12;
-  if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Culata de catalejo: primer tiro
-  if (G('m_ice') && active(e)) {                                                               // Bala de escarcha
+  if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Brazal de catalejo: primer tiro
+  if (G('m_ice') && active(e)) {                                                               // Gema de escarcha
     if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); S.stat.freeze++; note(e.x, e.y - e.r - 10, '¡Congelado!', '#bfe9ff'); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 7, t: 0, life: 0.2, col: '#bfe9ff' }); }
     slow(e, 1.5, 0.7); e.iceT = 1.5; if (res('coldiron')) addFrost(e, 1);                       // resonancia Hierro frío
   }
   onHit(e, dmg, ux, uy, big, col, 'player');
-  if (G('m_blunt') && p.shotN % 5 === 0 && active(e)) stun(e, 0.6);                             // Bala roma
-  if (G('m_grow') && !active(e) && !e.boss) p.grow = Math.min(30, (p.grow || 0) + 1);          // Bala voraz
-  if (G('m_leech')) { p.leechN = (p.leechN || 0) + 1; if (p.leechN >= 8) { p.leechN = 0; heal(2); } }   // Bala sanguijuela
-  if (G('m_awl') && !S._awl) { S._awl = true; let bestE = null, ba = 70;                       // Bala de punzón: el de detrás
+  if (G('m_blunt') && p.shotN % 5 === 0 && active(e)) stun(e, 0.6);                             // Gema roma
+  if (G('m_grow') && !active(e) && !e.boss) p.grow = Math.min(30, (p.grow || 0) + 1);          // Gema voraz
+  if (G('m_leech')) { p.leechN = (p.leechN || 0) + 1; if (p.leechN >= 8) { p.leechN = 0; heal(2); } }   // Gema sanguijuela
+  if (G('m_awl') && !S._awl) { S._awl = true; let bestE = null, ba = 70;                       // Gema de punzón: el de detrás
     for (const o of S.enemies) { if (!active(o) || o === e) continue; const ex = o.x - e.x, ey = o.y - e.y, al = ex * ux + ey * uy; if (al > 0 && al - o.r < ba && Math.abs(ex * uy - ey * ux) <= o.r + 7) { ba = al - o.r; bestE = o; } }
     if (bestE) { S.stat.awl++; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: bestE.x, y2: bestE.y, t: 0, life: 0.1, col }); onHit(bestE, dmg * 0.6, ux, uy, false, col, 'player'); } S._awl = false; }
-  if (G('m_timed') && !S._timed) { const tx = e.x, ty = e.y, dm = dmg * 0.5; S.timers.push({ t: 1, fn: () => { const x = active(e) ? e.x : tx, y = active(e) ? e.y : ty; S._timed = true; S.stat.timed++; explode(x, y, 36, dm, { col: C.ember, soft: true }); S._timed = false; } }); }   // Bala de mecha
-  if (G('m_seed') && active(e)) addSeed(e, 1);                                                 // Bala de bellota
-  if (G('m_saw') && active(e)) addBleed(e, th('blood') ? 2 : 1);                               // Bala serrada
-  if (G('m_salt') && active(e)) { soak(e, 3); push(e, ux, uy, th('tide') ? 110 : 55); }        // Bala de sal
-  if (G('m_star') && active(e)) light(e, 4);                                                   // Bala de lucero
-  if (G('m_quick') && p.shotN % (th('mirror') ? 2 : 4) === 0 && active(e) && !S._quick) { S._quick = true; S.stat.quickb++; S.fx.push({ k: 'tracer', x1: e.x + ux * 50, y1: e.y + uy * 50, x2: e.x, y2: e.y, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, -ux, -uy, false, GODS.mirror.color); S._quick = false; }   // Bala de azogue
-  if (G('m_fire')) S.zones.push({ x: e.x, y: e.y, r: 16, life: ens('trail') ? 6 : 2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // Bala incendiaria
-  if (G('m_mark') && active(e)) { e.traceN = (e.traceN || 0) + 1; if (e.traceN >= 3) { e.traceN = 0; e.traced = 5; S.stat.traced++; note(e.x, e.y - e.r - 10, '¡Marcado!', C.energy); } }   // Bala trazadora
-  if (G('m_big') && !S._big) { S._big = true; for (const o of others(e, e.r + 22, 4)) { S.stat.splash++; hit(o, dmg * 0.5, ux, uy, false, col); } S._big = false; }   // Bala de calibre
-  if (G('m_split') && !S._split) {                                                             // Bala partida
+  if (G('m_timed') && !S._timed) { const tx = e.x, ty = e.y, dm = dmg * 0.5; S.timers.push({ t: 1, fn: () => { const x = active(e) ? e.x : tx, y = active(e) ? e.y : ty; S._timed = true; S.stat.timed++; explode(x, y, 36, dm, { col: C.ember, soft: true }); S._timed = false; } }); }   // Gema de mecha
+  if (G('m_seed') && active(e)) addSeed(e, 1);                                                 // Gema de bellota
+  if (G('m_saw') && active(e)) addBleed(e, th('blood') ? 2 : 1);                               // Gema serrada
+  if (G('m_salt') && active(e)) { soak(e, 3); push(e, ux, uy, th('tide') ? 110 : 55); }        // Gema de sal
+  if (G('m_star') && active(e)) light(e, 4);                                                   // Gema de lucero
+  if (G('m_quick') && p.shotN % (th('mirror') ? 2 : 4) === 0 && active(e) && !S._quick) { S._quick = true; S.stat.quickb++; S.fx.push({ k: 'tracer', x1: e.x + ux * 50, y1: e.y + uy * 50, x2: e.x, y2: e.y, t: 0, life: 0.12, col: GODS.mirror.color }); hit(e, dmg * 0.5, -ux, -uy, false, GODS.mirror.color); S._quick = false; }   // Gema de azogue
+  if (G('m_fire')) S.zones.push({ x: e.x, y: e.y, r: 16, life: ens('trail') ? 6 : 2, acc: 0.4, ember: 1, col: GODS.dragon.color });   // Gema incendiaria
+  if (G('m_mark') && active(e)) { e.traceN = (e.traceN || 0) + 1; if (e.traceN >= 3) { e.traceN = 0; e.traced = 5; S.stat.traced++; note(e.x, e.y - e.r - 10, '¡Marcado!', C.energy); } }   // Gema de marca
+  if (G('m_big') && !S._big) { S._big = true; for (const o of others(e, e.r + 22, 4)) { S.stat.splash++; hit(o, dmg * 0.5, ux, uy, false, col); } S._big = false; }   // Gema gruesa
+  if (G('m_split') && !S._split) {                                                             // Gema partida
     S._split = true;
     for (const sg of [-1, 1]) { const a = Math.atan2(uy, ux) + sg * 0.75, rx = Math.cos(a), ry = Math.sin(a); let bestE = null, ba = rayClip(e.x, e.y, rx, ry, 110);
       for (const o of S.enemies) { if (!active(o) || o === e) continue; const ex = o.x - e.x, ey = o.y - e.y, al = ex * rx + ey * ry; if (al >= 0 && al - o.r < ba && Math.abs(ex * ry - ey * rx) <= o.r + 6) { ba = Math.max(0, al - o.r); bestE = o; } }
@@ -3477,7 +3452,7 @@ function shot(e, dmg, ux, uy, big, col) {
       if (bestE) { S.stat.split++; onHit(bestE, dmg * 0.35 * (ens('splinter') ? 2 : 1) * (res('mirrorhall') ? 2 : 1), rx, ry, false, col, 'player'); } }
     S._split = false;
   }
-  if (G('m_frag') && !active(e) && !S._frag) {                                                 // Bala de metralla: estalla al matar
+  if (G('m_frag') && !active(e) && !S._frag) {                                                 // Gema de esquirlas: estalla al matar
     S._frag = true; S.stat.frag++;
     for (const o of others(e, ens('cluster') ? 130 : 90, ens('cluster') ? 8 : 5)) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.12, col: C.ink }); onHit(o, dmg * 0.3, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'frag'); }
     S._frag = false;
@@ -3504,52 +3479,52 @@ function shot(e, dmg, ux, uy, big, col) {
     }
   }
   if (duoOn('warthunder') && furyFull()) { const o = others(e, 120, 1)[0]; bolt(e, o, dmg * 0.6, null); if (o && active(o)) addNeedles(o, lv('storm_passive')); }   // dúo Trueno de guerra: su rayo clava las Agujas de Conductor, que es una de sus dos técnicas
-  if (G('m_chain')) {                                                                          // Bala enramada: salta al más cercano
+  if (G('m_chain')) {                                                                          // Gema enramada: salta al más cercano
     const o = others(e, 95, 1)[0];
     if (o) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
   }
-  if (G('m_heavy') && active(e) && !e.boss) { e.kx += ux * 150; e.ky += uy * 150; }               // Bala de cañón: empuja
+  if (G('m_heavy') && active(e) && !e.boss) { e.kx += ux * 150; e.ky += uy * 150; }               // Gema de plomo: empuja
 }
 
-// Un tirón del gatillo: mecanismo y cargador deciden cuánto y cómo; el cañón decide a quién le da.
+// Un disparo: dedos y gema deciden cuánto y cómo; la palma decide a quién le da.
 function fireBasic(target) {
   const p = S.p, g = S.gun, draw = g.action === 'a_draw';
   if (!target || !active(target)) target = nearestInRange();
-  if (g.action === 'a_rota' && target) {   // Llave de ronda: cada disparo a un enemigo distinto del anterior
+  if (g.action === 'a_rota' && target) {   // Dedos de ronda: cada disparo a un enemigo distinto del anterior
     const alt = S.enemies.filter(e => active(e) && e !== p.rotaT && dist(p, e) - e.r <= rangeOf() && (overWalls() || !blocked(p, e))).sort((a, b) => dist(p, a) - dist(p, b))[0];
     if (alt) target = alt; p.rotaT = target;
   }
   if (!target && !draw) { p.cd = 0.12; p.crit = false; return; }   // tensando se puede soltar sin objetivo
   p.shotN += 1; p.trig += 1;
   let mult = gunDmg();
-  if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Desenfundado!', C.ember, true); }   // Pistolete
-  if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Llave de péndulo (sustituye el 1,5 del Compás por la racha)
+  if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Presta!', C.ember, true); }   // Palma presta
+  if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Dedos de péndulo (sustituye el 1,5 del Compás por la racha)
   if (g.mag === 'm_blood') payLife(1);
-  if (g.mag === 'm_gold') { if (p.gold >= 1) { p.gold -= 1; mult *= 1.35; } else mult *= 0.8; }           // Bala de oro
+  if (g.mag === 'm_gold') { if (p.gold >= 1) { p.gold -= 1; mult *= 1.35; } else mult *= 0.8; }           // Gema de oro
   if (g.action === 'a_spring' && res('deathclock') && (p.idle || 0) >= 4 && target && target.doom) fulfil(target);   // resonancia Hora señalada
-  if (g.action === 'a_spring') { const k = 1 + Math.min(2, 0.5 * (p.idle || 0)); if (k > 1.4) { S.stat.spring++; note(p.x, p.y - 14, 'x' + k.toFixed(1), C.ember); } mult *= k; }   // Llave de resorte
+  if (g.action === 'a_spring') { const k = 1 + Math.min(2, 0.5 * (p.idle || 0)); if (k > 1.4) { S.stat.spring++; note(p.x, p.y - 14, 'x' + k.toFixed(1), C.ember); } mult *= k; }   // Dedos de resorte
   let heavyAlt = false;
-  if (g.action === 'a_alt') { heavyAlt = p.alt; mult *= p.alt ? 1.8 : 0.6; p.alt = !p.alt; }               // Llave alterna
-  if (g.action === 'a_combo') { if (target && target === p.comboT) p.comboN = Math.min(8, (p.comboN || 0) + 1); else p.comboN = 0; p.comboT = target; }   // Llave de insistencia
+  if (g.action === 'a_alt') { heavyAlt = p.alt; mult *= p.alt ? 1.8 : 0.6; p.alt = !p.alt; }               // Dedos alternos
+  if (g.action === 'a_combo') { if (target && target === p.comboT) p.comboN = Math.min(8, (p.comboN || 0) + 1); else p.comboN = 0; p.comboT = target; }   // Dedos de insistencia
   let kick = false;
-  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (leg('master') && target) explode(target.x, target.y, 44, p.dmg, { col: GODS.forge.color, skip: target }); if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de trueno
+  if (g.action === 'a_kick' && p.trig % 3 === 0) { kick = true; mult *= 2.2; if (leg('master') && target) explode(target.x, target.y, 44, p.dmg, { col: GODS.forge.color, skip: target }); if (res('anvilsong')) addTemper(2); if (ens('gambler')) addGold(3); S.stat.kick++; note(p.x, p.y - 14, '¡Trueno!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Dedos de trueno
   if (p.venge > 0) { p.venge -= 1; mult *= 2; }
   if (g.action === 'a_rota') mult *= 1.3;
   let overB = false;
-  if (g.action === 'a_over' && p.overT >= 10) { p.overT = 0; overB = true; mult *= 4; S.stat.over++; note(p.x, p.y - 14, '¡Sobrecarga!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Llave de sobrecarga
-  p.lastShotT = S.t;                                                             // Culata de rencor
-  if (g.action === 'a_drum') gainFury(th('orc') ? 12 : 8);                                                  // Llave de tambor
+  if (g.action === 'a_over' && p.overT >= 10) { p.overT = 0; overB = true; mult *= 4; S.stat.over++; note(p.x, p.y - 14, '¡Sobrecarga!', C.ember, true); S.shake = Math.max(S.shake, 6); }   // Dedos de sobrecarga
+  p.lastShotT = S.t;                                                             // Brazal de rencor
+  if (g.action === 'a_drum') gainFury(th('orc') ? 12 : 8);                                                  // Dedos de tambor
   if (g.action === 'a_glass' && p.trig % (th('time') ? 2 : 3) === 0 && target) { const tg = target, d0 = p.dmg * mult * 0.6, fx0 = Math.cos(p.face), fy0 = Math.sin(p.face), ox = p.x, oy = p.y; S.stat.themed++;
-    S.timers.push({ t: echoDelay(1), fn: () => { if (!active(tg)) return; S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: tg.x, y2: tg.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 }); onHit(tg, d0, fx0, fy0, false, GODS.time.color, 'echo'); } }); }   // Llave de clepsidra
-  if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Llave de nana
-  p.idle = 0;                       // Bala de sangre
+    S.timers.push({ t: echoDelay(1), fn: () => { if (!active(tg)) return; S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: tg.x, y2: tg.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 }); onHit(tg, d0, fx0, fy0, false, GODS.time.color, 'echo'); } }); }   // Dedos de clepsidra
+  if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Dedos de nana
+  p.idle = 0;                       // Gema de sangre
   let lastB = false;
-  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última bala
+  if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última gema
   if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
   if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
   if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
   let onetwo = false;
-  if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Doble carga: la segunda al mismo blanco pega más
+  if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Gema doble: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
   if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
   if (draw) mult *= (0.6 + 1.6 * p.drawPow) * (ens('siege') && p.drawPow >= 1 && braced() ? 1.6 : 1);
@@ -3568,7 +3543,7 @@ function fireBasic(target) {
   } else barrelFire(target, mult, big, col, reach);
   if (leg('zhuge') && draw) for (const d of [0.08, 0.16]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.04, 'square', 0.03, -500); barrelFire(t2, mult * 0.7, false, col, reach); addVenom(t2, 2); } } });
   if (leg('zhuge') && draw && target && active(target)) addVenom(target, 2);
-  if (imb && target && active(target)) { S.stat.blessed++; explode(target.x, target.y, 40, p.dmg * 1.2, { col: '#ffffff' }); }   // Bala bendita
+  if (imb && target && active(target)) { S.stat.blessed++; explode(target.x, target.y, 40, p.dmg * 1.2, { col: '#ffffff' }); }   // Gema bendita
   if (res('leadstorm') && p.trig % 10 === 0 && target && active(target)) discharge(target, 1, null);        // resonancia Tormenta de plomo
   if (res('firingline')) for (const sh of S.shades) {                        // resonancia Línea de tiro
     let tg = null, td = 220;
@@ -3584,32 +3559,32 @@ function fireBasic(target) {
       if (duoOn('doubles')) for (const sh of S.shades) { let tg = null, td = 220; for (const e of S.enemies) { if (!active(e)) continue; const dd = dist(sh, e); if (dd < td) { td = dd; tg = e; } } if (tg) { S.fx.push({ k: 'tracer', x1: sh.x, y1: sh.y, x2: tg.x, y2: tg.y, t: 0, life: 0.09, col: GODS.shade.color }); onHit(tg, p.dmg * 0.3, (tg.x - sh.x) / (td || 1), (tg.y - sh.y) / (td || 1), false, GODS.shade.color, 'shade'); } }
     }
     if (fb3 && p.shotN % Math.max(2, 8 - fb3 * 2) === 0) addTemper(1);         // Temple
-    if (g.stock === 's_geode' && target && active(target)) for (const c of S.crystals.slice(0, 4)) { const d = Math.hypot(target.x - c.x, target.y - c.y) || 1; if (d > 220) continue; S.stat.themed++; S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.stone.color }); hit(target, p.dmg * mult * (th('stone') ? 0.4 : 0.2), (target.x - c.x) / d, (target.y - c.y) / d, false, GODS.stone.color); }   // Culata de geoda
+    if (g.stock === 's_geode' && target && active(target)) for (const c of S.crystals.slice(0, 4)) { const d = Math.hypot(target.x - c.x, target.y - c.y) || 1; if (d > 220) continue; S.stat.themed++; S.fx.push({ k: 'tracer', x1: c.x, y1: c.y, x2: target.x, y2: target.y, t: 0, life: 0.09, col: GODS.stone.color }); hit(target, p.dmg * mult * (th('stone') ? 0.4 : 0.2), (target.x - c.x) / d, (target.y - c.y) / d, false, GODS.stone.color); }   // Brazal de geoda
     if (p.redhot > 0) p.redhot -= 1;
     for (const pt of S.pets) if (target && active(target)) pt.prey = target; }  // el sabueso va a por quien disparas
   if (lastB) p.cd = Math.max(p.cd, 1.2);
-  if (g.action === 'a_fin' && target && active(target) && target.hp / target.maxHp < 0.25) p.cd = Math.min(p.cd, 0.1);   // Llave de remate
+  if (g.action === 'a_fin' && target && active(target) && target.hp / target.maxHp < 0.25) p.cd = Math.min(p.cd, 0.1);   // Dedos de remate
   if (kick && target && active(target)) push(target, Math.cos(p.face), Math.sin(p.face), 300);
-  if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Culata de muelle: saltito tras disparar
+  if (g.stock === 's_spring' && p.dodgeT <= 0 && Math.hypot(I.mx, I.my) > 0.3) {   // Brazal de muelle: saltito tras disparar
     const hopL = ens('hare') ? 48 : 24, m = Math.hypot(I.mx, I.my) / (hopL / 24); p.x += I.mx / m * 24; p.y += I.my / m * 24; S.stat.hop++;
     p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r);
     S.fx.push({ k: 'ghost', x: p.x - I.mx / m * 24, y: p.y - I.my / m * 24, t: 0, life: 0.18 });
   }
-  // Cargador
+  // Gema
   if (g.mag === 'm_drum') {              // dos disparos y a recargar
     p.shells -= 1;
     if (p.shells <= 0) { p.shells = 2; p.cd = periodOf() * 1.25; if (res('leadfeast')) { heal(4); p.feastShot = true; } }   // resonancia Banquete de plomo
     else p.cd = periodOf() * 0.22;
   }
-  if (g.mag === 'm_belt') {              // la cinta calienta el arma
+  if (g.mag === 'm_belt') {              // la gema candente calienta los guanteletes
     p.heat = Math.min(1, p.heat + (g.action === 'a_rotary' ? 0.045 : 0.13)); p.heatT = 0.7;
     if (p.heat >= 1 && leg('organ')) { p.heat = 0; S.shake = Math.max(S.shake, 5); note(p.x, p.y - 16, '¡Salva!', C.ember, true); const near = S.enemies.filter(e => active(e) && dist(p, e) < rangeOf() + 40 && !blocked(p, e)); for (let i = 0; i < 11 && near.length; i++) { const e = near[i % near.length], d = dist(p, e) || 1; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: e.x, y2: e.y, t: 0, life: 0.12, col: C.ember, w: 1.5 }); if (active(e)) shot(e, p.dmg * 0.6, (e.x - p.x) / d, (e.y - p.y) / d, false, col); } }
     else if (p.heat >= 1) { p.over = 1.6; p.spin = 0; p.drawing = false; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); blip(120, 0.4, 'sawtooth', 0.06, -60); if (res('furnace')) explode(p.x, p.y, 70, p.dmg * 2.5, { push: 200, col: GODS.orc.color }); }
   }
-  // Culata de retroceso: cada disparo te aparta del enemigo
+  // Brazal de coz: cada disparo te aparta del enemigo
   if (g.stock === 's_recoil' && target && g.barrel !== 'b_spike' && p.dodgeT <= 0) { const d = dist(p, target) || 1; p.x -= (target.x - p.x) / d * 9; p.y -= (target.y - p.y) / d * 9; p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r); }
 }
-// El cañón: a quién alcanza un disparo
+// La palma: a quién alcanza un disparo
 function barrelFire(target, m, big, col, reach) {
   const p = S.p, B = S.gun.barrel;
   const ang = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, ux = Math.cos(ang), uy = Math.sin(ang);
@@ -3663,7 +3638,7 @@ function barrelFire(target, m, big, col, reach) {
     const pass = () => { for (const e of S.enemies.slice()) { if (!active(e)) continue; const ax = e.x - p.x, ay = e.y - p.y, al = ax * ux + ay * uy; if (al >= 0 && al <= len + e.r && Math.abs(ax * uy - ay * ux) <= 8 + e.r) { S.stat.boom++; shot(e, p.dmg * m * 0.7, ux, uy, big, col); } } };
     S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: ex, y2: ey, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass();
     S.timers.push({ t: 0.28, fn: () => { S.fx.push({ k: 'tracer', x1: ex, y1: ey, x2: S.p.x, y2: S.p.y, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass(); } });
-  } else if (B === 'b_nail') {           // clavos: al cuarto en el mismo enemigo, revientan
+  } else if (B === 'b_nail') {           // espinas: a la cuarta en el mismo enemigo, revientan
     tracer(target.x, target.y); shot(target, p.dmg * m * 0.75, ux, uy, big, col);
     if (active(target)) { target.nails = (target.nails || 0) + 1; if (target.nails >= 4) { target.nails = 0; S.stat.nail++; if (ens('rivet')) for (const o of others(target, 60, 6)) hit(o, p.dmg * m * 3, ux, uy, true, col); note(target.x, target.y - target.r - 10, '¡Revienta!', C.ember); S.fx.push({ k: 'ring', x: target.x, y: target.y, r: target.r + 10, t: 0, life: 0.18, col: C.ember }); hit(target, p.dmg * m * 3, ux, uy, true, col); } }
   } else if (B === 'b_arc') {            // salta entre cuatro
@@ -3675,7 +3650,7 @@ function barrelFire(target, m, big, col, reach) {
     const d = dist(p, target) - target.r, k = d > reach * 0.66 ? 2 : d < reach * 0.3 ? 0.5 : 1; if (k > 1 && res('sunbeam')) for (const o of others(target, 70, 6)) light(o);   // resonancia Rayo de sol
     if (k > 1) { S.stat.far++; S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 10, t: 0, life: 0.15, col: C.ink }); }
     tracer(target.x, target.y, k > 1 ? 2 : 0); shot(target, p.dmg * m * k, ux, uy, big || k > 1, col);
-  } else if (B === 'b_swarm') {          // tres dardos a tres enemigos al azar
+  } else if (B === 'b_swarm') {          // tres centellas a tres enemigos al azar
     const pool = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort(() => Math.random() - 0.5).slice(0, 3); while (pool.length < 3) pool.push(target);
     if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6, true); }   // resonancia Montería
     pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: S.p.x, y1: S.p.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
@@ -3700,7 +3675,7 @@ function barrelFire(target, m, big, col, reach) {
   } else if (B === 'b_flail') {          // mangual: lanzas la bola y tarda en volver
     S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.25, col: PAL.I, w: 2 }); p.orbAway = 1; S.stat.flail++;
     shot(target, p.dmg * m * 1.5, ux, uy, true, col);
-  } else if (B === 'b_bomb') {           // bomba en arco: pasa por encima de los muros y revienta en área
+  } else if (B === 'b_bomb') {           // orbe por lo alto: pasa por encima de los muros y revienta en área
     const tx = target.x, ty = target.y, fl = 0.2 + dist(p, target) / 520, dm = p.dmg * m * 0.8;
     S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
     S.fx.push({ k: 'ring', x: tx, y: ty, r: 16, t: 0, life: fl, col: C.ember });
@@ -3716,20 +3691,20 @@ function barrelFire(target, m, big, col, reach) {
     if (res('executor')) { stun(target, 0.4); gainFury(15); }                // resonancia Verdugo
     if (!active(target)) { p.cd = 0; note(p.x, p.y - 14, '¡Otra!', C.ember); }
     if (p.dodgeT <= 0) lunge(ang, dist(p, target) + target.r + 22);
-  } else {                               // ballesta o pistolete: una bala a un enemigo
+  } else {                               // palma de fragua o palma presta: un disparo a un enemigo
     if (B === 'b_icicle' && target.frozen > 0) m *= 1.3;
-    if (B === 'b_drill') { if (target === p.drillT) p.drillN = Math.min(10, p.drillN + 1); else p.drillN = 0; p.drillT = target; m *= 1 + 0.15 * p.drillN; }   // Berbiquí
-    if (B === 'b_net') { m *= 0.65; if ((target.netCd || 0) <= S.t) { target.netCd = S.t + 3; S.stat.net++; root(target, 0.9); } }   // Lanzarredes
+    if (B === 'b_drill') { if (target === p.drillT) p.drillN = Math.min(10, p.drillN + 1); else p.drillN = 0; p.drillT = target; m *= 1 + 0.15 * p.drillN; }   // Palma de berbiquí
+    if (B === 'b_net') { m *= 0.65; if ((target.netCd || 0) <= S.t) { target.netCd = S.t + 3; S.stat.net++; root(target, 0.9); } }   // Palma de red
     const far = B === 'b_long' && dist(p, target) - target.r > reach * 0.5;
     if (far) S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 9, t: 0, life: 0.15, col: C.ink });
     tracer(target.x, target.y, far ? 1.8 : 0); shot(target, p.dmg * m * (far ? 1.4 : 1), ux, uy, far || big, col);
-    if (active(target)) {                // cañones temáticos: lo suyo, aunque no lleves a esa deidad
+    if (active(target)) {                // palmas temáticas: lo suyo, aunque no lleves a esa deidad
       if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
       if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }
       if (B === 'b_rod') { addNeedles(target, th('storm') ? 2 : 1); S.stat.themed++; if (target.needles >= (leg('tempest') ? 3 : 6)) discharge(target, 1, null); }   // con Sobrecarga, a las 6 ya se han descargado solas y aquí no queda nada
       if (B === 'b_icicle') { addFrost(target, th('frost') ? 2 : 1); S.stat.themed++; }
     }
-    if (B === 'b_long') {                // Remate: si mata, la bala sigue
+    if (B === 'b_long') {                // Remate: si mata, el disparo sigue
       let from = target, hops = 0;
       while (!active(from) && hops < 3) {
         const next = others(from, 115, 1)[0]; if (!next) break;
@@ -3758,7 +3733,7 @@ function startDodge(a, free) {
   p.danced = false; p.lastDodgeT = S.t; p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
-  if (G('a_rider') && !free) { const tg = nearestInRange(); if (tg) { S.stat.rider++; barrelFire(tg, gunDmg() * 1.3, true, slotColor('basic'), rangeOf()); } }   // Llave de jinete
+  if (G('a_rider') && !free) { const tg = nearestInRange(); if (tg) { S.stat.rider++; barrelFire(tg, gunDmg() * 1.3, true, slotColor('basic'), rangeOf()); } }   // Dedos de jinete
   if (lv('stone_dodge') || (G('s_geode') && !free)) addCrystal(p.x, p.y);                              // Geoda
   const td = lv('time_dodge'), sd = lv('shade_dodge');
   if (td) S.fields.push({ x: p.x, y: p.y, r: 80, life: 2 + td, life0: 2 + td });   // Hora muerta
@@ -3797,15 +3772,15 @@ function endDodge() {
     if (vd2 && !p.isLunge) addWell(from.x, from.y, 62, 1 + vd2, 0, 0, { stunC: duoOn('funnel') }); }   // Hueco (y dúo Embudo)
   { const fd = lv('frost_dodge'); if (fd && !p.isLunge) S.zones.push({ x: from.x, y: from.y, r: 40, life: 4, acc: 0.4, frost: fd, col: GODS.frost.color }); }   // Paso de hielo
   if (p.fly && dd) explode(p.x, p.y, 52, p.dmg * 1.5 * dd, { col: GODS.dragon.color, zap: duoOn('comet') });   // Vuelo (y dúo Cometa)
-  if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Arma gemela
-  if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Culata de fresno / Pistolete: sales del esquive con el arma lista
+  if (S.plans.has('echo') && !p.isLunge) S.turrets.push({ x: from.x, y: from.y, life: 3, cd: 0.15 });        // Guantelete gemelo
+  if (!p.isLunge) { if (G('s_light')) { p.cd = 0; p.windup = 0; } if (G('b_short')) { p.quick = 1.2; p.cd = 0; } }   // Brazal de pluma / Palma presta: sales del esquive con los guanteletes listos
   p.dodgeFrom = null; p.fly = false; p.lanceDmg = 0;
 }
 // Lo que pasa al atravesar a un enemigo con el esquive
 function dashThrough(e) {
   const p = S.p, od = lv('orc_dodge'), fd = lv('feast_dodge'), rd = lv('storm_dodge');
-  if (G('s_dance') && !p.danced) { p.danced = true; p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); note(p.x, p.y - 18, '¡Otra!', C.energy); }   // Culata de bailarín
-  if (G('s_spikes') && active(e)) { S.stat.spk++; hit(e, p.dmg * 1.5, p.dvx, p.dvy, true, C.ink); stun(e, 0.5); }   // Culata de púas
+  if (G('s_dance') && !p.danced) { p.danced = true; p.dodgeN = Math.min(dodgeMax(), p.dodgeN + 1); note(p.x, p.y - 18, '¡Otra!', C.energy); }   // Brazal de bailarín
+  if (G('s_spikes') && active(e)) { S.stat.spk++; hit(e, p.dmg * 1.5, p.dvx, p.dvy, true, C.ink); stun(e, 0.5); }   // Brazal de púas
   if (p.lanceDmg) { hit(e, p.lanceDmg, p.dvx, p.dvy, true, C.energy); if (active(e)) chargePayoff(e); }      // carga de la lanza
   if (rd && active(e)) { if (e.needles > 0) { const n = discharge(e, 0.8 + 0.2 * (rd - 1), null); if (duoOn('toast')) heal(2 * n); } else addNeedles(e, 2); }   // Paso relámpago (y dúo Brindis eléctrico)
   if (fd && active(e)) { hit(e, p.dmg * 0.6 * fd, p.dvx, p.dvy, false, GODS.feast.color); heal(3 * fd); }   // Brindis
@@ -3953,7 +3928,7 @@ function castCharged(snap, mult, echo) {
   } else if (CH === 'c_nova') {          // onda que aparta
     S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 120, t: 0, life: 0.35, col }); S.shake = Math.max(S.shake, 7);
     for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(o, e) || 1; if (d > 120 + e.r) continue; strike(e, dmg * 0.7, (e.x - o.x) / d, (e.y - o.y) / d); if (active(e)) { if (leg('winter')) freeze(e); push(e, (e.x - o.x) / d, (e.y - o.y) / d, 380); } }
-  } else if (CH === 'c_turret') {        // centinela: una copia del arma clavada en el suelo
+  } else if (CH === 'c_turret') {        // centinela: un guantelete gemelo clavado en el suelo
     S.turrets.push({ x: o.x, y: o.y, life: ens('watch') ? 12 : 6, cd: 0.2, k: 0.8, sentry: true });
   } else if (CH === 'c_snipe') {         // verdugo: un tiro al más fuerte a la vista
     const tg = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < 420).sort((a, b) => b.hp - a.hp)[0];
@@ -4055,7 +4030,7 @@ function fireCharged(am) {
   if (S.plans.has('recoil') && !moves) { cd *= 0.65; startDodge(Math.atan2(-uy, -ux), true); }
   else if (!moves) { p.x -= ux * 6; p.y -= uy * 6; }
   p.chargeCdMax = p.chargeCd = cd;
-  if (p.snipeRefund) { p.snipeRefund = false; p.chargeCd = 0.15; }   // Recámara de verdugo
+  if (p.snipeRefund) { p.snipeRefund = false; p.chargeCd = 0.15; }   // Brasa de verdugo
   S.shake = Math.max(S.shake, 4 + 4 * ratio);
   blip(300, 0.3, 'sawtooth', 0.06, -220);
 }
@@ -4063,19 +4038,19 @@ function fireCharged(am) {
 function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
-  if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Culata con rodela
+  if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Brazal con rodela
   if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
   p.streak = 0;                                                               // Racha: se pierde al recibir un golpe (no si lo para la rodela o se lo lleva el Reflejo)
   { const mp = lv('mirror_passive'); if (mp) explode(p.x, p.y, 64, p.dmg * mp, { col: GODS.mirror.color }); }   // Azogue
-  if (G('s_tower')) dmg *= 0.7;                                               // Culata de torre
-  if (G('s_anchor') && p.charging) dmg *= 0.5;                                // Culata de ancla
-  if (G('s_venge')) p.venge = 3;                                              // Culata de rencor
+  if (G('s_tower')) dmg *= 0.7;                                               // Brazal de torre
+  if (G('s_anchor') && p.charging) dmg *= 0.5;                                // Brazal de ancla
+  if (G('s_venge')) p.venge = 3;                                              // Brazal de rencor
   if (has('q_break')) p.broke = true;
   if (!mastery('forge')) p.temper = Math.floor(p.temper / 2);
   dmg *= (1 - 0.05 * tk('skin')) * (has('m_skin') ? 0.9 : 1) * (1.2 + 0.3 * (S.world - 1));
   if (p.reserve > 0) { const a = Math.min(p.reserve, dmg); p.reserve -= a; dmg -= a; }   // la Reserva hace de escudo
   p.hp -= dmg; p.inv = 0.5; S.hurtFx = 0.35;
-  if (G('s_wind') && !S.windUsed && p.hp > 0 && p.hp < p.maxHp * 0.3) { S.windUsed = true; S.stat.wind++; heal(p.maxHp * 0.2); note(p.x, p.y - 20, '¡Segundo aire!', '#8fe08a', true); }   // Culata de segundo aire
+  if (G('s_wind') && !S.windUsed && p.hp > 0 && p.hp < p.maxHp * 0.3) { S.windUsed = true; S.stat.wind++; heal(p.maxHp * 0.2); note(p.x, p.y - 20, '¡Segundo aire!', '#8fe08a', true); }   // Brazal de segundo aire
   if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata
   S.shake = Math.max(S.shake, 6);
   gainFury(15);
@@ -4240,16 +4215,16 @@ function update(dt) {
   if (I.atkP) { if (p.cd > T.buffer) p.spoil = true; p.buffer = T.buffer; if (!target) S.noTarget = 0.25; }
   const g = S.gun, A = g.action, want = p.buffer > 0 || I.atk || A === 'a_auto';
   if (p.over > 0) p.over -= dt;
-  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Llave de chispa: carrerilla
+  p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
     if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se arma', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
-  p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Llave de volante
+  p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Dedos de volante
   if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); blip(1400, 0.1, 'sine', 0.04, 300); } }
-  if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con el arma lista (Llave de resorte, Culata de corredor)
-  if (g.barrel === 'b_flail') {   // Mangual: la bola gira y golpea lo que toca
+  if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con los guanteletes listos (Dedos de resorte, Brazal de corredor)
+  if (g.barrel === 'b_flail') {   // Palma de mangual: la bola gira y golpea lo que toca
     p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
     if (p.orbAway <= 0) { const bx = p.x + Math.cos(p.orbA) * 34, by = p.y + Math.sin(p.orbA) * 34;
       for (const e of S.enemies.slice()) if (active(e) && (e.orbT || 0) <= S.t && Math.hypot(e.x - bx, e.y - by) < e.r + 7) { e.orbT = S.t + 0.45; S.stat.orb++; const d = dist(p, e) || 1; shot(e, p.dmg * gunDmg() * 0.7, (e.x - p.x) / d, (e.y - p.y) / d, false, slotColor('basic')); } }
@@ -4288,23 +4263,23 @@ function update(dt) {
   }
   S.wells = S.wells.filter(w => w.life > 0);
   if (duoOn('lens')) for (const c of S.crystals) for (const e of S.enemies) if (active(e) && Math.hypot(e.x - c.x, e.y - c.y) < 60) light(e, 1.5);   // dúo Lente
-  for (const mn of S.mines) {     // minas de la Recámara de minas
+  for (const mn of S.mines) {     // minas de la Brasa de minas
     mn.life -= dt;
     if (S.enemies.some(e => active(e) && !e.type.fly && Math.hypot(e.x - mn.x, e.y - mn.y) < e.r + 9)) { mn.life = 0; S.stat.mine++; if (res('thornmine')) S.zones.push({ x: mn.x, y: mn.y, r: 40, life: 4, acc: 0.4, slow: 0.5, dmg: p.dmg * 0.25, bram: true, col: GODS.wood.color }); explode(mn.x, mn.y, 50, mn.dmg, { col: mn.col, payoff: true }); }
   }
   S.mines = S.mines.filter(mn => mn.life > 0);
   p.quick = Math.max(0, p.quick - dt); p.buttCd = Math.max(0, p.buttCd - dt);
-  if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Culata herrada: culatazo a quien se pegue
+  if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Brazal herrado: codazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
     if (near.length) {
-      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Culatazo!', C.ember, true);
+      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Codazo!', C.ember, true);
       S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 26, t: 0, life: 0.18, col: C.ink });
       for (const e of near) { const d = dist(p, e) || 1; hit(e, p.dmg * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, true, C.ink); if (active(e)) { e.kx += (e.x - p.x) / d * 300; e.ky += (e.y - p.y) / d * 300; stun(e, 0.6); } }
     }
   }
   p.heatT -= dt; if (p.heatT <= 0) p.heat = Math.max(0, p.heat - dt * 0.45);
   const canFire = p.over <= 0 && !p.charging && p.dodgeT <= 0;
-  if (A === 'a_hold') {   // Llave de retén: guardar hasta tres balas y soltarlas
+  if (A === 'a_hold') {   // Dedos de retén: guardar hasta tres disparos y soltarlos
     if (I.atk && canFire && p.cd <= 0) { p.drawing = true; p.draw = Math.min(1, p.draw + dt / (periodOf() * 2.2)); if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x); }
     else if (p.drawing) {
       p.drawing = false; const n = 1 + Math.floor(p.draw * 2 + 0.001); p.draw = 0; p.cd = periodOf() * 0.5; S.stat.hold = (S.stat.hold || 0) + n;
@@ -4334,9 +4309,9 @@ function update(dt) {
     p.spoil = false;
     p.windupTotal = p.windup = period * P.windupFrac * (A === 'a_alt' ? (p.alt ? 2 : 0.2) : 1) * (A === 'a_semi' ? 0.5 : A === 'a_burst' ? 1.25 : 1) * (g.stock === 's_heavy' ? 1.3 : 1) * (g.barrel === 'b_spike' ? 0.6 : 1) * (1 - 0.06 * tk('brake'));
     if (g.barrel === 'b_short' && p.quick > 0) p.windupTotal = p.windup = 0.03;
-    if (A === 'a_fin' && target.hp / target.maxHp < 0.25) p.windupTotal = p.windup = 0.03;   // Llave de remate: sin frenazo   // Pistolete: desenfundar no tiene frenazo
+    if (A === 'a_fin' && target.hp / target.maxHp < 0.25) p.windupTotal = p.windup = 0.03;   // Dedos de remate: sin frenazo   // Palma presta: el golpe tras esquivar no tiene frenazo
     p.windupTarget = target; p.cd = period; p.buffer = 0;
-    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Mecha lenta: sale sola medio segundo después
+    if (A === 'a_fuse') { p.windup = 0; const tg = target; S.fx.push({ k: 'clock', x: p.x, y: p.y, t: 0, life: 0.5 }); S.timers.push({ t: 0.5, fn: () => { if (S.p.dodgeT <= 0) { fireBasic(tg); if (res('lullaby') && tg && active(tg)) sleep(tg, 3); } } }); }   // Dedos de rescoldo: sale sola medio segundo después
   }
   if (p.windup > 0) {
     const wt = p.windupTarget && active(p.windupTarget) ? p.windupTarget : target;
@@ -4353,8 +4328,8 @@ function update(dt) {
   else if (p.windup > 0) mult = free || A === 'a_semi' ? 1 : P.windupSlow;
   else if (I.atk && A === 'a_rotary') mult = free ? 1 : p.over > 0 ? 0.8 : 0.3 + 0.35 * (1 - p.spin);
   else if (I.atk && target) mult = free || A === 'a_semi' ? 1 : P.holdSlow;
-  if (g.stock === 's_sprint' && (p.idle || 0) > 2) mult *= 1.35;                // Culata de corredor
-  if (g.stock === 's_gasp' && p.hp < p.maxHp * 0.25) mult *= 1.3;              // Culata del último aliento
+  if (g.stock === 's_sprint' && (p.idle || 0) > 2) mult *= 1.35;                // Brazal de corredor
+  if (g.stock === 's_gasp' && p.hp < p.maxHp * 0.25) mult *= 1.3;              // Brazal del último aliento
   p.still = Math.hypot(I.mx, I.my) < 0.2 && p.dodgeT <= 0 ? p.still + dt : 0;   // para el Bípode
   if (p.dodgeT > 0) {
     p.dodgeT -= dt;
@@ -4373,7 +4348,7 @@ function update(dt) {
     collide(p, p.r);
   }
 
-  // Armas gemelas
+  // Guanteletes gemelos
   for (const tu of S.turrets) {
     tu.life -= dt; tu.cd -= dt;
     if (tu.cd > 0) continue;
@@ -4426,7 +4401,7 @@ function update(dt) {
     for (const e of S.enemies.slice()) {
       if (!active(e)) continue;
       const d = dist(c, e) - e.r;
-      if (obs && d < 42) addEmber(e, 1);                                   // dúo Bala de obsidiana
+      if (obs && d < 42) addEmber(e, 1);                                   // dúo Filo de obsidiana
       if (tox && d < 42) addVenom(e, 2);                                   // dúo Estela de cristal
       if (cq && d < 50) { slow(e, 0.6, 0.6); fed = true; }                 // dúo Cuarzo de reloj
       if (tab && d < 60 && !e.boss && e.hp / e.maxHp < (e.champ ? 0.1 : 0.2)) {   // dúo Mesa puesta
@@ -4474,7 +4449,7 @@ function update(dt) {
     const damp = 1 - Math.min(1, dt * 12); e.kx *= damp; e.ky *= damp;
     e.autoCd = Math.max(0, e.autoCd - dt); e.mark = Math.max(0, e.mark - dt);
     if (e.slowT > 0) e.slowT -= dt; else e.slowF = 1;
-    if (e.iceT > 0) e.iceT -= dt;   // la marca de la Bala de escarcha caduca con su frenado
+    if (e.iceT > 0) e.iceT -= dt;   // la marca de la Gema de escarcha caduca con su frenado
     if (lunch < 1 && dist(p, e) < 90) slow(e, 0.15, lunch);                // dúo Sobremesa larga
     if (e.needles > 0 && !(duoOn('syringe') && e.venom > 0)) { e.needleT -= dt; if (e.needleT <= 0) e.needles = 0; }
     if (e.fling > 0) {                   // dúo Avalancha: enemigo lanzado
@@ -5195,7 +5170,7 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
 const heroKey = () => 'alec_s';
-// Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
+// Alec es el mago de los guanteletes (tools/make_alec.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
@@ -6125,7 +6100,7 @@ function renderOverlay() {
   if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
-    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de ballesta y dioses</p><h1 class="logo">Alec, el sin dios</h1>
+    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de guanteletes y dioses</p><h1 class="logo">Alec, el sin dios</h1>
       <p class="lead">Dispara, da un paso, dispara. Roba las técnicas de los dioses y úsalas para matarlos.</p>
       <button id="ovBtn" class="primary big">${M.seenIntro ? 'Continuar' : 'Empezar'}</button>
       <details class="ctl"><summary>Controles</summary><dl class="keys">
@@ -6134,7 +6109,7 @@ function renderOverlay() {
         <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
       </dl></details>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo, gente y armas de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos del Fantasy RPG Pixel Pack.</p></div>`;
+      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · Alec, dibujado para este juego.</p></div>`;
   } else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();

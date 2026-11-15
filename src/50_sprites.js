@@ -550,7 +550,7 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
 const heroKey = () => 'alec_s';
-// Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
+// Alec es el mago de los guanteletes (tools/make_alec.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
