@@ -9,7 +9,7 @@ const T = {
   room: { w: 880, h: 580 },
   viewArea: 520 * 300,          // unidades de mundo visibles (área constante)
   player: {
-    r: 7, speed: 82, hp: 100, dmg: 12,
+    r: 7, speed: 82, hp: 85, dmg: 15,   // menos vida y más pegada que al principio (antes 100 y 12): los primeros enemigos caen en dos golpes, no en tres
     as: 0.95,                   // disparos por segundo
     range: 185,
     windupFrac: 0.22,           // parte del ciclo de ataque en la que te frenas
@@ -6522,7 +6522,7 @@ function renderHud() {
   if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
   else if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
   $('dev').textContent = dev;
-  $('hint').textContent = HINTS[lastDev] || HINTS.none;
+  $('hint').textContent = '';   // los controles ya no van al pie de la pantalla: están en Ajustes → Controles
   $('touch').hidden = lastDev !== 'touch';
 }
 

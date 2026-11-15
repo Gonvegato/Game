@@ -9,7 +9,7 @@ const T = {
   room: { w: 880, h: 580 },
   viewArea: 520 * 300,          // unidades de mundo visibles (área constante)
   player: {
-    r: 7, speed: 82, hp: 100, dmg: 12,
+    r: 7, speed: 82, hp: 85, dmg: 15,   // menos vida y más pegada que al principio (antes 100 y 12): los primeros enemigos caen en dos golpes, no en tres
     as: 0.95,                   // disparos por segundo
     range: 185,
     windupFrac: 0.22,           // parte del ciclo de ataque en la que te frenas

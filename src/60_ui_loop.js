@@ -131,7 +131,7 @@ function renderHud() {
   if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
   else if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }
   $('dev').textContent = dev;
-  $('hint').textContent = HINTS[lastDev] || HINTS.none;
+  $('hint').textContent = '';   // los controles ya no van al pie de la pantalla: están en Ajustes → Controles
   $('touch').hidden = lastDev !== 'touch';
 }
 
