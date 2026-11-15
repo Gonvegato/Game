@@ -1,0 +1,36 @@
+{
+  "group_id": "db2896af-20d4-4207-a5e9-c317bc642f5e",
+  "states": [
+    {
+      "character": {
+        "id": "adb55efc-a701-42bc-ae08-fb0e1003a169",
+        "name": "Idle",
+        "prompt": "Adult man, slim, top-down RPG view. Messy chin-length silver-white hair, layered, with long bangs crossing between the eyes and pointed locks flicking outward at the jaw. Red eyes. Dark red cloth mask covering nose and mouth. Long dark navy robe to the ankles, gold belt, dark boots. Iron gauntlets on both hands with a glowing orange ember. No weapon, no staff.",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-11-15T20:18:22.355093+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-11-15T20:20:28.473989"
+}

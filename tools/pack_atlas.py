@@ -63,9 +63,9 @@ CAST.update({
   'adv_dwarf': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Dwarf', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Attack', 11, 16)}),
   'adv_knight': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Knight', {'idle': ('Idle', 1, 1), 'move': ('Run', 8, 12), 'atk': ('Attack', 11, 16)}),
   # Alec, el mago de los guanteletes: el cuerpo base «Body_A» de Pixel Crawler vestido por tools/paint_alec.py (tiras en assets/library/alec/)
-  'alec_s': ('!side', {'idle': ('idle', 4, 5), 'move': ('move', 6, 12), 'dash': ('move', 6, 22), 'atk': ('atk', 8, 18)}),
-  'alec_u': ('!up', {'idle': ('idle', 4, 5), 'move': ('move', 6, 12), 'dash': ('move', 6, 22), 'atk': ('atk', 8, 18)}),
-  'alec_d': ('!down', {'idle': ('idle', 4, 5), 'move': ('move', 6, 12), 'dash': ('move', 6, 22), 'atk': ('atk', 8, 18)}),
+  'alec_s': ('!side', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
+  'alec_u': ('!up', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
+  'alec_d': ('!down', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
