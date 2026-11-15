@@ -105,13 +105,13 @@ function pieceCard(pc) {
   const D = cur && DUO[cur.id];
   if (D && (D.a === pc.id || D.b === pc.id)) {
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color;
-    return up(D.name, l => PIECE[D.a].desc(l) + ' ' + PIECE[D.b].desc(l) + ' ' + D.desc);
+    return up(D.name, l => duoText(D, l));
   }
   const lvl = 1 + rar, duo = cur && !D ? duoFor(cur.id, pc.id) : null;
   if (duo) {   // la técnica que llevas se funde con esta
     const nl = Math.max(cur.lvl, lvl), old = PIECE[cur.id];
     o.tag = 'Dúo · ' + SLOTS[pc.slot]; o.rar = 3; o.color = RAR[3].color; o.name = duo.name + (nl > 1 ? ' ' + ROMAN[nl] : '');
-    o.desc = `${duo.desc} Además hace lo de ${old.name} y lo de ${pc.name}: ${pc.desc(nl)}`;
+    o.desc = duoText(duo, nl);
     o.note = `Tu ${old.name} se convierte en esto` + (prog ? ' · ' + prog : '');
     o.apply = () => { S.build[pc.slot] = { id: duo.id, lvl: nl }; };
     return o;
@@ -124,7 +124,9 @@ function pieceCard(pc) {
 // Las que piden una técnica concreta solo salen si la llevas; las demás, si ya tienes algo de esa deidad o son ofrendas (sirven solas)
 const SOLO = ['d_warm', 'm_skin', 'v_slow', 'f_appet', 'o_scars', 't_second', 's_last', 'r_spark', 'w_brine', 'l_coin', 'b_thorn', 'i_rime', 'h_warm', 'e_ink', 'u_glint', 'z_yawn', 'o_tug', 'q_shard', 'a_pup', 'g_whet', 'd_blood', 'v_vapors', 'f_carve'];
 const techOk = t => !S.techs.has(t.id) && (t.req || []).every(id => lv(id) > 0) && (godCount(t.god) >= 1 || SOLO.includes(t.id));
-const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : 'cualquier técnica suya');
+const techNeeds = t => ((t.req || []).length ? t.req.map(id => PIECE[id].name).join(' y ') : SOLO.includes(t.id) ? 'nada, sirve sola' : 'cualquier técnica de esta deidad');
+// Texto completo de un dúo: lo que hace cada una de sus dos técnicas y, después, lo que añade el dúo
+const duoText = (D, l) => `${PIECE[D.a].name}: ${PIECE[D.a].desc(l)} ${PIECE[D.b].name}: ${PIECE[D.b].desc(l)} Dúo: ${D.desc}`;
 function pieceOptions(god) {
   const cands = [];
   for (const pc of PIECES.filter(x => x.god === god)) { const c = pieceCard(pc); if (c) cands.push([c.rar === 3 ? 1.6 : 1, c]); }
