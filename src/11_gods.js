@@ -99,20 +99,20 @@ const GODS = {
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
   forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
     key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10 (y 2 más por cada nivel de la técnica a partir del segundo); cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
-    enter: ['da un golpe de martillo. Tu arma vibra.', 'reconoce el trabajo del herrero que te crio.'],
+    enter: ['da un golpe de martillo. Tus guanteletes vibran.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
-    take:  ['examina tu arma y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
+    take:  ['examina tus guanteletes y no dice nada. Es un elogio.', 'te deja usar su fragua, de mala gana.'], master: ['te llama colega. No lo había dicho nunca.'] } },
 };
 const GOD_KEYS = Object.keys(GODS);
 const SLOTS = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
 const SLOT_KEYS = ['basic', 'charge', 'dodge', 'passive'];
 const pl = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 
-// Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a balas, explosiones, esquives y bajas.
+// Técnicas: una por acción. No llevan su efecto encerrado: se enganchan a disparos, explosiones, esquives y bajas.
 const PIECES = [
   // Dragones
   { id: 'dragon_basic',   god: 'dragon', slot: 'basic',   name: 'Colmillo al rojo', desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) clava ${pl(l, 'Ascua')} en el enemigo. Se acumulan hasta 8 por enemigo y cada una quema un 12% de tu daño cada medio segundo.` },
-  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Cada enemigo que alcanza tu disparo cargado recibe ${1 + l} Ascuas y, acto seguido, todas sus Ascuas estallan: ${35 + 10 * (l - 1)}% de tu daño por Ascua, en un área pequeña que deja 1 Ascua a quien toca. Las Ascuas estalladas se gastan. Con la Recámara de rayo, el rayo se convierte en un cono de fuego.` },
+  { id: 'dragon_charge',  god: 'dragon', slot: 'charge',  name: 'Aliento',          desc: l => `Cada enemigo que alcanza tu disparo cargado recibe ${1 + l} Ascuas y, acto seguido, todas sus Ascuas estallan: ${35 + 10 * (l - 1)}% de tu daño por Ascua, en un área pequeña que deja 1 Ascua a quien toca. Las Ascuas estalladas se gastan. Con la Brasa de rayo, el rayo se convierte en un cono de fuego.` },
   { id: 'dragon_dodge',   god: 'dragon', slot: 'dodge',   name: 'Vuelo',            desc: l => `Tu esquive se convierte en un salto casi el doble de largo que pasa por encima de los muros. Al aterrizar, explota a tu alrededor: ${150 * l}% de tu daño en área.` },
   { id: 'dragon_passive', god: 'dragon', slot: 'passive', name: 'Tesoro',           desc: l => `Haces un ${l}% más de daño por cada 10 de oro que lleves, hasta +${30 + 10 * l}% (no afecta al daño continuo). Además, los enemigos que mueren con Ascuas sueltan ${pl(l, 'moneda')}; para eso necesitas algo que clave Ascuas.` },
   // Minerales
@@ -159,7 +159,7 @@ const PIECES = [
   { id: 'luck_basic',     god: 'luck',   slot: 'basic',   name: 'Dado cargado',     desc: l => `Cada disparo tiene un ${10 + 10 * l}% de ser crítico (250% de daño). Cada disparo que no es crítico sube un 5% la probabilidad hasta que sale uno; entonces vuelve a la base. Solo pueden ser críticos tus disparos directos, no los repetidos.` },
   { id: 'luck_charge',    god: 'luck',   slot: 'charge',  name: 'Todo al rojo',     desc: l => `Tu disparo cargado tira ${l > 1 ? l + ' dados y se queda el mejor' : 'un dado'}, que decide su daño: 1, el 60%; 2, el 80%; 3, el 100%; 4, el 130%; 5, el 170%; 6, el triple. Las repeticiones del cargado no tiran dado.` },
   { id: 'luck_dodge',     god: 'luck',   slot: 'dodge',   name: 'Cara o cruz',      desc: l => `Al esquivar lanzas una moneda. Cara (50%): recuperas la carga de esquive. Cruz: la moneda se queda donde estabas y a los 0,55 s revienta: ${120 * l}% de tu daño en área.` },
-  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si un golpe te quita vida o Reserva, las pierdes todas; si eres invulnerable, lo para la Culata con rodela o se lo lleva tu Reflejo, no. Necesitas algo que haga críticos, como Dado cargado.` },
+  { id: 'luck_passive',   god: 'luck',   slot: 'passive', name: 'Racha',            desc: l => `Cada crítico suma una Racha, hasta 5: +${6 * l}% de daño por Racha (no al daño continuo). Si un golpe te quita vida o Reserva, las pierdes todas; si eres invulnerable, lo para el Brazal con rodela o se lo lleva tu Reflejo, no. Necesitas algo que haga críticos, como Dado cargado.` },
   // Bosque
   { id: 'wood_basic',     god: 'wood',   slot: 'basic',   name: 'Semilla',          desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) planta una Semilla, que no caduca. A la ${l >= 2 ? 'segunda' : 'tercera'} brotan Raíces: clavan al enemigo en el sitio 1,5 s y le hacen ${80 * l}% de tu daño. Luego la cuenta vuelve a empezar. A los jefes las Raíces les duran solo un tercio.` },
   { id: 'wood_charge',    god: 'wood',   slot: 'charge',  name: 'Zarzal',           desc: l => `Tu disparo cargado crea un zarzal de 5 s donde apuntas. Quien esté dentro va a la mitad de velocidad y recibe ${20 * l}% de tu daño cada 0,4 s.` },
@@ -209,13 +209,13 @@ const PIECES = [
   { id: 'forge_basic',    god: 'forge',  slot: 'basic',   name: 'Temple',           desc: l => `Cada ${Math.max(2, 8 - l * 2)} disparos ganas 1 de Temple, hasta ${8 + 2 * l}. Cuentan las veces que disparas, no los impactos. Cada punto da +3% de daño. Si te golpean, pierdes la mitad. Se conserva de una sala a otra.` },
   { id: 'forge_charge',   god: 'forge',  slot: 'charge',  name: 'Martillazo',       desc: l => `Tu disparo cargado añade un martillazo a tu alrededor: ${120 * l}% de tu daño, aturde 0,6 s y te da 1 de Temple por cada enemigo golpeado. Las repeticiones del cargado no dan Temple.` },
   { id: 'forge_dodge',    god: 'forge',  slot: 'dodge',   name: 'Al rojo',          desc: l => `Después de esquivar, tus ${1 + l} siguientes disparos salen al rojo: +50% de daño, y cada impacto salpica al enemigo más cercano con la mitad de ese daño.` },
-  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tu arma mejora: +${5 * l}% de daño, de cadencia y de alcance.` },
+  { id: 'forge_passive',  god: 'forge',  slot: 'passive', name: 'Maestro armero',   desc: l => `Tus guanteletes mejoran: +${5 * l}% de daño, de cadencia y de alcance.` },
 ];
 // Dúos: si llevas la técnica de una deidad y a otra le toca ofrecerte la suya para esa misma acción,
 // te ofrece el dúo. Ocupa la ranura, hace lo de las dos y añade una regla nueva. Las once primeras deidades tienen dúo con todas entre sí; las nuevas, solo con sus afines.
 const DUOS = [
   // Disparo
-  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Bala de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
+  { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Filo de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
   { id: 'eternal',   slot: 'basic',   a: 'dragon_basic',  b: 'time_basic',   name: 'Brasa eterna',       desc: 'Además de lo que hacen Colmillo al rojo y Segundero, las Ascuas ya no se apagan con el tiempo: siguen quemando hasta que el enemigo muere o las haces estallar. Además, cada eco clava el doble de Ascuas que un disparo normal.' },
   { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Además de lo que hacen Esquirla y Marca de tumba, cuando a un Cristal se le acaba el tiempo, se levanta una Sombra en su sitio. Cuenta para tu límite de Sombras: si ya estás al máximo, sustituye a la más antigua.' },
   { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Dardo y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
@@ -224,7 +224,7 @@ const DUOS = [
   { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Además de lo que hacen Segundero y Marca de tumba, cuando un enemigo marcado muere y se levanta como Sombra, 1,5 s después se levanta otra en el mismo sitio. Solo con las Sombras de Marca de tumba, y los jefes no se levantan.' },
   // Cargado
   { id: 'rot',       slot: 'charge',  a: 'dragon_charge', b: 'venom_charge', name: 'Aliento podrido',    desc: 'Además de lo que hacen Aliento y Purga, antes de nada, tu disparo cargado suma las Ascuas y el Veneno de cada enemigo que alcanza y sube los dos a ese total (las Ascuas hasta su tope; el Veneno, hasta 30). Después Aliento hace estallar las Ascuas y Purga convierte el Veneno.' },
-  { id: 'roar',      slot: 'charge',  a: 'dragon_charge', b: 'orc_charge',   name: 'Rugido',             desc: 'Además de lo que hacen Aliento y Grito de guerra, el cono de fuego de Aliento crece con la Furia que tienes al disparar: hasta el doble de largo y de ancho con la Furia llena. El grito solo gasta la mitad de tu Furia. El cono solo sale con la Recámara de rayo.' },
+  { id: 'roar',      slot: 'charge',  a: 'dragon_charge', b: 'orc_charge',   name: 'Rugido',             desc: 'Además de lo que hacen Aliento y Grito de guerra, el cono de fuego de Aliento crece con la Furia que tienes al disparar: hasta el doble de largo y de ancho con la Furia llena. El grito solo gasta la mitad de tu Furia. El cono solo sale con la Brasa de rayo.' },
   { id: 'rod',       slot: 'charge',  a: 'stone_charge',  b: 'storm_charge', name: 'Pararrayos',         desc: 'Además de lo que hacen Prisma y Sobretensión, cada vez que descargas a un enemigo que tiene un Cristal cerca, los rayos salen desde el Cristal y son el doble (hasta 14). Vale para cualquier descarga, no solo la del cargado.' },
   { id: 'table',     slot: 'charge',  a: 'stone_charge',  b: 'feast_charge', name: 'Mesa puesta',        desc: 'Además de lo que hacen Prisma y Banquete, cada medio segundo, tus Cristales rematan a los enemigos cercanos con menos del 20% de vida (los elegidos, con menos del 10%). Cada remate te da 4 de Reserva. No funciona con jefes.' },
   { id: 'cortege',   slot: 'charge',  a: 'venom_charge',  b: 'shade_charge', name: 'Cortejo fúnebre',    desc: 'Además de lo que hacen Purga y Orden, cada Sombra que estalla con Orden aplica 6 de Veneno a los que alcanza y deja un charco tóxico de 5 s que aplica 1 de Veneno por pulso.' },
@@ -285,7 +285,7 @@ const DUOS = [
   // Sangre (afines: Manjares, Orcos, Veneno, Sombras)
   { id: 'warwound',  slot: 'basic',   a: 'orc_basic',     b: 'blood_basic',   name: 'Herida de guerra',  desc: 'Además de lo que hacen Tambor de guerra y Herida abierta, cada Herida que abres te da 3 de Furia. Con la Furia llena, las Heridas sangran el doble.' },
   { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Dardo y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
-  { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con el cargador Bala de sangre.' },
+  { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con la Gema de sangre.' },
   { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Además de lo que hacen Orden y Sangría, los enemigos que mueren en los 0,7 s siguientes a tu disparo cargado (los mismos que te curan con Sangría) se levantan como Sombras. Los jefes no.' },
   // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
   { id: 'deadline',  slot: 'basic',   a: 'time_basic',    b: 'end_basic',     name: 'Plazo vencido',     desc: 'Además de lo que hacen Segundero y Sentencia, el daño de tus ecos cuenta el doble para la Sentencia.' },
@@ -399,12 +399,12 @@ const MASTERY = {
   forge:  { name: 'Obra maestra',          desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): tu máximo de Temple sube 5 puntos y ya no lo pierdes al recibir golpes.' },
   storm:  { name: 'Tormenta perfecta',     desc: 'Con técnicas suyas en 3 de tus 4 acciones (un dúo cuenta para sus dos deidades): si un rayo de descarga alcanza a un enemigo con Agujas, también se las descarga, en cadena (cada enemigo, una vez por cadena).' },
 };
-// Planos: mejoras del arma que salen durante la partida (jefes y tienda).
+// Planos: mejoras de los guanteletes que salen durante la partida (jefes y tienda).
 const PLANS = [
-  { id: 'echo',    name: 'Arma gemela',   desc: 'Al esquivar dejas una copia del arma donde estabas durante 3 s. Dispara sola al enemigo más cercano a tu cadencia, al 50% de tu daño base y con tus efectos de disparo, pero sin críticos, ecos ni Sentencias.' },
-  { id: 'tempo',   name: 'Compás',        desc: 'El ¡Compás! funciona con cualquier llave que dispare a pulsaciones (no con la Llave de retén, el Torno de ballesta ni la Manivela de ribadoquín) y duplica el daño de ese disparo en vez de darle +50%. Tienes que pulsar justo cuando el arma vuelve a estar lista: mantener pulsado o machacar el botón no cuenta.' },
-  { id: 'mortar',  name: 'Mortero',       desc: 'Solo con la Recámara de rayo. Tu disparo cargado ya no es un rayo: lanza un proyectil que pasa por encima de los muros y explota donde apuntas, con el 80% de su daño en área y todos sus efectos. Con Aliento ya no se abre en cono.', only: 'c_beam' },
-  { id: 'recoil',  name: 'Retroceso',     desc: 'Tu disparo cargado te lanza hacia atrás con un esquive gratis: no gasta carga, te hace intocable y activa tus técnicas de esquive (salvo Cara o cruz). Además, se recarga un 35% antes. No funciona con la Recámara de embestida ni con la de trueno.' },
+  { id: 'echo',    name: 'Guantelete gemelo', desc: 'Al esquivar dejas un guantelete gemelo donde estabas durante 3 s. Dispara solo al enemigo más cercano a tu cadencia, al 50% de tu daño base y con tus efectos de disparo, pero sin críticos, ecos ni Sentencias.' },
+  { id: 'tempo',   name: 'Compás',        desc: 'El ¡Compás! funciona con cualesquiera dedos que disparen a pulsaciones (no con los Dedos de retén, los Dedos tensos ni los Dedos de molinete) y duplica el daño de ese disparo en vez de darle +50%. Tienes que pulsar justo cuando los guanteletes vuelven a estar listos: mantener pulsado o machacar el botón no cuenta.' },
+  { id: 'mortar',  name: 'Mortero',       desc: 'Solo con la Brasa de rayo. Tu disparo cargado ya no es un rayo: lanza un proyectil que pasa por encima de los muros y explota donde apuntas, con el 80% de su daño en área y todos sus efectos. Con Aliento ya no se abre en cono.', only: 'c_beam' },
+  { id: 'recoil',  name: 'Retroceso',     desc: 'Tu disparo cargado te lanza hacia atrás con un esquive gratis: no gasta carga, te hace intocable y activa tus técnicas de esquive (salvo Cara o cruz). Además, se recarga un 35% antes. No funciona con la Brasa de embestida ni con la de trueno.' },
   { id: 'double',  name: 'Doble esquive', desc: 'Tienes una carga más de esquive.' },
 ];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];

@@ -12,7 +12,7 @@ const godCount = g => SLOT_KEYS.filter(k => godsIn(k).includes(g)).length;
 const mastery = g => godCount(g) >= 3;
 const slotColor = slot => { const cur = S.build[slot]; return !cur ? C.energy : DUO[cur.id] ? RAR[3].color : GODS[PIECE[cur.id].god].color; };
 const curName = cur => (DUO[cur.id] || PIECE[cur.id]).name;
-// ¿Lleva el arma montada esa pieza? ¿Está activa esa resonancia?
+// ¿Llevan los guanteletes montada esa pieza? ¿Está activa esa resonancia?
 const G = id => S.gun[PART[id].slot] === id;
 const res = id => RES[id].parts.every(G) && RES[id].techs.every(t => lv(t) > 0);
 const braced = () => G('s_brace') && S.p.still >= 0.5;
@@ -28,7 +28,7 @@ const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
   for (const E of ensOf(S.gun)) if (!S.resSeen.has('ens_' + E.id)) { S.resSeen.add('ens_' + E.id); sayRaw('[Ensamble: ' + E.name + '. ' + E.desc + ']', C.energy); blip(760, 0.3, 'triangle', 0.05, 500); }
   for (const g of GOD_KEYS) { const a = aff(g); if (a > 0 && (S.affSeen || (S.affSeen = {}))[g] !== a) { S.affSeen[g] = a; sayRaw('[Afinidad con ' + GODS[g].theme + ' ×' + a + ': ' + AFFIN[g] + (a > 1 ? ', por cada pieza' : '') + ']', GODS[g].color); } }
-  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Arma legendaria: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
+  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Guanteletes legendarios: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
  for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
 const dodgeMax = () => (G('s_roll') ? 1 : 0) + 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
 const dodgeCdOf = () => (G('s_gasp') && S.p.hp < S.p.maxHp * 0.25 ? 0.5 : 1) * T.dodge.cd * (G('s_light') ? 0.65 : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
@@ -43,7 +43,7 @@ const periodOf = () => {
   return 1 / (p.as * (has('h_frenzy') && p.hp < p.maxHp * 0.3 ? 1.4 : 1) * gunRate() * (1 + 0.03 * tk('rate')) * (bl && furyFull() ? 1 + 0.3 * bl : 1));
 };
 
-const overWalls = () => G('b_ghost') || G('b_bomb');   // el Cañón fantasma atraviesa los muros y la Bombarda tira por encima: no necesitan ver al objetivo
+const overWalls = () => G('b_ghost') || G('b_bomb');   // la Palma fantasma atraviesa los muros y la Palma de volcán tira por encima: no necesitan ver al objetivo
 function nearestInRange() {
   const p = S.p, rng = rangeOf(); let bestE = null, bd = 1e9;
   for (const e of S.enemies) {
@@ -91,10 +91,10 @@ function kill(e) {
   if (e.doom && e.doom.acc - (e.doom.inh || 0) > 0) { const was = S._doom; S._doom = true; explode(e.x, e.y, 46, (e.doom.acc - (e.doom.inh || 0)) * doomK(), { col: GODS.end.color, soft: true }); S._doom = was; }   // Sentencia sin cumplir: estalla sobre los de alrededor con lo que le tocaba (lo heredado por Epitafio no cuenta)
   { const ep = lv('end_passive'); if (ep && e.doom && e.doom.acc > 0) { const o = others(e, 140, 1)[0]; if (o) { const give = e.doom.acc * (1 + 0.15 * (ep - 1)); o.doom = { t: Math.max(2, e.doom.t), acc: give + (o.doom ? o.doom.acc : 0), inh: give + (o.doom ? o.doom.inh || 0 : 0) }; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.2, col: GODS.end.color }); } } }   // Epitafio
   if (has('u_halo') && e.lit > 0) explode(e.x, e.y, 46, p.dmg, { col: GODS.light.color });         // Halo
-  if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Culata de lápida
-  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Culata de bota de vino
+  if (G('s_grave') && !e.boss) { S.graveN = (S.graveN || 0) + 1; if (S.graveN >= (th('shade') ? 5 : 8)) { S.graveN = 0; S.stat.grave++; raiseShade(e.x, e.y); } }   // Brazal de lápida
+  if (G('s_wine')) { const k = th('feast') ? 2 : 1; if (p.hp >= p.maxHp) addReserve(k); else heal(k); }   // Brazal de bota de vino
   if (G('m_gold')) addGold(1);
-  if (G('m_blood')) heal(3);                                                                  // Bala de sangre
+  if (G('m_blood')) heal(3);                                                                  // Gema de sangre
   if (e.elite && G('m_silver')) addGold(3);
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
   if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
@@ -155,8 +155,8 @@ function hit(e, dmg, ux, uy, big, col) {
     if (duoOn('orchard') && e.root > 0) heal(1); }                                             // dúo Huerto
   if (has('v_syn')) dmg *= 1 + Math.min(0.9, 0.03 * e.venom);                                  // Organismo débil
   if (e.inWell > 0 && leg('blacksun')) dmg *= 1.5;                                             // legendaria Sol Negro
-  if (e.traced > 0) dmg *= 1.3;                                                               // Bala trazadora
-  if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Bala de plata
+  if (e.traced > 0) dmg *= 1.3;                                                               // Gema de marca
+  if (G('m_silver')) dmg *= e.boss || e.champ || e.elite ? 1.6 : 0.9;                              // Gema de plata
   if (e.boss && e.act === 'dazed') dmg *= 2;
   if (e.hp / e.maxHp < 0.3) dmg *= 1 + 0.08 * tk('coup');                                       // árbol: Golpe de gracia
   if (has('o_scars') && p.hp < p.maxHp / 2) dmg *= 1.15;                                       // Cicatrices

@@ -12,7 +12,7 @@ function renderOverlay() {
   if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
-    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de ballesta y dioses</p><h1 class="logo">Alec, el sin dios</h1>
+    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de guanteletes y dioses</p><h1 class="logo">Alec, el sin dios</h1>
       <p class="lead">Dispara, da un paso, dispara. Roba las técnicas de los dioses y úsalas para matarlos.</p>
       <button id="ovBtn" class="primary big">${M.seenIntro ? 'Continuar' : 'Empezar'}</button>
       <details class="ctl"><summary>Controles</summary><dl class="keys">

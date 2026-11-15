@@ -31,9 +31,9 @@ const TOTAL = WORLDS.length * (RPW + 1);
 
 // Ajustes del yunque (sala de yunque y tienda)
 const UPGRADES = [
-  { name: 'Llave engrasada', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
-  { name: 'Pólvora fina',     desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
-  { name: 'Ánima pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
+  { name: 'Nudillos sueltos', desc: '+18% de cadencia',                 apply: p => { p.as *= 1.18; } },
+  { name: 'Brasa avivada',    desc: '+25% de daño',                     apply: p => { p.dmg *= 1.25; } },
+  { name: 'Palma pulida',     desc: '+15% de alcance',                  apply: p => { p.range *= 1.15; } },
   { name: 'Botas de forja',   desc: '+8% de velocidad de movimiento',   apply: p => { p.speed *= 1.08; } },
 ];
 

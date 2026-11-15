@@ -8,9 +8,9 @@ function openShop() {
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
       { id: 'tech',  name: 'Arma de contrabando',    desc: `El ${GODS[god].weapon}, de ${GODS[god].title}: lo desmontas y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
-      { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste del arma: cadencia, daño, alcance o velocidad', price: pr(60) },
+      { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
       { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
-      { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tu arma: eliges entre tres', price: pr(100) },
+      { id: 'part',  name: 'Pieza de armero',        desc: 'Una pieza para tus guanteletes: eliges entre tres', price: pr(100) },
     ].concat(plan ? [{ id: 'plan', name: 'Plano: ' + plan.name, desc: plan.desc, price: pr(110), plan: plan.id }] : []) };
   }
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
@@ -45,9 +45,9 @@ function shopAct(act) {
 
 // ───────────────────────── La forja (entre vidas) ─────────────────────────
 const openForge = () => openTown();   // entre encargos se vuelve a la plaza; cada sitio de la plaza abre su menú (openPlace)
-// La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, el arma (un apartado cada vez), las sinergias y el árbol.
+// La forja va por pestañas para no ser una lista sin fin: el mapa del contrato, los guanteletes (un apartado cada vez), las sinergias y el árbol.
 let forgeTab = 'map', forgeSlot = 'barrel';
-const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Arma'], ['syn', 'Sinergias'], ['tree', 'Árbol'], ['room', 'Habitación'], ['king', 'Audiencia']];
+const FORGE_TABS = [['map', 'Contrato'], ['gun', 'Guanteletes'], ['syn', 'Sinergias'], ['tree', 'Árbol'], ['room', 'Habitación'], ['king', 'Audiencia']];
 const placeTabs = () => FORGE_TABS.filter(t => PLACES[forgePlace].tabs.includes(t[0]));
 function forgeHtml() {
   const matChips = GOD_KEYS.filter(g => M.mats[g] > 0).map(g => `<span style="color:${GODS[g].color}">${M.mats[g]} ${GODS[g].mat}</span>`).join(' · ');
@@ -63,7 +63,7 @@ function forgeHtml() {
     const rank = x => (M.gun[k] === x.id ? 0 : M.parts[x.id] === 2 ? 1 : canPay(x.cost) ? 2 : 3);
     known.sort((a, b) => rank(a) - rank(b));
     const on = ensOf(M.gun), L = legOf(M.gun);
-    body = `<p class="fine">Tu arma tiene cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Arma legendaria: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
+    body = `<p class="fine">Tus guanteletes tienen cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Guanteletes legendarios: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
       <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
         return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
@@ -72,11 +72,11 @@ function forgeHtml() {
       `</div>` + (all.length > known.length ? `<p class="fine">${all.length - known.length === 1 ? 'Queda 1 pieza' : 'Quedan ' + (all.length - known.length) + ' piezas'} de este apartado por descubrir.</p>` : '');
   } else if (forgeTab === 'syn') {
     const affs = {}; for (const sk of GSLOT_KEYS) { const g = affGod(M.gun[sk]); if (g) affs[g] = (affs[g] || 0) + 1; }
-    const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tu arma no lleva ninguna pieza afín a una deidad.</span></li>';
+    const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tus guanteletes no llevan ninguna pieza afín a una deidad.</span></li>';
     const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
       return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
     body = `<p class="fine">Combinaciones que dan efectos extra. Lo que aún no has descubierto sale como «???».</p>
-      <div class="forge"><section><h3>Afinidades de tu arma · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
+      <div class="forge"><section><h3>Afinidades de tus guanteletes · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
       <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
   } else {
     const spent = TREE_NODES.reduce((a, n) => a + n.cost.slice(0, tk(n.id)).reduce((x, y) => x + y, 0), 0), hrs = M.time / 3600;
@@ -134,7 +134,7 @@ function navPick(els, cur, dx, dy) {
 }
 function listInput() {
   if (S.mode === 'forge' && I.backP && modeT > 0.3) { closePlace(); return; }
-  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en el arma, por sus cinco partes
+  if (S.mode === 'forge' && (I.tabL || I.tabR)) {   // LB va a la izquierda y RB a la derecha: por las pestañas y, en los guanteletes, por sus cinco partes
     const seq = []; for (const [id] of placeTabs()) { if (id === 'gun') for (const k of GSLOT_KEYS) seq.push(['gun', k]); else seq.push([id, null]); }
     if (seq.length < 2) return;
     const i = seq.findIndex(([t, k]) => t === forgeTab && (t !== 'gun' || k === forgeSlot)), n = seq[(i + (I.tabR ? 1 : seq.length - 1)) % seq.length];
@@ -187,9 +187,9 @@ function bookHtml() {
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>Necesita: ${PIECE[d.a].name} + ${PIECE[d.b].name} en la misma acción. ${d.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza del arma más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
+  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza de los guanteletes más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2>Piezas del arma</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
+  h += `<section><h2>Piezas de los guanteletes</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
     `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
   h += `<section><h2>Planos</h2><ul class="build full">` + PLANS.map(x => `<li class="${S.plans.has(x.id) ? 'own' : ''}"><em>Plano</em><b>${x.name}</b><span>${x.desc}</span></li>`).join('') + `</ul></section>`;
   return h + `</div><button id="ovBtn" class="primary">Volver</button>`;
@@ -198,14 +198,14 @@ function openBook() { bookFrom = S.mode; S.mode = 'book'; modeT = 0; renderOverl
 function closeBook() { S.mode = bookFrom; modeT = 0; renderOverlay(); }
 
 
-// Armas legendarias en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuál llevas montada
+// Guanteletes legendarios en la forja: qué piezas piden (las que no has descubierto salen como ???) y cuáles llevas montados
 function legendsHtml(g) {
   const cur = legOf(g);
-  return `<h3>Armas legendarias · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
+  return `<h3>Guanteletes legendarios · tres piezas concretas a la vez</h3><ul class="build full legends">` + LEGENDS.map(L => {
     const known = (M.legends || {})[L.id] || L.parts.every(id => M.parts[id]);
-    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montada' : 'Legendaria'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
+    return `<li class="${cur === L ? 'own' : ''}"><em>${cur === L ? 'Montados' : 'Legendarios'}</em><b>${known ? L.name : '???'}</b><span>${L.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + L.desc + ' <i>' + L.lore + '</i>' : ''}</span></li>`; }).join('') + '</ul>';
 }
-// En cada pieza de la forja: si forma parte de un arma legendaria cuyas piezas ya conoces, lo dice
+// En cada pieza de la forja: si forma parte de unos guanteletes legendarios cuyas piezas ya conoces, lo dice
 function legHint(id) {
   const L = LEGENDS.filter(L => L.parts.includes(id) && L.parts.every(p => M.parts[p])), E = ENSEMBLES.filter(E => E.parts.includes(id) && E.parts.every(p => M.parts[p]));
   return (L.length ? `<span class="leg">Parte de: ${L.map(x => x.name).join(', ')}</span>` : '') + (E.length ? `<span class="leg">Ensambla con: ${E.map(x => PART[x.parts.find(p => p !== id)].name + ' (' + x.name + ')').join(', ')}</span>` : '');
