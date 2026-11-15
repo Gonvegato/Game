@@ -61,15 +61,15 @@ const UPGRADES = [
 ];
 
 // ───────────────────────── Deidades ─────────────────────────
-// El herrero no tiene dios. En las salas de deidad espera su elegido con un arma bendecida:
-// lo matas, la desmontas y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
+// El herrero no tiene dios. En las salas de deidad espera su elegido con una reliquia de su dios (el campo `weapon`):
+// lo matas, la quiebras y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
 const GODS = {
   dragon: { title: 'La Que Duerme Sobre Oro', theme: 'Dragones', weapon: 'Colmillo de la Durmiente', mat: 'Escama', color: '#ff6a3c',
     key: 'Ascuas: sus técnicas las clavan en los enemigos y queman todas a la vez, hasta 8 por enemigo. Su pasiva convierte tu oro en daño: cuanto más llevas, más pegas.', lines: {
     enter: ['entreabre un ojo. Su elegido guarda esta sala.', 'huele a intruso entre sus monedas.'],
     champ: ['cuenta su oro para calmarse. Le falta una pieza.', 'resopla humo. Ha perdido un elegido.'],
     take:  ['te apunta en su lista de deudores.', 'no olvida quién le roba.'], master: ['ruge: nadie le había robado tanto.'] } },
-  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Pico de Veta Madre', mat: 'Mena', color: '#6fe3d0',
+  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Corazón de Veta Madre', mat: 'Mena', color: '#6fe3d0',
     key: 'Cristales: los dejan Esquirla (al disparar) y Geoda (al esquivar). Solos no hacen nada; sus otras técnicas los usan para repetir tus disparos, lanzar rayos o reventarlos.', lines: {
     enter: ['tarda un siglo en mirarte. Ya te está mirando.', 'cruje. Su elegido despierta.'],
     champ: ['no dice nada. En algún lugar se agrieta una montaña.', 'guarda silencio. Es un mal silencio.'],
@@ -79,12 +79,12 @@ const GODS = {
     enter: ['anota tu peso y tu altura.', 'prepara un frasco con tu nombre.'],
     champ: ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
     take:  ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'], master: ['te propone, encantada, un experimento.'] } },
-  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Trinchante del Anfitrión', mat: 'Especia', color: '#ff8fb3',
+  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Copa del Anfitrión', mat: 'Especia', color: '#ff8fb3',
     key: 'Reserva: con cualquier técnica suya, la curación que te sobra con la vida llena se guarda como escudo, hasta 30. Sus técnicas te curan y después convierten esa Reserva en daño.', lines: {
     enter: ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
     champ: ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
     take:  ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'], master: ['brinda por ti, y ya van tres copas.'] } },
-  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Hacha del Primer Puño', mat: 'Hueso', color: '#d9a066',
+  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Nudillo del Primer Puño', mat: 'Hueso', color: '#d9a066',
     key: 'Furia: con cualquier técnica suya ganas Furia al golpear y al recibir golpes, hasta 100, y baja si dejas de pelear. Sus técnicas la convierten en daño, cadencia y un grito.', lines: {
     enter: ['escupe al suelo. Su elegido quiere tu cabeza.', 'hace sonar los tambores.'],
     champ: ['se ríe a carcajadas. Buen golpe.', 'golpea la mesa: ¡otro!'],
@@ -94,12 +94,12 @@ const GODS = {
     enter: ['da cuerda a su elegido. Tic.', 'ya ha visto cómo acaba esta sala. No te lo dirá.'],
     champ: ['adelanta su reloj un minuto, molesto.', 'anota la hora de la muerte. Llega tarde.'],
     take:  ['murmura que eso ya lo habías robado antes.', 'te presta un segundo. Lo querrá de vuelta.'], master: ['detiene su reloj para mirarte bien.'] } },
-  shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Guadaña de la Contadora', mat: 'Ceniza', color: '#9d8cff',
+  shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Ábaco de la Contadora', mat: 'Ceniza', color: '#9d8cff',
     key: 'Sombras: con Marca de tumba, los enemigos que matas mientras están marcados se levantan y pelean por ti unos segundos. Sus otras técnicas sacan partido de esas Sombras.', lines: {
     enter: ['empieza a contar. Tú eres el siguiente número.', 'envía a su elegido con un hueco reservado para ti.'],
     champ: ['pierde la cuenta por primera vez en mil años.', 'suma uno. No era el que esperaba.'],
     take:  ['ve cómo sus muertos te siguen a ti.', 'te observa: los muertos no deberían obedecerte.'], master: ['deja de contar y se pone en pie.'] } },
-  storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Lanza de la Voz', mat: 'Chispa', color: '#ffe14d',
+  storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Caracola de la Voz', mat: 'Chispa', color: '#ffe14d',
     key: 'Agujas: Aguja estática las clava al disparar. Solas no hacen nada: hay que descargarlas con el cargado (Sobretensión) o atravesando al enemigo con el esquive (Paso relámpago), y entonces saltan rayos.', lines: {
     enter: ['truena a lo lejos. Su elegido ya está aquí.', 'carga el aire. Se te eriza el pelo.'],
     champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
@@ -109,22 +109,22 @@ const GODS = {
     enter: ['sube un palmo el agua de la sala.', 'arrastra algo pesado por el fondo. Viene hacia aquí.'],
     champ: ['suelta una burbuja. Tarda en llegar arriba.', 'se lleva a su elegido mar adentro, sin prisa.'],
     take:  ['te deja sal en los labios.', 'dice que todo lo que flota acaba volviendo.'], master: ['retira el mar entero para mirarte.'] } },
-  luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Estoque de la Dama', mat: 'Taba', color: '#f2ead0',
+  luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Dado de la Dama', mat: 'Taba', color: '#f2ead0',
     key: 'Críticos y azar: Dado cargado da a tu disparo probabilidad de crítico, el cargado tira dados, el esquive lanza una moneda y la pasiva acumula Rachas con cada crítico. Si sale bien, sale muy bien.', lines: {
     enter: ['apuesta por su elegido. Paga poco: lo ve claro.', 'baraja sin mirar las cartas.'],
     champ: ['pierde la apuesta y sonríe igual.', 'paga su deuda con una moneda de dos caras.'],
     take:  ['te guiña un ojo. O le ha entrado algo.', 'sube la apuesta.'], master: ['te ofrece los dados. Están calientes.'] } },
-  wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Hoz de la Madre', mat: 'Semilla', color: '#3fbf73',
+  wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Corona de la Madre de Espinas', mat: 'Semilla', color: '#3fbf73',
     key: 'Semillas y Raíces: cada impacto planta una Semilla y, al juntar 3 (2 desde el nivel II), brotan Raíces que clavan al enemigo en el sitio. Su cargado crea zarzales que frenan y dañan.', lines: {
     enter: ['hace crecer musgo en tus botas.', 'deja que su elegido eche raíces en esta sala.'],
     champ: ['lo cubre de hojas. Mañana será un árbol.', 'no llora: abona.'],
     take:  ['te llama mala hierba, con cariño.', 'siente cómo podas lo que era suyo.'], master: ['florece en pleno invierno, solo por verte.'] } },
-  frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Punzón de la Dama', mat: 'Carámbano', color: '#bfe9ff',
+  frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Lágrima de la Dama Quieta', mat: 'Carámbano', color: '#bfe9ff',
     key: 'Escarcha: sus técnicas la ponen al disparar, con el cargado o con placas de hielo. Cada punto frena; con 5, el enemigo queda Congelado y el cargado puede romperlo.', lines: {
     enter: ['no se mueve. Nunca se ha movido.', 'baja la temperatura de la sala. Ves tu aliento.'],
     champ: ['no parpadea. Guarda al muerto bajo el hielo, intacto.', 'deja que nieve sobre su elegido.'],
     take:  ['te mira hacerlo. Solo te mira.', 'tiene todo el tiempo del mundo para cobrártelo.'], master: ['da un paso. El primero en mil inviernos.'] } },
-  blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Lanceta del Acreedor', mat: 'Coágulo', color: '#d6334a',
+  blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Pagaré del Acreedor', mat: 'Coágulo', color: '#d6334a',
     key: 'Heridas: su disparo las abre y sangran más cuanta menos vida tengas. Sus otras técnicas te cobran vida para pegar más y te la devuelven al matar o al atravesar enemigos.', lines: {
     enter: ['abre su libro de cuentas por tu nombre.', 'te presta a su elegido. Con intereses.'],
     champ: ['apunta la pérdida. Te la cobrará.', 'lame la pluma y tacha una línea.'],
@@ -134,7 +134,7 @@ const GODS = {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
-  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lanza del Ojo', mat: 'Lucero', color: '#ffb84d',
+  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lente del Ojo', mat: 'Lucero', color: '#ffb84d',
     key: 'Iluminado: lo ponen sus técnicas al disparar, con el cargado o al esquivar. Con Señalar, parte del daño que recibe un Iluminado lo reciben también los demás Iluminados.', lines: {
     enter: ['te ve. Te ha visto siempre.', 'enfoca a su elegido. La sala se queda sin sombras.'],
     champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
@@ -149,17 +149,17 @@ const GODS = {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
-  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Daga de Azogue', mat: 'Azogue', color: '#cfd6de',
+  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Esquirla de Azogue', mat: 'Azogue', color: '#cfd6de',
     key: 'Reflejo: con Reflejo (disparo) o Doble (cargado) tienes una copia tuya al otro lado de tu objetivo que repite lo que haces.', lines: {
     enter: ['te mira desde un charco. Llevas tu cara.', 'pone a su elegido frente a un espejo. Salen dos.'],
     champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
     take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
-  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
+  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Collar de la Madre de Colmillos', mat: 'Colmillo', color: '#c8743a',
     key: 'Manada: cualquiera de sus técnicas de disparo, cargado o esquive te da un perro que muerde a quien disparas; su cargado y su esquive le dan órdenes. Crece con la Caza, las bajas de la misión con él a tu lado: de cachorro a sabueso, luego a lobo alfa, y al final se le une otro cachorro.', lines: {
     enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
     champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
-  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
+  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Fuelle del Yunque', mat: 'Escoria', color: '#e07a5f',
     key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10 (y 2 más por cada nivel de la técnica a partir del segundo); cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
     enter: ['da un golpe de martillo. Tus guanteletes vibran.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
@@ -183,7 +183,7 @@ const PIECES = [
   { id: 'stone_dodge',    god: 'stone',  slot: 'dodge',   name: 'Geoda',            desc: l => `Cada esquive deja un Cristal donde estabas. Si pasas a través de un Cristal mientras esquivas (cualquiera, no solo los de Geoda), revienta: ${120 * l}% de tu daño en área, y ese Cristal desaparece.` },
   { id: 'stone_passive',  god: 'stone',  slot: 'passive', name: 'Veta',             desc: l => `El Cristal más cercano a tu objetivo repite cada disparo tuyo, al ${30 * l}% de daño y con los efectos de tu técnica de disparo. Necesitas un Cristal cerca del enemigo; si no hay ninguno, no pasa nada.` },
   // Veneno
-  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Dardo',            desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Veneno. Se acumula hasta 30 por enemigo y no caduca. Cada punto hace un 3,5% de tu daño cada medio segundo.` },
+  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Ponzoña',            desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Veneno. Se acumula hasta 30 por enemigo y no caduca. Cada punto hace un 3,5% de tu daño cada medio segundo.` },
   { id: 'venom_charge',   god: 'venom',  slot: 'charge',  name: 'Purga',            desc: l => `Tu disparo cargado convierte en daño al instante el Veneno de cada enemigo que alcanza: ${15 * l}% de tu daño por punto. Después le queda la mitad del Veneno y deja un charco tóxico de 5 s que pone 1 de Veneno cada 0,4 s. Solo funciona si el enemigo ya tiene Veneno.` },
   { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `Tu esquive deja un rastro tóxico a lo largo del recorrido durante 5 s. Pone ${l} de Veneno cada 0,4 s a quien lo pise.` },
   { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un enemigo envenenado, todo su Veneno pasa, entero, a cada uno de los ${1 + l} enemigos más cercanos (sin pasar de 30). Solo funciona si muere con Veneno y hay otros enemigos cerca.` },
@@ -280,8 +280,8 @@ const DUOS = [
   { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Filo de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
   { id: 'eternal',   slot: 'basic',   a: 'dragon_basic',  b: 'time_basic',   name: 'Brasa eterna',       desc: 'Además de lo que hacen Colmillo al rojo y Segundero, las Ascuas ya no se apagan con el tiempo: siguen quemando hasta que el enemigo muere o las haces estallar. Además, cada eco clava el doble de Ascuas que un disparo normal.' },
   { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Además de lo que hacen Esquirla y Marca de tumba, cuando a un Cristal se le acaba el tiempo, se levanta una Sombra en su sitio. Cuenta para tu límite de Sombras: si ya estás al máximo, sustituye a la más antigua.' },
-  { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Dardo y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
-  { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Además de lo que hacen Dardo y Aguja estática, al descargar a un enemigo, cada rayo aplica a quien alcanza tanto Veneno como tenía ese enemigo (hasta 30). Las Agujas no caducan mientras el enemigo tenga Veneno.' },
+  { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Ponzoña y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
+  { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Además de lo que hacen Ponzoña y Aguja estática, al descargar a un enemigo, cada rayo aplica a quien alcanza tanto Veneno como tenía ese enemigo (hasta 30). Las Agujas no caducan mientras el enemigo tenga Veneno.' },
   { id: 'warhunger', slot: 'basic',   a: 'feast_basic',   b: 'orc_basic',    name: 'Hambre de guerra',   desc: 'Además de lo que hacen Bocado y Tambor de guerra, cada punto de vida que te curas te da 2 de Furia, también lo que va a la Reserva. Con la Furia llena, Bocado te cura el triple por disparo.' },
   { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Además de lo que hacen Segundero y Marca de tumba, cuando un enemigo marcado muere y se levanta como Sombra, 1,5 s después se levanta otra en el mismo sitio. Solo con las Sombras de Marca de tumba, y los jefes no se levantan.' },
   // Cargado
@@ -321,7 +321,7 @@ const DUOS = [
   { id: 'jackpot',   slot: 'passive', a: 'dragon_passive', b: 'luck_passive', name: 'Tesoro maldito',    desc: 'Además de lo que hacen Tesoro y Racha, cada crítico te da 1 de oro.' },
   { id: 'bones',     slot: 'passive', a: 'shade_passive', b: 'luck_passive', name: 'Tabas',              desc: 'Además de lo que hacen Séquito y Racha, tienes un 5% más de probabilidad de crítico por cada Sombra viva, también las de Relevo.' },
   { id: 'facet',     slot: 'basic',   a: 'stone_basic',   b: 'luck_basic',   name: 'Faceta',             desc: 'Además de lo que hacen Esquirla y Dado cargado, cada crítico deja un Cristal junto al enemigo.' },
-  { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Además de lo que hacen Dardo y Dado cargado, cada crítico duplica el Veneno del enemigo, hasta 30.' },
+  { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Además de lo que hacen Ponzoña y Dado cargado, cada crítico duplica el Veneno del enemigo, hasta 30.' },
   { id: 'loaded',    slot: 'basic',   a: 'time_basic',    b: 'luck_basic',   name: 'Dado trucado',       desc: 'Además de lo que hacen Segundero y Dado cargado, cada eco tira su propio crítico, con tu misma probabilidad y aparte del disparo original. Si sale, hace daño de crítico y cuenta como crítico para todo lo demás.' },
   { id: 'toss',      slot: 'dodge',   a: 'feast_dodge',   b: 'luck_dodge',   name: 'Propina',            desc: 'Además de lo que hacen Brindis y Cara o cruz, cada vez que lanzas la moneda te curas 5, salga cara o cruz.' },
   { id: 'fork',      slot: 'dodge',   a: 'storm_dodge',   b: 'luck_dodge',   name: 'Rayo caprichoso',    desc: 'Además de lo que hacen Paso relámpago y Cara o cruz, si sale cruz, la moneda cae como un rayo: descarga las Agujas de todos los que alcanza su explosión (80% por Aguja) y luego les clava 2.' },
@@ -346,7 +346,7 @@ const DUOS = [
   { id: 'frostthorn', slot: 'dodge',  a: 'wood_dodge',    b: 'frost_dodge',   name: 'Zarza de escarcha', desc: 'Además de lo que hacen Enredadera y Paso de hielo, la enredadera pone además 3 de Escarcha al enemigo que enraíza.' },
   // Sangre (afines: Manjares, Orcos, Veneno, Sombras)
   { id: 'warwound',  slot: 'basic',   a: 'orc_basic',     b: 'blood_basic',   name: 'Herida de guerra',  desc: 'Además de lo que hacen Tambor de guerra y Herida abierta, cada Herida que abres te da 3 de Furia. Con la Furia llena, las Heridas sangran el doble.' },
-  { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Dardo y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
+  { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Ponzoña y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
   { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con la Gema de sangre.' },
   { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Además de lo que hacen Orden y Sangría, los enemigos que mueren en los 0,7 s siguientes a tu disparo cargado (los mismos que te curan con Sangría) se levantan como Sombras. Los jefes no.' },
   // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
@@ -376,7 +376,7 @@ const DUOS = [
   { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Además de lo que hacen Racha y Azogue, cada golpe que recibes tiene un 33% de que se lo lleve el Reflejo: no pierdes vida ni la Racha. Azogue no rebota ese golpe.' },
   // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
   { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Además de lo que hacen Tambor de guerra y Sabueso, cada mordisco te da 4 de Furia. Con la Furia llena, tus perros muerden el doble de rápido.' },
-  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Dardo y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
+  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Ponzoña y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
   { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'Además de lo que hacen Transfusión y Manada, la embestida de Manada abre 2 Heridas a cada enemigo que alcanza y te cura 2 por cada uno.' },
   { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'Además de lo que hacen Zarzal y ¡A por él!, el salto del sabueso deja enraizados 1,5 s a todos los que alcanza (a los jefes, mucho menos).' },
   // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
@@ -498,7 +498,7 @@ const PARTS = [
   { id: 'b_far',     slot: 'barrel',  name: 'Palma de vigía',           tag: 'De lejos, el doble', desc: 'El doble de daño a los enemigos lejanos (a más de dos tercios de tu alcance) y la mitad a los cercanos (a menos del 30% de tu alcance). Entre medias, daño normal. +25% de alcance.', cost: { iron: 1, light: 2 } },
   { id: 'b_swarm',   slot: 'barrel',  name: 'Palma de avispero',             tag: 'Tres centellas al azar', desc: 'Cada disparo lanza tres centellas seguidas, cada una a un enemigo distinto elegido al azar entre los que tienes a tiro (45% del daño cada una). Si hay menos de tres enemigos, las centellas que sobran van a tu objetivo.', cost: { iron: 1, beast: 2 } },
   // Piezas temáticas: cada una hace por sí sola un poco de lo que hace una deidad, y con técnicas de esa deidad va a más
-  { id: 'b_blow',    slot: 'barrel',  name: 'Palma de víbora',            tag: 'Disparos con Veneno',  desc: 'Cada disparo pone 1 de Veneno al enemigo si sobrevive, aunque no lleves técnicas de Veneno. Si llevas la técnica Dardo, el Veneno que pone en cada disparo se duplica. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 1, venom: 3 }, theme: 'venom' },
+  { id: 'b_blow',    slot: 'barrel',  name: 'Palma de víbora',            tag: 'Disparos con Veneno',  desc: 'Cada disparo pone 1 de Veneno al enemigo si sobrevive, aunque no lleves técnicas de Veneno. Si llevas la técnica Ponzoña, el Veneno que pone en cada disparo se duplica. Todos tus disparos hacen un 15% menos de daño.', cost: { iron: 1, venom: 3 }, theme: 'venom' },
   { id: 'b_wyrm',    slot: 'barrel',  name: 'Palma de sierpe',       tag: 'Clava Ascuas',       desc: 'Cada disparo clava 1 Ascua al enemigo si sobrevive, aunque no lleves técnicas de Dragones. Si llevas alguna técnica de Dragones, los enemigos aguantan 4 Ascuas más antes de llegar al tope (12 en vez de 8).', cost: { iron: 1, dragon: 3 }, theme: 'dragon' },
   { id: 'b_rod',     slot: 'barrel',  name: 'Palma de cobre',        tag: 'Clava Agujas',       desc: 'Cada disparo clava 1 Aguja al enemigo si sobrevive (2 si llevas alguna técnica de Tormenta), aunque no lleves técnicas de Tormenta. Al juntar 6, el enemigo se descarga solo.', cost: { iron: 1, storm: 3 }, theme: 'storm' },
   { id: 'b_icicle',  slot: 'barrel',  name: 'Palma de carámbano',            tag: 'Pone Escarcha',      desc: 'Cada disparo pone 1 de Escarcha al enemigo si sobrevive (2 si llevas alguna técnica de Hielo), aunque no lleves técnicas de Hielo. Contra enemigos Congelados hace un 30% más de daño; mientras siguen Congelados, no acumulan más Escarcha.', cost: { iron: 1, frost: 3 }, theme: 'frost' },
@@ -709,8 +709,8 @@ const TREE = [
     { id: 'purse',   name: 'Bolsa honda',     max: 5, cost: curve(22, 2.2, 5),  desc: r => `Empiezas cada partida con ${25 * r} de oro` },
     { id: 'nose',    name: 'Olfato',          max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las salas de almas te dan un ${10 * r}% más de almas` },
     { id: 'luck',    name: 'Favor robado',    max: 5, cost: curve(22, 2.2, 5),  desc: r => `Las técnicas que te ofrecen salen Épicas un ${5 * r}% más a menudo y Comunes un ${5 * r}% menos. Una Rara llega con 1 nivel más; una Épica, con 2` },
-    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [80, 200, 450],      desc: r => `Al desmontar un arma, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
-    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [400],              desc: () => 'Al desmontar un arma, eliges entre cuatro técnicas en vez de tres' },
+    { id: 'reroll',  name: 'Regateo',         max: 3, cost: [80, 200, 450],      desc: r => `Al quebrar una reliquia, puedes volver a sortear las técnicas ${r === 1 ? 'una vez' : r + ' veces'}. Se recarga en cada sala` },
+    { id: 'eye4',    name: 'Buen ojo',        max: 1, cost: [400],              desc: () => 'Al quebrar una reliquia, eliges entre cuatro técnicas en vez de tres' },
     { id: 'recall',  name: 'Recuerdo vivo',   max: 1, cost: [700],              desc: () => 'Al empezar cada partida eliges una técnica entre tres, de cualquier deidad' },
     { id: 'door',    name: 'Otra puerta',     max: 1, cost: [600],              desc: () => 'Al acabar cada sala tienes una puerta más para elegir. No sirve en Defensa ni en Asalto, ni en la sala anterior al jefe' } ] },
 ];
@@ -1147,7 +1147,7 @@ const partScreen = eyebrow => () => {
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
-const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
+const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
 // Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
@@ -1160,7 +1160,7 @@ function roomCleared() {
   let got = '';
   if (ms.type === 'defend') {
     S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.18);   // entre oleadas los aldeanos apuntalan la campana
-    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay un arma bendecida'));
+    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay una reliquia'));
   } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
@@ -1270,9 +1270,9 @@ function pieceOptions(god) {
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);
   const n = tk('eye4') ? 4 : 3, keep = order.filter(c => !c.swap).slice(0, n), swaps = order.filter(c => c.swap);
   if (keep.length < n && swaps.length) keep.push(swaps[0]);
-  // Y siempre puedes no tocar nada: fundes el arma por oro y material
+  // Y siempre puedes no tocar nada: vendes la reliquia por oro y material
   const gold = 20 + 4 * S.lvl;
-  keep.push({ tag: 'Fundir', name: 'Fundir el arma', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
+  keep.push({ tag: 'Vender', name: 'Vender la reliquia', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
   return keep;
 }
 
@@ -1284,7 +1284,7 @@ function openShop() {
     const plan = PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5)[0];
     S.shop = { wave: S.wave, items: [
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
-      { id: 'tech',  name: 'Arma de contrabando',    desc: `El ${GODS[god].weapon}, de ${GODS[god].title}: lo desmontas y eliges una técnica`, price: pr(90), god },
+      { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
       { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
       { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },
@@ -3381,7 +3381,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   hit(e, dmg, ux, uy, big, col);
   const p = S.p, db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), rb = lv('storm_basic');
   if (db) addEmber(e, db * (src === 'echo' && duoOn('eternal') ? 2 : 1));                         // Colmillo al rojo (y dúo Brasa eterna)
-  if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Dardo
+  if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Ponzoña
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
   if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática
@@ -4153,7 +4153,7 @@ function update(dt) {
   S.waveT += dt;
   while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
   if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
-  if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había un arma bendecida')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
+  if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
     if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
@@ -4218,7 +4218,7 @@ function update(dt) {
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
-    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se arma', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
+    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Dedos de volante
@@ -5233,6 +5233,15 @@ function drawFx(name, k, x, y, col, size, rot) {
   return true;
 }
 // ───────────────────────── Dibujo ─────────────────────────
+// Una reliquia: un relicario pequeño con una gema del color de su deidad y un destello que late
+function drawRelic(x, y, col) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col; ctx.globalAlpha = 0.16 + 0.08 * Math.sin(S.t * 6 + x); ctx.fillRect(x - 5, y - 6, 10, 12); ctx.fillRect(x - 7, y - 3, 14, 6); ctx.restore();
+  ctx.fillStyle = '#16101a'; ctx.fillRect(x - 3, y - 5, 6, 10); ctx.fillRect(x - 4, y - 3, 8, 6); ctx.fillRect(x - 1, y - 7, 2, 2);
+  ctx.fillStyle = PAL.g; ctx.fillRect(x - 2, y - 4, 4, 8); ctx.fillRect(x - 3, y - 2, 6, 4);
+  ctx.fillStyle = col; ctx.fillRect(x - 1, y - 3, 2, 6); ctx.fillRect(x - 2, y - 1, 4, 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 2, 1, 1);
+}
 function resize() {
   const w = cv.clientWidth || 1, h = cv.clientHeight || 1, dpr = Math.min(2, window.devicePixelRatio || 1);
   if (w === view.cssW && h === view.cssH && dpr === view.dpr) return;
@@ -5402,12 +5411,10 @@ function renderWorld() {
     ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.25 + 0.6 * k; ctx.lineWidth = 1 + l.w * k;
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + ux * len, l.y + uy * len); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  if (S.drop) {                      // el arma bendecida, clavada en el suelo y brillando en el color de su deidad
+  if (S.drop) {                      // la reliquia que suelta el elegido, flotando y brillando en el color de su deidad
     const d = S.drop, x = Math.round(d.x), y = Math.round(d.y + Math.sin(S.t * 4) * 1.5), col = GODS[d.god].color;
     ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col; ctx.globalAlpha = 0.12 + 0.05 * Math.sin(S.t * 6); ctx.beginPath(); ctx.arc(x, y - 4, 16, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#16101a'; ctx.fillRect(x - 2, y - 15, 4, 16); ctx.fillRect(x - 5, y - 5, 10, 3); ctx.fillRect(x - 2, y - 2, 4, 6);
-    ctx.fillStyle = col; ctx.fillRect(x - 1, y - 14, 2, 10); ctx.fillStyle = tone(col, 0.6); ctx.fillRect(x - 1, y - 14, 1, 9);
-    ctx.fillStyle = PAL.g; ctx.fillRect(x - 4, y - 4, 8, 1); ctx.fillStyle = PAL.B; ctx.fillRect(x - 1, y - 3, 2, 4); ctx.fillStyle = PAL.g; ctx.fillRect(x - 1, y + 1, 2, 1);
+    drawRelic(x, y - 6, col);
   }
 
   // Columnas y rifles gemelos
@@ -5484,12 +5491,8 @@ function renderWorld() {
       else if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }
-    if (e.champ) { // la espada bendecida que lleva, en el color de su deidad
-      ctx.save(); ctx.translate(Math.round(e.x), Math.round(e.y)); ctx.rotate(e.dir);
-      ctx.fillStyle = '#16101a'; ctx.fillRect(3, -2, e.r + 9, 4); ctx.fillRect(5, -4, 3, 8);
-      ctx.fillStyle = e.color; ctx.fillRect(8, -1, e.r + 3, 2); ctx.fillStyle = tone(e.color, 0.6); ctx.fillRect(8, -1, e.r + 3, 1);
-      ctx.fillStyle = PAL.g; ctx.fillRect(6, -3, 1, 6); ctx.fillStyle = PAL.B; ctx.fillRect(4, -1, 2, 2);
-      ctx.restore();
+    if (e.champ) { // la reliquia de su dios flota sobre su cabeza, en el color de la deidad
+      drawRelic(e.x, e.y - e.r - 14 + Math.sin(S.t * 3 + e.x) * 1.5, e.color);
     }
     // Lo acumulado: Ascuas a la izquierda, Veneno a la derecha, sazón arriba, aturdido en blanco
     if (e.ember > 0) { ctx.strokeStyle = GODS.dragon.color; ctx.lineWidth = 0.8 + Math.min(3, 0.3 * e.ember); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); wtext(String(e.ember), e.x - e.r - 6, e.y + 3, 7, GODS.dragon.color); }

@@ -4,7 +4,7 @@ function onHit(e, dmg, ux, uy, big, col, src) {
   hit(e, dmg, ux, uy, big, col);
   const p = S.p, db = lv('dragon_basic'), vb = lv('venom_basic'), fb = lv('feast_basic'), sb = lv('stone_basic'), rb = lv('storm_basic');
   if (db) addEmber(e, db * (src === 'echo' && duoOn('eternal') ? 2 : 1));                         // Colmillo al rojo (y dúo Brasa eterna)
-  if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Dardo
+  if (vb) addVenom(e, vb * (G('b_blow') ? 2 : 1));                                                                     // Ponzoña
   if (duoOn('boil')) addVenom(e, Math.floor(p.fury / 20));                                        // dúo Sangre hirviente
   if (fb) heal(0.5 * fb * (duoOn('warhunger') && furyFull() ? 3 : 1) * (p.feastShot ? 3 : 1));                            // Bocado
   if (rb) addNeedles(e, rb);                                                                   // Aguja estática

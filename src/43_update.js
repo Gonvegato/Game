@@ -19,7 +19,7 @@ function update(dt) {
   S.waveT += dt;
   while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
   if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
-  if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había un arma bendecida')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
+  if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   if (!S.queue.length && !S.enemies.length) {
     S.waveClear += dt;
     if (S.waveClear > 0.7) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
@@ -84,7 +84,7 @@ function update(dt) {
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
-    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se arma', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
+    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Dedos de volante

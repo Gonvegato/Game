@@ -1,4 +1,13 @@
 // ───────────────────────── Dibujo ─────────────────────────
+// Una reliquia: un relicario pequeño con una gema del color de su deidad y un destello que late
+function drawRelic(x, y, col) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col; ctx.globalAlpha = 0.16 + 0.08 * Math.sin(S.t * 6 + x); ctx.fillRect(x - 5, y - 6, 10, 12); ctx.fillRect(x - 7, y - 3, 14, 6); ctx.restore();
+  ctx.fillStyle = '#16101a'; ctx.fillRect(x - 3, y - 5, 6, 10); ctx.fillRect(x - 4, y - 3, 8, 6); ctx.fillRect(x - 1, y - 7, 2, 2);
+  ctx.fillStyle = PAL.g; ctx.fillRect(x - 2, y - 4, 4, 8); ctx.fillRect(x - 3, y - 2, 6, 4);
+  ctx.fillStyle = col; ctx.fillRect(x - 1, y - 3, 2, 6); ctx.fillRect(x - 2, y - 1, 4, 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 2, 1, 1);
+}
 function resize() {
   const w = cv.clientWidth || 1, h = cv.clientHeight || 1, dpr = Math.min(2, window.devicePixelRatio || 1);
   if (w === view.cssW && h === view.cssH && dpr === view.dpr) return;
@@ -168,12 +177,10 @@ function renderWorld() {
     ctx.strokeStyle = C.blood; ctx.globalAlpha = 0.25 + 0.6 * k; ctx.lineWidth = 1 + l.w * k;
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + ux * len, l.y + uy * len); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  if (S.drop) {                      // el arma bendecida, clavada en el suelo y brillando en el color de su deidad
+  if (S.drop) {                      // la reliquia que suelta el elegido, flotando y brillando en el color de su deidad
     const d = S.drop, x = Math.round(d.x), y = Math.round(d.y + Math.sin(S.t * 4) * 1.5), col = GODS[d.god].color;
     ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = col; ctx.globalAlpha = 0.12 + 0.05 * Math.sin(S.t * 6); ctx.beginPath(); ctx.arc(x, y - 4, 16, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#16101a'; ctx.fillRect(x - 2, y - 15, 4, 16); ctx.fillRect(x - 5, y - 5, 10, 3); ctx.fillRect(x - 2, y - 2, 4, 6);
-    ctx.fillStyle = col; ctx.fillRect(x - 1, y - 14, 2, 10); ctx.fillStyle = tone(col, 0.6); ctx.fillRect(x - 1, y - 14, 1, 9);
-    ctx.fillStyle = PAL.g; ctx.fillRect(x - 4, y - 4, 8, 1); ctx.fillStyle = PAL.B; ctx.fillRect(x - 1, y - 3, 2, 4); ctx.fillStyle = PAL.g; ctx.fillRect(x - 1, y + 1, 2, 1);
+    drawRelic(x, y - 6, col);
   }
 
   // Columnas y rifles gemelos
@@ -250,12 +257,8 @@ function renderWorld() {
       else if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }
-    if (e.champ) { // la espada bendecida que lleva, en el color de su deidad
-      ctx.save(); ctx.translate(Math.round(e.x), Math.round(e.y)); ctx.rotate(e.dir);
-      ctx.fillStyle = '#16101a'; ctx.fillRect(3, -2, e.r + 9, 4); ctx.fillRect(5, -4, 3, 8);
-      ctx.fillStyle = e.color; ctx.fillRect(8, -1, e.r + 3, 2); ctx.fillStyle = tone(e.color, 0.6); ctx.fillRect(8, -1, e.r + 3, 1);
-      ctx.fillStyle = PAL.g; ctx.fillRect(6, -3, 1, 6); ctx.fillStyle = PAL.B; ctx.fillRect(4, -1, 2, 2);
-      ctx.restore();
+    if (e.champ) { // la reliquia de su dios flota sobre su cabeza, en el color de la deidad
+      drawRelic(e.x, e.y - e.r - 14 + Math.sin(S.t * 3 + e.x) * 1.5, e.color);
     }
     // Lo acumulado: Ascuas a la izquierda, Veneno a la derecha, sazón arriba, aturdido en blanco
     if (e.ember > 0) { ctx.strokeStyle = GODS.dragon.color; ctx.lineWidth = 0.8 + Math.min(3, 0.3 * e.ember); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); wtext(String(e.ember), e.x - e.r - 6, e.y + 3, 7, GODS.dragon.color); }

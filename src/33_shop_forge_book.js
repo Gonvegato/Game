@@ -6,7 +6,7 @@ function openShop() {
     const plan = PLANS.filter(x => !S.plans.has(x.id) && (!x.only || G(x.only))).sort(() => Math.random() - 0.5)[0];
     S.shop = { wave: S.wave, items: [
       { id: 'heal',  name: 'Guiso caliente',         desc: 'Recuperas el 35% de tu vida', price: pr(40) },
-      { id: 'tech',  name: 'Arma de contrabando',    desc: `El ${GODS[god].weapon}, de ${GODS[god].title}: lo desmontas y eliges una técnica`, price: pr(90), god },
+      { id: 'tech',  name: 'Reliquia de contrabando', desc: `${GODS[god].weapon}, reliquia de ${GODS[god].title}: la quiebras y eliges una técnica`, price: pr(90), god },
       { id: 'up',    name: 'Afilar una técnica',     desc: 'Sube un nivel una de las técnicas que llevas, al azar', price: pr(70) },
       { id: 'anvil', name: 'Rato de yunque',         desc: 'Eliges un ajuste de los guanteletes: cadencia, daño, alcance o velocidad', price: pr(60) },
       { id: 'heart', name: 'Corazón en conserva',    desc: '+15 de vida máxima', price: pr(70) },

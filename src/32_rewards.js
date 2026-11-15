@@ -14,7 +14,7 @@ const partScreen = eyebrow => () => {
   opts.push({ tag: 'Guardar', name: 'No montar nada', color: C.dim, desc: fresh.length ? `Dejas tus guanteletes como están. Te guardas ${fresh[0].name} para la forja.` : 'Dejas tus guanteletes como están.', note: '', apply: () => { if (fresh.length) discover(fresh[0].id); } });
   return { eyebrow, title: 'Una pieza para tus guanteletes', opts };
 };
-const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Desmontas: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
+const pieceScreen = (god, eyebrow) => () => { const o = pieceOptions(god); return o.length ? { eyebrow, title: 'Quiebras la reliquia: ' + GODS[god].weapon, opts: o, reroll: () => pieceOptions(god) } : statScreen(); };
 
 // Tras limpiar un tramo: recompensa según el tipo de misión, tienda si toca, y a por el siguiente (o a cobrar)
 function roomCleared() {
@@ -27,7 +27,7 @@ function roomCleared() {
   let got = '';
   if (ms.type === 'defend') {
     S.keepHp = Math.min(S.keep.maxHp, S.keep.hp + S.keep.maxHp * 0.18);   // entre oleadas los aldeanos apuntalan la campana
-    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay un arma bendecida'));
+    if (!last) pickQueue.push(pieceScreen(S.drop ? S.drop.god : lootGod(), here + ' rechazada · entre los caídos hay una reliquia'));
   } else if (ms.type === 'assault') { const k = W >= 3 ? 2 : 1; S.ironRun += k; got = '+' + k + ' de Hierro Místico'; }
   else if (S.roomType === 'god' && S.drop) pickQueue.push(pieceScreen(S.drop.god, here + ' · ' + GODS[S.drop.god].title));
   else if (S.roomType === 'souls') { const k = Math.round((22 + 8 * W) * (1 + 0.1 * tk('nose')) * (S.repeat ? 0.3 : 1)); S.soulsRun += k; got = '+' + k + ' almas' + (S.repeat ? ' (encargo repetido: 30%)' : ''); }
@@ -137,9 +137,9 @@ function pieceOptions(god) {
   const order = cands.map(([w, c]) => [Math.pow(Math.random(), 1 / w), c]).sort((x, y) => y[0] - x[0]).map(x => x[1]);
   const n = tk('eye4') ? 4 : 3, keep = order.filter(c => !c.swap).slice(0, n), swaps = order.filter(c => c.swap);
   if (keep.length < n && swaps.length) keep.push(swaps[0]);
-  // Y siempre puedes no tocar nada: fundes el arma por oro y material
+  // Y siempre puedes no tocar nada: vendes la reliquia por oro y material
   const gold = 20 + 4 * S.lvl;
-  keep.push({ tag: 'Fundir', name: 'Fundir el arma', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
+  keep.push({ tag: 'Vender', name: 'Vender la reliquia', color: C.dim, desc: `No tocas tu build. Te llevas ${gold} de oro y 1 de ${GODS[god].mat} más.`, note: '', apply: () => { addGold(gold); S.matsRun[god] += 1; } });
   return keep;
 }
 

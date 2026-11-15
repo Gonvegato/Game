@@ -1,13 +1,13 @@
 // ───────────────────────── Deidades ─────────────────────────
-// El herrero no tiene dios. En las salas de deidad espera su elegido con un arma bendecida:
-// lo matas, la desmontas y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
+// El herrero no tiene dios. En las salas de deidad espera su elegido con una reliquia de su dios (el campo `weapon`):
+// lo matas, la quiebras y te quedas con una técnica. Cada deidad tiene algo suyo que se acumula.
 const GODS = {
   dragon: { title: 'La Que Duerme Sobre Oro', theme: 'Dragones', weapon: 'Colmillo de la Durmiente', mat: 'Escama', color: '#ff6a3c',
     key: 'Ascuas: sus técnicas las clavan en los enemigos y queman todas a la vez, hasta 8 por enemigo. Su pasiva convierte tu oro en daño: cuanto más llevas, más pegas.', lines: {
     enter: ['entreabre un ojo. Su elegido guarda esta sala.', 'huele a intruso entre sus monedas.'],
     champ: ['cuenta su oro para calmarse. Le falta una pieza.', 'resopla humo. Ha perdido un elegido.'],
     take:  ['te apunta en su lista de deudores.', 'no olvida quién le roba.'], master: ['ruge: nadie le había robado tanto.'] } },
-  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Pico de Veta Madre', mat: 'Mena', color: '#6fe3d0',
+  stone: { title: 'El Paciente Bajo la Montaña', theme: 'Minerales', weapon: 'Corazón de Veta Madre', mat: 'Mena', color: '#6fe3d0',
     key: 'Cristales: los dejan Esquirla (al disparar) y Geoda (al esquivar). Solos no hacen nada; sus otras técnicas los usan para repetir tus disparos, lanzar rayos o reventarlos.', lines: {
     enter: ['tarda un siglo en mirarte. Ya te está mirando.', 'cruje. Su elegido despierta.'],
     champ: ['no dice nada. En algún lugar se agrieta una montaña.', 'guarda silencio. Es un mal silencio.'],
@@ -17,12 +17,12 @@ const GODS = {
     enter: ['anota tu peso y tu altura.', 'prepara un frasco con tu nombre.'],
     champ: ['pide que guarden una muestra del cadáver.', 'tacha un nombre de su cuaderno, sin pena.'],
     take:  ['siente curiosidad por lo que harás con eso.', 'apunta: el sujeto aprende rápido.'], master: ['te propone, encantada, un experimento.'] } },
-  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Trinchante del Anfitrión', mat: 'Especia', color: '#ff8fb3',
+  feast: { title: 'El Anfitrión del Banquete Eterno', theme: 'Manjares', weapon: 'Copa del Anfitrión', mat: 'Especia', color: '#ff8fb3',
     key: 'Reserva: con cualquier técnica suya, la curación que te sobra con la vida llena se guarda como escudo, hasta 30. Sus técnicas te curan y después convierten esa Reserva en daño.', lines: {
     enter: ['te guarda un sitio en la mesa. No dice en qué plato.', 'afila los cubiertos y sonríe.'],
     champ: ['lamenta el desperdicio y pide otra ronda.', 'brinda por el difunto. Estaba tierno.'],
     take:  ['aplaude: ¡por fin alguien con apetito!', 'te ofrece repetir.'], master: ['brinda por ti, y ya van tres copas.'] } },
-  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Hacha del Primer Puño', mat: 'Hueso', color: '#d9a066',
+  orc: { title: 'El Primer Puño', theme: 'Orcos', weapon: 'Nudillo del Primer Puño', mat: 'Hueso', color: '#d9a066',
     key: 'Furia: con cualquier técnica suya ganas Furia al golpear y al recibir golpes, hasta 100, y baja si dejas de pelear. Sus técnicas la convierten en daño, cadencia y un grito.', lines: {
     enter: ['escupe al suelo. Su elegido quiere tu cabeza.', 'hace sonar los tambores.'],
     champ: ['se ríe a carcajadas. Buen golpe.', 'golpea la mesa: ¡otro!'],
@@ -32,12 +32,12 @@ const GODS = {
     enter: ['da cuerda a su elegido. Tic.', 'ya ha visto cómo acaba esta sala. No te lo dirá.'],
     champ: ['adelanta su reloj un minuto, molesto.', 'anota la hora de la muerte. Llega tarde.'],
     take:  ['murmura que eso ya lo habías robado antes.', 'te presta un segundo. Lo querrá de vuelta.'], master: ['detiene su reloj para mirarte bien.'] } },
-  shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Guadaña de la Contadora', mat: 'Ceniza', color: '#9d8cff',
+  shade: { title: 'La Que Cuenta los Muertos', theme: 'Sombras', weapon: 'Ábaco de la Contadora', mat: 'Ceniza', color: '#9d8cff',
     key: 'Sombras: con Marca de tumba, los enemigos que matas mientras están marcados se levantan y pelean por ti unos segundos. Sus otras técnicas sacan partido de esas Sombras.', lines: {
     enter: ['empieza a contar. Tú eres el siguiente número.', 'envía a su elegido con un hueco reservado para ti.'],
     champ: ['pierde la cuenta por primera vez en mil años.', 'suma uno. No era el que esperaba.'],
     take:  ['ve cómo sus muertos te siguen a ti.', 'te observa: los muertos no deberían obedecerte.'], master: ['deja de contar y se pone en pie.'] } },
-  storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Lanza de la Voz', mat: 'Chispa', color: '#ffe14d',
+  storm: { title: 'La Voz Entre las Nubes', theme: 'Tormenta', weapon: 'Caracola de la Voz', mat: 'Chispa', color: '#ffe14d',
     key: 'Agujas: Aguja estática las clava al disparar. Solas no hacen nada: hay que descargarlas con el cargado (Sobretensión) o atravesando al enemigo con el esquive (Paso relámpago), y entonces saltan rayos.', lines: {
     enter: ['truena a lo lejos. Su elegido ya está aquí.', 'carga el aire. Se te eriza el pelo.'],
     champ: ['se queda sin voz un instante.', 'descarga su rabia contra una montaña.'],
@@ -47,22 +47,22 @@ const GODS = {
     enter: ['sube un palmo el agua de la sala.', 'arrastra algo pesado por el fondo. Viene hacia aquí.'],
     champ: ['suelta una burbuja. Tarda en llegar arriba.', 'se lleva a su elegido mar adentro, sin prisa.'],
     take:  ['te deja sal en los labios.', 'dice que todo lo que flota acaba volviendo.'], master: ['retira el mar entero para mirarte.'] } },
-  luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Estoque de la Dama', mat: 'Taba', color: '#f2ead0',
+  luck: { title: 'La Dama de los Dados', theme: 'Fortuna', weapon: 'Dado de la Dama', mat: 'Taba', color: '#f2ead0',
     key: 'Críticos y azar: Dado cargado da a tu disparo probabilidad de crítico, el cargado tira dados, el esquive lanza una moneda y la pasiva acumula Rachas con cada crítico. Si sale bien, sale muy bien.', lines: {
     enter: ['apuesta por su elegido. Paga poco: lo ve claro.', 'baraja sin mirar las cartas.'],
     champ: ['pierde la apuesta y sonríe igual.', 'paga su deuda con una moneda de dos caras.'],
     take:  ['te guiña un ojo. O le ha entrado algo.', 'sube la apuesta.'], master: ['te ofrece los dados. Están calientes.'] } },
-  wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Hoz de la Madre', mat: 'Semilla', color: '#3fbf73',
+  wood: { title: 'La Madre de Espinas', theme: 'Bosque', weapon: 'Corona de la Madre de Espinas', mat: 'Semilla', color: '#3fbf73',
     key: 'Semillas y Raíces: cada impacto planta una Semilla y, al juntar 3 (2 desde el nivel II), brotan Raíces que clavan al enemigo en el sitio. Su cargado crea zarzales que frenan y dañan.', lines: {
     enter: ['hace crecer musgo en tus botas.', 'deja que su elegido eche raíces en esta sala.'],
     champ: ['lo cubre de hojas. Mañana será un árbol.', 'no llora: abona.'],
     take:  ['te llama mala hierba, con cariño.', 'siente cómo podas lo que era suyo.'], master: ['florece en pleno invierno, solo por verte.'] } },
-  frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Punzón de la Dama', mat: 'Carámbano', color: '#bfe9ff',
+  frost: { title: 'La Dama Quieta', theme: 'Hielo', weapon: 'Lágrima de la Dama Quieta', mat: 'Carámbano', color: '#bfe9ff',
     key: 'Escarcha: sus técnicas la ponen al disparar, con el cargado o con placas de hielo. Cada punto frena; con 5, el enemigo queda Congelado y el cargado puede romperlo.', lines: {
     enter: ['no se mueve. Nunca se ha movido.', 'baja la temperatura de la sala. Ves tu aliento.'],
     champ: ['no parpadea. Guarda al muerto bajo el hielo, intacto.', 'deja que nieve sobre su elegido.'],
     take:  ['te mira hacerlo. Solo te mira.', 'tiene todo el tiempo del mundo para cobrártelo.'], master: ['da un paso. El primero en mil inviernos.'] } },
-  blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Lanceta del Acreedor', mat: 'Coágulo', color: '#d6334a',
+  blood: { title: 'El Acreedor Rojo', theme: 'Sangre', weapon: 'Pagaré del Acreedor', mat: 'Coágulo', color: '#d6334a',
     key: 'Heridas: su disparo las abre y sangran más cuanta menos vida tengas. Sus otras técnicas te cobran vida para pegar más y te la devuelven al matar o al atravesar enemigos.', lines: {
     enter: ['abre su libro de cuentas por tu nombre.', 'te presta a su elegido. Con intereses.'],
     champ: ['apunta la pérdida. Te la cobrará.', 'lame la pluma y tacha una línea.'],
@@ -72,7 +72,7 @@ const GODS = {
     enter: ['pasa una hoja. En la siguiente estás tú.', 'ya sabe cómo acaba esta sala. Lo ha leído.'],
     champ: ['corrige una errata: ese no tenía que morir hoy.', 'cierra un capítulo antes de tiempo.'],
     take:  ['te deja escribir una línea. Solo una.', 'anota al margen: imprevisto.'], master: ['te tiende la pluma. Pesa.'] } },
-  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lanza del Ojo', mat: 'Lucero', color: '#ffb84d',
+  light: { title: 'El Ojo Sin Párpado', theme: 'Luz', weapon: 'Lente del Ojo', mat: 'Lucero', color: '#ffb84d',
     key: 'Iluminado: lo ponen sus técnicas al disparar, con el cargado o al esquivar. Con Señalar, parte del daño que recibe un Iluminado lo reciben también los demás Iluminados.', lines: {
     enter: ['te ve. Te ha visto siempre.', 'enfoca a su elegido. La sala se queda sin sombras.'],
     champ: ['no cierra el ojo. No puede.', 'mira el cadáver hasta que deja de dar sombra.'],
@@ -87,17 +87,17 @@ const GODS = {
     enter: ['traga saliva. Se oye en toda la sala.', 'inclina el suelo hacia su elegido.'],
     champ: ['se lo traga sin masticar.', 'eructa. Huele a nada.'],
     take:  ['abre un poco más la boca.', 'no pide que se lo devuelvas. Espera a que caigas.'], master: ['por primera vez, se queda con hambre.'] } },
-  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Daga de Azogue', mat: 'Azogue', color: '#cfd6de',
+  mirror: { title: 'La Que Devuelve la Mirada', theme: 'Espejos', weapon: 'Esquirla de Azogue', mat: 'Azogue', color: '#cfd6de',
     key: 'Reflejo: con Reflejo (disparo) o Doble (cargado) tienes una copia tuya al otro lado de tu objetivo que repite lo que haces.', lines: {
     enter: ['te mira desde un charco. Llevas tu cara.', 'pone a su elegido frente a un espejo. Salen dos.'],
     champ: ['rompe un espejo. Siete años, dice.', 'busca su reflejo en el cadáver. No lo encuentra.'],
     take:  ['te imita mientras lo robas.', 'sonríe con tu boca.'], master: ['ya no sabe cuál de los dos eres tú.'] } },
-  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Colmillo de la Madre', mat: 'Colmillo', color: '#c8743a',
+  beast: { title: 'La Madre de Colmillos', theme: 'Bestias', weapon: 'Collar de la Madre de Colmillos', mat: 'Colmillo', color: '#c8743a',
     key: 'Manada: cualquiera de sus técnicas de disparo, cargado o esquive te da un perro que muerde a quien disparas; su cargado y su esquive le dan órdenes. Crece con la Caza, las bajas de la misión con él a tu lado: de cachorro a sabueso, luego a lobo alfa, y al final se le une otro cachorro.', lines: {
     enter: ['olfatea el aire. Hueles a hierro.', 'suelta a su elegido sin correa.'],
     champ: ['aúlla una vez, larga.', 'lame la herida de su cachorro. Ya no sangra.'],
     take:  ['te enseña los dientes. No es una sonrisa.', 'deja que el sabueso te huela la mano.'], master: ['te reconoce como de la camada.'] } },
-  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Martillo del Yunque', mat: 'Escoria', color: '#e07a5f',
+  forge: { title: 'El Yunque que Canta', theme: 'Forja', weapon: 'Fuelle del Yunque', mat: 'Escoria', color: '#e07a5f',
     key: 'Temple: su técnica de disparo, Temple, lo gana al disparar, hasta 10 (y 2 más por cada nivel de la técnica a partir del segundo); cada punto da +3% de daño y pierdes la mitad si te golpean. Su cargado también da Temple.', lines: {
     enter: ['da un golpe de martillo. Tus guanteletes vibran.', 'reconoce el trabajo del herrero que te crio.'],
     champ: ['enfría una pieza mal hecha.', 'dice que el acero era bueno. La mano, no.'],
@@ -121,7 +121,7 @@ const PIECES = [
   { id: 'stone_dodge',    god: 'stone',  slot: 'dodge',   name: 'Geoda',            desc: l => `Cada esquive deja un Cristal donde estabas. Si pasas a través de un Cristal mientras esquivas (cualquiera, no solo los de Geoda), revienta: ${120 * l}% de tu daño en área, y ese Cristal desaparece.` },
   { id: 'stone_passive',  god: 'stone',  slot: 'passive', name: 'Veta',             desc: l => `El Cristal más cercano a tu objetivo repite cada disparo tuyo, al ${30 * l}% de daño y con los efectos de tu técnica de disparo. Necesitas un Cristal cerca del enemigo; si no hay ninguno, no pasa nada.` },
   // Veneno
-  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Dardo',            desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Veneno. Se acumula hasta 30 por enemigo y no caduca. Cada punto hace un 3,5% de tu daño cada medio segundo.` },
+  { id: 'venom_basic',    god: 'venom',  slot: 'basic',   name: 'Ponzoña',            desc: l => `Cada impacto de tu disparo (también los que repiten otras técnicas) pone ${l} de Veneno. Se acumula hasta 30 por enemigo y no caduca. Cada punto hace un 3,5% de tu daño cada medio segundo.` },
   { id: 'venom_charge',   god: 'venom',  slot: 'charge',  name: 'Purga',            desc: l => `Tu disparo cargado convierte en daño al instante el Veneno de cada enemigo que alcanza: ${15 * l}% de tu daño por punto. Después le queda la mitad del Veneno y deja un charco tóxico de 5 s que pone 1 de Veneno cada 0,4 s. Solo funciona si el enemigo ya tiene Veneno.` },
   { id: 'venom_dodge',    god: 'venom',  slot: 'dodge',   name: 'Rastro',           desc: l => `Tu esquive deja un rastro tóxico a lo largo del recorrido durante 5 s. Pone ${l} de Veneno cada 0,4 s a quien lo pise.` },
   { id: 'venom_passive',  god: 'venom',  slot: 'passive', name: 'Plaga',            desc: l => `Cuando muere un enemigo envenenado, todo su Veneno pasa, entero, a cada uno de los ${1 + l} enemigos más cercanos (sin pasar de 30). Solo funciona si muere con Veneno y hay otros enemigos cerca.` },
@@ -218,8 +218,8 @@ const DUOS = [
   { id: 'obsidian',  slot: 'basic',   a: 'dragon_basic',  b: 'stone_basic',  name: 'Filo de obsidiana',  desc: 'Además de lo que hacen Colmillo al rojo y Esquirla, tus Cristales arden: cada medio segundo clavan 1 Ascua a los enemigos pegados a ellos. Cuando a un Cristal se le acaba el tiempo, estalla: 100% de daño en área y 2 Ascuas a cada enemigo alcanzado.' },
   { id: 'eternal',   slot: 'basic',   a: 'dragon_basic',  b: 'time_basic',   name: 'Brasa eterna',       desc: 'Además de lo que hacen Colmillo al rojo y Segundero, las Ascuas ya no se apagan con el tiempo: siguen quemando hasta que el enemigo muere o las haces estallar. Además, cada eco clava el doble de Ascuas que un disparo normal.' },
   { id: 'tombstone', slot: 'basic',   a: 'stone_basic',   b: 'shade_basic',  name: 'Lápida',             desc: 'Además de lo que hacen Esquirla y Marca de tumba, cuando a un Cristal se le acaba el tiempo, se levanta una Sombra en su sitio. Cuenta para tu límite de Sombras: si ya estás al máximo, sustituye a la más antigua.' },
-  { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Dardo y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
-  { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Además de lo que hacen Dardo y Aguja estática, al descargar a un enemigo, cada rayo aplica a quien alcanza tanto Veneno como tenía ese enemigo (hasta 30). Las Agujas no caducan mientras el enemigo tenga Veneno.' },
+  { id: 'boil',      slot: 'basic',   a: 'venom_basic',   b: 'orc_basic',    name: 'Sangre hirviente',   desc: 'Además de lo que hacen Ponzoña y Tambor de guerra, cada impacto aplica 1 de Veneno más por cada 20 de Furia (+5 con la Furia llena). Cada vez que el Veneno hace daño, ganas 1 de Furia. Con la Furia llena, el Veneno hace daño el doble de rápido.' },
+  { id: 'syringe',   slot: 'basic',   a: 'venom_basic',   b: 'storm_basic',  name: 'Aguja envenenada',   desc: 'Además de lo que hacen Ponzoña y Aguja estática, al descargar a un enemigo, cada rayo aplica a quien alcanza tanto Veneno como tenía ese enemigo (hasta 30). Las Agujas no caducan mientras el enemigo tenga Veneno.' },
   { id: 'warhunger', slot: 'basic',   a: 'feast_basic',   b: 'orc_basic',    name: 'Hambre de guerra',   desc: 'Además de lo que hacen Bocado y Tambor de guerra, cada punto de vida que te curas te da 2 de Furia, también lo que va a la Reserva. Con la Furia llena, Bocado te cura el triple por disparo.' },
   { id: 'clockmark', slot: 'basic',   a: 'time_basic',    b: 'shade_basic',  name: 'Marca del reloj',    desc: 'Además de lo que hacen Segundero y Marca de tumba, cuando un enemigo marcado muere y se levanta como Sombra, 1,5 s después se levanta otra en el mismo sitio. Solo con las Sombras de Marca de tumba, y los jefes no se levantan.' },
   // Cargado
@@ -259,7 +259,7 @@ const DUOS = [
   { id: 'jackpot',   slot: 'passive', a: 'dragon_passive', b: 'luck_passive', name: 'Tesoro maldito',    desc: 'Además de lo que hacen Tesoro y Racha, cada crítico te da 1 de oro.' },
   { id: 'bones',     slot: 'passive', a: 'shade_passive', b: 'luck_passive', name: 'Tabas',              desc: 'Además de lo que hacen Séquito y Racha, tienes un 5% más de probabilidad de crítico por cada Sombra viva, también las de Relevo.' },
   { id: 'facet',     slot: 'basic',   a: 'stone_basic',   b: 'luck_basic',   name: 'Faceta',             desc: 'Además de lo que hacen Esquirla y Dado cargado, cada crítico deja un Cristal junto al enemigo.' },
-  { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Además de lo que hacen Dardo y Dado cargado, cada crítico duplica el Veneno del enemigo, hasta 30.' },
+  { id: 'snakeeyes', slot: 'basic',   a: 'venom_basic',   b: 'luck_basic',   name: 'Ojos de serpiente',  desc: 'Además de lo que hacen Ponzoña y Dado cargado, cada crítico duplica el Veneno del enemigo, hasta 30.' },
   { id: 'loaded',    slot: 'basic',   a: 'time_basic',    b: 'luck_basic',   name: 'Dado trucado',       desc: 'Además de lo que hacen Segundero y Dado cargado, cada eco tira su propio crítico, con tu misma probabilidad y aparte del disparo original. Si sale, hace daño de crítico y cuenta como crítico para todo lo demás.' },
   { id: 'toss',      slot: 'dodge',   a: 'feast_dodge',   b: 'luck_dodge',   name: 'Propina',            desc: 'Además de lo que hacen Brindis y Cara o cruz, cada vez que lanzas la moneda te curas 5, salga cara o cruz.' },
   { id: 'fork',      slot: 'dodge',   a: 'storm_dodge',   b: 'luck_dodge',   name: 'Rayo caprichoso',    desc: 'Además de lo que hacen Paso relámpago y Cara o cruz, si sale cruz, la moneda cae como un rayo: descarga las Agujas de todos los que alcanza su explosión (80% por Aguja) y luego les clava 2.' },
@@ -284,7 +284,7 @@ const DUOS = [
   { id: 'frostthorn', slot: 'dodge',  a: 'wood_dodge',    b: 'frost_dodge',   name: 'Zarza de escarcha', desc: 'Además de lo que hacen Enredadera y Paso de hielo, la enredadera pone además 3 de Escarcha al enemigo que enraíza.' },
   // Sangre (afines: Manjares, Orcos, Veneno, Sombras)
   { id: 'warwound',  slot: 'basic',   a: 'orc_basic',     b: 'blood_basic',   name: 'Herida de guerra',  desc: 'Además de lo que hacen Tambor de guerra y Herida abierta, cada Herida que abres te da 3 de Furia. Con la Furia llena, las Heridas sangran el doble.' },
-  { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Dardo y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
+  { id: 'hemotoxin', slot: 'basic',   a: 'venom_basic',   b: 'blood_basic',   name: 'Hemotoxina',        desc: 'Además de lo que hacen Ponzoña y Herida abierta, las Heridas de los enemigos con Veneno sangran el doble.' },
   { id: 'bloodwine', slot: 'passive', a: 'feast_passive', b: 'blood_passive', name: 'Vino de sangre',    desc: 'Además de lo que hacen Glotón y Deuda, toda la vida que pagas vuelve como Reserva. Solo sirve si pagas vida: con Sangría en el disparo cargado o con la Gema de sangre.' },
   { id: 'bloodrite', slot: 'charge',  a: 'shade_charge',  b: 'blood_charge',  name: 'Rito rojo',         desc: 'Además de lo que hacen Orden y Sangría, los enemigos que mueren en los 0,7 s siguientes a tu disparo cargado (los mismos que te curan con Sangría) se levantan como Sombras. Los jefes no.' },
   // Final (afines: Tiempo, Dragones, Sombras, Fortuna)
@@ -314,7 +314,7 @@ const DUOS = [
   { id: 'luckglass', slot: 'passive', a: 'luck_passive',  b: 'mirror_passive', name: 'Espejo de la suerte', desc: 'Además de lo que hacen Racha y Azogue, cada golpe que recibes tiene un 33% de que se lo lleve el Reflejo: no pierdes vida ni la Racha. Azogue no rebota ese golpe.' },
   // Bestias (afines: Orcos, Veneno, Sangre, Bosque)
   { id: 'warhound',  slot: 'basic',   a: 'orc_basic',     b: 'beast_basic',   name: 'Perro de guerra',   desc: 'Además de lo que hacen Tambor de guerra y Sabueso, cada mordisco te da 4 de Furia. Con la Furia llena, tus perros muerden el doble de rápido.' },
-  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Dardo y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
+  { id: 'rabid',     slot: 'basic',   a: 'venom_basic',   b: 'beast_basic',   name: 'Rabia',             desc: 'Además de lo que hacen Ponzoña y Sabueso, cada mordisco de tus perros aplica 2 de Veneno a su presa.' },
   { id: 'bloodhound', slot: 'dodge',  a: 'blood_dodge',   b: 'beast_dodge',   name: 'Rastro de sangre',  desc: 'Además de lo que hacen Transfusión y Manada, la embestida de Manada abre 2 Heridas a cada enemigo que alcanza y te cura 2 por cada uno.' },
   { id: 'wolfthorn', slot: 'charge',  a: 'wood_charge',   b: 'beast_charge',  name: 'Lobo entre zarzas', desc: 'Además de lo que hacen Zarzal y ¡A por él!, el salto del sabueso deja enraizados 1,5 s a todos los que alcanza (a los jefes, mucho menos).' },
   // Forja (afines: Dragones, Minerales, Orcos, Tormenta)
