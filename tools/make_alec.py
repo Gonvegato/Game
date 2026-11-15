@@ -33,8 +33,8 @@ DOWN = grid([
     '..kHwHHwwwHHwHhk..',
     '..khwHhwwHwhHwhk..',
     '..khHhHwHHwHhHhk..',
-    '..khHsHhssHsHhhk..',
-    '..khseEssssEeshk..',
+    '..khHhhhsshhhHhk..',
+    '..khsSeEssEeSshk..',
     '..khrrrrrrrrrrhk..',
     '..khHrtrrrrtrHhk..',
     '.khHhRrrrrrrRhHhk.',
@@ -88,14 +88,14 @@ SIDE = grid([
     '.khwHwHhHsseEsk...',
     '.khHwHhhrrrrrrk...',
     '.khHwHhhrtrrrrk...',
-    'khHwHhhhRrrrrk....',
-    'khwHhHhkcRRrk.....',
-    'khHwHhkcdccCcdk...',
-    'khHhHhkcdccCcdk...',
-    '.khHhhkcdccCcdk...',
-    '.khhhkkcdccCcdk...',
-    '..khhk.kgGggGgk...',
-    '..kkk..kdcCCcdk...',
+    '.khHwHhhRrrrrk....',
+    '.khwHhhkcRRrk.....',
+    '.khHwhkcdccCcdk...',
+    '..khHhkcdccCcdk...',
+    '..khhkkcdccCcdk...',
+    '...kk.kcdccCcdk...',
+    '......kgGgggGgk...',
+    '......kdcCCccdk...',
     '......kdccCCcdk...',
     '......kdccCCccdk..',
     '.....kdcccCCccdk..',
@@ -134,13 +134,19 @@ def stamp(im, rows, x, y):
         for i, ch in enumerate(r):
             if ch != '.' and 0 <= x + i < im.width and 0 <= y + j < im.height: im.putpixel((x + i, y + j), rgba(ch))
 
-def frame(view, legs, bob=0, gl=(0, 0), gr=(0, 0), hot=0, lean=0):
+def frame(view, legs, bob=0, gl=(0, 0), gr=(0, 0), hot=0, lean=0, sway=0):
     """Compone un fotograma. gl/gr: desplazamiento de cada guantelete; hot: brasa encendida."""
     im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     ox, top = 5, H - 2 - 24
     side = view == 'side'
     stamp(im, (LEGS_SIDE if side else LEGS_FRONT)[legs], ox, H - 2)
+    if side and sway:      # la punta de la melena se queda atrás al andar
+        if sway > 0: stamp(im, ['kh', 'kh', 'kk'], ox + 1 + lean, top + 13 + bob)
     stamp(im, {'down': DOWN, 'up': UP, 'side': SIDE}[view], ox + lean, top + bob)
+    if sway:               # el bajo de la túnica ondea hacia un lado
+        if side: stamp(im, ['kd', 'kk'], ox + 3 + lean, top + 22 + bob)
+        elif sway < 0: stamp(im, ['kd', 'kc', 'kk'], ox + 0, top + 21 + bob)
+        else: stamp(im, ['dk', 'ck', 'kk'], ox + 16, top + 21 + bob)
     hands = []
     if side:
         x, y = ox + 9 + gr[0], top + 13 + bob + gr[1]
@@ -155,17 +161,18 @@ def frame(view, legs, bob=0, gl=(0, 0), gr=(0, 0), hot=0, lean=0):
 def anims(view):
     if view == 'side':
         idle = [frame(view, 'stand'), frame(view, 'stand'), frame(view, 'stand', 1), frame(view, 'stand', 1)]
-        move = [frame(view, 'a', 0, gr=(1, -1), lean=1), frame(view, 'b', 1, lean=1), frame(view, 'c', 0, gr=(-1, 0), lean=1),
-                frame(view, 'a', 0, gr=(-1, 0), lean=1), frame(view, 'b', 1, lean=1), frame(view, 'c', 0, gr=(1, -1), lean=1)]
-        atk = [frame(view, 'stand', 0, gr=(-2, -1), hot=1), frame(view, 'stand', 0, gr=(3, -3), hot=1, lean=1), frame(view, 'stand', 0, gr=(4, -3), hot=1, lean=1),
+        move = [frame(view, 'a', 0, gr=(1, -1), lean=1, sway=1), frame(view, 'b', 1, lean=1, sway=-1), frame(view, 'c', 0, gr=(-1, 0), lean=1, sway=1),
+                frame(view, 'a', 0, gr=(-1, 0), lean=1, sway=-1), frame(view, 'b', 1, lean=1, sway=1), frame(view, 'c', 0, gr=(1, -1), lean=1, sway=-1)]
+        atk = [frame(view, 'stand', 0, gr=(-2, -1), hot=1), frame(view, 'stand', 0, gr=(3, -3), hot=1, lean=1, sway=1), frame(view, 'stand', 0, gr=(4, -3), hot=1, lean=1, sway=1),
                frame(view, 'stand', 0, gr=(3, -3), hot=1, lean=1), frame(view, 'stand', 0, gr=(1, -1)), frame(view, 'stand')]
     else:
         d = -1 if view == 'up' else 1      # de frente los puños bajan hacia la cámara; de espaldas suben
         idle = [frame(view, 'stand'), frame(view, 'stand'), frame(view, 'stand', 1, gl=(0, -1), gr=(0, -1)), frame(view, 'stand', 1, gl=(0, -1), gr=(0, -1))]
-        move = [frame(view, 'l', 0, gl=(0, -1), gr=(0, 1)), frame(view, 'stand', 1), frame(view, 'r', 0, gl=(0, 1), gr=(0, -1)),
-                frame(view, 'r', 0, gl=(0, 1), gr=(0, -1)), frame(view, 'stand', 1), frame(view, 'l', 0, gl=(0, -1), gr=(0, 1))]
-        atk = [frame(view, 'stand', 0, gl=(1, -2), gr=(-1, -2), hot=1), frame(view, 'stand', 1, gl=(2, 2 * d), gr=(-2, 2 * d), hot=1), frame(view, 'stand', 1, gl=(2, 3 * d), gr=(-2, 3 * d), hot=1),
-               frame(view, 'stand', 1, gl=(2, 2 * d), gr=(-2, 2 * d), hot=1), frame(view, 'stand', 0, gl=(1, 0), gr=(-1, 0)), frame(view, 'stand')]
+        move = [frame(view, 'l', 0, gl=(0, -1), gr=(0, 1), sway=-1), frame(view, 'stand', 1, sway=-1), frame(view, 'r', 0, gl=(0, 1), gr=(0, -1)),
+                frame(view, 'r', 0, gl=(0, 1), gr=(0, -1), sway=1), frame(view, 'stand', 1, sway=1), frame(view, 'l', 0, gl=(0, -1), gr=(0, 1))]
+        # al lanzar abre los brazos hacia fuera para que la llama no le tape la cara
+        atk = [frame(view, 'stand', 0, gl=(0, -2), gr=(0, -2), hot=1), frame(view, 'stand', 1, gl=(-2, 1 * d), gr=(2, 1 * d), hot=1), frame(view, 'stand', 1, gl=(-3, 2 * d), gr=(3, 2 * d), hot=1),
+               frame(view, 'stand', 1, gl=(-2, 1 * d), gr=(2, 1 * d), hot=1), frame(view, 'stand', 0, gl=(-1, 0), gr=(1, 0)), frame(view, 'stand')]
     return {'idle': idle, 'move': move, 'atk': atk}
 
 def main():
