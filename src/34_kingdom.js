@@ -4,11 +4,11 @@
 // Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda es el arma forjada y el árbol.
 // Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
 const MTYPES = {
-  doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas, con puerta a elegir tras cada una y dos tiendas por el camino.' },
-  defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Doce oleadas contra una aldea. Tras cada una te llevas una técnica. Si derriban la campana, fracasas.' },
-  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos, cada uno con estandartes que llaman refuerzos sin parar. Derríbalos todos.' },
-  boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas, dos tiendas y el guardián de la zona.' },
-  god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas, dos tiendas y el dios.' },
+  doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas. Al acabar cada una eliges puerta. Hay dos tiendas.' },
+  defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Protege la campana de la aldea durante doce oleadas. Si cae, pierdes.' },
+  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos. Derriba sus estandartes: mientras sigan en pie, llegan refuerzos.' },
+  boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas y, al final, el guardián de la zona. Hay dos tiendas.' },
+  god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas y, al final, el dios. Hay dos tiendas.' },
 };
 const KINGDOMS = [
   { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro',

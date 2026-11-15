@@ -175,7 +175,7 @@ const ROOM_GEN = {
     fillRect(g, cx - 1, 5, 2, 1);                                                 // el trono
     for (const x of [5, c - 7]) for (const y of [8, 13]) fillRect(g, x, y, 2, 2);  // columnas
     OUT.npcs.push({ key: 'king', x: cx, y: 6.15 }, { key: 'queen', x: cx + 1.6, y: 6.9, flip: true }, { key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
-    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Audiencia con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Hablar con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
   // La forja y la posada por dentro: muros alrededor, la puerta abajo, muebles del paquete y quien atiende

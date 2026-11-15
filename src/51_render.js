@@ -35,6 +35,7 @@ function render() {
     scr.fillStyle = col; scr.fillText(txt, (x - cam.x) * k, (y - cam.y) * k);
   }
   scr.globalAlpha = 1;
+  if (S.dialog) drawDialog(k);   // bocadillos de conversación, a resolución de pantalla para que el texto se lea nítido
   if (S.hurtFx > 0) { scr.fillStyle = C.blood; scr.globalAlpha = S.hurtFx * 0.7; scr.fillRect(0, 0, cv.width, cv.height); scr.globalAlpha = 1; }
   if (touch.joyId !== null) {
     const r = cv.getBoundingClientRect(), d = view.dpr, ox = (touch.ox - r.left) * d, oy = (touch.oy - r.top) * d;

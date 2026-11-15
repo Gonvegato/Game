@@ -19,7 +19,7 @@ function openShop() {
 function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a.idle.f[0]; return `<div class="keeper"><i style="width:${m.w}px;height:${m.h}px;background-position:-${f[0]}px -${f[1]}px"></i><span>«Mira sin prisa, mercenario. Lo que no compres hoy, mañana lo llevará otro.»</span></div>`; }
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
-  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1>${keeperHtml()}<p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro no sale de la misión: gástalo.</p><div class="forge"><section>` +
+  return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1>${keeperHtml()}<p class="lead">Llevas <b>${Math.floor(p.gold)}</b> de oro y ${Math.ceil(p.hp)} de ${p.maxHp} de vida. El oro solo sirve en este encargo: gástalo.</p><div class="forge"><section>` +
     S.shop.items.map((it, i) => `<button class="fi${it.sold ? ' on' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><b>${ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0)}${it.name}</b><span>${it.desc}</span><i>${it.sold ? 'Comprado' : it.price + ' de oro'}</i></button>`).join('') +
     `</section><section><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></section></div><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button>`;
 }
@@ -57,13 +57,13 @@ function forgeHtml() {
   let body = '';
   if (forgeTab === 'map') {
     const go = M.run ? `<button class="fi primary" data-act="resume">Continuar: ${M.run.mission.name}, tramo ${M.run.wave + 1}</button>` : '';
-    body = `${go}<div class="kingdom">${mapHtml()}</div><p class="fine">Cada misión empieza de cero: lo que robes a los dioses no sale de ella. Las almas pagan tu árbol; el Hierro Místico y los materiales, las piezas de tu arma. Si caes, te retiras con lo que llevabas y lo vuelves a intentar.</p>`;
+    body = `${go}<div class="kingdom">${mapHtml()}</div><p class="fine">Las técnicas de los dioses solo duran un encargo. Lo que ganas se queda: almas para el patio de armas, y Hierro Místico y materiales para la forja. Si caes, conservas lo ganado y puedes repetir.</p>`;
   } else if (forgeTab === 'gun') {
     const k = forgeSlot, all = PARTS.filter(x => x.slot === k), known = all.filter(x => M.parts[x.id]);
     const rank = x => (M.gun[k] === x.id ? 0 : M.parts[x.id] === 2 ? 1 : canPay(x.cost) ? 2 : 3);
     known.sort((a, b) => rank(a) - rank(b));
     const on = ensOf(M.gun), L = legOf(M.gun);
-    body = `<p class="fine">Cada apartado decide una cosa. Elige un apartado y debajo salen sus piezas: las que descubras en las misiones aparecen aquí, y forjarlas una vez te deja empezar con ellas.${L ? ` <b class="gold">Arma legendaria: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
+    body = `<p class="fine">Tu arma tiene cinco partes. Elige una y abajo verás sus piezas. Las que encuentres en los encargos aparecen aquí: fórjalas una vez y podrás montarlas siempre.${L ? ` <b class="gold">Arma legendaria: ${L.name}.</b>` : ''}${on.length ? ` <b class="gold">Ensambles activos: ${on.map(E => E.name).join(', ')}.</b>` : ''}</p>
       <div class="slots">${GSLOT_KEYS.map(sk => { const n = PARTS.filter(x => x.slot === sk), kn = n.filter(x => M.parts[x.id]).length;
         return `<button class="fi slot${sk === k ? ' on' : ''}" data-act="slot:${sk}"><b>${GSLOTS[sk]}</b><span>${PART[M.gun[sk]].name}</span><i>${kn}/${n.length}</i></button>`; }).join('')}</div>
       <h3>${GSLOTS[k]} · ${GSLOT_WHAT[k]}</h3><div class="plist">` +
@@ -75,7 +75,7 @@ function forgeHtml() {
     const affTxt = Object.keys(affs).length ? Object.keys(affs).map(g => `<li class="own"><em style="color:${GODS[g].color}">${GODS[g].theme} ×${affs[g]}</em><span>Si llevas una técnica suya: ${AFFIN[g]}${affs[g] > 1 ? ', por cada pieza' : ''}.</span></li>`).join('') : '<li><span>Tu arma no lleva ninguna pieza afín a una deidad.</span></li>';
     const reso = RESO.map(R => { const known = R.parts.every(id => M.parts[id]), mounted = R.parts.every(id => M.gun[PART[id].slot] === id);
       return `<li class="${mounted ? 'own' : ''}"><em>${mounted ? 'Montada' : 'Resonancia'}</em><b>${known ? R.name : '???'}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : '???')).join(' + ')} con ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' y ')}${known ? '. ' + R.desc : ''}</span></li>`; }).join('');
-    body = `<p class="fine">Cuatro formas de que tu arma haga más que la suma de sus piezas. Lo que aún no has descubierto sale como «???».</p>
+    body = `<p class="fine">Combinaciones que dan efectos extra. Lo que aún no has descubierto sale como «???».</p>
       <div class="forge"><section><h3>Afinidades de tu arma · pieza con deidad</h3><ul class="build full legends">${affTxt}</ul>${ensHtml(M.gun)}</section>
       <section>${legendsHtml(M.gun)}<h3>Resonancias · una pieza con una técnica concreta</h3><ul class="build full legends">${reso}</ul></section></div>`;
   } else {
@@ -170,17 +170,17 @@ function buildHtml(full) {
   return rows.join('');
 }
 function bookHtml() {
-  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que ya llevas. Cabe una técnica por acción. Si llevas la de una deidad y otra te ofrece la suya para esa misma acción, te ofrece el dúo de las dos.</p><div class="book">`;
+  let h = `<p class="eyebrow">Recetario del herrero</p><h1>Lo que se les puede robar</h1><p class="fine">En blanco, lo que llevas. Solo cabe una técnica por acción (disparo, cargado, esquive y pasiva). Si dos deidades te dan técnicas para la misma acción, pueden ofrecerte un dúo que mezcla las dos.</p><div class="book">`;
   for (const g of GOD_KEYS) {
     const n = godCount(g), G = GODS[g];
     h += `<section><h2 style="color:${G.color}">${G.title}</h2><p class="fine">${G.theme}. ${G.key}</p><ul class="build full">` +
       PIECES.filter(x => x.god === g).map(pc => { const l = lv(pc.id); return `<li class="${l ? 'own' : ''}"><em>${SLOTS[pc.slot]}</em><b>${pc.name}${l ? ' ' + ROMAN[l] : ''}</b><span>${pc.desc(Math.max(1, l))}</span></li>`; }).join('') +
       TECHS.filter(t => t.god === g).map(t => `<li class="${S.techs.has(t.id) ? 'own' : ''}"><em style="color:${RAR[t.rar].color}">${RAR[t.rar].name}</em><b>${t.name}</b><span>${t.desc} Pide: ${techNeeds(t)}.</span></li>`).join('') +
-      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Lleva técnicas suyas en 3 acciones. ${MASTERY[g].desc}</span></li></ul></section>`;
+      `<li class="${n >= 3 ? 'own' : ''}"><em style="color:${G.color}">Maestría</em><b>${MASTERY[g].name} · ${Math.min(n, 3)}/3</b><span>Se activa si llevas técnicas suyas en 3 acciones. ${MASTERY[g].desc}</span></li></ul></section>`;
   }
   for (const k of SLOT_KEYS) h += `<section><h2 style="color:${RAR[3].color}">Dúos de ${SLOTS[k].toLowerCase()}</h2><ul class="build full">` +
     DUOS.filter(d => d.slot === k).map(d => `<li class="${duoOn(d.id) ? 'own' : ''}"><em>${GODS[PIECE[d.a].god].theme} + ${GODS[PIECE[d.b].god].theme}</em><b>${d.name}</b><span>${PIECE[d.a].name} + ${PIECE[d.b].name}. ${d.desc}</span></li>`).join('') + `</ul></section>`;
-  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza del arma y una técnica de una deidad que, juntas, despiertan algo. Se activan solas.</p><ul class="build full">` +
+  h += `<section><h2 style="color:${RAR[3].color}">Resonancias</h2><p class="fine">Una pieza del arma más una técnica concreta dan un efecto extra. Se activan solas.</p><ul class="build full">` +
     RESO.map(R => `<li class="${res(R.id) ? 'own' : ''}"><em>${R.parts.map(id => GSLOTS[PART[id].slot]).join(' + ')}</em><b>${R.name}</b><span>${R.parts.map(id => (M.parts[id] ? PART[id].name : 'una pieza sin descubrir')).join(' + ')} y ${R.techs.map(id => PIECE[id].name + ' (' + GODS[PIECE[id].god].theme + ')').join(' + ')}. ${R.desc}</span></li>`).join('') + `</ul></section>`;
   h += `<section><h2>Piezas del arma</h2><ul class="build full">` + PARTS.filter(x => M.parts[x.id]).map(x => `<li class="${G(x.id) ? 'own' : ''}"><em>${GSLOTS[x.slot]}</em><b>${x.name} · ${x.tag}</b><span>${x.desc}</span></li>`).join('') +
     `<li><em>Faltan</em><span>${PARTS.filter(x => !M.parts[x.id]).length} piezas por descubrir.</span></li></ul></section>`;
