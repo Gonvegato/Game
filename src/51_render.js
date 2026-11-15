@@ -307,6 +307,7 @@ function renderWorld() {
   // Proyectiles enemigos
   for (const sh of S.shots) {
     const x = Math.round(sh.x), y = Math.round(sh.y), r = Math.max(2, Math.round(sh.r)), tw = Math.floor(S.t * 12 + x) % 2;
+    if (sh.vx != null && drawFx('bolt', (S.t * 14 + x * 0.1) % 1, sh.x, sh.y, C.arcane, Math.max(12, r * 5), Math.atan2(sh.vy, sh.vx))) continue;
     ctx.fillStyle = C.arcane; ctx.globalAlpha = 0.28; ctx.fillRect(x - r - 2, y - r, r * 2 + 4, r * 2); ctx.fillRect(x - r, y - r - 2, r * 2, r * 2 + 4);
     ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(x - r, y - r + 1, r * 2, r * 2 - 2); ctx.fillRect(x - r + 1, y - r, r * 2 - 2, r * 2);
     ctx.fillStyle = C.arcane; ctx.fillRect(x - r + 1, y - r + 1, r * 2 - 2, r * 2 - 2);

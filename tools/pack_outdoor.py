@@ -21,7 +21,20 @@ P = {
   'rune1': (FF, 212, 280, 42, 40), 'rune2': (FF, 179, 289, 28, 31), 'grey1': (FF, 212, 232, 42, 40), 'grey2': (FF, 179, 241, 28, 31), 'bush_g': (FF, 65, 16, 47, 32), 'bush_a': (FF, 65, 64, 47, 32),
   'mush_xl': (CV, 3, 3, 87, 88), 'mush_l': (CV, 196, 1, 53, 45), 'mush_tall': (CV, 162, 96, 60, 96), 'mush_m': (CV, 291, 3, 27, 28),
 }
+# ── Tierra de no-muertos (Free Undead Tileset de CraftPix): objetos sueltos. El paquete entero no va en el repositorio;
+#    con la carpeta delante (python3 -I tools/pack_outdoor.py <carpeta Objects_separately>) se guardan los recortes usados en assets/library/extra/ ──
+import sys, os
+U = {'u_ribs': 'Bones_shadow1_10', 'u_bones1': 'Bones_shadow1_11', 'u_beast': 'Bones_shadow1_12', 'u_bones2': 'Bones_shadow1_6', 'u_ribs2': 'Bones_shadow1_9', 'u_log': 'Broken_tree_shadow1_1',
+     'u_arm1': 'Dead_arm_shadow1_1', 'u_arm2': 'Dead_arm_shadow1_2', 'u_arm3': 'Dead_arm_shadow1_3', 'u_arm4': 'Dead_arm_shadow1_4', 'u_dtree1': 'Dead_tree_shadow1_1', 'u_dtree2': 'Dead_tree_shadow1_2', 'u_dtree3': 'Dead_tree_shadow1_3',
+     'u_lich': 'Lich_shadow1', 'u_pile': 'Pile_sculls_shadow1', 'u_ruin1': 'Ruin_shadow1_1', 'u_ruin2': 'Ruin_shadow1_2', 'u_ruin3': 'Ruin_shadow1_3', 'u_ruin4': 'Ruin_shadow1_4', 'u_skull': 'Scull_door_shadow1',
+     'u_thorn1': 'Thorn_plant_shadow1_1', 'u_thorn2': 'Thorn_plant_shadow1_2', 'u_tree1': 'Tree_shadow1_1', 'u_tree2': 'Tree_shadow1_2', 'u_tree3': 'Tree_shadow1_3'}
+EX = 'assets/library/extra/'; os.makedirs(EX, exist_ok=True)
+if len(sys.argv) > 1:
+    for k, f in U.items():
+        im = Image.open(os.path.join(sys.argv[1], f + '.png')).convert('RGBA'); im.crop(im.getbbox()).save(EX + k + '.png')
 cache = {}; items = []
+for k in U:
+    if os.path.exists(EX + k + '.png'): items.append((k, Image.open(EX + k + '.png').convert('RGBA')))
 for k, (f, x, y, w, h) in P.items():
     im = cache.setdefault(f, Image.open(f).convert('RGBA')).crop((x, y, x + w, y + h)); b = im.getbbox(); items.append((k, im.crop(b)))
 items.sort(key=lambda t: -t[1].height)
