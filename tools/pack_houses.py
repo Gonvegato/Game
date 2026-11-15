@@ -57,8 +57,31 @@ def house(roof, wall, door, gable, wins):
     return out
 SPEC = [('big_brown', 'timber', 'arch', 'vplank', [10, 96]), ('big_teal', 'plaster', 'plain', 'plank', [10, 96]), ('small_brown', 'log', 'plain', 'vplank', [4]), ('small_teal', 'brick', 'arch', 'plank', [70]), ('big_brown', 'brick', 'plain', 'plank', [14, 92]), ('small_brown', 'timber', 'arch', 'vplank', [4])]
 ims = [house(*s) for s in SPEC]
+# Versiones en ruinas (aldeas abandonadas): tejado medio hundido, madera quemada, ventanas a oscuras
+import random
+def ruin(im, seed):
+    rnd = random.Random(seed); im = im.copy(); px = im.load(); w, h = im.size
+    cx, cy, rx, ry = w * rnd.choice([0.27, 0.73]), h * 0.3, w * 0.15, h * 0.13
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if not a: continue
+            d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+            if d < 0.8 + rnd.random() * 0.35:                                                           # el boquete del tejado: se ve el interior a oscuras
+                px[x, y] = (40, 26, 22, 255) if (x + 2 * y) % 9 < 2 else (20, 15, 20, 255); continue
+            k = 0.42 if d < 2.2 else 0.66                                                               # chamuscado alrededor del boquete
+            gr = (r + g + b) / 3; r, g, b = (int((c * 0.65 + gr * 0.35) * k) for c in (r, g, b))
+            if y > h * 0.6 and px[x, y][2] > px[x, y][0] + 8: r, g, b = 16, 13, 20                      # ventanas: ya no hay luz dentro
+            px[x, y] = (r, g, b, a)
+    for i in range(26):                                                                                 # tejas y tablas que faltan
+        x, y = rnd.randrange(w), rnd.randrange(int(h * 0.55))
+        if px[x, y][3]:
+            for dx in range(rnd.choice([2, 3, 4])):
+                if x + dx < w and px[x + dx, y][3]: px[x + dx, y] = (26, 19, 22, 255)
+    return im
+ims += [ruin(im, 7 + i) for i, im in enumerate(ims[:6])]
 x = 0; meta = []; Wt = sum(i.width + 2 for i in ims); Ht = max(i.height for i in ims); sheet = Image.new('RGBA', (Wt, Ht))
 for im in ims: sheet.alpha_composite(im, (x, 0)); meta.append([x, 0, im.width, im.height]); x += im.width + 2
 sheet.save('assets/houses.png', optimize=True)
-open('src/49_houses.js', 'w').write('// Generado por tools/pack_houses.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.\n// [x, y, ancho, alto] de cada casa en assets/houses.png; las 0, 1 y 4 son grandes (128 px), las demás pequeñas (96 px)\nconst HOUSES = ' + json.dumps(meta) + ';\n')
+open('src/49_houses.js', 'w').write('// Generado por tools/pack_houses.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.\n// [x, y, ancho, alto] de cada casa en assets/houses.png; las 0, 1 y 4 son grandes (128 px), las demás pequeñas (96 px); de la 6 a la 11, las mismas en ruinas\nconst HOUSES = ' + json.dumps(meta) + ';\n')
 print(meta)

@@ -18,7 +18,8 @@ function roomBgDungeon(Dover) {
   cvs.width = (c + BG_M * 2) * CELL; cvs.height = (r + BG_M * 2) * CELL; g.imageSmoothingEnabled = false;
   g.fillStyle = D.top; g.fillRect(0, 0, cvs.width, cvs.height);
   g.translate(BG_M * CELL, BG_M * CELL);
-  const wallAt = (x, y) => x < 0 || y < 0 || x >= c || y >= r || NAV.wall[y * c + x] === 1;
+  const sp = new Set(Dover ? [] : (S.solidProps || []).map(q => q.y * c + q.x));   // obstáculos sueltos: son muro para el juego, pero se pintan como un objeto sobre el suelo
+  const wallAt = (x, y) => x < 0 || y < 0 || x >= c || y >= r || (NAV.wall[y * c + x] === 1 && !sp.has(y * c + x));
   const hash = (x, y, k = 0) => { let h = (x * 374761393 + y * 668265263 + k * 2147483647 + (S.world || 1) * 9781) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const blit = (src, s, dx, dy, w, h) => g.drawImage(src, s[0], s[1], w || s[2], h || s[3], dx, dy, w || s[2], h || s[3]);
   // Suelo: el dibujo del paquete repetido según la posición, para que enlace de casilla en casilla
@@ -80,7 +81,7 @@ function roomBgDungeon(Dover) {
     const onTrap = (x, y) => (S.traps || []).some(t => x * CELL >= t.x - 8 && x * CELL < t.x + t.w + 8 && y * CELL >= t.y - 8 && y * CELL < t.y + t.h + 8);
     const items = [];
     for (let y = 1; y < r - 1; y++) for (let x = 1; x < c - 1; x++) {
-      if (wallAt(x, y) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
+      if (wallAt(x, y) || sp.has(y * c + x) || used[y * c + x] || onTrap(x, y) || (start && Math.abs(x - start.x) < 3 && Math.abs(y - start.y) < 3)) continue;
       const byWall = wallAt(x, y - 1), h = hash(x, y, 61);
       const list = byWall ? DZ.wall : DZ.floor; if (!list.length || h > (byWall ? 0.42 : 0.08)) continue;
       const it = list[Math.floor(hash(x, y, 62) * list.length)];
@@ -88,6 +89,7 @@ function roomBgDungeon(Dover) {
       for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (y + j >= 0 && y + j < r && x + i >= 0 && x + i < c) used[(y + j) * c + x + i] = 1;
       items.push({ it, x: x * CELL + 8 + (hash(x, y, 63) - 0.5) * 4, y: byWall ? y * CELL + Math.min(14, it[3] - 2) : y * CELL + 12 });
     }
+    for (const k of sp) { const x = k % c, y = (k / c) | 0, list = DZ.solid || []; if (list.length) items.push({ it: list[Math.floor(hash(x, y, 91) * list.length)], x: x * CELL + 8, y: y * CELL + 15 }); }
     items.sort((a, b) => a.y - b.y);
     for (const { it, x, y } of items) {
       g.fillStyle = 'rgba(0,0,0,0.28)'; g.beginPath(); g.ellipse(x, y, Math.min(10, it[2] / 2.2), 2.5, 0, 0, Math.PI * 2); g.fill();

@@ -71,15 +71,17 @@ function fillDefWave() {
   while (budget > 0.5 && list.length < 32) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
   list.sort(() => Math.random() - 0.5);
   if (w % 3 === 0) list.splice(Math.ceil(list.length / 2), 0, 'champ');   // cada tres oleadas llega un elegido con los asaltantes
-  S.queue = list.map((type, i) => ({ type, at: 1 + i * 0.4, raid: i % 3 === 0 && !TYPES[type].fly && type !== 'champ' }));
+  S.queue = list.map((type, i) => ({ type, at: 1 + i * 0.4, raid: i % 4 === 0 && !TYPES[type].fly && type !== 'champ' }));
   note(S.p.x, S.p.y - 30, 'Oleada ' + w + ' de ' + roomsOf(S.mission), C.blood, true);
-  if (w === 1) sayRaw('[Uno de cada tres va a por la campana: no la dejes sola.]', C.blood);
+  if (w === 1) sayRaw('[Uno de cada cuatro va a por la campana: no la dejes sola.]', C.blood);
 }
 // ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
 function setupAssault() {
   const p = S.p, spots = [];
   S.postsAll = S.room >= 4 ? 4 : 3;
-  for (let i = 0, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
+  const camps = ((S.out && S.out.camps) || []).slice().sort(() => Math.random() - 0.5);   // los campamentos que dibujó el generador
+  for (const k of camps) if (spots.length < S.postsAll) spots.push({ x: (k.x + 0.5) * CELL, y: (k.y + 0.5) * CELL });
+  for (let i = spots.length, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
   let budget = 5 + S.lvl * 2.1; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 18) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }

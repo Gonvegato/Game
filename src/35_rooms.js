@@ -104,32 +104,65 @@ const ROOM_GEN = {
     fillRect(g, (c >> 1) - 9, (r >> 1) - 1, 2, 2); fillRect(g, (c >> 1) + 7, (r >> 1) - 1, 2, 2);
     return [c >> 1, (r >> 1) + 4];
   },
-  // Pradera: un claro entre árboles, con rocas, árboles sueltos y charcas que cortan el paso pero no las balas
+  // Exterior de Asalto: el paisaje de la zona (cementerio, bosque de setas, nieve o tierra quemada), con campamentos enemigos
+  // ya montados (hoguera, sacos, toneles y bandera alrededor de cada estandarte), a veces una aldea abandonada, charcas y obstáculos
   pradera(g, c, r) {
-    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [] };
+    const tid = ZONE_THEME[clamp(((S && S.world) || 1) - 1, 0, 3)], T = THEMES[tid], R = a => a[ri(0, a.length - 1)];
+    OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], decor: [], fires: [], camps: [] };
     outBorder(g, c, r);
-    const sx = c >> 1, sy = r - 6;
-    for (let i = 0, t = 0; i < (c > 60 ? 3 : 2) && t < 60; t++) {
+    const sx = c >> 1, sy = r - 6, keep = [[sx, sy, 5]], far = (x, y) => keep.every(([kx, ky, kr]) => Math.hypot(x - kx, y - ky) >= kr);
+    for (let i = 0, t = 0; i < 5 && t < 500; t++) {   // campamentos
+      const x = ri(9, c - 10), y = ri(8, r - 9);
+      if (Math.hypot(x - sx, y - sy) < 15 || OUT.camps.some(k => Math.hypot(k.x - x, k.y - y) < 13) || !areaFree(g, x - 6, y - 5, 13, 11)) continue;
+      OUT.camps.push({ x, y }); keep.push([x, y, 6.5]);
+      ob(g, x + 3, y + 1, 2, 2, 'ref', { r: 'firering' }); OUT.fires.push({ x: x + 4, y: y + 2.5 });
+      ob(g, x - 4, y - 3, 2, 1, 'ref', { r: 'skullflag' }); ob(g, x + 3, y - 3, 2, 1, 'ref', { r: i % 2 ? 'barrels' : 'shelf' }); ob(g, x - 4, y + 2, 1, 1, 'ref', { r: 'cask' });
+      OUT.decor.push({ r: 'bedroll1', x: x - 2, y: y + 4.2, shadow: false }, { r: 'bedroll2', x: x - 0.4, y: y + 4.4, shadow: false }, { r: 'bags', x: x + 1.6, y: y - 2.4 }, { r: 'bedroll1', x: x + 1.4, y: y + 4.3, shadow: false });
+      i++;
+    }
+    if (Math.random() < 0.8) for (let t = 0; t < 120; t++) {   // aldea abandonada: tres casas en ruinas, su pozo, vallas rotas y un espantapájaros
+      const x = ri(5, c - 23), y = ri(9, r - 17);
+      if (Math.hypot(x + 9 - sx, y + 6 - sy) < 13 || !areaFree(g, x - 2, y - 6, 22, 20) || OUT.camps.some(k => Math.abs(k.x - x - 9) < 17 && Math.abs(k.y - y - 5) < 14)) continue;
+      ob(g, x, y, 8, 4, 'house', { v: ri(0, 2), big: true, ruin: true }); ob(g, x + 12, y + 1, 6, 4, 'house', { v: ri(0, 2), ruin: true }); ob(g, x + 4, y + 9, 6, 4, 'house', { v: ri(0, 2), ruin: true });
+      ob(g, x + 13, y + 8, 2, 1, 'well'); ob(g, x + 16, y + 10, 2, 2, 'prop', { k: 'scarecrow' }); ob(g, x + 1, y + 11, 2, 1, 'prop', { k: 'hay' });
+      for (const fx of [0, 1, 3]) ob(g, x + 9 + fx, y + 6, 1, 1, 'fence', { horiz: 1 });
+      break;
+    }
+    if (tid !== 'ash') for (let i = 0, t = 0; i < (tid === 'mines' ? 3 : 2) && t < 80; t++) {   // charcas (hielo en la nieve)
       const rx = ri(3, 5), ry = ri(2, 3), cx = ri(7 + rx, c - 8 - rx), cy = ri(6 + ry, r - 7 - ry);
-      if (Math.hypot(cx - sx, cy - sy) < 9 || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
+      if (!far(cx, cy) || !areaFree(g, cx - rx - 3, cy - ry - 3, 2 * rx + 7, 2 * ry + 7)) continue;
       pond(g, cx, cy, rx + 0.4, ry + 0.4); i++;
     }
-    for (let i = 0, t = 0; i < Math.floor(c * r / 70) && t < 600; t++) {
-      const x = ri(5, c - 7), y = ri(5, r - 7);
-      if (Math.hypot(x - sx, y - sy) < 5 || !areaFree(g, x - 3, y - 3, 8, 8)) continue;
-      ob(g, x, y, 2, 2, ['rock', 'tree', 'tree', 'ruin'][ri(0, 3)], { v: ri(0, 13) }); i++;
+    for (let i = 0, t = 0; i < Math.floor(c * r / 60) && t < 1200; t++) {   // obstáculos del tema
+      const roll = Math.random(), big = roll > 0.8, small = roll < 0.3, w = big ? 3 : small ? 1 : 2, h = small ? 1 : 2, x = ri(5, c - 6 - w), y = ri(5, r - 6 - h);
+      if (!far(x + w / 2, y + h / 2) || !areaFree(g, x - 3, y - 3, w + 6, h + 6)) continue;
+      if (small) ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }); else if (big) ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }); else ob(g, x, y, 2, 2, Math.random() < 0.62 ? 'tree' : 'rock', { v: ri(0, 23) });
+      i++;
     }
     return [sx, sy];
   },
-  // Aldea al aire libre: cuatro casas alrededor de la campana, un pozo y barriles
+  // Aldea al aire libre (Defensa): la campana en la plazuela, casas en las esquinas, calles empedradas en cruz y la vida de un pueblo:
+  // puestos, pozo, bancos, heno, huerto vallado, toneles y los árboles y piedras de su zona. Las calles quedan libres para los asaltantes.
   aldea_ext(g, c, r) {
-    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [] };
+    const tid = ZONE_THEME[clamp(((S && S.world) || 1) - 1, 0, 3)], T = THEMES[tid], R = a => a[ri(0, a.length - 1)];
+    OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], decor: [], fires: [] };
     outBorder(g, c, r);
     const cx = c >> 1, cy = r >> 1;
-    [[0.22, 0.26], [0.78, 0.26], [0.22, 0.74], [0.78, 0.74]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 1, 6, 3, 'house', { v: i }));
-    ob(g, cx - 10, cy, 2, 1, 'well'); ob(g, cx + 8, cy - 1, 1, 1, 'barrel', { v: 0 }); ob(g, cx + 9, cy - 1, 1, 1, 'barrel', { v: 1 }); ob(g, cx + 8, cy, 1, 1, 'barrel', { v: 2 });
-    for (const [x, y] of [[cx - 8, 5], [cx + 6, r - 7], [5, cy - 6], [c - 7, cy + 4]]) ob(g, x, y, 2, 2, 'tree', { v: ri(0, 7) });
-    OUT.paves.push([cx - 1, 2, 2, r - 4], [2, cy - 1, c - 4, 2], [cx - 4, cy - 3, 8, 6]);   // calles empedradas y la plazuela de la campana
+    [[0.2, 0.3], [0.8, 0.3], [0.2, 0.78], [0.8, 0.78]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 2, 6, 4, 'house', { v: i }));
+    OUT.paves.push([cx - 1, 2, 2, r - 4], [2, cy - 1, c - 4, 2], [cx - 4, cy - 3, 8, 6]);
+    const lane = (x, y, w, h) => x + w > cx - 3 && x < cx + 3 || y + h > cy - 3 && y < cy + 3 || (x + w > cx - 6 && x < cx + 6 && y + h > cy - 5 && y < cy + 5);   // calles y plazuela
+    const put = (w, h, pad, fn) => { for (let t = 0; t < 80; t++) { const x = ri(4, c - 5 - w), y = ri(4, r - 5 - h); if (lane(x, y, w, h) || !areaFree(g, x - pad, y - pad, w + 2 * pad, h + 2 * pad)) continue; fn(x, y); return true; } return false; };
+    put(3, 1, 2, (x, y) => ob(g, x, y, 3, 1, 'stall', { v: 0 })); put(3, 1, 2, (x, y) => ob(g, x, y, 3, 1, 'stall', { v: 2 }));
+    put(2, 1, 2, (x, y) => ob(g, x, y, 2, 1, 'well')); put(3, 1, 2, (x, y) => ob(g, x, y, 3, 1, 'prop', { k: 'bench' }));
+    put(6, 4, 2, (x, y) => {   // huerto vallado, con su espantapájaros y el heno
+      for (let i = 0; i < 6; i++) { if (i !== 2 && i !== 3) ob(g, x + i, y, 1, 1, 'fence', { horiz: 1 }); ob(g, x + i, y + 3, 1, 1, 'fence', { horiz: 1 }); }
+      ob(g, x + 2, y + 1, 2, 2, 'prop', { k: 'scarecrow' }); OUT.decor.push({ r: BIO.deco[9], x: x + 1, y: y + 2.6, shadow: false }, { r: BIO.deco[9], x: x + 5, y: y + 2.2, shadow: false });
+    });
+    for (let i = 0; i < 2; i++) put(2, 1, 2, (x, y) => ob(g, x, y, 2, 1, 'prop', { k: 'hay' }));
+    for (let i = 0; i < 4; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'barrel', { v: i }));
+    for (let i = 0; i < 5; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'tree', { v: ri(0, 23) }));
+    for (let i = 0; i < 5; i++) put(1, 1, 2, (x, y) => ob(g, x, y, 1, 1, 'ref', { r: R(T.small) }));
+    for (let i = 0; i < 2; i++) put(2, 2, 2, (x, y) => ob(g, x, y, 2, 2, 'rock', { v: ri(0, 23) }));
     return [cx, cy + 4];
   },
   // La plaza del reino: el castillo arriba; la plaza mayor empedrada con el pozo, el tablón y el mercado; la forja con su patio
@@ -219,6 +252,12 @@ function buildRoom(boss, kindF, sizeF) {
     OUT = null;
     const [sx, sy] = ROOM_GEN[kind](g, c, r), out = OUT;
     for (let j = sy - 1; j <= sy + 1; j++) for (let i = sx - 1; i <= sx + 1; i++) if (g[j] && i >= 0 && i < c) g[j][i] = 0;   // el punto de entrada, despejado
+    const solids = [];   // mazmorras: obstáculos sueltos de una casilla (ataúdes, setas, pilares...) que tapan el paso y los disparos
+    if (!out) for (let i = 0, t = 0; i < (boss ? 0 : Math.round(c * r / 190)) && t < 200; t++) {
+      const x = ri(3, c - 4), y = ri(3, r - 4);
+      if (Math.hypot(x - sx, y - sy) < 4 || !areaFree(g, x - 2, y - 2, 5, 5)) continue;
+      g[y][x] = 1; solids.push({ x, y }); i++;
+    }
     // Alcance desde la entrada: lo que no se pueda pisar pasa a ser muro, para que no queden bolsas inaccesibles
     const seen = Array.from({ length: r }, () => new Array(c).fill(0)), q = [[sx, sy]]; seen[sy][sx] = 1; let open = 1;
     while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= c || ny >= r || g[ny][nx] || seen[ny][nx]) continue; seen[ny][nx] = 1; open++; q.push([nx, ny]); } }
@@ -247,7 +286,7 @@ function buildRoom(boss, kindF, sizeF) {
       if (traps.some(t => Math.abs(t.x / CELL - x) < 4 && Math.abs(t.y / CELL - y) < 4)) continue;
       traps.push({ x: x * CELL, y: y * CELL, w: CELL * 2, h: CELL * 2, off: Math.random() * 3.4, state: 0, acc: 0, hitP: false }); i++;
     }
-    return { traps: out ? [] : traps, pools, out, w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
+    return { traps: out ? [] : traps.filter(t => !solids.some(q => q.x * CELL >= t.x - CELL && q.x * CELL < t.x + t.w + CELL && q.y * CELL >= t.y - CELL && q.y * CELL < t.y + t.h + CELL)), solids, pools, out, w: c * CELL, h: r * CELL, walls, start: { x: (sx + 0.5) * CELL, y: (sy + 0.5) * CELL }, kind };
   }
 }
 // ¿Se puede estar de pie aquí? (ni muro ni agua)

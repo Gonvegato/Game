@@ -1,6 +1,6 @@
 // ───────────────────────── Exteriores: suelos y decorado del paquete de biomas (byandrox, itch.io) ─────────────────────────
 // La sala se pinta una vez: hierba, agua con sus orillas, caminos, y encima rocas, árboles y casas ordenados de arriba abajo.
-loadImg('biome', 'assets/biomes.png'); loadImg('town', 'assets/town.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
+loadImg('biome', 'assets/biomes.png'); loadImg('outdoor', 'assets/outdoor.png'); loadImg('town', 'assets/town.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
 const BIO = {
   grass: { tiles: [0, 0], inner: [64, 0], water: [64, 32], base: '#819447' },
   tree: [[243, 32, 26, 32], [246, 65, 20, 31], [272, 65, 16, 31], [292, 67, 24, 29], [243, 100, 24, 26], [276, 102, 22, 24], [245, 8, 21, 21], [272, 37, 16, 22]],
@@ -13,6 +13,24 @@ const BIO = {
   lily: [[192, 68, 16, 11], [192, 81, 16, 13]],
   ruin: [[161, 146, 29, 29], [274, 145, 26, 31], [304, 144, 15, 48], [321, 160, 14, 32], [274, 177, 29, 25], [164, 209, 25, 31], [276, 209, 24, 30], [306, 196, 29, 43], [241, 226, 29, 30], [273, 241, 30, 30], [194, 263, 44, 39], [337, 1, 14, 46], [352, 1, 16, 46], [353, 55, 14, 24]], cobble: [7, 71, 34, 31], tall: [7, 118, 33, 40],   // ruin: de Ancient Ruins (Androx), torres caídas, pilares y piedras con runas
 };
+// Otros biomas del paquete: el suelo es su baldosa central y el agua (o el hielo) se pinta encima con su propia orilla
+BIO.snow = { land: [16, 384], water: [0, 304], winner: [64, 304], base: '#e4f0f0' };
+BIO.savanna = { land: [16, 512], water: [0, 240], winner: [64, 240], base: '#b3a633' };
+// Temas de exterior, uno por zona. Cada dibujo es [x, y, ancho, alto] de biomes.png o una clave de OUTP (outdoor.png).
+// trees y rocks: obstáculos de 2×2 · big: de 3×2 · small: de 1×1 · deco: adorno que se pisa · forest y fbush: el borde de la sala
+const THEMES = {
+  grass: { biome: 'grass', trees: BIO.tree.slice(0, 6), rocks: BIO.rock, big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)), small: BIO.bush, deco: BIO.deco, forest: BIO.tree.slice(0, 6), fbush: BIO.bush, pc: true },
+  crypt: { biome: 'grass', trees: ['pine_m', 'pine_m', 'pine_s', BIO.tree[1], 'pine_l', 'dead_m'], rocks: BIO.rock.concat(['tomb1', 'tomb2', 'tomb3']), big: ['cross_stat', 'graves_row', 'angel2', 'reaper', 'cross2', 'olive'],
+    small: ['grave1', 'grave2', 'grave3', 'grave4', 'cross_big', 'angel1', 'coffin1', 'coffin2'], deco: BIO.deco.slice(0, 3).concat([BIO.deco[10], BIO.deco[11]]), forest: ['pine_m', 'pine_s', 'pine_m', BIO.tree[1], 'pine_l', 'dead_s'], fbush: ['darkbush', BIO.bush[0]], dim: 'rgba(30,40,60,0.16)' },
+  nest: { biome: 'grass', trees: [BIO.tree[0], 'mush_tall', BIO.tree[4], 'mush_l', BIO.tree[5], 'vine_l'], rocks: ['mossy2', 'boulder2', 'mossy3', 'boulder1'], big: ['mush_xl', 'mush_l', 'bush_g', 'bush_a', 'mossy3'],
+    small: ['flower_m', 'flower_m2', 'vine_m', 'mush_m', 'vine_s', 'flower_l'], deco: BIO.deco, forest: BIO.tree.slice(0, 6).concat(['mush_l']), fbush: ['bush_g', BIO.bush[1], BIO.bush[3]], pc: true, dim: 'rgba(20,60,30,0.10)' },
+  mines: { biome: 'snow', trees: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [161, 433, 30, 31], [192, 432, 32, 31]], rocks: [[113, 370, 30, 28], [112, 408, 27, 23], [145, 409, 29, 21], 'grey1', 'rune1', [148, 381, 26, 18]],
+    big: BIO.ruin.slice(0, 11).map(r => ['r'].concat(r)).concat(['rune1']), small: [[176, 385, 16, 13], [209, 386, 15, 13], [304, 386, 16, 12], [208, 464, 16, 16], 'rune2', 'grey2', [144, 436, 16, 28]], deco: [[307, 435, 10, 9], [177, 417, 14, 13], [210, 418, 14, 12], [305, 403, 14, 12]],
+    forest: [[227, 384, 26, 32], [230, 417, 20, 31], [256, 417, 16, 31], [276, 419, 24, 29], [230, 454, 22, 24], [261, 452, 24, 26]], fbush: [[176, 385, 16, 13], [145, 467, 14, 12], [193, 466, 14, 12]] },
+  ash: { biome: 'savanna', trees: ['dead_m', 'deadtree', 'dead_s', [240, 518, 32, 40], 'dead_l', [160, 530, 31, 28]], rocks: [[116, 522, 44, 21], [160, 511, 31, 17], 'boulder3', 'boulder2'], big: ['tusk_l', 'tusk_m', 'deadtree', [192, 512, 48, 47], 'cross_stat'],
+    small: ['tusk_s', 'deadbush', [193, 530, 13, 27], [178, 497, 12, 13], 'coffin1', 'grave2', [113, 545, 29, 13]], deco: [[129, 499, 15, 12], [113, 500, 14, 11], [145, 545, 15, 14], [260, 496, 25, 14]], forest: ['dead_m', 'dead_s', 'deadbush', 'dead_l', [193, 530, 13, 27], 'dead_m'], fbush: ['deadbush', [178, 497, 12, 13]], sparse: true, dim: 'rgba(52,34,34,0.34)' },
+};
+const ZONE_THEME = ['crypt', 'nest', 'mines', 'ash'];
 // Una casa de aldea pintada a mano con la paleta del paquete (el paquete no trae edificios)
 function drawHouse(g, X, Y, W, H, v) {
   const roofs = [['#9c4a3a', '#7a352c', '#c0644a'], ['#4a6a8a', '#35506c', '#6a8cae'], ['#6b5a3a', '#4f4129', '#8f7a50'], ['#5a7a3c', '#43602c', '#7f9c4c']][v % 4];
@@ -38,7 +56,9 @@ function roomBgOut() {
   const im = IMG.biome;
   if (ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls && (ROOM_BG.ok || !im)) return ROOM_BG;
   if (!IMG.houses && S.out.obs.some(o => o.kind === 'house') && im) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
-  const c = NAV.cols, r = NAV.rows, O = S.out, B = BIO[O.biome] || BIO.grass, cvs = document.createElement('canvas'), g = cvs.getContext('2d'), Mg = BG_M;
+  const TH = THEMES[S.out.theme] || THEMES.grass;
+  if (im && !IMG.outdoor) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
+  const c = NAV.cols, r = NAV.rows, O = S.out, B = BIO[TH.biome] || BIO.grass, cvs = document.createElement('canvas'), g = cvs.getContext('2d'), Mg = BG_M;
   cvs.width = (c + Mg * 2) * CELL; cvs.height = (r + Mg * 2) * CELL; g.imageSmoothingEnabled = false;
   g.fillStyle = B.base; g.fillRect(0, 0, cvs.width, cvs.height);
   const res = { c: cvs, walls: S.walls, world: S.world, torches: [], out: true, ok: !!im };
@@ -52,8 +72,21 @@ function roomBgOut() {
   const stand = (s, cx, by) => spr(s, cx - s[2] / 2, by - s[3]);
   const shadow = (cx, by, w) => { g.fillStyle = 'rgba(0,0,0,0.22)'; g.beginPath(); g.ellipse(cx, by - 1, w, 3, 0, 0, Math.PI * 2); g.fill(); };
   const tile = (o, tx, ty, x, y) => g.drawImage(im, o[0] + tx, o[1] + ty, 16, 16, x * CELL, y * CELL, 16, 16);
+  // Dibuja una referencia de tema con los pies en (cx, by); devuelve su ancho
+  const refS = rf => (typeof rf === 'string' ? OUTP[rf] : rf[0] === 'r' ? rf.slice(1) : rf) || [0, 0, 16, 16];
+  const ref = (rf, cx, by) => { const q = refS(rf), src = typeof rf === 'string' ? IMG.outdoor : rf[0] === 'r' ? IMG.ruins : im; if (src) g.drawImage(src, q[0], q[1], q[2], q[3], Math.round(cx - q[2] / 2), Math.round(by - q[3]), q[2], q[3]); return q[2]; };
+  const pick = (list, v) => list[((v % list.length) + list.length) % list.length];
   // Suelo: hierba, y agua con la orilla que le toca a cada casilla
-  for (let y = -Mg; y < r + Mg; y++) for (let x = -Mg; x < c + Mg; x++) {
+  if (B.land) for (let y = -Mg; y < r + Mg; y++) for (let x = -Mg; x < c + Mg; x++) {   // nieve, tierra seca...: baldosa central y el agua encima
+    g.drawImage(im, B.land[0], B.land[1], 16, 16, x * CELL, y * CELL, 16, 16);
+    if (!water(x, y)) continue;
+    const N = !water(x, y - 1), So = !water(x, y + 1), W = !water(x - 1, y), E = !water(x + 1, y), w3 = B.water, wi = B.winner;
+    if (N && W) tile(w3, 0, 0, x, y); else if (N && E) tile(w3, 32, 0, x, y); else if (So && W) tile(w3, 0, 32, x, y); else if (So && E) tile(w3, 32, 32, x, y);
+    else if (N) tile(w3, 16, 0, x, y); else if (So) tile(w3, 16, 32, x, y); else if (W) tile(w3, 0, 16, x, y); else if (E) tile(w3, 32, 16, x, y);
+    else if (!water(x - 1, y - 1)) tile(wi, 0, 0, x, y); else if (!water(x + 1, y - 1)) tile(wi, 16, 0, x, y); else if (!water(x - 1, y + 1)) tile(wi, 0, 16, x, y); else if (!water(x + 1, y + 1)) tile(wi, 16, 16, x, y);
+    else tile(w3, 16, 16, x, y);
+  }
+  else for (let y = -Mg; y < r + Mg; y++) for (let x = -Mg; x < c + Mg; x++) {
     if (water(x, y)) { tile(B.water, 0, 0, x, y); continue; }
     const N = water(x, y - 1), So = water(x, y + 1), W = water(x - 1, y), E = water(x + 1, y);
     if (N && W) tile(B.tiles, 0, 0, x, y); else if (N && E) tile(B.tiles, 32, 0, x, y); else if (So && W) tile(B.tiles, 0, 32, x, y); else if (So && E) tile(B.tiles, 32, 32, x, y);
@@ -81,7 +114,7 @@ function roomBgOut() {
       if (!paved(x - 1, y)) { g.fillStyle = '#4a4a3e'; g.fillRect(X, Y, 2, CELL); }
       if (!paved(x + 1, y)) { g.fillStyle = '#4a4a3e'; g.fillRect(X + CELL - 2, Y, 2, CELL); }
       const edge = !paved(x, y - 1) || !paved(x, y + 1) || !paved(x - 1, y) || !paved(x + 1, y);
-      if (edge && hash(x, y, 31) < 0.22) { const d = BIO.deco[Math.floor(hash(x, y, 32) * 3)]; spr(d, X + hash(x, y, 33) * 6, Y + (paved(x, y - 1) ? 10 : -2)); }
+      if (edge && !B.land && hash(x, y, 31) < 0.22) { const d = BIO.deco[Math.floor(hash(x, y, 32) * 3)]; spr(d, X + hash(x, y, 33) * 6, Y + (paved(x, y - 1) ? 10 : -2)); }
     }
   }
   for (const path of (tw && O.paves ? [] : O.paths)) for (let k = 0; k + 1 < path.length; k++) {
@@ -89,11 +122,11 @@ function roomBgOut() {
     for (let i = 0; i <= n; i++) { const x = (ax + (bx - ax) * i / n) * 16, y = (ay + (by - ay) * i / n) * 16; spr(BIO.cobble, x - 17 + (hash(i, k, 3) - 0.5) * 6, y - 15 + (hash(i, k, 4) - 0.5) * 6); }
   }
   for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) {
-    if (dry(x, y) && hash(x, y, 7) < 0.16) { const d = BIO.deco[Math.floor(hash(x, y, 8) * BIO.deco.length)]; spr(d, x * CELL + hash(x, y, 9) * (16 - d[2]), y * CELL + hash(x, y, 10) * (16 - Math.min(16, d[3]))); }
-    if (at(x, y) === 2 && at(x - 1, y) === 2 && at(x + 1, y) === 2 && at(x, y - 1) === 2 && at(x, y + 1) === 2 && hash(x, y, 11) < 0.07) spr(BIO.lily[hash(x, y, 12) < 0.5 ? 0 : 1], x * CELL, y * CELL + 2);
+    if (dry(x, y) && hash(x, y, 7) < (TH.sparse ? 0.1 : 0.16)) { const d = pick(TH.deco, Math.floor(hash(x, y, 8) * 97)), q = refS(d); ref(d, x * CELL + q[2] / 2 + hash(x, y, 9) * (16 - Math.min(16, q[2])), y * CELL + Math.min(16, q[3]) + hash(x, y, 10) * (16 - Math.min(16, q[3]))); }
+    if (!B.land && at(x, y) === 2 && at(x - 1, y) === 2 && at(x + 1, y) === 2 && at(x, y - 1) === 2 && at(x, y + 1) === 2 && hash(x, y, 11) < 0.07) spr(BIO.lily[hash(x, y, 12) < 0.5 ? 0 : 1], x * CELL, y * CELL + 2);
   }
   // Matorrales y flores de Pixel Crawler sueltos por la hierba (no estorban: son de adorno)
-  if (tw) for (let y = 3; y < r - 3; y++) for (let x = 3; x < c - 3; x++) {
+  if (tw && TH.pc) for (let y = 3; y < r - 3; y++) for (let x = 3; x < c - 3; x++) {
     if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || hash(x, y, 81) > 0.022) continue;
     const k = ['bush1', 'bush4', 'flower1', 'flower2', 'flower1', 'bush1'][Math.floor(hash(x, y, 82) * 6)], t = TOWN[k];
     if (t) g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(x * CELL + 8 - t[2] / 2), Math.round(y * CELL + 14 - t[3]), t[2], t[3]);
@@ -104,8 +137,9 @@ function roomBgOut() {
   for (const o of O.obs) {
     for (let j = o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (i >= 0 && j >= 0 && i < c && j < r) cover[j * c + i] = 1;
     const X = o.x * CELL, Y = o.y * CELL, W = o.w * CELL, H = o.h * CELL, cx = X + W / 2, by = Y + H;
-    if (o.kind === 'rock') items.push({ by, fn: () => { shadow(cx, by, 15); stand(BIO.rock[o.v % 4], cx, by); } });
-    else if (o.kind === 'tree') items.push({ by, fn: () => { shadow(cx, by, 11); stand(BIO.tree[o.v % 6], cx, by); } });
+    if (o.kind === 'rock') items.push({ by, fn: () => { shadow(cx, by, 15); ref(pick(TH.rocks, o.v), cx, by + 1); } });
+    else if (o.kind === 'tree') items.push({ by, fn: () => { shadow(cx, by, 11); ref(pick(TH.trees, o.v), cx, by); } });
+    else if (o.kind === 'ref') items.push({ by, fn: () => { shadow(cx, by, Math.min(20, refS(o.r)[2] / 2.3)); ref(o.r, cx, by + 1); } });
     else if (o.kind === 'ruin') items.push({ by, fn: () => { const sp = BIO.ruin[o.v % BIO.ruin.length]; shadow(cx, by, Math.min(15, sp[2] / 2)); if (IMG.ruins) g.drawImage(IMG.ruins, sp[0], sp[1], sp[2], sp[3], Math.round(cx - sp[2] / 2), by + 2 - sp[3], sp[2], sp[3]); } });
     else if (o.kind === 'prop') items.push({ by, fn: () => { const t = TOWN[o.k]; if (!tw || !t) return; shadow(cx, by, Math.min(16, t[2] / 2.4)); g.drawImage(tw, t[0], t[1], t[2], t[3], Math.round(cx - t[2] / 2), by + 2 - t[3], t[2], t[3]); } });
     else if (o.kind === 'fence') items.push({ by, fn: () => {   // valla de madera, en tramos horizontales o verticales
@@ -124,7 +158,7 @@ function roomBgOut() {
     else if (o.kind === 'barrel') items.push({ by, fn: () => { shadow(cx, by, 7); stand(BIO.barrel[o.v % 3], cx, by); } });
     else if (o.kind === 'well') items.push({ by, fn: () => { shadow(cx, by + 2, 13); stand(BIO.well, cx, by + 3); } });
     else if (o.kind === 'house') items.push({ by, fn: () => {   // casas montadas con el Pixel Crawler Free Pack; si no han cargado, la dibujada a mano
-      const hs = IMG.houses, list = o.big ? [0, 1, 4] : [2, 3, 5], h = HOUSES[list[o.v % list.length]];
+      const hs = IMG.houses, list = o.big ? [0, 1, 4] : [2, 3, 5], h = HOUSES[list[o.v % list.length] + (o.ruin ? 6 : 0)];
       if (hs) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 4, by - 2, W - 4, 5); g.drawImage(hs, h[0], h[1], h[2], h[3], Math.round(cx - h[2] / 2), by + 2 - h[3], h[2], h[3]); }
       else drawHouse(g, X, Y - (o.big ? 18 : 12), W, H + (o.big ? 18 : 12), o.v);
     } });
@@ -159,10 +193,13 @@ function roomBgOut() {
     const inb = x >= 0 && y >= 0 && x < c && y < r;
     if (at(x, y) !== 1 || (inb && cover[y * c + x])) continue;
     const X = x * CELL, by = (y + 1) * CELL, h = hash(x, y, 20);
-    if (((x + y) & 1) === 0 || h < 0.3) items.push({ by: by + h, fn: () => { shadow(X + 8, by, 9); stand(BIO.tree[Math.floor(hash(x, y, 21) * 6)], X + 8 + (hash(x, y, 22) - 0.5) * 6, by); } });
-    else if (h > 0.6) items.push({ by: by + h, fn: () => stand(BIO.bush[Math.floor(hash(x, y, 23) * 4)], X + 8, by) });
+    if (TH.sparse ? h < 0.34 : (((x + y) & 1) === 0 || h < 0.3)) items.push({ by: by + h, fn: () => { shadow(X + 8, by, 9); ref(pick(TH.forest, Math.floor(hash(x, y, 21) * 97)), X + 8 + (hash(x, y, 22) - 0.5) * 6, by); } });
+    else if (h > 0.6) items.push({ by: by + h, fn: () => ref(pick(TH.fbush, Math.floor(hash(x, y, 23) * 97)), X + 8, by) });
   }
+  for (const d of O.decor || []) items.push({ by: d.y * CELL, fn: () => { if (d.shadow !== false) shadow(d.x * CELL, d.y * CELL, Math.min(14, refS(d.r)[2] / 2.6)); ref(d.r, d.x * CELL, d.y * CELL + 1); } });   // adorno que se pisa: sacos, tumbas caídas...
   items.sort((a, b) => a.by - b.by);
   for (const it of items) it.fn();
+  if (TH.dim) { g.fillStyle = TH.dim; g.fillRect(-Mg * CELL, -Mg * CELL, cvs.width, cvs.height); }   // tono de la zona
+  for (const f of O.fires || []) res.torches.push({ x: f.x * CELL, y: f.y * CELL - 6 });               // hogueras: llama animada y luz
   return (ROOM_BG = res);
 }
