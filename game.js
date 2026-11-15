@@ -1400,6 +1400,7 @@ function forgeAct(act) {
   if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
   if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
   if (k === 'resume') { resumeRun(); return; }
+  if (k === 'intro') { playIntro(); return; }   // desde la habitación de la posada: volver a ver la cinemática del principio
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
   else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
   blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
@@ -2076,7 +2077,8 @@ function roomHtml() {
   const forged = PARTS.filter(x => M.parts[x.id] === 2).length, known = PARTS.filter(x => M.parts[x.id]).length;
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
-    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>`;
+    <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de arma descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Arma actual: ${gunName(M.gun)}</p></section></div>
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>`;
 }
 
 // ───────────────────────── Conversaciones con bocadillos ─────────────────────────
@@ -2099,6 +2101,7 @@ function talkUpdate(dt) {
   }
 }
 function speakerPos(who) {
+  if (S.intro) return introSpeakerPos(who);   // en la cinemática hablan sus actores
   if (who === 'alec') return { x: S.p.x, y: S.p.y - 26 };
   const n = S.town && S.town.npcs.find(q => q.key === who);
   return n ? { x: n.x * CELL, y: n.y * CELL - 30 } : { x: S.p.x, y: S.p.y - 26 };
@@ -2131,7 +2134,7 @@ function drawDialog(k) {
     lines.forEach((t, i) => { if (left <= 0) return; const part = t.slice(0, left); g.fillText(part, bx + pad, by + pad + fs * 1.1 + i * lh); left -= t.length + 1; });
     if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.fillText('▸', bx + w - pad - fs * 0.6, by + h - pad - fs * 0.9); }
     g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)'; g.textAlign = 'center';
-    g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);
+    if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);   // la cinemática pone su propia ayuda
   } else if (d.choices) {   // opciones de respuesta de Alec
     g.font = `500 ${fs}px ${FONT}`;
     const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
@@ -2195,6 +2198,431 @@ const FIRST_TALK = {
     { who: 'trainer', text: 'Cada habilidad que aprendes te hace más fuerte para siempre: más vida, más daño, más esquives… Elige con cabeza.' },
   ],
 };
+// ───────────────────────── La cinemática del principio ─────────────────────────
+// Alec cuenta su historia en seis escenas cortas. Cada escena es una sala de verdad del motor (su propio generador o la plaza),
+// con personajes del atlas que andan, entran y caen, y bocadillos del sistema de conversación de la plaza.
+// Disparar (A, Espacio, tocar) pasa de línea · Esquivar (B, Shift) salta la escena · Start (Esc, el botón de arriba) salta todo.
+// Se ve la primera vez que se pulsa Empezar (M.seenIntro) y después desde la habitación de la posada.
+const IC = n => n * CELL;
+const ihash = (a, b) => { let h = (Math.floor(a) * 374761393 + Math.floor(b) * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+
+// ── Los escenarios: el pueblo de Alec, la forja del herrero y un camino entre reinos ──
+ROOM_SIZES.intro_pueblo = [50, 22]; ROOM_SIZES.intro_camino = [50, 20];
+// Una calle empedrada con cuatro casas en fila, el pozo y un huerto vallado. Las casas («ihouse») no las pinta el fondo:
+// las dibuja la cinemática, enteras, ardiendo o quemadas, y ordenadas con los personajes.
+ROOM_GEN.intro_pueblo = function (g, c, r) {
+  OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [] };
+  outBorder(g, c, r);
+  for (let y = 12; y < 15; y++) for (const x of [0, 1, c - 2, c - 1]) g[y][x] = 0;   // la calle sale del pueblo por los dos lados
+  OUT.paves.push([0, 12, c, 3]);
+  for (const [x, w, hs] of [[6, 6, 2], [14, 8, 0], [24, 6, 3], [32, 8, 1]]) ob(g, x, 8, w, 3, 'ihouse', { hs });
+  for (const [x, y, v] of [[3, 9, 2], [12, 9, 1], [30, 9, 4], [41, 9, 0], [45, 9, 3], [22, 17, 5], [36, 17, 1], [42, 16, 2], [3, 17, 4]]) ob(g, x, y, 2, 2, 'tree', { v });
+  ob(g, 22, 10, 1, 1, 'barrel', { v: 0 }); ob(g, 23, 10, 1, 1, 'barrel', { v: 2 }); ob(g, 28, 17, 2, 1, 'well');
+  for (let x = 6; x < 16; x++) ob(g, x, 16, 1, 1, 'fence', { horiz: 1 });
+  ob(g, 9, 17, 2, 2, 'prop', { k: 'scarecrow' }); ob(g, 13, 18, 2, 1, 'prop', { k: 'hay' }); ob(g, 18, 17, 2, 1, 'prop', { k: 'hay' }); ob(g, 32, 18, 2, 1, 'prop', { k: 'hay' });
+  return [c >> 1, 13];
+};
+// La forja del herrero: como las de la plaza por dentro, con otro orden
+ROOM_GEN.intro_forja = function (g, c, r) {
+  OUT = { interior: 'forge', obs: [], spots: [], npcs: [], paths: [], bridges: [], props: [] };
+  fillRect(g, 0, 0, c, 4); fillRect(g, 0, r - 2, c, 2); fillRect(g, 0, 0, 2, r); fillRect(g, c - 2, 0, 2, r);
+  const cx = c >> 1; for (let y = r - 2; y < r; y++) for (const x of [cx - 1, cx]) g[y][x] = 0;
+  const put = (src, s, x, y, w, h) => { if (w) fillRect(g, Math.floor(x - w / 2), Math.floor(y - h), w, h); OUT.props.push({ src, s, x: x * CELL, y: y * CELL }); };
+  put('town', 'workbench', 5.5, 6, 4, 1); put('town', 'furnace', c - 8.5, 6, 2, 1); put('town', 'furnace', c - 5, 6, 2, 1); put('town', 'anvil', cx - 1, 9, 4, 1);
+  put('castle', [336, 1, 32, 26], 4, 12.6, 2, 1); put('bio', 'barrel0', c - 3.6, 12.8, 1, 1); put('bio', 'barrel2', c - 4.7, 13.1, 1, 1);
+  return [cx, r - 4];
+};
+// Un camino de piedras sueltas entre árboles, rocas y ruinas viejas
+ROOM_GEN.intro_camino = function (g, c, r) {
+  OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [[[-3, 10.6], [c + 3, 10.6]]], bridges: [] };
+  outBorder(g, c, r);
+  for (let y = 9; y < 12; y++) for (const x of [0, 1, c - 2, c - 1]) g[y][x] = 0;
+  for (const [x, y, k, v] of [[4, 5, 'tree', 0], [8, 14, 'tree', 3], [11, 4, 'ruin', 2], [14, 15, 'rock', 1], [17, 5, 'tree', 1], [21, 14, 'tree', 4], [24, 4, 'rock', 2], [27, 15, 'ruin', 5], [30, 5, 'tree', 5], [33, 14, 'tree', 2],
+    [36, 4, 'ruin', 3], [39, 15, 'rock', 0], [42, 5, 'tree', 0], [45, 14, 'tree', 3], [7, 7, 'rock', 3], [20, 7, 'tree', 2], [34, 7, 'tree', 4], [12, 13, 'tree', 5], [29, 13, 'tree', 1], [44, 7, 'rock', 1]]) ob(g, x, y, 2, 2, k, { v });
+  return [c >> 1, 10];
+};
+
+// Quién habla en los bocadillos (las líneas de Alec niño y muchacho son su voz de ahora, contando)
+Object.assign(SPEAKER, { kid: ['Alec', '#9fd3ff'], teen: ['Alec', '#9fd3ff'], mother: ['Su madre', '#e6c07a'], oldsmith: ['El herrero', '#ff9a5c'], chosen: ['El elegido', '#e0524a'], guardia: ['Un guardia', '#cfd6de'] });
+
+// ── El guion: cada escena monta su sala y sus actores; cada tiempo («beat») puede mover cosas (on), programar golpes (ev: [segundo, función])
+// y, tras una espera, enseñar una línea. Al pasar de línea, lo que quedara a medias se da por hecho, para que la escena no se descoloque. ──
+const INTRO_GONE = a => { a.hidden = true; };
+const INTRO = [
+  { cap: 'Hace muchos años', room: ['intro_pueblo', 'intro_pueblo'], amb: '#474b82',
+    setup(R) {
+      R.cam.x = IC(30); R.cam.y = IC(10.5); R.camTo = { x: IC(23), y: IC(10.5) }; R.camV = 0.45;
+      Object.assign(R.houses[2], { fire: 0.85, fireTo: 1, char: 0.3 }); Object.assign(R.houses[3], { fire: 1, fireTo: 1, char: 0.45 });
+      R.fires.push({ x: IC(33), y: IC(19) - 3, w: 20, h: 20, lvl: 1 }, { x: IC(44), y: IC(10.6), w: 14, h: 16, lvl: 1 });
+      R.add('kid', 'alec_kid', 17.7, 13.6); R.add('mother', 'cit_peasant', 18.9, 12.8); R.add('sister', 'cit_tavern_b', 16.5, 13.1);
+      R.go(R.add('v1', 'villager', 33, 13.7, { flip: true }), [[-3, 14]], 92, INTRO_GONE); R.go(R.add('v2', 'cit_tavern_a', 29.5, 12.9, { flip: true }), [[-3, 12.9]], 84, INTRO_GONE); R.go(R.add('v3', 'villager', 39, 14.4, { flip: true }), [[-3, 14.5]], 98, INTRO_GONE);
+      R.add('g1', 'guard', 31, 13.5);
+    },
+    beats: [
+      { wait: 1.5, who: 'kid', text: 'Yo era un niño cuando los ejércitos de los dioses llegaron a mi pueblo.' },
+      { wait: 1.6, who: 'kid', text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
+        on(R) {
+          [['s1', 'pc_skel_war', 52, 13.2, 32.2, 13.4], ['s2', 'pc_skel', 53.5, 14.3, 34, 14.3], ['s3', 'pc_skel_rogue', 55, 12.7, 35, 12.8], ['s4', 'brute', 56.5, 13.9, 37, 13.9], ['s5', 'pc_skel_war', 58, 14.6, 38.6, 14.6]]
+            .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); blip(160, 0.12, 'sawtooth', 0.04, -80); } : null));
+          R.camTo.x = IC(24);
+        } },
+      { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
+      { wait: 3.1, min: 0.6, who: 'kid', text: 'Corrí hasta los árboles. Y miré atrás.',
+        on(R) {
+          R.go('kid', [[4.6, 13.9]], 105, a => { a.flip = false; });
+          R.a('mother').flip = false; R.go('mother', [[19.7, 12.9]], 40); R.go('sister', [[13.6, 13.3]], 30);
+          R.go('s1', [[21, 13.1]], 72, () => { R.fall('mother', -1); R.shake(3); blip(150, 0.14, 'sawtooth', 0.04, -80); });
+          R.go('s3', [[21.5, 14.3], [14.8, 13.5]], 86, () => { const s = R.a('sister'); s.path = []; R.fall(s, -1); blip(150, 0.14, 'sawtooth', 0.04, -80); });
+          R.go('s2', [[23.5, 14.3]], 66); R.go('s4', [[26, 13.9]], 60); R.go('s5', [[28, 14.6]], 62);
+          R.houses[0].fireTo = 0.7; R.camTo.x = IC(16); R.camV = 0.9;
+        } },
+    ] },
+  { cap: 'A la mañana siguiente', room: ['intro_pueblo', 'intro_pueblo'], amb: '#a49fb2',
+    setup(R) {
+      R.burnt = true; R.cam.x = IC(16.5); R.cam.y = IC(10.5);
+      for (const h of R.houses) h.smoke = 1;
+      R.fires.push({ x: IC(19), y: IC(18) - 3, w: 8, h: 7, lvl: 0.6 }, { x: IC(21.2), y: IC(11) - 2, w: 10, h: 8, lvl: 0.6 }, { x: IC(33.5), y: IC(11) - 3, w: 12, h: 10, lvl: 0.6 }, { x: IC(26), y: IC(11) - 2, w: 8, h: 6, lvl: 0.6 }, { x: IC(8), y: IC(11) - 2, w: 8, h: 6, lvl: 0.6 });
+      R.add('kid', 'alec_kid', 17.9, 13.3);
+    },
+    beats: [
+      { wait: 1.3, who: 'kid', text: 'Por la mañana no quedaba nadie. Ni casas, ni vecinos, ni familia.',
+        on(R) { R.go(R.add('oldsmith', 'oldsmith', -2.5, 14), [[15.7, 13.6]], 56, () => { R.a('kid').flip = true; }); } },
+      { who: 'oldsmith', text: '¿Queda alguien más, chico?' },
+      { who: 'kid', text: 'No.' },
+      { who: 'oldsmith', text: 'Pues aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
+      { wait: 1.1, who: 'kid', text: 'Era herrero. Me dio techo, trabajo y pocas palabras.',
+        on(R) { R.go('oldsmith', [[4, 14]], 38); }, ev: [[0.5, R => R.go('kid', [[5.8, 13.8]], 38)]] },
+    ] },
+  { cap: 'La forja', room: ['intro_forja', 'shop'], amb: '#b8a596',
+    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('oldsmith', 'oldsmith', 8.7, 11.6, { flip: true }); R.add('kid', 'alec_kid', 5.3, 10.5); },
+    tick(R, dt) {
+      R.acc += dt;
+      if (R.stage === 0) {   // el niño, al yunque
+        if (R.acc > 0.95) { R.acc = 0; R.a('kid').hop = 0.12; R.burst(IC(6.4), IC(10.4) - 15, 7, ['#ffe08a', '#ffb347', '#ff8a3c'], 40); blip(1250, 0.04, 'triangle', 0.02, -300); }
+      } else {               // el muchacho, contra el muñeco
+        const t = R.a('teen'), d = R.a('dummy');
+        if (R.acc > 1.5) { R.acc = 0; t.once = { anim: 'atk', t0: R.t, dur: 10 / 14 }; R.hitT = 0.3; }
+        if (R.hitT > 0) { R.hitT -= dt; if (R.hitT <= 0) { d.flash = 0.1; R.burst(d.x - 3, d.y - 11, 5, ['#efe6c8', '#c9b98a'], 34); blip(240, 0.05, 'square', 0.02, -80); } }
+      }
+    },
+    beats: [
+      { wait: 1.2, who: 'kid', text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
+      { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
+      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja un arma y no sabe usarla solo fabrica chatarra.',
+        on(R) {
+          R.dipTo(() => {
+            R.a('kid').hidden = true; R.stage = 1; R.acc = 0.9; R.setCap('Años después');
+            R.add('teen', 'alec_teen', 10.4, 12.2, { amb: true }); R.add('dummy', 'decoy', 13.2, 12.2, { amb: true });
+            const s = R.a('oldsmith'); s.x = IC(15.8); s.y = IC(12); s.flip = true;
+          });
+        } },
+      { who: 'teen', text: 'Fueron diez años. No he tenido otros mejores.' },
+    ] },
+  { cap: 'La última noche', room: ['intro_forja', 'shop'], amb: '#4c4166',
+    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_teen', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
+    beats: [
+      { wait: 2.3, who: 'teen', text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
+        on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); blip(90, 0.5, 'sawtooth', 0.03, -30); } },
+      { who: 'chosen', text: 'Herrero. Tu fragua servirá a mi señor, o no servirá a nadie.' },
+      { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, atrás.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); } },
+      { wait: 1.6, min: 0.9, who: 'teen', text: 'Lo mató de un solo golpe. A mí ni me miró.',
+        on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
+        ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); blip(110, 0.25, 'sawtooth', 0.06, -70); }],
+          [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
+      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+    ] },
+  { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
+    setup(R) {
+      const a = R.add('alec', null, 2, 10.9, { hero: true, face: 0 }); R.follow = a; R.followOff = [IC(5), -IC(1)]; R.cam.x = a.x + IC(5); R.cam.y = a.y - IC(1);
+      R.go(a, [[19, 10.9]], 54);
+    },
+    beats: [
+      { wait: 1, who: 'alec', text: 'Con su martillo forjé esta ballesta. No he vuelto a soltarla.' },
+      { wait: 0.6, who: 'alec', text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
+        on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
+        ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
+      { who: 'alec', text: 'No lo hago por el oro. Algún día mataré a los dioses.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
+    ] },
+  { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
+    setup(R) {
+      const r = NAV.rows, cx = NAV.cols >> 1;
+      for (const n of R.room.out.npcs) R.add(null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+      for (const w of R.room.out.wander || []) { const [ax, ay, aw, ah] = w.area; R.add(null, w.key, ax + Math.random() * aw, ay + Math.random() * ah, { amb: true, area: w.area, waitT: Math.random() * 2 }); }
+      const a = R.add('alec', null, cx, r - 4.6, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);
+      R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
+      const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
+    },
+    tick(R, dt) {   // los vecinos pasean como en la plaza de verdad
+      for (const n of R.actors) {
+        if (!n.area || n.path.length) continue;
+        n.waitT -= dt; if (n.waitT > 0) continue;
+        const [ax, ay, aw, ah] = n.area; n.waitT = 1 + Math.random() * 3; R.go(n, [[ax + Math.random() * aw, ay + Math.random() * ah]], 22);
+      }
+    },
+    beats: [
+      { wait: 1.2, who: 'alec', text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
+        ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
+      { wait: 0.5, who: 'guardia', text: '¿Alec, el mercenario que no reza? El rey te espera en el castillo.' },
+      { who: 'alec', text: 'Veamos cuánto paga por la cabeza de un dios.' },
+    ] },
+];
+
+// ── Poner en marcha, pasar de escena y acabar ──
+let introHudOn = false, introTap = false, INTRO_LM = null;
+function playIntro() {
+  newGame(); S.gun = Object.assign({}, M.gun);
+  S.mode = 'intro'; modeT = 0; S.intro = { i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
+  introTap = false; renderOverlay(); introScene(0); blip(300, 0.3, 'triangle', 0.03, -120);
+}
+function introEnd() {
+  S.dialog = null; S.intro = null;
+  if (!M.seenIntro) { M.seenIntro = 1; save(); }
+  openTown();
+}
+function introScene(i) {
+  const N = S.intro, sc = INTRO[i], room = buildRoom(false, sc.room[0], sc.room[1]);
+  T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.traps = []; S.world = 1; S.dialog = null;
+  const R = N.R = {
+    t: 0, room, actors: [], fx: [], fires: [], houses: [], props: [], cam: { x: room.w / 2, y: room.h / 2 }, camTo: null, camV: 1.6, follow: null, followOff: [0, 0],
+    fade: 1, dip: null, shk: 0, flash: 0, cap: typeof sc.cap === 'function' ? sc.cap() : sc.cap, capT: 0, burnt: false, amb: sc.amb, stage: 0, acc: 0, hitT: 0,
+    a: id => R.actors.find(q => q.id === id),
+    add(id, key, x, y, o) { const a = Object.assign({ id, key, x: IC(x), y: IC(y), flip: false, path: [], speed: 60, walking: false, fall: null, fallDir: 1, hidden: false, ph: Math.random() * 3, once: null, flash: 0, hop: 0, kick: 0, then: null }, o); R.actors.push(a); return a; },
+    go(a, pts, speed, then) { if (typeof a === 'string') a = R.a(a); if (!a || a.fall != null) return a; a.path = pts.map(p => [IC(p[0]), IC(p[1])]); a.speed = speed || 60; a.then = then || null; return a; },
+    fall(a, dir) { if (typeof a === 'string') a = R.a(a); if (!a || a.fall != null) return; a.fall = 0; a.fallDir = dir || 1; a.path = []; a.walking = false; a.then = null; },
+    burst(x, y, n, cols, v) { for (let k = 0; k < n; k++) { const an = Math.random() * Math.PI * 2, s = (0.4 + Math.random() * 0.6) * (v || 50); R.fx.push({ k: 'spark', x, y, vx: Math.cos(an) * s, vy: Math.sin(an) * s - 20, g: 120, t: 0, life: 0.25 + Math.random() * 0.35, col: cols[k % cols.length] }); } },
+    shake(n) { R.shk = Math.max(R.shk, n); },
+    dipTo(fn) { R.dip = { t: 0, fn, done: false }; },
+    setCap(txt) { R.cap = txt; R.capT = 0; },
+    shoot(from, to) {   // un virote de la ballesta: sale, llega y derriba
+      const a = R.a(from), b = R.a(to); if (!a || !b || b.fall != null) return;
+      a.aim = Math.atan2(b.y - a.y, b.x - a.x); a.kick = 3;
+      R.fx.push({ k: 'bolt', x1: a.x + 12, y1: a.y - 11, x2: b.x, y2: b.y - 14, t: 0, life: 0.1, hit() { R.fall(b, 1); R.burst(b.x, b.y - 14, 6, ['#efe6c8', '#c9b98a'], 60); blip(200, 0.08, 'square', 0.04, -90); } });
+      blip(520, 0.06, 'square', 0.04, -260);
+    },
+  };
+  for (const o of room.out.obs) if (o.kind === 'ihouse') { const s = HOUSES[o.hs], cx = (o.x + o.w / 2) * CELL, by = (o.y + o.h) * CELL; R.houses.push({ hs: o.hs, s, cx, by, sx: Math.round(cx - s[2] / 2), sy: by + 2 - s[3], fire: 0, fireTo: 0, char: 0, smoke: 0 }); }
+  N.i = i; sc.setup(R); introBeat(0, true);
+}
+// Cerrar el tiempo en curso: lo programado que no haya pasado, pasa; quien iba andando, llega
+function introFinishBeat() {
+  const N = S.intro, R = N.R, B = INTRO[N.i].beats[N.b];
+  if (B && B.ev) while (N.evi < B.ev.length) B.ev[N.evi++][1](R);
+  if (R.dip) { if (!R.dip.done) R.dip.fn(R); R.dip = null; R.fade = 0; }
+  for (const f of R.fx) if (f.k === 'bolt' && f.hit) { f.hit(); f.hit = null; }
+  for (const a of R.actors) if (!a.amb && a.path.length) { const p = a.path[a.path.length - 1]; a.x = p[0]; a.y = p[1]; a.path = []; a.walking = false; const f = a.then; a.then = null; if (f) f(a); }
+  S.dialog = null;
+}
+function introBeat(k, fresh) {
+  const N = S.intro, sc = INTRO[N.i];
+  if (!fresh) introFinishBeat();
+  if (k >= sc.beats.length) { N.phase = 'hold'; N.bt = 0; return; }
+  N.b = k; N.bt = 0; N.evi = 0; N.phase = 'wait';
+  const B = sc.beats[k]; if (B.on) B.on(N.R);
+  if (!fresh) blip(620, 0.02, 'triangle', 0.02);
+}
+function introUpdate(dt) {
+  const N = S.intro; if (!N) return;
+  S.t += dt;
+  const adv = I.atkP || introTap; introTap = false;
+  if (I.startP && modeT > 0.2) { introEnd(); return; }
+  const R = N.R, sc = INTRO[N.i]; R.t += dt;
+  introSim(R, sc, dt);
+  if (N.phase === 'out') { R.fade = Math.min(1, R.fade + dt / 0.45); if (R.fade >= 1) { if (N.i + 1 < INTRO.length) introScene(N.i + 1); else introEnd(); } return; }
+  if (R.dip) {   // un fundido corto a negro para saltar en el tiempo dentro de la misma escena
+    const d = R.dip; d.t += dt; R.fade = d.t < 0.35 ? d.t / 0.35 : Math.max(0, 1 - (d.t - 0.35) / 0.45);
+    if (d.t >= 0.35 && !d.done) { d.done = true; d.fn(R); }
+    if (d.t >= 0.8) R.dip = null;
+  } else R.fade = Math.max(0, R.fade - dt / 0.6);
+  if (I.dodgeP && R.t > 0.25) { introFinishBeat(); N.phase = 'out'; blip(420, 0.06, 'triangle', 0.03, -160); return; }
+  if (N.phase === 'hold') { N.bt += dt; if (N.bt > 0.5) N.phase = 'out'; return; }
+  const B = sc.beats[N.b]; N.bt += dt;
+  if (B.ev) while (N.evi < B.ev.length && N.bt >= B.ev[N.evi][0]) B.ev[N.evi++][1](R);
+  if (N.phase === 'wait') {
+    if (N.bt >= (B.wait == null ? 0.35 : B.wait) || (adv && N.bt >= (B.min == null ? 0.25 : B.min))) {
+      if (!B.text) { introBeat(N.b + 1); return; }
+      N.txt = typeof B.text === 'function' ? B.text() : B.text; N.phase = 'say';
+      S.dialog = { lines: [{ who: B.who, text: N.txt }], i: 0, ch: 0, choices: null, sel: 0, t: 0, onEnd: null };
+    }
+  } else {
+    const d = S.dialog, len = N.txt.length; d.ch = Math.min(len, d.ch + dt * 48); d.t += dt;
+    if (adv && d.t > 0.15) { if (d.ch < len) d.ch = len; else introBeat(N.b + 1); }
+  }
+}
+// Lo que se mueve solo: actores, fuegos, chispas, humo y la cámara
+function introSim(R, sc, dt) {
+  for (const a of R.actors) {
+    if (a.flash > 0) a.flash -= dt; if (a.hop > 0) a.hop -= dt; if (a.kick > 0) a.kick = Math.max(0, a.kick - dt * 22);
+    if (a.fall != null) { a.fall += dt; continue; }
+    if (!a.path.length) { a.walking = false; continue; }
+    const [tx, ty] = a.path[0], dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy), st = a.speed * dt;
+    if (d <= st) { a.x = tx; a.y = ty; a.path.shift(); if (!a.path.length) { a.walking = false; const f = a.then; a.then = null; if (f) f(a); } }
+    else { a.x += dx / d * st; a.y += dy / d * st; a.walking = true; if (Math.abs(dx) > 0.3) a.flip = dx < 0; if (a.hero) a.face = Math.atan2(dy, dx); }
+  }
+  if (sc.tick) sc.tick(R, dt);
+  for (const h of R.houses) {
+    h.fire += clamp(h.fireTo - h.fire, -dt * 0.3, dt * 0.3); h.char = Math.min(0.8, h.char + dt * 0.05 * h.fire);
+    const s = h.s;
+    if (h.fire > 0.3 && Math.random() < dt * 16 * h.fire) R.fx.push({ k: 'spark', x: h.sx + s[2] * (0.1 + 0.8 * Math.random()), y: h.sy + s[3] * (0.1 + 0.4 * Math.random()), vx: rnd(4, 26), vy: rnd(-70, -30), g: -6, t: 0, life: rnd(0.7, 1.6), col: ['#ffb347', '#ff8a3c', '#ffe08a'][Math.floor(Math.random() * 3)] });
+    const sm = Math.max(h.fire, h.smoke * 0.5);
+    if (sm > 0.05 && Math.random() < dt * 12 * sm) R.fx.push({ k: 'smoke', x: h.sx + s[2] * (0.2 + 0.6 * Math.random()), y: h.sy + s[3] * (R.burnt ? 0.5 : 0.15), vx: rnd(6, 16), vy: rnd(-30, -18), t: 0, life: rnd(2.4, 4), sz: rnd(4, 7) });
+  }
+  for (const f of R.fires) if (Math.random() < dt * 5 * f.lvl) R.fx.push({ k: 'spark', x: f.x + rnd(-f.w / 2, f.w / 2), y: f.y - f.h * 0.5, vx: rnd(2, 16), vy: rnd(-50, -24), g: -6, t: 0, life: rnd(0.5, 1.1), col: '#ffb347' });
+  for (let i = R.fx.length - 1; i >= 0; i--) {
+    const f = R.fx[i]; f.t += dt;
+    if (f.vx != null) { f.x += f.vx * dt; f.y += f.vy * dt; if (f.g) f.vy += f.g * dt; }
+    if (f.t >= f.life) { if (f.k === 'bolt' && f.hit) f.hit(); R.fx.splice(i, 1); }
+  }
+  if (R.follow) R.camTo = { x: R.follow.x + R.followOff[0], y: R.follow.y + R.followOff[1] };
+  if (R.camTo) { const k = Math.min(1, dt * R.camV); R.cam.x += (R.camTo.x - R.cam.x) * k; R.cam.y += (R.camTo.y - R.cam.y) * k; }
+  R.shk = Math.max(0, R.shk - dt * 18); R.flash = Math.max(0, R.flash - dt * 2.4); R.capT += dt;
+}
+function introSpeakerPos(who) {
+  const R = S.intro && S.intro.R, a = R && R.actors.find(q => q.id === who && !q.hidden);
+  if (!a) return { x: cam.x + view.w / 2, y: cam.y + view.h * 0.55 };
+  const m = a.hero ? ATLAS.hunter_s : ATLAS[a.key];
+  return { x: a.x, y: a.y - (a.fall != null ? 10 : m ? Math.min(m.gy, m.bh) + 4 : 30) };
+}
+const introHint = () => (lastDev === 'pad' ? 'A: seguir · B: saltar la escena · Start: saltar toda la historia' : lastDev === 'touch' ? 'Toca: seguir · Esquivar: saltar la escena · «Saltar historia»: saltarla entera' : 'Espacio: seguir · Shift: saltar la escena · Esc: saltar toda la historia');
+// Mientras dura, la barra de vida y la ayuda de combate sobran, y el botón de pausa sirve para saltarla
+function introHud(on) {
+  introHudOn = on;
+  const st = document.querySelector('#hud .stack'), h = $('hint'), b = $('btnPause');
+  if (st) st.style.visibility = on ? 'hidden' : ''; if (h) h.style.visibility = on ? 'hidden' : ''; if (b) b.textContent = on ? 'Saltar historia' : 'Pausa';
+}
+cv.addEventListener('pointerdown', () => { if (S && S.mode === 'intro') introTap = true; });
+$('btnPause').addEventListener('click', () => { if (S && S.mode === 'intro' && S.intro) introEnd(); });
+
+// ── Dibujo ──
+// Una casa quemada: el dibujo del paquete ennegrecido; en ruinas, además, con el tejado hundido y alguna viga en pie
+const INTRO_BURNT = {};
+function introBurnt(i, ruin) {
+  const key = i + (ruin ? 'r' : 't'); if (INTRO_BURNT[key]) return INTRO_BURNT[key];
+  const s = HOUSES[i], c2 = document.createElement('canvas'), g = c2.getContext('2d'); c2.width = s[2]; c2.height = s[3];
+  g.drawImage(IMG.houses, s[0], s[1], s[2], s[3], 0, 0, s[2], s[3]);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = ruin ? 'rgba(22,16,18,0.8)' : 'rgba(22,14,14,0.85)'; g.fillRect(0, 0, s[2], s[3]);
+  if (ruin) {
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000000'; g.beginPath(); g.moveTo(-2, -2);
+    for (let k = 0; k <= 10; k++) g.lineTo(Math.round(k / 10 * s[2]), Math.round(s[3] * (0.36 + 0.24 * ihash(k, i * 7 + 3) + (k % 2 ? 0.07 : 0))));
+    g.lineTo(s[2] + 2, -2); g.closePath(); g.fill();
+    g.globalCompositeOperation = 'source-over'; g.fillStyle = '#17110f';
+    for (const u of [0.07, 0.48, 0.92]) { const hh = Math.round(s[3] * (0.22 + 0.2 * ihash(u * 20, i))); g.fillRect(Math.round(u * s[2]) - 2, Math.round(s[3] * 0.66) - hh, 4, hh); }
+  }
+  return (INTRO_BURNT[key] = c2);
+}
+// Una llama de píxeles: columnas de dos píxeles en tres capas, más altas en el centro y bailando con el tiempo
+function introFlame(x, y, w, h, t, seed) {
+  const n = Math.max(2, Math.round(w / 2)), x0 = Math.round(x - n), y0 = Math.round(y);
+  for (let i = 0; i < n; i++) {
+    const u = (i + 0.5) / n, env = 1 - Math.pow(Math.abs(u - 0.5) * 2, 1.7), wob = 0.62 + 0.22 * Math.sin(t * 9 + i * 1.3 + seed) + 0.16 * Math.sin(t * 17 - i * 2.1 + seed * 3), hh = h * env * wob;
+    for (const [k, col] of [[1, '#b8321e'], [0.74, '#f0702a'], [0.48, '#ffb347'], [0.22, '#ffe9a8']]) { const q = Math.round(hh * k); if (q > 0) { ctx.fillStyle = col; ctx.fillRect(x0 + i * 2, y0 - q, 2, q); } }
+  }
+}
+// Un yunque pequeño sobre su tocón
+function introAnvil(x, y) {
+  const r = (dx, dy, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x + dx, y + dy, w, h); };
+  ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x, y, 10, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+  r(-6, -7, 12, 7, '#2a1a18'); r(-5, -6, 10, 6, '#6e4530'); r(-5, -6, 10, 1, '#8a6240'); r(-2, -5, 1, 5, '#4a2e22'); r(2, -5, 1, 5, '#4a2e22');
+  r(-9, -14, 17, 5, '#16101a'); r(-12, -13, 4, 3, '#16101a'); r(-5, -10, 9, 4, '#16101a');
+  r(-8, -13, 15, 3, '#66778f'); r(-8, -13, 15, 1, '#c3d0e0'); r(-11, -12, 3, 1, '#96a9c1'); r(-4, -10, 7, 3, '#4a5768');
+}
+const INTRO_FLAMES = [[0.5, 0.2, 28, 34], [0.27, 0.42, 22, 26], [0.73, 0.42, 22, 26], [0.5, 0.52, 30, 26], [0.13, 0.6, 16, 20], [0.87, 0.6, 16, 20], [0.21, 0.82, 12, 14], [0.79, 0.82, 12, 14]];
+function introFrame(key, anim, i, x, y, flip, flash) {
+  const m = ATLAS[key]; if (!m || !IMG.chars) return;
+  const fr = (m.a[anim] || m.a.idle).f, f = fr[clamp(i, 0, fr.length - 1)], im = flash ? IMG.charsF : IMG.chars;
+  if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(im, f[0], f[1], m.w, m.h, -m.ax, Math.round(y - m.gy), m.w, m.h); ctx.restore(); }
+  else ctx.drawImage(im, f[0], f[1], m.w, m.h, Math.round(x - m.ax), Math.round(y - m.gy), m.w, m.h);
+}
+function introActor(a, R) {
+  const x = Math.round(a.x), y = Math.round(a.y), m = a.hero ? ATLAS.hunter_s : ATLAS[a.key], sw = m ? clamp(m.bw / 2.4, 5, 16) : 7;
+  const shadow = w => { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x, y, w, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; };
+  if (a.fall != null) {   // caído: con su animación de muerte si la tiene; si no, vuelca y se queda en el suelo
+    if (m && m.a.die) { shadow(sw + 2); introFrame(a.key, 'die', Math.floor(a.fall * m.a.die.fps), x, y, a.flip, false); return; }
+    const k = Math.min(1, a.fall / 0.28), ang = a.fallDir * k * k * Math.PI / 2;
+    ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x + a.fallDir * 9 * k, y, sw + 6 * k, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.save(); ctx.translate(x, y - Math.round(3 * k)); ctx.rotate(ang); drawChar(a.key, 'idle', 0, 0, 0, a.flip, false); ctx.restore(); return;
+  }
+  shadow(sw);
+  const tt = S.t + a.ph;
+  if (a.hero) {
+    const ang = a.aim != null ? a.aim : a.face, behind = Math.sin(ang) < -0.7, k = Math.round(a.kick);
+    if (behind) drawWeapon(x, y - 10, ang, k);
+    if (!drawHero(a.walking ? 'move' : 'idle', tt, x, y, a.aim != null ? a.aim : a.face, false)) drawSprite(SPR.player, x, y, Math.cos(ang) < 0, false);
+    if (!behind) drawWeapon(x, y - 10, ang, k);
+    return;
+  }
+  const on = a.once && R.t - a.once.t0 < a.once.dur;
+  drawChar(a.key, on ? a.once.anim : a.walking ? 'move' : 'idle', on ? R.t - a.once.t0 : tt, x, y - (a.hop > 0 ? 2 : 0), a.flip, a.flash > 0);
+}
+// Pinta la cinemática si está en marcha. Devuelve si lo ha hecho (si no, el bucle pinta el juego como siempre).
+function introDraw() {
+  const on = !!S && S.mode === 'intro' && !!S.intro;
+  if (on !== introHudOn) introHud(on);
+  if (!on) return false;
+  sysTick(); WTEXT.length = 0;
+  const N = S.intro, R = N.R, RM = T.room, t = S.t;
+  cam.x = Math.round(view.w >= RM.w ? (RM.w - view.w) / 2 : clamp(R.cam.x - view.w / 2, 0, RM.w - view.w));
+  cam.y = Math.round(view.h >= RM.h ? (RM.h - view.h) / 2 : clamp(R.cam.y - view.h / 2, 0, RM.h - view.h));
+  const shx = Math.round((Math.random() - 0.5) * R.shk), shy = Math.round((Math.random() - 0.5) * R.shk), bg = roomBg();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#0b080d'; ctx.fillRect(0, 0, lo.width, lo.height);
+  ctx.setTransform(1, 0, 0, 1, -(cam.x + shx), -(cam.y + shy));
+  ctx.drawImage(bg.c, -BG_M * CELL, -BG_M * CELL);
+  // casas y personajes, de arriba abajo
+  const list = [];
+  if (IMG.houses) for (const h of R.houses) list.push({ y: h.by, fn() {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(h.sx + 4, h.by - 2, h.s[2] - 4, 5);
+    if (R.burnt) ctx.drawImage(introBurnt(h.hs, true), h.sx, h.sy);
+    else { ctx.drawImage(IMG.houses, h.s[0], h.s[1], h.s[2], h.s[3], h.sx, h.sy, h.s[2], h.s[3]); if (h.char > 0.02) { ctx.globalAlpha = h.char; ctx.drawImage(introBurnt(h.hs, false), h.sx, h.sy); ctx.globalAlpha = 1; } }
+  } });
+  for (const p of R.props) list.push({ y: p.y, fn() { p.draw(p.x, p.y); } });
+  for (const a of R.actors) if (!a.hidden) list.push({ y: a.y - (a.fall != null ? 4 : 0), fn() { introActor(a, R); } });
+  list.sort((p, q) => p.y - q.y); for (const it of list) it.fn();
+  // la luz de la escena: un tono general (noche, amanecer, penumbra de forja) y, encima, lo que alumbra
+  const lights = [], fl = 0.92 + 0.08 * Math.sin(t * 11) * Math.sin(t * 7.3);
+  for (const h of R.houses) if (h.fire > 0.03) lights.push({ x: h.cx, y: h.sy + h.s[3] * 0.5, r: 56 + 84 * h.fire, c: '255,160,80', a: Math.min(1, 0.3 + 0.65 * h.fire) * fl });
+  for (const f of R.fires) lights.push({ x: f.x, y: f.y - 4, r: 26 + f.w * 2.2, c: '255,160,80', a: 0.8 * fl });
+  for (const tc of bg.torches || []) lights.push({ x: tc.x, y: tc.y + 4, r: 62, c: '255,170,90', a: 0.75 * fl });
+  for (const p of (S.out && S.out.props) || []) if (p.s === 'furnace') lights.push({ x: p.x, y: p.y - 18, r: 84, c: '255,130,60', a: 0.95 * fl });
+  for (const a of R.actors) if (a.glow && !a.hidden) lights.push({ x: a.x, y: a.y - 16, r: 58, c: a.glow, a: 0.8 });
+  if (R.amb) {
+    if (!INTRO_LM) INTRO_LM = document.createElement('canvas');
+    const L = INTRO_LM; if (L.width !== lo.width || L.height !== lo.height) { L.width = lo.width; L.height = lo.height; }
+    const g = L.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.fillStyle = R.amb; g.fillRect(0, 0, L.width, L.height);
+    g.globalCompositeOperation = 'lighter';
+    for (const l of lights) {
+      const x = l.x - cam.x - shx, y = l.y - cam.y - shy; if (x < -l.r || y < -l.r || x > L.width + l.r || y > L.height + l.r) continue;
+      const gr = g.createRadialGradient(x, y, 0, x, y, l.r); gr.addColorStop(0, `rgba(${l.c},${l.a})`); gr.addColorStop(1, `rgba(${l.c},0)`); g.fillStyle = gr; g.fillRect(x - l.r, y - l.r, l.r * 2, l.r * 2);
+    }
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(L, 0, 0); ctx.restore();
+  }
+  // lo que brilla por sí mismo: antorchas, llamas, chispas; y el humo
+  for (const tc of bg.torches || []) strip(VFX.torch, t * 10 + tc.x, tc.x, tc.y - 2);
+  for (const h of R.houses) if (h.fire > 0.02) INTRO_FLAMES.forEach(([fx, fy, w, hh], i) => { const lv = clamp(h.fire * 1.6 - i * 0.09, 0, 1); if (lv > 0.05) introFlame(h.sx + h.s[2] * fx, h.sy + h.s[3] * fy, w * (0.5 + 0.5 * lv), hh * lv, t, h.hs * 5 + i * 2.7); });
+  R.fires.forEach((f, i) => introFlame(f.x, f.y, f.w, f.h, t, 40 + i * 3.1));
+  for (const f of R.fx) {
+    const k = 1 - f.t / f.life;
+    if (f.k === 'smoke') { const sz = Math.round(f.sz + (1 - k) * 7); ctx.fillStyle = R.burnt ? '#4b4652' : '#241f2a'; ctx.globalAlpha = 0.42 * Math.min(1, k * 1.6, f.t * 3); ctx.fillRect(Math.round(f.x - sz / 2), Math.round(f.y - sz / 2), sz, sz); }
+    else if (f.k === 'spark') { ctx.fillStyle = f.col; ctx.globalAlpha = Math.min(1, k * 2); ctx.fillRect(Math.round(f.x), Math.round(f.y), k > 0.5 ? 2 : 1, k > 0.5 ? 2 : 1); }
+    else if (f.k === 'bolt') { const u = f.t / f.life, u0 = Math.max(0, u - 0.35); ctx.strokeStyle = '#efe6c8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(f.x1 + (f.x2 - f.x1) * u0, f.y1 + (f.y2 - f.y1) * u0); ctx.lineTo(f.x1 + (f.x2 - f.x1) * u, f.y1 + (f.y2 - f.y1) * u); ctx.stroke(); }
+    else if (f.k === 'slash' && IMG.vfx) { ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y)); ctx.rotate(f.a); ctx.drawImage(IMG.vfx, Math.min(7, Math.floor(f.t / f.life * 8)) * 32, VFX.slashFire * 32, 32, 32, -32, -32, 64, 64); ctx.restore(); }
+    ctx.globalAlpha = 1;
+  }
+  // a pantalla: el mundo ampliado, el fundido, las franjas de cine con el rótulo y la ayuda, y el bocadillo
+  const k = view.s, dp = view.dpr, bar = Math.round(cv.height * 0.085);
+  scr.setTransform(1, 0, 0, 1, 0, 0); scr.imageSmoothingEnabled = false; scr.globalAlpha = 1;
+  scr.drawImage(lo, 0, 0, lo.width * k, lo.height * k);
+  if (R.flash > 0) { scr.fillStyle = '#ffffff'; scr.globalAlpha = Math.min(1, R.flash); scr.fillRect(0, 0, cv.width, cv.height); scr.globalAlpha = 1; }
+  if (R.fade > 0) { scr.fillStyle = '#07050a'; scr.globalAlpha = R.fade; scr.fillRect(0, 0, cv.width, cv.height); scr.globalAlpha = 1; }
+  scr.fillStyle = '#07050a'; scr.fillRect(0, 0, cv.width, bar); scr.fillRect(0, cv.height - bar, cv.width, bar);
+  scr.save(); scr.textAlign = 'center'; scr.textBaseline = 'middle';
+  const ca = clamp(Math.min(R.capT / 0.5, (4.6 - R.capT) / 0.7), 0, 1);
+  if (ca > 0 && R.cap) { scr.globalAlpha = ca; scr.font = `600 ${Math.round(17 * dp)}px ${FONT}`; scr.fillStyle = '#efe6c8'; scr.fillText(R.cap, cv.width / 2, bar / 2 + dp); }
+  scr.globalAlpha = 1; scr.font = `500 ${Math.round(11.5 * dp)}px ${FONT}`; scr.fillStyle = 'rgba(239,230,200,0.62)'; scr.fillText(introHint(), cv.width / 2, cv.height - bar / 2);
+  scr.restore();
+  if (S.dialog) drawDialog(k);
+  return true;
+}
 // ───────────────────────── El mapa del reino (tablón de encargos) ─────────────────────────
 // En el tablón no hay una lista: hay un mapa dibujado del reino. Cada territorio se tiñe del color del guardián que lo tiene
 // tomado y, cuando cae, pasa al color del reino. Los encargos son marcadores (.fi) puestos sobre el mapa: la navegación
@@ -4148,7 +4576,7 @@ function update(dt) {
 
 // Generado por tools/pack_atlas.py a partir del CHARACTER MEGAPACK de overboy (itch.io). No editar a mano.
 // w, h: tamaño del recorte · ax: centro del cuerpo · gy: línea del suelo · a: animaciones (fps y posición de cada fotograma)
-const ATLAS = {"stalker":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[0,0]]},"move":{"fps":12,"f":[[29,0],[58,0],[87,0],[116,0],[145,0],[174,0],[203,0],[232,0],[261,0],[290,0]]},"atk":{"fps":18,"f":[[319,0],[348,0],[377,0],[406,0],[435,0],[464,0],[493,0],[522,0],[551,0],[580,0]]}}},"runner":{"w":15,"h":24,"ax":7,"gy":24,"bw":12,"bh":12,"a":{"idle":{"fps":3,"f":[[609,0],[625,0]]},"move":{"fps":20,"f":[[641,0],[657,0],[673,0],[689,0],[705,0],[721,0],[737,0],[753,0],[769,0],[785,0],[801,0],[817,0],[833,0],[849,0]]},"atk":{"fps":24,"f":[[865,0],[881,0],[897,0],[913,0],[929,0],[945,0],[961,0],[977,0],[993,0],[1009,0],[1025,0],[1041,0],[1057,0],[1073,0]]}}},"brute":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[1089,0]]},"move":{"fps":7,"f":[[1138,0],[1187,0],[1236,0],[1285,0],[1334,0]]},"atk":{"fps":14,"f":[[1383,0],[1432,0],[1481,0],[1530,0],[1579,0],[1628,0],[1677,0],[1726,0],[1775,0],[1824,0],[1873,0],[1922,0]]}}},"mage":{"w":31,"h":37,"ax":10,"gy":24,"bw":21,"bh":18,"a":{"idle":{"fps":3,"f":[[1971,0],[2003,0]]},"move":{"fps":12,"f":[[0,54],[32,54],[64,54],[96,54],[128,54],[160,54],[192,54],[224,54],[256,54],[288,54],[320,54],[352,54]]},"atk":{"fps":14,"f":[[384,54],[416,54],[448,54],[480,54],[512,54],[544,54],[576,54],[608,54],[640,54],[672,54]]}}},"bomber":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[704,54]]},"move":{"fps":12,"f":[[733,54],[762,54],[791,54],[820,54],[849,54],[878,54],[907,54],[936,54],[965,54],[994,54]]},"atk":{"fps":14,"f":[[1023,54],[1052,54],[1081,54],[1110,54],[1139,54],[1168,54],[1197,54],[1226,54],[1255,54],[1284,54]]}}},"leaper":{"w":35,"h":43,"ax":18,"gy":43,"bw":35,"bh":17,"a":{"idle":{"fps":3,"f":[[1313,54],[1349,54]]},"move":{"fps":4,"f":[[1385,54],[1421,54]]},"atk":{"fps":20,"f":[[1457,54],[1493,54],[1529,54],[1565,54],[1601,54],[1637,54],[1673,54],[1709,54],[1745,54],[1781,54],[1817,54],[1853,54],[1889,54],[1925,54]]}}},"sniper":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[1961,54]]},"move":{"fps":10,"f":[[0,98],[65,98],[130,98],[195,98],[260,98],[325,98]]},"atk":{"fps":12,"f":[[390,98],[455,98],[520,98],[585,98],[650,98],[715,98],[780,98],[845,98],[910,98],[975,98],[1040,98]]}}},"shaman":{"w":41,"h":34,"ax":18,"gy":34,"bw":29,"bh":25,"a":{"idle":{"fps":3,"f":[[1105,98],[1147,98]]},"move":{"fps":4,"f":[[1189,98],[1231,98]]},"atk":{"fps":14,"f":[[1273,98],[1315,98],[1357,98],[1399,98],[1441,98],[1483,98],[1525,98],[1567,98],[1609,98],[1651,98],[1693,98],[1735,98],[1777,98],[1819,98]]}}},"lancer":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1861,98]]},"move":{"fps":12,"f":[[1901,98],[1941,98],[1981,98],[0,135],[40,135],[80,135],[120,135],[160,135]]},"atk":{"fps":16,"f":[[200,135],[240,135],[280,135],[320,135],[360,135],[400,135]]}}},"bat":{"w":27,"h":24,"ax":12,"gy":24,"bw":17,"bh":18,"a":{"idle":{"fps":3,"f":[[440,135],[468,135]]},"move":{"fps":16,"f":[[496,135],[524,135],[552,135],[580,135],[608,135],[636,135],[664,135],[692,135],[720,135],[748,135]]},"atk":{"fps":16,"f":[[776,135],[804,135],[832,135],[860,135],[888,135],[916,135],[944,135],[972,135]]}}},"champ":{"w":32,"h":42,"ax":16,"gy":39,"bw":31,"bh":32,"a":{"idle":{"fps":3,"f":[[1000,135],[1033,135]]},"move":{"fps":14,"f":[[1066,135],[1099,135],[1132,135],[1165,135],[1198,135],[1231,135],[1264,135],[1297,135],[1330,135],[1363,135]]},"atk":{"fps":16,"f":[[1396,135],[1429,135],[1462,135],[1495,135],[1528,135],[1561,135],[1594,135],[1627,135]]}}},"guardian":{"w":64,"h":72,"ax":32,"gy":72,"bw":64,"bh":68,"a":{"idle":{"fps":3,"f":[[1660,135],[1725,135]]},"move":{"fps":12,"f":[[1790,135],[1855,135],[1920,135],[0,208],[65,208],[130,208],[195,208],[260,208],[325,208],[390,208],[455,208],[520,208]]},"atk":{"fps":14,"f":[[585,208],[650,208],[715,208],[780,208],[845,208],[910,208],[975,208],[1040,208],[1105,208],[1170,208],[1235,208],[1300,208],[1365,208],[1430,208]]}}},"matriarch":{"w":86,"h":82,"ax":42,"gy":82,"bw":67,"bh":48,"a":{"idle":{"fps":3,"f":[[1495,208],[1582,208]]},"move":{"fps":12,"f":[[1669,208],[1756,208],[1843,208],[1930,208],[0,291],[87,291],[174,291],[261,291],[348,291],[435,291],[522,291]]},"atk":{"fps":8,"f":[[609,291],[696,291],[783,291],[870,291]]}}},"colossus":{"w":65,"h":64,"ax":32,"gy":64,"bw":65,"bh":63,"a":{"idle":{"fps":8,"f":[[957,291],[1023,291],[1089,291],[1155,291],[1221,291],[1287,291],[1353,291],[1419,291]]},"move":{"fps":10,"f":[[1485,291],[1551,291],[1617,291],[1683,291],[1749,291],[1815,291],[1881,291],[1947,291]]},"atk":{"fps":14,"f":[[0,374],[66,374],[132,374],[198,374],[264,374],[330,374],[396,374],[462,374],[528,374],[594,374],[660,374],[726,374],[792,374],[858,374]]}}},"nameless":{"w":57,"h":57,"ax":30,"gy":57,"bw":49,"bh":49,"a":{"idle":{"fps":3,"f":[[924,374],[982,374]]},"move":{"fps":12,"f":[[1040,374],[1098,374],[1156,374],[1214,374],[1272,374],[1330,374],[1388,374],[1446,374],[1504,374],[1562,374],[1620,374],[1678,374]]},"atk":{"fps":12,"f":[[1736,374],[1794,374],[1852,374],[1910,374],[1968,374],[0,439],[58,439],[116,439],[174,439],[232,439]]}}},"firstfist":{"w":153,"h":140,"ax":60,"gy":126,"bw":114,"bh":118,"a":{"idle":{"fps":10,"f":[[290,439],[444,439],[598,439],[752,439],[906,439],[1060,439],[1214,439],[1368,439],[1522,439],[1676,439],[1830,439],[0,580]]},"move":{"fps":10,"f":[[154,580],[308,580],[462,580],[616,580],[770,580],[924,580],[1078,580],[1232,580],[1386,580],[1540,580],[1694,580],[1848,580]]},"atk":{"fps":14,"f":[[0,721],[154,721],[308,721],[462,721],[616,721],[770,721],[924,721],[1078,721],[1232,721],[1386,721],[1540,721],[1694,721],[1848,721],[0,862],[154,862],[308,862]]}}},"stalker_b":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[462,862]]},"move":{"fps":12,"f":[[491,862],[520,862],[549,862],[578,862],[607,862],[636,862],[665,862],[694,862],[723,862],[752,862]]},"atk":{"fps":18,"f":[[781,862],[810,862],[839,862],[868,862],[897,862],[926,862],[955,862],[984,862],[1013,862],[1042,862]]}}},"bomber_b":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[1071,862]]},"move":{"fps":12,"f":[[1100,862],[1129,862],[1158,862],[1187,862],[1216,862],[1245,862],[1274,862],[1303,862],[1332,862],[1361,862]]},"atk":{"fps":14,"f":[[1390,862],[1419,862],[1448,862],[1477,862],[1506,862],[1535,862],[1564,862],[1593,862],[1622,862],[1651,862]]}}},"brute_b":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[1680,862]]},"move":{"fps":7,"f":[[1729,862],[1778,862],[1827,862],[1876,862],[1925,862]]},"atk":{"fps":14,"f":[[1974,862],[0,1003],[49,1003],[98,1003],[147,1003],[196,1003],[245,1003],[294,1003],[343,1003],[392,1003],[441,1003],[490,1003]]}}},"sniper_b":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[539,1003]]},"move":{"fps":10,"f":[[604,1003],[669,1003],[734,1003],[799,1003],[864,1003],[929,1003]]},"atk":{"fps":12,"f":[[994,1003],[1059,1003],[1124,1003],[1189,1003],[1254,1003],[1319,1003],[1384,1003],[1449,1003],[1514,1003],[1579,1003],[1644,1003]]}}},"stalker_r":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[1709,1003]]},"move":{"fps":12,"f":[[1738,1003],[1767,1003],[1796,1003],[1825,1003],[1854,1003],[1883,1003],[1912,1003],[1941,1003],[1970,1003],[1999,1003]]},"atk":{"fps":18,"f":[[0,1057],[29,1057],[58,1057],[87,1057],[116,1057],[145,1057],[174,1057],[203,1057],[232,1057],[261,1057]]}}},"bomber_r":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[290,1057]]},"move":{"fps":12,"f":[[319,1057],[348,1057],[377,1057],[406,1057],[435,1057],[464,1057],[493,1057],[522,1057],[551,1057],[580,1057]]},"atk":{"fps":14,"f":[[609,1057],[638,1057],[667,1057],[696,1057],[725,1057],[754,1057],[783,1057],[812,1057],[841,1057],[870,1057]]}}},"brute_r":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[899,1057]]},"move":{"fps":7,"f":[[948,1057],[997,1057],[1046,1057],[1095,1057],[1144,1057]]},"atk":{"fps":14,"f":[[1193,1057],[1242,1057],[1291,1057],[1340,1057],[1389,1057],[1438,1057],[1487,1057],[1536,1057],[1585,1057],[1634,1057],[1683,1057],[1732,1057]]}}},"sniper_r":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[1781,1057]]},"move":{"fps":10,"f":[[1846,1057],[1911,1057],[1976,1057],[0,1111],[65,1111],[130,1111]]},"atk":{"fps":12,"f":[[195,1111],[260,1111],[325,1111],[390,1111],[455,1111],[520,1111],[585,1111],[650,1111],[715,1111],[780,1111],[845,1111]]}}},"lancer_silver":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[910,1111]]},"move":{"fps":12,"f":[[950,1111],[990,1111],[1030,1111],[1070,1111],[1110,1111],[1150,1111],[1190,1111],[1230,1111]]},"atk":{"fps":16,"f":[[1270,1111],[1310,1111],[1350,1111],[1390,1111],[1430,1111],[1470,1111]]}}},"lancer_gold":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1510,1111]]},"move":{"fps":12,"f":[[1550,1111],[1590,1111],[1630,1111],[1670,1111],[1710,1111],[1750,1111],[1790,1111],[1830,1111]]},"atk":{"fps":16,"f":[[1870,1111],[1910,1111],[1950,1111],[1990,1111],[0,1148],[40,1148]]}}},"lancer_devil":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[80,1148]]},"move":{"fps":12,"f":[[120,1148],[160,1148],[200,1148],[240,1148],[280,1148],[320,1148],[360,1148],[400,1148]]},"atk":{"fps":16,"f":[[440,1148],[480,1148],[520,1148],[560,1148],[600,1148],[640,1148]]}}},"lancer_orc":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[680,1148]]},"move":{"fps":12,"f":[[720,1148],[760,1148],[800,1148],[840,1148],[880,1148],[920,1148],[960,1148],[1000,1148]]},"atk":{"fps":16,"f":[[1040,1148],[1080,1148],[1120,1148],[1160,1148],[1200,1148],[1240,1148]]}}},"lancer_red":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1280,1148]]},"move":{"fps":12,"f":[[1320,1148],[1360,1148],[1400,1148],[1440,1148],[1480,1148],[1520,1148],[1560,1148],[1600,1148]]},"atk":{"fps":16,"f":[[1640,1148],[1680,1148],[1720,1148],[1760,1148],[1800,1148],[1840,1148]]}}},"lancer_frozen":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[1880,1148]]},"move":{"fps":12,"f":[[1922,1148],[1964,1148],[2006,1148],[0,1180],[42,1180],[84,1180],[126,1180],[168,1180]]},"atk":{"fps":16,"f":[[210,1180],[252,1180],[294,1180],[336,1180],[378,1180],[420,1180]]}}},"lancer_bio":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[462,1180]]},"move":{"fps":12,"f":[[504,1180],[546,1180],[588,1180],[630,1180],[672,1180],[714,1180],[756,1180],[798,1180]]},"atk":{"fps":16,"f":[[840,1180],[882,1180],[924,1180],[966,1180],[1008,1180],[1050,1180]]}}},"lancer_rad":{"w":43,"h":34,"ax":19,"gy":34,"bw":28,"bh":33,"a":{"idle":{"fps":1,"f":[[1092,1180]]},"move":{"fps":12,"f":[[1136,1180],[1180,1180],[1224,1180],[1268,1180],[1312,1180],[1356,1180],[1400,1180],[1444,1180]]},"atk":{"fps":16,"f":[[1488,1180],[1532,1180],[1576,1180],[1620,1180],[1664,1180],[1708,1180]]}}},"lancer_oniric":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[1752,1180]]},"move":{"fps":12,"f":[[1794,1180],[1836,1180],[1878,1180],[1920,1180],[1962,1180],[2004,1180],[0,1215],[42,1215]]},"atk":{"fps":16,"f":[[84,1215],[126,1215],[168,1215],[210,1215],[252,1215],[294,1215]]}}},"stalker_ent":{"w":35,"h":39,"ax":22,"gy":39,"bw":26,"bh":25,"a":{"idle":{"fps":4,"f":[[336,1215],[372,1215],[408,1215],[444,1215]]},"move":{"fps":12,"f":[[480,1215],[516,1215],[552,1215],[588,1215],[624,1215],[660,1215],[696,1215],[732,1215],[768,1215]]},"atk":{"fps":14,"f":[[804,1215],[840,1215],[876,1215],[912,1215],[948,1215],[984,1215]]}}},"brute_ent":{"w":59,"h":40,"ax":20,"gy":39,"bw":38,"bh":25,"a":{"idle":{"fps":3,"f":[[1020,1215],[1080,1215]]},"move":{"fps":10,"f":[[1140,1215],[1200,1215],[1260,1215],[1320,1215],[1380,1215],[1440,1215],[1500,1215],[1560,1215],[1620,1215],[1680,1215],[1740,1215],[1800,1215]]},"atk":{"fps":14,"f":[[1860,1215],[1920,1215],[1980,1215],[0,1256],[60,1256],[120,1256],[180,1256],[240,1256],[300,1256],[360,1256]]}}},"brute_ent3":{"w":71,"h":51,"ax":26,"gy":51,"bw":42,"bh":47,"a":{"idle":{"fps":3,"f":[[420,1256],[492,1256]]},"move":{"fps":10,"f":[[564,1256],[636,1256],[708,1256],[780,1256],[852,1256],[924,1256],[996,1256],[1068,1256],[1140,1256]]},"atk":{"fps":12,"f":[[1212,1256],[1284,1256],[1356,1256],[1428,1256],[1500,1256],[1572,1256],[1644,1256],[1716,1256]]}}},"champ_wood":{"w":53,"h":65,"ax":22,"gy":65,"bw":43,"bh":62,"a":{"idle":{"fps":3,"f":[[1788,1256],[1842,1256]]},"move":{"fps":12,"f":[[1896,1256],[1950,1256],[0,1322],[54,1322],[108,1322],[162,1322],[216,1322],[270,1322],[324,1322],[378,1322],[432,1322],[486,1322]]},"atk":{"fps":14,"f":[[540,1322],[594,1322],[648,1322],[702,1322],[756,1322],[810,1322],[864,1322],[918,1322],[972,1322],[1026,1322],[1080,1322]]}}},"bat_fly":{"w":54,"h":94,"ax":26,"gy":93,"bw":38,"bh":36,"a":{"idle":{"fps":6,"f":[[1134,1322],[1189,1322],[1244,1322],[1299,1322]]},"move":{"fps":14,"f":[[1354,1322],[1409,1322],[1464,1322],[1519,1322],[1574,1322],[1629,1322],[1684,1322],[1739,1322]]},"atk":{"fps":14,"f":[[1794,1322],[1849,1322],[1904,1322],[1959,1322],[0,1417],[55,1417]]}}},"runner_2":{"w":19,"h":33,"ax":10,"gy":33,"bw":18,"bh":28,"a":{"idle":{"fps":3,"f":[[110,1417],[130,1417]]},"move":{"fps":20,"f":[[150,1417],[170,1417],[190,1417],[210,1417],[230,1417],[250,1417],[270,1417],[290,1417],[310,1417],[330,1417],[350,1417],[370,1417]]},"atk":{"fps":20,"f":[[390,1417],[410,1417],[430,1417],[450,1417],[470,1417],[490,1417],[510,1417],[530,1417],[550,1417],[570,1417]]}}},"bomber_mimic":{"w":48,"h":42,"ax":24,"gy":42,"bw":42,"bh":42,"a":{"idle":{"fps":3,"f":[[590,1417],[639,1417]]},"move":{"fps":14,"f":[[688,1417],[737,1417],[786,1417],[835,1417],[884,1417],[933,1417],[982,1417],[1031,1417],[1080,1417],[1129,1417],[1178,1417],[1227,1417]]},"atk":{"fps":8,"f":[[1276,1417],[1325,1417]]}}},"sniper_cyc":{"w":26,"h":25,"ax":16,"gy":25,"bw":19,"bh":20,"a":{"idle":{"fps":3,"f":[[1374,1417],[1401,1417]]},"move":{"fps":10,"f":[[1428,1417],[1455,1417],[1482,1417],[1509,1417],[1536,1417],[1563,1417],[1590,1417],[1617,1417]]},"atk":{"fps":10,"f":[[1644,1417],[1671,1417],[1698,1417],[1725,1417],[1752,1417],[1779,1417],[1806,1417]]}}},"mage_2":{"w":32,"h":23,"ax":14,"gy":23,"bw":26,"bh":23,"a":{"idle":{"fps":5,"f":[[1833,1417],[1866,1417],[1899,1417],[1932,1417]]},"move":{"fps":12,"f":[[1965,1417],[1998,1417],[0,1512],[33,1512],[66,1512],[99,1512],[132,1512],[165,1512],[198,1512],[231,1512],[264,1512],[297,1512]]},"atk":{"fps":14,"f":[[330,1512],[363,1512],[396,1512],[429,1512],[462,1512],[495,1512],[528,1512],[561,1512],[594,1512],[627,1512]]}}},"mage_3":{"w":42,"h":39,"ax":20,"gy":39,"bw":38,"bh":37,"a":{"idle":{"fps":5,"f":[[660,1512],[703,1512],[746,1512],[789,1512]]},"move":{"fps":12,"f":[[832,1512],[875,1512],[918,1512],[961,1512],[1004,1512],[1047,1512],[1090,1512],[1133,1512],[1176,1512],[1219,1512],[1262,1512],[1305,1512]]},"atk":{"fps":12,"f":[[1348,1512],[1391,1512],[1434,1512],[1477,1512],[1520,1512],[1563,1512],[1606,1512],[1649,1512]]}}},"decoy":{"w":14,"h":20,"ax":7,"gy":20,"bw":14,"bh":20,"a":{"idle":{"fps":3,"f":[[1692,1512],[1707,1512]]},"move":{"fps":3,"f":[[1722,1512],[1737,1512]]}}},"post":{"w":32,"h":31,"ax":16,"gy":31,"bw":32,"bh":29,"a":{"idle":{"fps":3,"f":[[1752,1512],[1785,1512]]},"move":{"fps":3,"f":[[1818,1512],[1851,1512]]},"atk":{"fps":12,"f":[[1884,1512],[1917,1512],[1950,1512],[1983,1512],[0,1552],[33,1552],[66,1552],[99,1552]]}}},"turret":{"w":55,"h":38,"ax":31,"gy":38,"bw":46,"bh":36,"a":{"idle":{"fps":3,"f":[[132,1552],[188,1552]]},"move":{"fps":14,"f":[[244,1552],[300,1552],[356,1552],[412,1552],[468,1552],[524,1552],[580,1552],[636,1552],[692,1552],[748,1552],[804,1552],[860,1552]]}}},"villager":{"w":20,"h":21,"ax":11,"gy":21,"bw":18,"bh":16,"a":{"idle":{"fps":6,"f":[[916,1552],[937,1552],[958,1552],[979,1552],[1000,1552],[1021,1552]]},"move":{"fps":10,"f":[[1042,1552],[1063,1552],[1084,1552],[1105,1552],[1126,1552],[1147,1552],[1168,1552],[1189,1552]]}}},"smith":{"w":34,"h":27,"ax":17,"gy":27,"bw":34,"bh":26,"a":{"idle":{"fps":5,"f":[[1210,1552],[1245,1552],[1280,1552],[1315,1552],[1350,1552]]},"move":{"fps":5,"f":[[1385,1552],[1420,1552],[1455,1552],[1490,1552],[1525,1552]]}}},"trainer":{"w":42,"h":40,"ax":21,"gy":40,"bw":42,"bh":40,"a":{"idle":{"fps":6,"f":[[1560,1552],[1603,1552],[1646,1552],[1689,1552],[1732,1552],[1775,1552],[1818,1552]]},"move":{"fps":6,"f":[[1861,1552],[1904,1552],[1947,1552],[1990,1552],[0,1593],[43,1593],[86,1593]]}}},"guard":{"w":18,"h":35,"ax":8,"gy":35,"bw":17,"bh":34,"a":{"idle":{"fps":5,"f":[[129,1593],[148,1593],[167,1593],[186,1593]]},"move":{"fps":10,"f":[[205,1593],[224,1593],[243,1593],[262,1593],[281,1593],[300,1593]]}}},"guard_k":{"w":19,"h":31,"ax":8,"gy":31,"bw":17,"bh":31,"a":{"idle":{"fps":5,"f":[[319,1593],[339,1593],[359,1593],[379,1593]]},"move":{"fps":10,"f":[[399,1593],[419,1593],[439,1593],[459,1593],[479,1593],[499,1593]]}}},"priest":{"w":17,"h":31,"ax":8,"gy":31,"bw":17,"bh":31,"a":{"idle":{"fps":5,"f":[[519,1593],[537,1593],[555,1593],[573,1593]]},"move":{"fps":10,"f":[[591,1593],[609,1593],[627,1593],[645,1593],[663,1593],[681,1593]]}}},"king":{"w":23,"h":28,"ax":10,"gy":28,"bw":15,"bh":25,"a":{"idle":{"fps":4,"f":[[699,1593],[723,1593],[747,1593],[771,1593]]},"move":{"fps":10,"f":[[795,1593],[819,1593],[843,1593],[867,1593],[891,1593],[915,1593],[939,1593],[963,1593]]},"atk":{"fps":8,"f":[[987,1593],[1011,1593],[1035,1593],[1059,1593],[1083,1593],[1107,1593],[1131,1593]]}}},"queen":{"w":19,"h":25,"ax":10,"gy":25,"bw":15,"bh":23,"a":{"idle":{"fps":6,"f":[[1155,1593],[1175,1593],[1195,1593],[1215,1593]]},"move":{"fps":10,"f":[[1235,1593],[1255,1593],[1275,1593],[1295,1593],[1315,1593],[1335,1593],[1355,1593],[1375,1593]]}}},"cit_peasant":{"w":16,"h":31,"ax":8,"gy":31,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1395,1593],[1412,1593],[1429,1593],[1446,1593]]},"move":{"fps":9,"f":[[1463,1593],[1480,1593],[1497,1593],[1514,1593],[1531,1593],[1548,1593]]}}},"cit_tavern_a":{"w":23,"h":31,"ax":12,"gy":31,"bw":23,"bh":30,"a":{"idle":{"fps":5,"f":[[1565,1593],[1589,1593],[1613,1593],[1637,1593]]},"move":{"fps":9,"f":[[1661,1593],[1685,1593],[1709,1593],[1733,1593],[1757,1593],[1781,1593]]}}},"cit_tavern_b":{"w":16,"h":31,"ax":8,"gy":31,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1805,1593],[1822,1593],[1839,1593],[1856,1593]]},"move":{"fps":9,"f":[[1873,1593],[1890,1593],[1907,1593],[1924,1593],[1941,1593],[1958,1593]]}}},"adv_archer":{"w":22,"h":17,"ax":8,"gy":15,"bw":17,"bh":15,"a":{"idle":{"fps":1,"f":[[1975,1593]]},"move":{"fps":12,"f":[[1998,1593],[2021,1593],[0,1634],[23,1634],[46,1634],[69,1634],[92,1634],[115,1634]]},"atk":{"fps":12,"f":[[138,1634],[161,1634],[184,1634],[207,1634],[230,1634],[253,1634]]}}},"adv_dwarf":{"w":29,"h":26,"ax":14,"gy":26,"bw":14,"bh":17,"a":{"idle":{"fps":1,"f":[[276,1634]]},"move":{"fps":12,"f":[[306,1634],[336,1634],[366,1634],[396,1634],[426,1634],[456,1634],[486,1634],[516,1634]]},"atk":{"fps":16,"f":[[546,1634],[576,1634],[606,1634],[636,1634],[666,1634],[696,1634],[726,1634],[756,1634],[786,1634],[816,1634],[846,1634]]}}},"adv_knight":{"w":20,"h":26,"ax":10,"gy":26,"bw":11,"bh":15,"a":{"idle":{"fps":1,"f":[[876,1634]]},"move":{"fps":12,"f":[[897,1634],[918,1634],[939,1634],[960,1634],[981,1634],[1002,1634],[1023,1634],[1044,1634]]},"atk":{"fps":16,"f":[[1065,1634],[1086,1634],[1107,1634],[1128,1634],[1149,1634],[1170,1634],[1191,1634],[1212,1634],[1233,1634],[1254,1634],[1275,1634]]}}},"hunter_s":{"w":49,"h":34,"ax":18,"gy":34,"bw":19,"bh":33,"a":{"idle":{"fps":5,"f":[[1296,1634],[1346,1634],[1396,1634],[1446,1634]]},"move":{"fps":12,"f":[[1496,1634],[1546,1634],[1596,1634],[1646,1634],[1696,1634],[1746,1634]]},"dash":{"fps":22,"f":[[1796,1634],[1846,1634],[1896,1634],[1946,1634],[1996,1634],[0,1669]]},"atk":{"fps":18,"f":[[50,1669],[100,1669],[150,1669],[200,1669],[250,1669],[300,1669],[350,1669],[400,1669]]}}},"hunter_u":{"w":24,"h":39,"ax":14,"gy":39,"bw":16,"bh":34,"a":{"idle":{"fps":5,"f":[[450,1669],[475,1669],[500,1669],[525,1669]]},"move":{"fps":12,"f":[[550,1669],[575,1669],[600,1669],[625,1669],[650,1669],[675,1669]]},"dash":{"fps":22,"f":[[700,1669],[725,1669],[750,1669],[775,1669],[800,1669],[825,1669]]},"atk":{"fps":18,"f":[[850,1669],[875,1669],[900,1669],[925,1669],[950,1669],[975,1669],[1000,1669],[1025,1669]]}}},"hunter_d":{"w":25,"h":49,"ax":14,"gy":33,"bw":16,"bh":33,"a":{"idle":{"fps":5,"f":[[1050,1669],[1076,1669],[1102,1669],[1128,1669]]},"move":{"fps":12,"f":[[1154,1669],[1180,1669],[1206,1669],[1232,1669],[1258,1669],[1284,1669]]},"dash":{"fps":22,"f":[[1310,1669],[1336,1669],[1362,1669],[1388,1669],[1414,1669],[1440,1669]]},"atk":{"fps":18,"f":[[1466,1669],[1492,1669],[1518,1669],[1544,1669],[1570,1669],[1596,1669],[1622,1669],[1648,1669]]}}},"keeper":{"w":26,"h":20,"ax":12,"gy":20,"bw":24,"bh":20,"a":{"idle":{"fps":6,"f":[[1674,1669],[1701,1669],[1728,1669],[1755,1669],[1782,1669],[1809,1669],[1836,1669],[1863,1669]]},"move":{"fps":6,"f":[[1890,1669],[1917,1669],[1944,1669],[1971,1669],[1998,1669],[0,1719],[27,1719],[54,1719]]}}},"pc_skel":{"w":32,"h":32,"ax":14,"gy":32,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[81,1719],[114,1719],[147,1719],[180,1719]]},"move":{"fps":10,"f":[[213,1719],[246,1719],[279,1719],[312,1719],[345,1719],[378,1719]]},"die":{"fps":12,"f":[[411,1719],[444,1719],[477,1719],[510,1719],[543,1719],[576,1719]]}}},"pc_skel_mage":{"w":26,"h":32,"ax":13,"gy":32,"bw":18,"bh":32,"a":{"idle":{"fps":5,"f":[[609,1719],[636,1719],[663,1719],[690,1719]]},"move":{"fps":10,"f":[[717,1719],[744,1719],[771,1719],[798,1719],[825,1719],[852,1719]]},"die":{"fps":12,"f":[[879,1719],[906,1719],[933,1719],[960,1719],[987,1719],[1014,1719]]}}},"pc_skel_rogue":{"w":28,"h":32,"ax":14,"gy":32,"bw":20,"bh":32,"a":{"idle":{"fps":5,"f":[[1041,1719],[1070,1719],[1099,1719],[1128,1719]]},"move":{"fps":10,"f":[[1157,1719],[1186,1719],[1215,1719],[1244,1719],[1273,1719],[1302,1719]]},"die":{"fps":12,"f":[[1331,1719],[1360,1719],[1389,1719],[1418,1719],[1447,1719],[1476,1719]]}}},"pc_skel_war":{"w":32,"h":32,"ax":14,"gy":32,"bw":20,"bh":30,"a":{"idle":{"fps":5,"f":[[1505,1719],[1538,1719],[1571,1719],[1604,1719]]},"move":{"fps":10,"f":[[1637,1719],[1670,1719],[1703,1719],[1736,1719],[1769,1719],[1802,1719]]},"die":{"fps":12,"f":[[1835,1719],[1868,1719],[1901,1719],[1934,1719],[1967,1719],[2000,1719],[0,1752],[33,1752]]}}},"pc_zombie":{"w":32,"h":33,"ax":10,"gy":33,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[66,1752],[99,1752],[132,1752],[165,1752]]},"move":{"fps":10,"f":[[198,1752],[231,1752],[264,1752],[297,1752],[330,1752],[363,1752]]},"die":{"fps":12,"f":[[396,1752],[429,1752],[462,1752],[495,1752],[528,1752],[561,1752]]}}},"pc_zombie_fat":{"w":32,"h":33,"ax":10,"gy":33,"bw":17,"bh":32,"a":{"idle":{"fps":5,"f":[[594,1752],[627,1752],[660,1752],[693,1752]]},"move":{"fps":10,"f":[[726,1752],[759,1752],[792,1752],[825,1752],[858,1752],[891,1752]]},"die":{"fps":12,"f":[[924,1752],[957,1752],[990,1752],[1023,1752],[1056,1752],[1089,1752]]}}},"pc_zombie_mus":{"w":31,"h":32,"ax":10,"gy":32,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1122,1752],[1154,1752],[1186,1752],[1218,1752]]},"move":{"fps":10,"f":[[1250,1752],[1282,1752],[1314,1752],[1346,1752],[1378,1752],[1410,1752]]},"die":{"fps":12,"f":[[1442,1752],[1474,1752],[1506,1752],[1538,1752],[1570,1752],[1602,1752]]}}},"pc_banshee":{"w":41,"h":48,"ax":11,"gy":48,"bw":18,"bh":47,"a":{"idle":{"fps":5,"f":[[1634,1752],[1676,1752],[1718,1752],[1760,1752]]},"move":{"fps":10,"f":[[1802,1752],[1844,1752],[1886,1752],[1928,1752],[1970,1752],[0,1801]]},"die":{"fps":12,"f":[[42,1801],[84,1801],[126,1801],[168,1801],[210,1801],[252,1801]]}}},"pc_fungus":{"w":38,"h":32,"ax":18,"gy":32,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[294,1801],[333,1801],[372,1801],[411,1801]]},"move":{"fps":10,"f":[[450,1801],[489,1801],[528,1801],[567,1801],[606,1801],[645,1801]]},"die":{"fps":12,"f":[[684,1801],[723,1801],[762,1801],[801,1801],[840,1801],[879,1801]]}}},"pc_fungus_long":{"w":53,"h":52,"ax":26,"gy":52,"bw":36,"bh":50,"a":{"idle":{"fps":5,"f":[[918,1801],[972,1801],[1026,1801],[1080,1801]]},"move":{"fps":10,"f":[[1134,1801],[1188,1801],[1242,1801],[1296,1801],[1350,1801],[1404,1801]]},"die":{"fps":12,"f":[[1458,1801],[1512,1801],[1566,1801],[1620,1801],[1674,1801],[1728,1801]]}}},"pc_fungus_heavy":{"w":52,"h":37,"ax":23,"gy":37,"bw":40,"bh":35,"a":{"idle":{"fps":5,"f":[[1782,1801],[1835,1801],[1888,1801],[1941,1801]]},"move":{"fps":10,"f":[[1994,1801],[0,1854],[53,1854],[106,1854],[159,1854],[212,1854]]},"die":{"fps":12,"f":[[265,1854],[318,1854],[371,1854],[424,1854],[477,1854],[530,1854]]}}},"pc_fungus_old":{"w":52,"h":41,"ax":22,"gy":41,"bw":30,"bh":39,"a":{"idle":{"fps":5,"f":[[583,1854],[636,1854],[689,1854],[742,1854]]},"move":{"fps":10,"f":[[795,1854],[848,1854],[901,1854],[954,1854],[1007,1854],[1060,1854]]},"die":{"fps":12,"f":[[1113,1854],[1166,1854],[1219,1854],[1272,1854],[1325,1854],[1378,1854]]}}},"pc_rat":{"w":42,"h":34,"ax":16,"gy":34,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[1431,1854],[1474,1854],[1517,1854],[1560,1854]]},"move":{"fps":10,"f":[[1603,1854],[1646,1854],[1689,1854],[1732,1854],[1775,1854],[1818,1854]]},"die":{"fps":12,"f":[[1861,1854],[1904,1854],[1947,1854],[1990,1854],[0,1896],[43,1896]]}}},"pc_rat_rogue":{"w":46,"h":35,"ax":16,"gy":35,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[86,1896],[133,1896],[180,1896],[227,1896]]},"move":{"fps":10,"f":[[274,1896],[321,1896],[368,1896],[415,1896],[462,1896],[509,1896]]},"die":{"fps":12,"f":[[556,1896],[603,1896],[650,1896],[697,1896],[744,1896],[791,1896]]}}},"pc_rat_mage":{"w":41,"h":35,"ax":16,"gy":35,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[838,1896],[880,1896],[922,1896],[964,1896]]},"move":{"fps":10,"f":[[1006,1896],[1048,1896],[1090,1896],[1132,1896],[1174,1896],[1216,1896]]},"die":{"fps":12,"f":[[1258,1896],[1300,1896],[1342,1896],[1384,1896],[1426,1896],[1468,1896]]}}},"pc_rat_war":{"w":47,"h":34,"ax":16,"gy":34,"bw":29,"bh":30,"a":{"idle":{"fps":5,"f":[[1510,1896],[1558,1896],[1606,1896],[1654,1896]]},"move":{"fps":10,"f":[[1702,1896],[1750,1896],[1798,1896],[1846,1896],[1894,1896],[1942,1896]]},"die":{"fps":12,"f":[[1990,1896],[0,1932],[48,1932],[96,1932],[144,1932],[192,1932]]}}},"pc_stone":{"w":28,"h":49,"ax":14,"gy":49,"bw":21,"bh":29,"a":{"idle":{"fps":5,"f":[[240,1932],[269,1932],[298,1932],[327,1932]]},"move":{"fps":10,"f":[[356,1932],[385,1932],[414,1932],[443,1932],[472,1932],[501,1932]]},"die":{"fps":12,"f":[[530,1932],[559,1932],[588,1932],[617,1932],[646,1932],[675,1932]]}}},"pc_stone_broken":{"w":26,"h":32,"ax":14,"gy":32,"bw":19,"bh":23,"a":{"idle":{"fps":5,"f":[[704,1932],[731,1932],[758,1932],[785,1932]]},"move":{"fps":10,"f":[[812,1932],[839,1932],[866,1932],[893,1932],[920,1932],[947,1932]]},"die":{"fps":12,"f":[[974,1932],[1001,1932],[1028,1932],[1055,1932],[1082,1932],[1109,1932]]}}},"pc_stone_lava":{"w":34,"h":37,"ax":19,"gy":37,"bw":22,"bh":27,"a":{"idle":{"fps":5,"f":[[1136,1932],[1171,1932],[1206,1932],[1241,1932]]},"move":{"fps":10,"f":[[1276,1932],[1311,1932],[1346,1932],[1381,1932],[1416,1932],[1451,1932]]},"die":{"fps":12,"f":[[1486,1932],[1521,1932],[1556,1932],[1591,1932],[1626,1932],[1661,1932]]}}},"pc_golem":{"w":28,"h":46,"ax":14,"gy":46,"bw":21,"bh":31,"a":{"idle":{"fps":5,"f":[[1696,1932],[1725,1932],[1754,1932],[1783,1932]]},"move":{"fps":10,"f":[[1812,1932],[1841,1932],[1870,1932],[1899,1932],[1928,1932],[1957,1932]]},"die":{"fps":12,"f":[[1986,1932],[2015,1932],[0,1982],[29,1982],[58,1982],[87,1982]]}}}};
+const ATLAS = {"stalker":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[0,0]]},"move":{"fps":12,"f":[[29,0],[58,0],[87,0],[116,0],[145,0],[174,0],[203,0],[232,0],[261,0],[290,0]]},"atk":{"fps":18,"f":[[319,0],[348,0],[377,0],[406,0],[435,0],[464,0],[493,0],[522,0],[551,0],[580,0]]}}},"runner":{"w":15,"h":24,"ax":7,"gy":24,"bw":12,"bh":12,"a":{"idle":{"fps":3,"f":[[609,0],[625,0]]},"move":{"fps":20,"f":[[641,0],[657,0],[673,0],[689,0],[705,0],[721,0],[737,0],[753,0],[769,0],[785,0],[801,0],[817,0],[833,0],[849,0]]},"atk":{"fps":24,"f":[[865,0],[881,0],[897,0],[913,0],[929,0],[945,0],[961,0],[977,0],[993,0],[1009,0],[1025,0],[1041,0],[1057,0],[1073,0]]}}},"brute":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[1089,0]]},"move":{"fps":7,"f":[[1138,0],[1187,0],[1236,0],[1285,0],[1334,0]]},"atk":{"fps":14,"f":[[1383,0],[1432,0],[1481,0],[1530,0],[1579,0],[1628,0],[1677,0],[1726,0],[1775,0],[1824,0],[1873,0],[1922,0]]}}},"mage":{"w":31,"h":37,"ax":10,"gy":24,"bw":21,"bh":18,"a":{"idle":{"fps":3,"f":[[1971,0],[2003,0]]},"move":{"fps":12,"f":[[0,54],[32,54],[64,54],[96,54],[128,54],[160,54],[192,54],[224,54],[256,54],[288,54],[320,54],[352,54]]},"atk":{"fps":14,"f":[[384,54],[416,54],[448,54],[480,54],[512,54],[544,54],[576,54],[608,54],[640,54],[672,54]]}}},"bomber":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[704,54]]},"move":{"fps":12,"f":[[733,54],[762,54],[791,54],[820,54],[849,54],[878,54],[907,54],[936,54],[965,54],[994,54]]},"atk":{"fps":14,"f":[[1023,54],[1052,54],[1081,54],[1110,54],[1139,54],[1168,54],[1197,54],[1226,54],[1255,54],[1284,54]]}}},"leaper":{"w":35,"h":43,"ax":18,"gy":43,"bw":35,"bh":17,"a":{"idle":{"fps":3,"f":[[1313,54],[1349,54]]},"move":{"fps":4,"f":[[1385,54],[1421,54]]},"atk":{"fps":20,"f":[[1457,54],[1493,54],[1529,54],[1565,54],[1601,54],[1637,54],[1673,54],[1709,54],[1745,54],[1781,54],[1817,54],[1853,54],[1889,54],[1925,54]]}}},"sniper":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[1961,54]]},"move":{"fps":10,"f":[[0,98],[65,98],[130,98],[195,98],[260,98],[325,98]]},"atk":{"fps":12,"f":[[390,98],[455,98],[520,98],[585,98],[650,98],[715,98],[780,98],[845,98],[910,98],[975,98],[1040,98]]}}},"shaman":{"w":41,"h":34,"ax":18,"gy":34,"bw":29,"bh":25,"a":{"idle":{"fps":3,"f":[[1105,98],[1147,98]]},"move":{"fps":4,"f":[[1189,98],[1231,98]]},"atk":{"fps":14,"f":[[1273,98],[1315,98],[1357,98],[1399,98],[1441,98],[1483,98],[1525,98],[1567,98],[1609,98],[1651,98],[1693,98],[1735,98],[1777,98],[1819,98]]}}},"lancer":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1861,98]]},"move":{"fps":12,"f":[[1901,98],[1941,98],[1981,98],[0,135],[40,135],[80,135],[120,135],[160,135]]},"atk":{"fps":16,"f":[[200,135],[240,135],[280,135],[320,135],[360,135],[400,135]]}}},"bat":{"w":27,"h":24,"ax":12,"gy":24,"bw":17,"bh":18,"a":{"idle":{"fps":3,"f":[[440,135],[468,135]]},"move":{"fps":16,"f":[[496,135],[524,135],[552,135],[580,135],[608,135],[636,135],[664,135],[692,135],[720,135],[748,135]]},"atk":{"fps":16,"f":[[776,135],[804,135],[832,135],[860,135],[888,135],[916,135],[944,135],[972,135]]}}},"champ":{"w":32,"h":42,"ax":16,"gy":39,"bw":31,"bh":32,"a":{"idle":{"fps":3,"f":[[1000,135],[1033,135]]},"move":{"fps":14,"f":[[1066,135],[1099,135],[1132,135],[1165,135],[1198,135],[1231,135],[1264,135],[1297,135],[1330,135],[1363,135]]},"atk":{"fps":16,"f":[[1396,135],[1429,135],[1462,135],[1495,135],[1528,135],[1561,135],[1594,135],[1627,135]]}}},"guardian":{"w":64,"h":72,"ax":32,"gy":72,"bw":64,"bh":68,"a":{"idle":{"fps":3,"f":[[1660,135],[1725,135]]},"move":{"fps":12,"f":[[1790,135],[1855,135],[1920,135],[0,208],[65,208],[130,208],[195,208],[260,208],[325,208],[390,208],[455,208],[520,208]]},"atk":{"fps":14,"f":[[585,208],[650,208],[715,208],[780,208],[845,208],[910,208],[975,208],[1040,208],[1105,208],[1170,208],[1235,208],[1300,208],[1365,208],[1430,208]]}}},"matriarch":{"w":86,"h":82,"ax":42,"gy":82,"bw":67,"bh":48,"a":{"idle":{"fps":3,"f":[[1495,208],[1582,208]]},"move":{"fps":12,"f":[[1669,208],[1756,208],[1843,208],[1930,208],[0,291],[87,291],[174,291],[261,291],[348,291],[435,291],[522,291]]},"atk":{"fps":8,"f":[[609,291],[696,291],[783,291],[870,291]]}}},"colossus":{"w":65,"h":64,"ax":32,"gy":64,"bw":65,"bh":63,"a":{"idle":{"fps":8,"f":[[957,291],[1023,291],[1089,291],[1155,291],[1221,291],[1287,291],[1353,291],[1419,291]]},"move":{"fps":10,"f":[[1485,291],[1551,291],[1617,291],[1683,291],[1749,291],[1815,291],[1881,291],[1947,291]]},"atk":{"fps":14,"f":[[0,374],[66,374],[132,374],[198,374],[264,374],[330,374],[396,374],[462,374],[528,374],[594,374],[660,374],[726,374],[792,374],[858,374]]}}},"nameless":{"w":57,"h":57,"ax":30,"gy":57,"bw":49,"bh":49,"a":{"idle":{"fps":3,"f":[[924,374],[982,374]]},"move":{"fps":12,"f":[[1040,374],[1098,374],[1156,374],[1214,374],[1272,374],[1330,374],[1388,374],[1446,374],[1504,374],[1562,374],[1620,374],[1678,374]]},"atk":{"fps":12,"f":[[1736,374],[1794,374],[1852,374],[1910,374],[1968,374],[0,439],[58,439],[116,439],[174,439],[232,439]]}}},"firstfist":{"w":153,"h":140,"ax":60,"gy":126,"bw":114,"bh":118,"a":{"idle":{"fps":10,"f":[[290,439],[444,439],[598,439],[752,439],[906,439],[1060,439],[1214,439],[1368,439],[1522,439],[1676,439],[1830,439],[0,580]]},"move":{"fps":10,"f":[[154,580],[308,580],[462,580],[616,580],[770,580],[924,580],[1078,580],[1232,580],[1386,580],[1540,580],[1694,580],[1848,580]]},"atk":{"fps":14,"f":[[0,721],[154,721],[308,721],[462,721],[616,721],[770,721],[924,721],[1078,721],[1232,721],[1386,721],[1540,721],[1694,721],[1848,721],[0,862],[154,862],[308,862]]}}},"stalker_b":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[462,862]]},"move":{"fps":12,"f":[[491,862],[520,862],[549,862],[578,862],[607,862],[636,862],[665,862],[694,862],[723,862],[752,862]]},"atk":{"fps":18,"f":[[781,862],[810,862],[839,862],[868,862],[897,862],[926,862],[955,862],[984,862],[1013,862],[1042,862]]}}},"bomber_b":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[1071,862]]},"move":{"fps":12,"f":[[1100,862],[1129,862],[1158,862],[1187,862],[1216,862],[1245,862],[1274,862],[1303,862],[1332,862],[1361,862]]},"atk":{"fps":14,"f":[[1390,862],[1419,862],[1448,862],[1477,862],[1506,862],[1535,862],[1564,862],[1593,862],[1622,862],[1651,862]]}}},"brute_b":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[1680,862]]},"move":{"fps":7,"f":[[1729,862],[1778,862],[1827,862],[1876,862],[1925,862]]},"atk":{"fps":14,"f":[[1974,862],[0,1003],[49,1003],[98,1003],[147,1003],[196,1003],[245,1003],[294,1003],[343,1003],[392,1003],[441,1003],[490,1003]]}}},"sniper_b":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[539,1003]]},"move":{"fps":10,"f":[[604,1003],[669,1003],[734,1003],[799,1003],[864,1003],[929,1003]]},"atk":{"fps":12,"f":[[994,1003],[1059,1003],[1124,1003],[1189,1003],[1254,1003],[1319,1003],[1384,1003],[1449,1003],[1514,1003],[1579,1003],[1644,1003]]}}},"stalker_r":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[1709,1003]]},"move":{"fps":12,"f":[[1738,1003],[1767,1003],[1796,1003],[1825,1003],[1854,1003],[1883,1003],[1912,1003],[1941,1003],[1970,1003],[1999,1003]]},"atk":{"fps":18,"f":[[0,1057],[29,1057],[58,1057],[87,1057],[116,1057],[145,1057],[174,1057],[203,1057],[232,1057],[261,1057]]}}},"bomber_r":{"w":28,"h":21,"ax":12,"gy":21,"bw":22,"bh":15,"a":{"idle":{"fps":1,"f":[[290,1057]]},"move":{"fps":12,"f":[[319,1057],[348,1057],[377,1057],[406,1057],[435,1057],[464,1057],[493,1057],[522,1057],[551,1057],[580,1057]]},"atk":{"fps":14,"f":[[609,1057],[638,1057],[667,1057],[696,1057],[725,1057],[754,1057],[783,1057],[812,1057],[841,1057],[870,1057]]}}},"brute_r":{"w":48,"h":53,"ax":23,"gy":53,"bw":26,"bh":28,"a":{"idle":{"fps":1,"f":[[899,1057]]},"move":{"fps":7,"f":[[948,1057],[997,1057],[1046,1057],[1095,1057],[1144,1057]]},"atk":{"fps":14,"f":[[1193,1057],[1242,1057],[1291,1057],[1340,1057],[1389,1057],[1438,1057],[1487,1057],[1536,1057],[1585,1057],[1634,1057],[1683,1057],[1732,1057]]}}},"sniper_r":{"w":64,"h":36,"ax":26,"gy":35,"bw":38,"bh":32,"a":{"idle":{"fps":1,"f":[[1781,1057]]},"move":{"fps":10,"f":[[1846,1057],[1911,1057],[1976,1057],[0,1111],[65,1111],[130,1111]]},"atk":{"fps":12,"f":[[195,1111],[260,1111],[325,1111],[390,1111],[455,1111],[520,1111],[585,1111],[650,1111],[715,1111],[780,1111],[845,1111]]}}},"lancer_silver":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[910,1111]]},"move":{"fps":12,"f":[[950,1111],[990,1111],[1030,1111],[1070,1111],[1110,1111],[1150,1111],[1190,1111],[1230,1111]]},"atk":{"fps":16,"f":[[1270,1111],[1310,1111],[1350,1111],[1390,1111],[1430,1111],[1470,1111]]}}},"lancer_gold":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1510,1111]]},"move":{"fps":12,"f":[[1550,1111],[1590,1111],[1630,1111],[1670,1111],[1710,1111],[1750,1111],[1790,1111],[1830,1111]]},"atk":{"fps":16,"f":[[1870,1111],[1910,1111],[1950,1111],[1990,1111],[0,1148],[40,1148]]}}},"lancer_devil":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[80,1148]]},"move":{"fps":12,"f":[[120,1148],[160,1148],[200,1148],[240,1148],[280,1148],[320,1148],[360,1148],[400,1148]]},"atk":{"fps":16,"f":[[440,1148],[480,1148],[520,1148],[560,1148],[600,1148],[640,1148]]}}},"lancer_orc":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[680,1148]]},"move":{"fps":12,"f":[[720,1148],[760,1148],[800,1148],[840,1148],[880,1148],[920,1148],[960,1148],[1000,1148]]},"atk":{"fps":16,"f":[[1040,1148],[1080,1148],[1120,1148],[1160,1148],[1200,1148],[1240,1148]]}}},"lancer_red":{"w":39,"h":30,"ax":17,"gy":30,"bw":24,"bh":29,"a":{"idle":{"fps":1,"f":[[1280,1148]]},"move":{"fps":12,"f":[[1320,1148],[1360,1148],[1400,1148],[1440,1148],[1480,1148],[1520,1148],[1560,1148],[1600,1148]]},"atk":{"fps":16,"f":[[1640,1148],[1680,1148],[1720,1148],[1760,1148],[1800,1148],[1840,1148]]}}},"lancer_frozen":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[1880,1148]]},"move":{"fps":12,"f":[[1922,1148],[1964,1148],[2006,1148],[0,1180],[42,1180],[84,1180],[126,1180],[168,1180]]},"atk":{"fps":16,"f":[[210,1180],[252,1180],[294,1180],[336,1180],[378,1180],[420,1180]]}}},"lancer_bio":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[462,1180]]},"move":{"fps":12,"f":[[504,1180],[546,1180],[588,1180],[630,1180],[672,1180],[714,1180],[756,1180],[798,1180]]},"atk":{"fps":16,"f":[[840,1180],[882,1180],[924,1180],[966,1180],[1008,1180],[1050,1180]]}}},"lancer_rad":{"w":43,"h":34,"ax":19,"gy":34,"bw":28,"bh":33,"a":{"idle":{"fps":1,"f":[[1092,1180]]},"move":{"fps":12,"f":[[1136,1180],[1180,1180],[1224,1180],[1268,1180],[1312,1180],[1356,1180],[1400,1180],[1444,1180]]},"atk":{"fps":16,"f":[[1488,1180],[1532,1180],[1576,1180],[1620,1180],[1664,1180],[1708,1180]]}}},"lancer_oniric":{"w":41,"h":31,"ax":18,"gy":31,"bw":26,"bh":30,"a":{"idle":{"fps":1,"f":[[1752,1180]]},"move":{"fps":12,"f":[[1794,1180],[1836,1180],[1878,1180],[1920,1180],[1962,1180],[2004,1180],[0,1215],[42,1215]]},"atk":{"fps":16,"f":[[84,1215],[126,1215],[168,1215],[210,1215],[252,1215],[294,1215]]}}},"stalker_ent":{"w":35,"h":39,"ax":22,"gy":39,"bw":26,"bh":25,"a":{"idle":{"fps":4,"f":[[336,1215],[372,1215],[408,1215],[444,1215]]},"move":{"fps":12,"f":[[480,1215],[516,1215],[552,1215],[588,1215],[624,1215],[660,1215],[696,1215],[732,1215],[768,1215]]},"atk":{"fps":14,"f":[[804,1215],[840,1215],[876,1215],[912,1215],[948,1215],[984,1215]]}}},"brute_ent":{"w":59,"h":40,"ax":20,"gy":39,"bw":38,"bh":25,"a":{"idle":{"fps":3,"f":[[1020,1215],[1080,1215]]},"move":{"fps":10,"f":[[1140,1215],[1200,1215],[1260,1215],[1320,1215],[1380,1215],[1440,1215],[1500,1215],[1560,1215],[1620,1215],[1680,1215],[1740,1215],[1800,1215]]},"atk":{"fps":14,"f":[[1860,1215],[1920,1215],[1980,1215],[0,1256],[60,1256],[120,1256],[180,1256],[240,1256],[300,1256],[360,1256]]}}},"brute_ent3":{"w":71,"h":51,"ax":26,"gy":51,"bw":42,"bh":47,"a":{"idle":{"fps":3,"f":[[420,1256],[492,1256]]},"move":{"fps":10,"f":[[564,1256],[636,1256],[708,1256],[780,1256],[852,1256],[924,1256],[996,1256],[1068,1256],[1140,1256]]},"atk":{"fps":12,"f":[[1212,1256],[1284,1256],[1356,1256],[1428,1256],[1500,1256],[1572,1256],[1644,1256],[1716,1256]]}}},"champ_wood":{"w":53,"h":65,"ax":22,"gy":65,"bw":43,"bh":62,"a":{"idle":{"fps":3,"f":[[1788,1256],[1842,1256]]},"move":{"fps":12,"f":[[1896,1256],[1950,1256],[0,1322],[54,1322],[108,1322],[162,1322],[216,1322],[270,1322],[324,1322],[378,1322],[432,1322],[486,1322]]},"atk":{"fps":14,"f":[[540,1322],[594,1322],[648,1322],[702,1322],[756,1322],[810,1322],[864,1322],[918,1322],[972,1322],[1026,1322],[1080,1322]]}}},"bat_fly":{"w":54,"h":94,"ax":26,"gy":93,"bw":38,"bh":36,"a":{"idle":{"fps":6,"f":[[1134,1322],[1189,1322],[1244,1322],[1299,1322]]},"move":{"fps":14,"f":[[1354,1322],[1409,1322],[1464,1322],[1519,1322],[1574,1322],[1629,1322],[1684,1322],[1739,1322]]},"atk":{"fps":14,"f":[[1794,1322],[1849,1322],[1904,1322],[1959,1322],[0,1417],[55,1417]]}}},"runner_2":{"w":19,"h":33,"ax":10,"gy":33,"bw":18,"bh":28,"a":{"idle":{"fps":3,"f":[[110,1417],[130,1417]]},"move":{"fps":20,"f":[[150,1417],[170,1417],[190,1417],[210,1417],[230,1417],[250,1417],[270,1417],[290,1417],[310,1417],[330,1417],[350,1417],[370,1417]]},"atk":{"fps":20,"f":[[390,1417],[410,1417],[430,1417],[450,1417],[470,1417],[490,1417],[510,1417],[530,1417],[550,1417],[570,1417]]}}},"bomber_mimic":{"w":48,"h":42,"ax":24,"gy":42,"bw":42,"bh":42,"a":{"idle":{"fps":3,"f":[[590,1417],[639,1417]]},"move":{"fps":14,"f":[[688,1417],[737,1417],[786,1417],[835,1417],[884,1417],[933,1417],[982,1417],[1031,1417],[1080,1417],[1129,1417],[1178,1417],[1227,1417]]},"atk":{"fps":8,"f":[[1276,1417],[1325,1417]]}}},"sniper_cyc":{"w":26,"h":25,"ax":16,"gy":25,"bw":19,"bh":20,"a":{"idle":{"fps":3,"f":[[1374,1417],[1401,1417]]},"move":{"fps":10,"f":[[1428,1417],[1455,1417],[1482,1417],[1509,1417],[1536,1417],[1563,1417],[1590,1417],[1617,1417]]},"atk":{"fps":10,"f":[[1644,1417],[1671,1417],[1698,1417],[1725,1417],[1752,1417],[1779,1417],[1806,1417]]}}},"mage_2":{"w":32,"h":23,"ax":14,"gy":23,"bw":26,"bh":23,"a":{"idle":{"fps":5,"f":[[1833,1417],[1866,1417],[1899,1417],[1932,1417]]},"move":{"fps":12,"f":[[1965,1417],[1998,1417],[0,1512],[33,1512],[66,1512],[99,1512],[132,1512],[165,1512],[198,1512],[231,1512],[264,1512],[297,1512]]},"atk":{"fps":14,"f":[[330,1512],[363,1512],[396,1512],[429,1512],[462,1512],[495,1512],[528,1512],[561,1512],[594,1512],[627,1512]]}}},"mage_3":{"w":42,"h":39,"ax":20,"gy":39,"bw":38,"bh":37,"a":{"idle":{"fps":5,"f":[[660,1512],[703,1512],[746,1512],[789,1512]]},"move":{"fps":12,"f":[[832,1512],[875,1512],[918,1512],[961,1512],[1004,1512],[1047,1512],[1090,1512],[1133,1512],[1176,1512],[1219,1512],[1262,1512],[1305,1512]]},"atk":{"fps":12,"f":[[1348,1512],[1391,1512],[1434,1512],[1477,1512],[1520,1512],[1563,1512],[1606,1512],[1649,1512]]}}},"decoy":{"w":14,"h":20,"ax":7,"gy":20,"bw":14,"bh":20,"a":{"idle":{"fps":3,"f":[[1692,1512],[1707,1512]]},"move":{"fps":3,"f":[[1722,1512],[1737,1512]]}}},"post":{"w":32,"h":31,"ax":16,"gy":31,"bw":32,"bh":29,"a":{"idle":{"fps":3,"f":[[1752,1512],[1785,1512]]},"move":{"fps":3,"f":[[1818,1512],[1851,1512]]},"atk":{"fps":12,"f":[[1884,1512],[1917,1512],[1950,1512],[1983,1512],[0,1552],[33,1552],[66,1552],[99,1552]]}}},"turret":{"w":55,"h":38,"ax":31,"gy":38,"bw":46,"bh":36,"a":{"idle":{"fps":3,"f":[[132,1552],[188,1552]]},"move":{"fps":14,"f":[[244,1552],[300,1552],[356,1552],[412,1552],[468,1552],[524,1552],[580,1552],[636,1552],[692,1552],[748,1552],[804,1552],[860,1552]]}}},"villager":{"w":20,"h":21,"ax":11,"gy":21,"bw":18,"bh":16,"a":{"idle":{"fps":6,"f":[[916,1552],[937,1552],[958,1552],[979,1552],[1000,1552],[1021,1552]]},"move":{"fps":10,"f":[[1042,1552],[1063,1552],[1084,1552],[1105,1552],[1126,1552],[1147,1552],[1168,1552],[1189,1552]]}}},"smith":{"w":34,"h":27,"ax":17,"gy":27,"bw":34,"bh":26,"a":{"idle":{"fps":5,"f":[[1210,1552],[1245,1552],[1280,1552],[1315,1552],[1350,1552]]},"move":{"fps":5,"f":[[1385,1552],[1420,1552],[1455,1552],[1490,1552],[1525,1552]]}}},"trainer":{"w":42,"h":40,"ax":21,"gy":40,"bw":42,"bh":40,"a":{"idle":{"fps":6,"f":[[1560,1552],[1603,1552],[1646,1552],[1689,1552],[1732,1552],[1775,1552],[1818,1552]]},"move":{"fps":6,"f":[[1861,1552],[1904,1552],[1947,1552],[1990,1552],[0,1593],[43,1593],[86,1593]]}}},"guard":{"w":18,"h":35,"ax":8,"gy":35,"bw":17,"bh":34,"a":{"idle":{"fps":5,"f":[[129,1593],[148,1593],[167,1593],[186,1593]]},"move":{"fps":10,"f":[[205,1593],[224,1593],[243,1593],[262,1593],[281,1593],[300,1593]]}}},"guard_k":{"w":19,"h":31,"ax":8,"gy":31,"bw":17,"bh":31,"a":{"idle":{"fps":5,"f":[[319,1593],[339,1593],[359,1593],[379,1593]]},"move":{"fps":10,"f":[[399,1593],[419,1593],[439,1593],[459,1593],[479,1593],[499,1593]]}}},"priest":{"w":17,"h":31,"ax":8,"gy":31,"bw":17,"bh":31,"a":{"idle":{"fps":5,"f":[[519,1593],[537,1593],[555,1593],[573,1593]]},"move":{"fps":10,"f":[[591,1593],[609,1593],[627,1593],[645,1593],[663,1593],[681,1593]]}}},"king":{"w":23,"h":28,"ax":10,"gy":28,"bw":15,"bh":25,"a":{"idle":{"fps":4,"f":[[699,1593],[723,1593],[747,1593],[771,1593]]},"move":{"fps":10,"f":[[795,1593],[819,1593],[843,1593],[867,1593],[891,1593],[915,1593],[939,1593],[963,1593]]},"atk":{"fps":8,"f":[[987,1593],[1011,1593],[1035,1593],[1059,1593],[1083,1593],[1107,1593],[1131,1593]]}}},"queen":{"w":19,"h":25,"ax":10,"gy":25,"bw":15,"bh":23,"a":{"idle":{"fps":6,"f":[[1155,1593],[1175,1593],[1195,1593],[1215,1593]]},"move":{"fps":10,"f":[[1235,1593],[1255,1593],[1275,1593],[1295,1593],[1315,1593],[1335,1593],[1355,1593],[1375,1593]]}}},"cit_peasant":{"w":16,"h":31,"ax":8,"gy":31,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1395,1593],[1412,1593],[1429,1593],[1446,1593]]},"move":{"fps":9,"f":[[1463,1593],[1480,1593],[1497,1593],[1514,1593],[1531,1593],[1548,1593]]}}},"cit_tavern_a":{"w":23,"h":31,"ax":12,"gy":31,"bw":23,"bh":30,"a":{"idle":{"fps":5,"f":[[1565,1593],[1589,1593],[1613,1593],[1637,1593]]},"move":{"fps":9,"f":[[1661,1593],[1685,1593],[1709,1593],[1733,1593],[1757,1593],[1781,1593]]}}},"cit_tavern_b":{"w":16,"h":31,"ax":8,"gy":31,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1805,1593],[1822,1593],[1839,1593],[1856,1593]]},"move":{"fps":9,"f":[[1873,1593],[1890,1593],[1907,1593],[1924,1593],[1941,1593],[1958,1593]]}}},"adv_archer":{"w":22,"h":17,"ax":8,"gy":15,"bw":17,"bh":15,"a":{"idle":{"fps":1,"f":[[1975,1593]]},"move":{"fps":12,"f":[[1998,1593],[2021,1593],[0,1634],[23,1634],[46,1634],[69,1634],[92,1634],[115,1634]]},"atk":{"fps":12,"f":[[138,1634],[161,1634],[184,1634],[207,1634],[230,1634],[253,1634]]}}},"adv_dwarf":{"w":29,"h":26,"ax":14,"gy":26,"bw":14,"bh":17,"a":{"idle":{"fps":1,"f":[[276,1634]]},"move":{"fps":12,"f":[[306,1634],[336,1634],[366,1634],[396,1634],[426,1634],[456,1634],[486,1634],[516,1634]]},"atk":{"fps":16,"f":[[546,1634],[576,1634],[606,1634],[636,1634],[666,1634],[696,1634],[726,1634],[756,1634],[786,1634],[816,1634],[846,1634]]}}},"adv_knight":{"w":20,"h":26,"ax":10,"gy":26,"bw":11,"bh":15,"a":{"idle":{"fps":1,"f":[[876,1634]]},"move":{"fps":12,"f":[[897,1634],[918,1634],[939,1634],[960,1634],[981,1634],[1002,1634],[1023,1634],[1044,1634]]},"atk":{"fps":16,"f":[[1065,1634],[1086,1634],[1107,1634],[1128,1634],[1149,1634],[1170,1634],[1191,1634],[1212,1634],[1233,1634],[1254,1634],[1275,1634]]}}},"hunter_s":{"w":49,"h":34,"ax":18,"gy":34,"bw":19,"bh":33,"a":{"idle":{"fps":5,"f":[[1296,1634],[1346,1634],[1396,1634],[1446,1634]]},"move":{"fps":12,"f":[[1496,1634],[1546,1634],[1596,1634],[1646,1634],[1696,1634],[1746,1634]]},"dash":{"fps":22,"f":[[1796,1634],[1846,1634],[1896,1634],[1946,1634],[1996,1634],[0,1669]]},"atk":{"fps":18,"f":[[50,1669],[100,1669],[150,1669],[200,1669],[250,1669],[300,1669],[350,1669],[400,1669]]}}},"hunter_u":{"w":24,"h":39,"ax":14,"gy":39,"bw":16,"bh":34,"a":{"idle":{"fps":5,"f":[[450,1669],[475,1669],[500,1669],[525,1669]]},"move":{"fps":12,"f":[[550,1669],[575,1669],[600,1669],[625,1669],[650,1669],[675,1669]]},"dash":{"fps":22,"f":[[700,1669],[725,1669],[750,1669],[775,1669],[800,1669],[825,1669]]},"atk":{"fps":18,"f":[[850,1669],[875,1669],[900,1669],[925,1669],[950,1669],[975,1669],[1000,1669],[1025,1669]]}}},"hunter_d":{"w":25,"h":49,"ax":14,"gy":33,"bw":16,"bh":33,"a":{"idle":{"fps":5,"f":[[1050,1669],[1076,1669],[1102,1669],[1128,1669]]},"move":{"fps":12,"f":[[1154,1669],[1180,1669],[1206,1669],[1232,1669],[1258,1669],[1284,1669]]},"dash":{"fps":22,"f":[[1310,1669],[1336,1669],[1362,1669],[1388,1669],[1414,1669],[1440,1669]]},"atk":{"fps":18,"f":[[1466,1669],[1492,1669],[1518,1669],[1544,1669],[1570,1669],[1596,1669],[1622,1669],[1648,1669]]}}},"keeper":{"w":26,"h":20,"ax":12,"gy":20,"bw":24,"bh":20,"a":{"idle":{"fps":6,"f":[[1674,1669],[1701,1669],[1728,1669],[1755,1669],[1782,1669],[1809,1669],[1836,1669],[1863,1669]]},"move":{"fps":6,"f":[[1890,1669],[1917,1669],[1944,1669],[1971,1669],[1998,1669],[0,1719],[27,1719],[54,1719]]}}},"pc_skel":{"w":32,"h":32,"ax":14,"gy":32,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[81,1719],[114,1719],[147,1719],[180,1719]]},"move":{"fps":10,"f":[[213,1719],[246,1719],[279,1719],[312,1719],[345,1719],[378,1719]]},"die":{"fps":12,"f":[[411,1719],[444,1719],[477,1719],[510,1719],[543,1719],[576,1719]]}}},"pc_skel_mage":{"w":26,"h":32,"ax":13,"gy":32,"bw":18,"bh":32,"a":{"idle":{"fps":5,"f":[[609,1719],[636,1719],[663,1719],[690,1719]]},"move":{"fps":10,"f":[[717,1719],[744,1719],[771,1719],[798,1719],[825,1719],[852,1719]]},"die":{"fps":12,"f":[[879,1719],[906,1719],[933,1719],[960,1719],[987,1719],[1014,1719]]}}},"pc_skel_rogue":{"w":28,"h":32,"ax":14,"gy":32,"bw":20,"bh":32,"a":{"idle":{"fps":5,"f":[[1041,1719],[1070,1719],[1099,1719],[1128,1719]]},"move":{"fps":10,"f":[[1157,1719],[1186,1719],[1215,1719],[1244,1719],[1273,1719],[1302,1719]]},"die":{"fps":12,"f":[[1331,1719],[1360,1719],[1389,1719],[1418,1719],[1447,1719],[1476,1719]]}}},"pc_skel_war":{"w":32,"h":32,"ax":14,"gy":32,"bw":20,"bh":30,"a":{"idle":{"fps":5,"f":[[1505,1719],[1538,1719],[1571,1719],[1604,1719]]},"move":{"fps":10,"f":[[1637,1719],[1670,1719],[1703,1719],[1736,1719],[1769,1719],[1802,1719]]},"die":{"fps":12,"f":[[1835,1719],[1868,1719],[1901,1719],[1934,1719],[1967,1719],[2000,1719],[0,1752],[33,1752]]}}},"pc_zombie":{"w":32,"h":33,"ax":10,"gy":33,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[66,1752],[99,1752],[132,1752],[165,1752]]},"move":{"fps":10,"f":[[198,1752],[231,1752],[264,1752],[297,1752],[330,1752],[363,1752]]},"die":{"fps":12,"f":[[396,1752],[429,1752],[462,1752],[495,1752],[528,1752],[561,1752]]}}},"pc_zombie_fat":{"w":32,"h":33,"ax":10,"gy":33,"bw":17,"bh":32,"a":{"idle":{"fps":5,"f":[[594,1752],[627,1752],[660,1752],[693,1752]]},"move":{"fps":10,"f":[[726,1752],[759,1752],[792,1752],[825,1752],[858,1752],[891,1752]]},"die":{"fps":12,"f":[[924,1752],[957,1752],[990,1752],[1023,1752],[1056,1752],[1089,1752]]}}},"pc_zombie_mus":{"w":31,"h":32,"ax":10,"gy":32,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1122,1752],[1154,1752],[1186,1752],[1218,1752]]},"move":{"fps":10,"f":[[1250,1752],[1282,1752],[1314,1752],[1346,1752],[1378,1752],[1410,1752]]},"die":{"fps":12,"f":[[1442,1752],[1474,1752],[1506,1752],[1538,1752],[1570,1752],[1602,1752]]}}},"pc_banshee":{"w":41,"h":48,"ax":11,"gy":48,"bw":18,"bh":47,"a":{"idle":{"fps":5,"f":[[1634,1752],[1676,1752],[1718,1752],[1760,1752]]},"move":{"fps":10,"f":[[1802,1752],[1844,1752],[1886,1752],[1928,1752],[1970,1752],[0,1801]]},"die":{"fps":12,"f":[[42,1801],[84,1801],[126,1801],[168,1801],[210,1801],[252,1801]]}}},"pc_fungus":{"w":38,"h":32,"ax":18,"gy":32,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[294,1801],[333,1801],[372,1801],[411,1801]]},"move":{"fps":10,"f":[[450,1801],[489,1801],[528,1801],[567,1801],[606,1801],[645,1801]]},"die":{"fps":12,"f":[[684,1801],[723,1801],[762,1801],[801,1801],[840,1801],[879,1801]]}}},"pc_fungus_long":{"w":53,"h":52,"ax":26,"gy":52,"bw":36,"bh":50,"a":{"idle":{"fps":5,"f":[[918,1801],[972,1801],[1026,1801],[1080,1801]]},"move":{"fps":10,"f":[[1134,1801],[1188,1801],[1242,1801],[1296,1801],[1350,1801],[1404,1801]]},"die":{"fps":12,"f":[[1458,1801],[1512,1801],[1566,1801],[1620,1801],[1674,1801],[1728,1801]]}}},"pc_fungus_heavy":{"w":52,"h":37,"ax":23,"gy":37,"bw":40,"bh":35,"a":{"idle":{"fps":5,"f":[[1782,1801],[1835,1801],[1888,1801],[1941,1801]]},"move":{"fps":10,"f":[[1994,1801],[0,1854],[53,1854],[106,1854],[159,1854],[212,1854]]},"die":{"fps":12,"f":[[265,1854],[318,1854],[371,1854],[424,1854],[477,1854],[530,1854]]}}},"pc_fungus_old":{"w":52,"h":41,"ax":22,"gy":41,"bw":30,"bh":39,"a":{"idle":{"fps":5,"f":[[583,1854],[636,1854],[689,1854],[742,1854]]},"move":{"fps":10,"f":[[795,1854],[848,1854],[901,1854],[954,1854],[1007,1854],[1060,1854]]},"die":{"fps":12,"f":[[1113,1854],[1166,1854],[1219,1854],[1272,1854],[1325,1854],[1378,1854]]}}},"pc_rat":{"w":42,"h":34,"ax":16,"gy":34,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[1431,1854],[1474,1854],[1517,1854],[1560,1854]]},"move":{"fps":10,"f":[[1603,1854],[1646,1854],[1689,1854],[1732,1854],[1775,1854],[1818,1854]]},"die":{"fps":12,"f":[[1861,1854],[1904,1854],[1947,1854],[1990,1854],[0,1896],[43,1896]]}}},"pc_rat_rogue":{"w":46,"h":35,"ax":16,"gy":35,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[86,1896],[133,1896],[180,1896],[227,1896]]},"move":{"fps":10,"f":[[274,1896],[321,1896],[368,1896],[415,1896],[462,1896],[509,1896]]},"die":{"fps":12,"f":[[556,1896],[603,1896],[650,1896],[697,1896],[744,1896],[791,1896]]}}},"pc_rat_mage":{"w":41,"h":35,"ax":16,"gy":35,"bw":27,"bh":30,"a":{"idle":{"fps":5,"f":[[838,1896],[880,1896],[922,1896],[964,1896]]},"move":{"fps":10,"f":[[1006,1896],[1048,1896],[1090,1896],[1132,1896],[1174,1896],[1216,1896]]},"die":{"fps":12,"f":[[1258,1896],[1300,1896],[1342,1896],[1384,1896],[1426,1896],[1468,1896]]}}},"pc_rat_war":{"w":47,"h":34,"ax":16,"gy":34,"bw":29,"bh":30,"a":{"idle":{"fps":5,"f":[[1510,1896],[1558,1896],[1606,1896],[1654,1896]]},"move":{"fps":10,"f":[[1702,1896],[1750,1896],[1798,1896],[1846,1896],[1894,1896],[1942,1896]]},"die":{"fps":12,"f":[[1990,1896],[0,1932],[48,1932],[96,1932],[144,1932],[192,1932]]}}},"pc_stone":{"w":28,"h":49,"ax":14,"gy":49,"bw":21,"bh":29,"a":{"idle":{"fps":5,"f":[[240,1932],[269,1932],[298,1932],[327,1932]]},"move":{"fps":10,"f":[[356,1932],[385,1932],[414,1932],[443,1932],[472,1932],[501,1932]]},"die":{"fps":12,"f":[[530,1932],[559,1932],[588,1932],[617,1932],[646,1932],[675,1932]]}}},"pc_stone_broken":{"w":26,"h":32,"ax":14,"gy":32,"bw":19,"bh":23,"a":{"idle":{"fps":5,"f":[[704,1932],[731,1932],[758,1932],[785,1932]]},"move":{"fps":10,"f":[[812,1932],[839,1932],[866,1932],[893,1932],[920,1932],[947,1932]]},"die":{"fps":12,"f":[[974,1932],[1001,1932],[1028,1932],[1055,1932],[1082,1932],[1109,1932]]}}},"pc_stone_lava":{"w":34,"h":37,"ax":19,"gy":37,"bw":22,"bh":27,"a":{"idle":{"fps":5,"f":[[1136,1932],[1171,1932],[1206,1932],[1241,1932]]},"move":{"fps":10,"f":[[1276,1932],[1311,1932],[1346,1932],[1381,1932],[1416,1932],[1451,1932]]},"die":{"fps":12,"f":[[1486,1932],[1521,1932],[1556,1932],[1591,1932],[1626,1932],[1661,1932]]}}},"pc_golem":{"w":28,"h":46,"ax":14,"gy":46,"bw":21,"bh":31,"a":{"idle":{"fps":5,"f":[[1696,1932],[1725,1932],[1754,1932],[1783,1932]]},"move":{"fps":10,"f":[[1812,1932],[1841,1932],[1870,1932],[1899,1932],[1928,1932],[1957,1932]]},"die":{"fps":12,"f":[[1986,1932],[2015,1932],[0,1982],[29,1982],[58,1982],[87,1982]]}}},"alec_kid":{"w":24,"h":27,"ax":12,"gy":27,"bw":19,"bh":18,"a":{"idle":{"fps":3,"f":[[116,1982],[141,1982]]},"move":{"fps":14,"f":[[166,1982],[191,1982],[216,1982],[241,1982],[266,1982],[291,1982],[316,1982],[341,1982],[366,1982],[391,1982]]}}},"alec_teen":{"w":47,"h":44,"ax":26,"gy":44,"bw":41,"bh":30,"a":{"idle":{"fps":3,"f":[[416,1982],[464,1982]]},"move":{"fps":14,"f":[[512,1982],[560,1982],[608,1982],[656,1982],[704,1982],[752,1982],[800,1982],[848,1982],[896,1982],[944,1982],[992,1982],[1040,1982]]},"atk":{"fps":14,"f":[[1088,1982],[1136,1982],[1184,1982],[1232,1982],[1280,1982],[1328,1982],[1376,1982],[1424,1982],[1472,1982],[1520,1982]]}}},"oldsmith":{"w":18,"h":30,"ax":8,"gy":30,"bw":16,"bh":30,"a":{"idle":{"fps":5,"f":[[1568,1982],[1587,1982],[1606,1982],[1625,1982]]},"move":{"fps":10,"f":[[1644,1982],[1663,1982],[1682,1982],[1701,1982],[1720,1982],[1739,1982]]}}}};
 // Generado por tools/pack_decor.py (Pixel Crawler de Anokolisa, Ancient Ruins de Androx). No editar a mano.
 const DECOR = {"1":{"wall":[[137,0,14,22],[152,0,14,26],[167,0,16,21],[184,0,14,19],[199,0,20,35],[220,0,20,35],[241,0,16,21],[258,0,14,24],[273,0,10,21],[284,0,10,21]],"floor":[[295,0,10,9],[306,0,9,6],[316,0,10,8],[327,0,11,9],[339,0,13,12]],"decal":[],"solid":[[0,0,20,35],[21,0,20,35],[42,0,20,53],[63,0,18,32],[82,0,16,33],[99,0,20,32],[120,0,16,34]]},"2":{"wall":[[0,54,27,28],[28,54,27,28],[56,54,20,26],[77,54,19,25],[97,54,23,24],[121,54,13,32],[135,54,12,32],[148,54,53,45]],"floor":[[202,54,14,16],[217,54,10,11],[228,54,10,11],[239,54,13,12],[253,54,12,8],[266,54,11,9]],"decal":[],"solid":[[353,0,27,28],[381,0,27,28],[409,0,20,26],[430,0,13,32],[444,0,12,32],[457,0,28,30],[486,0,22,42]]},"3":{"wall":[[414,54,15,15],[430,54,15,15],[446,54,15,15],[462,54,15,48],[478,54,14,32],[493,54,13,32],[0,103,12,16],[13,103,32,25]],"floor":[[46,103,13,12],[60,103,12,8],[73,103,12,15],[86,103,9,7]],"decal":[],"solid":[[278,54,15,48],[294,54,14,32],[309,54,13,32],[323,54,28,31],[352,54,28,31],[381,54,32,25]]},"4":{"wall":[[228,103,16,22],[245,103,16,22],[262,103,16,23],[279,103,16,22],[296,103,16,19],[313,103,28,44],[342,103,10,21],[353,103,20,53]],"floor":[[374,103,10,9],[385,103,10,8],[396,103,8,13],[405,103,8,13]],"decal":[],"solid":[[96,103,28,44],[125,103,28,28],[154,103,20,53],[175,103,16,22],[192,103,16,23],[209,103,18,32]]}};
 // Generado por tools/pack_houses.py con piezas del Pixel Crawler Free Pack (Anokolisa). No editar a mano.
@@ -5589,8 +6017,8 @@ const HINTS = {
 };
 function renderOverlay() {
   const m = S.mode;
-  ov.hidden = m === 'play' || m === 'town';
-  if (m === 'play' || m === 'town') { ovBody.innerHTML = ''; return; }
+  ov.hidden = m === 'play' || m === 'town' || m === 'intro';
+  if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
     h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
@@ -5631,7 +6059,7 @@ function renderOverlay() {
   ovBody.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => { audioInit(); modeT = Math.max(modeT, 1); choosePick(+c.dataset.i); }));
 }
 function primaryAction(force) {
-  if (S.mode === 'title') openForge();
+  if (S.mode === 'title') { if (M.seenIntro) openForge(); else playIntro(); }   // la primera vez, Alec cuenta su historia antes de llegar a la plaza
   else if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
   else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
@@ -5674,6 +6102,7 @@ function frame(now) {
   if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'town') townUpdate(dt);
+  else if (m === 'intro') introUpdate(dt);
   else if (m === 'play') { M.time += dt; if (I.startP) setMode('pause'); else update(dt); }
   else if (m === 'pick') {
     let moved = false;
@@ -5683,11 +6112,12 @@ function frame(now) {
     if (I.backP) rerollPick();
   } else if (m === 'forge' || m === 'shop') listInput();
   else if (I.atkP || (m === 'pause' && I.startP)) primaryAction(false);
-  render(); renderHud();
+  if (!introDraw()) render();
+  renderHud();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') setMode('pause'); });
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { place: openPlace, town: openTown, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();
