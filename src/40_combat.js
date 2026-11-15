@@ -199,7 +199,7 @@ function explode(x, y, r, dmg, o) {
   sfx('boom', 0.4, 0.85 + Math.random() * 0.3, 0.09);
   const blood = has('d_blood'), vap = has('v_vapors');
   if (blood) r *= 1.3;
-  S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.28, col: o.col || C.ink });
+  S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.42, col: o.col || C.ink, boom: true });   // boom: se pinta como explosión, no como un simple aro
   if (!o.soft) { S.shake = Math.max(S.shake, 4); sfx('boom', 0.45); }
   for (const e of S.enemies.slice()) {
     if (!active(e)) continue;

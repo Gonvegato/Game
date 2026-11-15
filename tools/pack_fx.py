@@ -35,6 +35,9 @@ SETS = {
     'thorns': lambda c: giga('Fantasy Spells', 'spell_thorns_001', c, None, 2, 8, 20),       # Raíces: zarzas a los pies
     'ice': lambda c: giga('Fantasy Spells', 'spell_ice_001', c, None, 2, 18, 28),            # Helado: el bloque de hielo
     'clock': lambda c: giga('Fantasy Spells', 'spell_haste_001', c, None, 2, 4, 28),         # Ralentizado: el reloj
+    # Efectos de área de las técnicas
+    'blast': lambda c: giga('Explosions', 'epic_explosion_001', c),                          # explosiones grandes
+    'well': lambda c: giga('Fantasy Spells', 'spell_absorb_001', c, None, 2, 6, 24),         # pozos del Vacío: partículas que caen hacia dentro
 }
 meta, blocks, y = {}, [], 0
 for name, fn in SETS.items():

@@ -146,14 +146,29 @@ function renderWorld() {
     ctx.globalAlpha = 1;
   }
 
-  // Zonas en el suelo
-  for (const z of S.zones) {
-    const a = Math.min(1, z.life);
-    if (z.r) { ctx.fillStyle = z.col; ctx.globalAlpha = 0.2 * a + 0.04 * Math.sin(S.t * 14); ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; continue; }
-    ctx.strokeStyle = z.col; ctx.lineCap = 'round';
-    ctx.globalAlpha = 0.22 * a; ctx.lineWidth = 20; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2); ctx.stroke();
-    ctx.globalAlpha = 0.5 * a; ctx.lineWidth = 5 + Math.sin(S.t * 14) * 1.5; ctx.stroke();
-    ctx.globalAlpha = 1; ctx.lineCap = 'butt';
+  // Zonas en el suelo: un charco tenue del color de la deidad y, dentro, lo que la zona es de verdad
+  // (llamas, burbujas de veneno, zarzas, zetas de sueño, escarcha…), para distinguirlas de un vistazo
+  {
+    const kind = col => (col === GODS.dragon.color || col === GODS.forge.color ? ['flame', 10, 14] : col === GODS.venom.color ? ['poison', 20, 12] : col === GODS.wood.color ? ['thorns', 30, 9]
+      : col === GODS.dream.color ? ['sleep', 13, 9] : ['spark', 18, 12]);
+    const h01 = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
+    for (const z of S.zones) {
+      const a = Math.min(1, z.life), [name, size, fps] = kind(z.col), F = FXA[name], lp = i => ((S.t * fps + i * 3.7 + z.x * 0.13) / F.n) % 1, pts = [];
+      if (z.r) {
+        ctx.fillStyle = z.col; ctx.globalAlpha = 0.14 * a + 0.03 * Math.sin(S.t * 9); ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = z.col; ctx.globalAlpha = 0.55 * a; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.lineDashOffset = -S.t * 6; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+        const n = name === 'thorns' ? Math.max(2, Math.round(z.r / 14)) : clamp(Math.round(z.r / 9), 2, 7);
+        for (let i = 0; i < n; i++) { const ang = i * 2.399 + z.x, rr = z.r * 0.7 * Math.sqrt((i + 0.5) / n); pts.push([z.x + Math.cos(ang) * rr, z.y + Math.sin(ang) * rr * 0.8]); }
+      } else {
+        const dx = z.x2 - z.x1, dy = z.y2 - z.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+        ctx.strokeStyle = z.col; ctx.lineCap = 'round'; ctx.globalAlpha = 0.16 * a; ctx.lineWidth = 20; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2); ctx.stroke(); ctx.lineCap = 'butt';
+        const n = Math.max(2, Math.round(len / (name === 'thorns' ? 22 : 13)));
+        for (let i = 0; i < n; i++) { const q = (i + 0.5) / n, off = (h01(i + z.x1) - 0.5) * 12; pts.push([z.x1 + dx * q + nx * off, z.y1 + dy * q + ny * off]); }
+      }
+      ctx.globalAlpha = a;
+      pts.forEach(([x, y], i) => drawFx(name, lp(i), x, y - (name === 'flame' ? size * 0.5 : name === 'thorns' ? 6 : 0), z.col, size + (name === 'flame' ? 4 * h01(i + 7) : 0)));
+      ctx.globalAlpha = 1;
+    }
   }
   // Cristales, Bocados y arma caída
   for (const c of S.crystals) {      // cristal clavado en el suelo: una gema de píxeles con su brillo
@@ -189,10 +204,9 @@ function renderWorld() {
 
   // Columnas y rifles gemelos
   for (const w of S.wells) {        // pozos: un remolino oscuro que gira hacia dentro
-    ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.35, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = GODS.void.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.7;
-    for (let i = 0; i < 3; i++) { const rr = w.r * (1 - ((S.t * 0.9 + i / 3) % 1)); ctx.beginPath(); ctx.arc(w.x, w.y, Math.max(2, rr), S.t * 3 + i * 2, S.t * 3 + i * 2 + 4.4); ctx.stroke(); }
-    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#0b080d'; ctx.globalAlpha = 0.55; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = GODS.void.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.45; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);   // hasta dónde tira
+    ctx.globalAlpha = 1; drawFx('well', ((S.t * 12 + w.x) / FXA.well.n) % 1, w.x, w.y, GODS.void.color, Math.max(26, w.r * 1.5));   // partículas cayendo hacia dentro
   }
   for (const mn of S.mines) {       // minas: un bulto de hierro con una luz que parpadea
     const x = Math.round(mn.x), y = Math.round(mn.y);
@@ -368,7 +382,13 @@ function renderWorld() {
     }
     if (f.k === 'ghost') { ctx.globalAlpha = 0.75 * k; if (!drawChar('decoy', 'idle', S.t, f.x, f.y + p.r + 2, false, false)) { ctx.fillStyle = C.ember; ctx.globalAlpha = 0.35 * k; ctx.beginPath(); ctx.arc(f.x, f.y, p.r, 0, Math.PI * 2); ctx.fill(); } }
     else if (f.k === 'clock') { ctx.strokeStyle = GODS.time.color; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(f.x, f.y, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke(); }
-    else if (f.k === 'cone') { ctx.fillStyle = f.col; ctx.globalAlpha = 0.45 * k; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.r * (1 - 0.3 * k), f.a - f.half, f.a + f.half); ctx.closePath(); ctx.fill(); }
+    else if (f.k === 'cone') {   // abanico: un velo tenue y, dentro, llamas (o destellos) que avanzan desde Alec hacia fuera
+      const R = f.r * (1 - 0.3 * k), fire = f.col === GODS.dragon.color || f.col === GODS.forge.color;
+      ctx.fillStyle = f.col; ctx.globalAlpha = 0.22 * k; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, R, f.a - f.half, f.a + f.half); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = Math.min(1, k * 1.6);
+      for (let i = 0; i < 7; i++) { const q = 0.3 + 0.7 * ((i * 0.37 + (1 - k) * 0.6) % 1), an = f.a + f.half * 0.85 * (((i * 0.618) % 1) * 2 - 1), x = f.x + Math.cos(an) * R * q, y = f.y + Math.sin(an) * R * q;
+        if (fire) drawFx('flame', ((S.t * 16 + i * 3) / FXA.flame.n) % 1, x, y - 4, f.col, 8 + 8 * q); else drawFx('cast', (1 - k + i * 0.13) % 1, x, y, f.col, 12 + 8 * q); }
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -435,6 +455,10 @@ function renderWorld() {
         ctx.fillStyle = col; ctx.fillRect(hx - r - 1, hy - r, r * 2 + 2, r * 2); ctx.fillRect(hx - r, hy - r - 1, r * 2, r * 2 + 2);
         ctx.fillStyle = '#ffffff'; ctx.fillRect(hx - r, hy - r, r * 2, r * 2);
       } else drawFx('hit', (u - T) / (1 - T), f.x2, f.y2, col, 12 + 6 * w);
+    }
+    else if (f.k === 'ring' && f.boom) {   // explosión: el estallido del paquete a su tamaño real y un aro fino que marca hasta dónde llega
+      drawFx(f.r >= 26 ? 'blast' : 'boom', 1 - k, f.x, f.y, f.col, f.r * 2.4);
+      ctx.strokeStyle = f.col; ctx.globalAlpha = 0.6 * k; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.35 * k), 0, Math.PI * 2); ctx.stroke();
     }
     else if (f.k === 'ring') { ctx.strokeStyle = f.col; ctx.globalAlpha = k; ctx.lineWidth = 3 * k + 0.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.6 * k), 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = f.col; ctx.globalAlpha = 0.18 * k; ctx.fill(); }
     else if (f.k === 'beam') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k * 0.5; ctx.lineWidth = f.w * 3 * k; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = k; ctx.lineWidth = f.w * k; ctx.stroke(); }
