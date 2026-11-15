@@ -803,6 +803,42 @@ let AC = null, muted = false;
 function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume().catch(() => {}); return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+  sfxLoad();
+}
+// ── Efectos grabados y música (assets/audio, todo CC0; ver assets/library/CREDITOS.txt). Si un archivo no carga, el juego sigue con los pitidos ──
+const SFX = {}, SFXT = {}, MUS = {}; let musNow = null, sfxAsked = false;
+function sfxLoad() {
+  if (sfxAsked || !AC) return; sfxAsked = true;
+  for (const n of ['cast', 'hit', 'kill', 'hurt', 'charged', 'boom', 'relic', 'pick', 'bossdie', 'dodge'])
+    fetch('assets/audio/' + n + '.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { SFX[n] = buf; }).catch(() => {});
+}
+function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
+  if (!AC || muted || AC.state !== 'running') return;
+  const buf = SFX[name], t = AC.currentTime; if (!buf || t - (SFXT[name] || -1) < gap) return;
+  SFXT[name] = t;
+  try { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol; src.connect(g); g.connect(AC.destination); src.start(t); } catch (e) { /* sin sonido */ }
+}
+// La música va por pantalla: título, aldea, mazmorra, campo abierto, jefe y victoria. En los menús de dentro de una misión sigue la que sonaba.
+function musicWant() {
+  if (muted || !S) return null;
+  const m = S.mode;
+  if (m === 'title' || m === 'intro') return 'm_title';
+  if (m === 'dead') return null;
+  if (m === 'win') return 'm_win';
+  if (m === 'town' || S.town) return 'm_town';
+  if (m === 'play') return S.enemies.some(e => e.boss) ? 'm_boss' : S.out ? 'm_battle' : 'm_crypt';
+  return musNow || 'm_town';
+}
+function musicTick() {
+  if (!AC) return;                      // hasta el primer toque no puede sonar nada
+  const w = musicWant();
+  if (w !== musNow) {
+    if (musNow && MUS[musNow]) MUS[musNow].pause();
+    musNow = w;
+    if (w) { const a = MUS[w] || (MUS[w] = new Audio('assets/audio/' + w + '.mp3')); a.loop = w !== 'm_win'; a.volume = 0.32; try { a.currentTime = 0; } catch (e) { /* aún sin cargar */ } }
+  }
+  const a = musNow && MUS[musNow];
+  if (a && a.paused && !(musNow === 'm_win' && a.ended)) { const pr = a.play(); if (pr && pr.catch) pr.catch(() => {}); }
 }
 function blip(freq, dur, type = 'square', vol = 0.04, slide = 0) {
   if (!AC || muted || AC.state !== 'running') return;
@@ -1212,6 +1248,7 @@ function rerollPick() {   // Regateo
 function choosePick(i) {
   if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
   const before = GOD_KEYS.filter(mastery), o = pickOpts[i];
+  sfx('pick', 0.5);
   o.apply();
   blip(660, 0.12, 'triangle', 0.05, 500);
   if (o.god) say(o.god, 'take');
@@ -3039,6 +3076,7 @@ function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
   const p = S.p;
+  sfx(e.boss ? 'bossdie' : e.champ ? 'relic' : 'kill', e.boss ? 0.8 : e.champ ? 0.6 : 0.3, 0.9 + Math.random() * 0.25);
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
@@ -3133,7 +3171,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (S.t - S.lastStop > 0.16) { S.hitstop = big ? 0.05 : 0.02; S.lastStop = S.t; }   // micropausa de impacto, sin encadenarse
   gainFury(2);
   if (e.hp > 0 && has('f_carve') && !e.boss && e.hp / e.maxHp < 0.12) { e.hp = 0; note(e.x, e.y - e.r - 12, '¡Trinchado!', GODS.feast.color); }   // Trinchar
-  if (e.hp <= 0) kill(e); else blip(520, 0.035, 'square', 0.025);
+  if (e.hp <= 0) kill(e); else { blip(520, 0.035, 'square', 0.025); sfx('hit', 0.3, 0.9 + Math.random() * 0.3); }
 }
 // Daño continuo: sin pausa ni empujón
 function dot(e, dmg, col) {
@@ -3150,6 +3188,7 @@ function dot(e, dmg, col) {
 // Toda explosión pasa por aquí, así que las técnicas que dicen "todas tus explosiones" afectan a cualquiera
 function explode(x, y, r, dmg, o) {
   o = o || {};
+  sfx('boom', 0.4, 0.85 + Math.random() * 0.3, 0.09);
   const blood = has('d_blood'), vap = has('v_vapors');
   if (blood) r *= 1.3;
   S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.28, col: o.col || C.ink });
@@ -3535,6 +3574,7 @@ function fireBasic(target) {
   if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro delante de los puños
     const mx = p.x + Math.cos(p.face) * 12, my = p.y + 1 + Math.sin(p.face) * 12;
     S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
+    sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
   blip(1250, 0.07, 'square', 0.035, -700);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos
@@ -3720,7 +3760,7 @@ function barrelFire(target, m, big, col, reach) {
 function lunge(a, d) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
-  p.dodgeT = d / (p.speed * T.dodge.mult); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
+  p.dodgeT = d / (p.speed * T.dodge.mult); p.inv = Math.max(p.inv, p.dodgeT + 0.06); sfx('dodge', 0.35);
   p.dodgeFrom = { x: p.x, y: p.y }; p.dodgeHit = new Set(); p.isLunge = true; p.fly = false; p.danced = false;
 }
 
@@ -3729,7 +3769,7 @@ function startDodge(a, free) {
   const p = S.p;
   p.dvx = Math.cos(a); p.dvy = Math.sin(a);
   p.fly = lv('dragon_dodge') > 0;                                           // Vuelo: salto largo por encima de las columnas
-  p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (G('s_light') ? 1.3 : 1) * (G('s_roll') ? 0.65 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06);
+  p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (G('s_light') ? 1.3 : 1) * (G('s_roll') ? 0.65 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06); sfx('dodge', 0.35);
   p.danced = false; p.lastDodgeT = S.t; p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
   blip(420, 0.1, 'triangle', 0.04, 500);
@@ -4003,6 +4043,7 @@ function castCharged(snap, mult, echo) {
   }
 }
 function fireCharged(am) {
+  sfx('charged', 0.6);
   const p = S.p, ch = T.charge, CH = S.gun.chamber, moves = CH === 'c_dash' || CH === 'c_blast';
   const ratio = clamp(p.charge / ch.full, 0, 1), ux = Math.cos(p.chargeDir), uy = Math.sin(p.chargeDir);
   const tg = S.target && active(S.target) && am <= 0.35 ? S.target : null, reach = CH === 'c_rain' ? 190 : 170;
@@ -4040,6 +4081,7 @@ function hurtPlayer(dmg) {
   if (p.inv > 0 || S.mode !== 'play') return;
   if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Brazal con rodela
   if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
+  sfx('hurt', 0.7);
   p.streak = 0;                                                               // Racha: se pierde al recibir un golpe (no si lo para la rodela o se lo lleva el Reflejo)
   { const mp = lv('mirror_passive'); if (mp) explode(p.x, p.y, 64, p.dmg * mp, { col: GODS.mirror.color }); }   // Azogue
   if (G('s_tower')) dmg *= 0.7;                                               // Brazal de torre
@@ -6112,7 +6154,7 @@ function renderOverlay() {
         <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
       </dl></details>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · Alec, dibujado para este juego.</p></div>`;
+      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y gente de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos de «Super Pixel Effects Gigapack», de Will Tice / unTied Games, y del Fantasy RPG Pixel Pack · huesos y ruinas del Free Undead Tileset · Alec, dibujado para este juego. Música de RandomMind, ARoachIFoundOnMyPillow y Juhani Junkala; sonidos de «150 Combat Sound Effects» y «Magic Spell SFX» (OpenGameArt, CC0).</p></div>`;
   } else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
@@ -6146,7 +6188,7 @@ function primaryAction(force) {
   else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) openForge();
 }
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
-$('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); });
+$('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); musicTick(); });
 
 let hudKey = '';
 // Las cuatro acciones en el HUD: una casilla por acción, con el color de su deidad y el nivel en puntos
@@ -6192,7 +6234,7 @@ let last = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
-  resize(); pollInput(); modeT += dt;
+  resize(); pollInput(); modeT += dt; musicTick();
   const m = S.mode;
   if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
   if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
@@ -6216,5 +6258,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S &
 
 newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Acceso para pruebas
-window.__kiteo = { place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

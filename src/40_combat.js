@@ -77,6 +77,7 @@ function addGold(n) { const p = S.p; if (G('s_loot')) n = Math.round(n * 1.5); p
 // ───────────────────────── Golpes, bajas y explosiones ─────────────────────────
 function kill(e) {
   const p = S.p;
+  sfx(e.boss ? 'bossdie' : e.champ ? 'relic' : 'kill', e.boss ? 0.8 : e.champ ? 0.6 : 0.3, 0.9 + Math.random() * 0.25);
   S.kills += 1;
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
@@ -171,7 +172,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (S.t - S.lastStop > 0.16) { S.hitstop = big ? 0.05 : 0.02; S.lastStop = S.t; }   // micropausa de impacto, sin encadenarse
   gainFury(2);
   if (e.hp > 0 && has('f_carve') && !e.boss && e.hp / e.maxHp < 0.12) { e.hp = 0; note(e.x, e.y - e.r - 12, '¡Trinchado!', GODS.feast.color); }   // Trinchar
-  if (e.hp <= 0) kill(e); else blip(520, 0.035, 'square', 0.025);
+  if (e.hp <= 0) kill(e); else { blip(520, 0.035, 'square', 0.025); sfx('hit', 0.3, 0.9 + Math.random() * 0.3); }
 }
 // Daño continuo: sin pausa ni empujón
 function dot(e, dmg, col) {
@@ -188,6 +189,7 @@ function dot(e, dmg, col) {
 // Toda explosión pasa por aquí, así que las técnicas que dicen "todas tus explosiones" afectan a cualquiera
 function explode(x, y, r, dmg, o) {
   o = o || {};
+  sfx('boom', 0.4, 0.85 + Math.random() * 0.3, 0.09);
   const blood = has('d_blood'), vap = has('v_vapors');
   if (blood) r *= 1.3;
   S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.28, col: o.col || C.ink });

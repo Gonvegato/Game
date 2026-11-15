@@ -29,6 +29,42 @@ let AC = null, muted = false;
 function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume().catch(() => {}); return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+  sfxLoad();
+}
+// ── Efectos grabados y música (assets/audio, todo CC0; ver assets/library/CREDITOS.txt). Si un archivo no carga, el juego sigue con los pitidos ──
+const SFX = {}, SFXT = {}, MUS = {}; let musNow = null, sfxAsked = false;
+function sfxLoad() {
+  if (sfxAsked || !AC) return; sfxAsked = true;
+  for (const n of ['cast', 'hit', 'kill', 'hurt', 'charged', 'boom', 'relic', 'pick', 'bossdie', 'dodge'])
+    fetch('assets/audio/' + n + '.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { SFX[n] = buf; }).catch(() => {});
+}
+function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
+  if (!AC || muted || AC.state !== 'running') return;
+  const buf = SFX[name], t = AC.currentTime; if (!buf || t - (SFXT[name] || -1) < gap) return;
+  SFXT[name] = t;
+  try { const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol; src.connect(g); g.connect(AC.destination); src.start(t); } catch (e) { /* sin sonido */ }
+}
+// La música va por pantalla: título, aldea, mazmorra, campo abierto, jefe y victoria. En los menús de dentro de una misión sigue la que sonaba.
+function musicWant() {
+  if (muted || !S) return null;
+  const m = S.mode;
+  if (m === 'title' || m === 'intro') return 'm_title';
+  if (m === 'dead') return null;
+  if (m === 'win') return 'm_win';
+  if (m === 'town' || S.town) return 'm_town';
+  if (m === 'play') return S.enemies.some(e => e.boss) ? 'm_boss' : S.out ? 'm_battle' : 'm_crypt';
+  return musNow || 'm_town';
+}
+function musicTick() {
+  if (!AC) return;                      // hasta el primer toque no puede sonar nada
+  const w = musicWant();
+  if (w !== musNow) {
+    if (musNow && MUS[musNow]) MUS[musNow].pause();
+    musNow = w;
+    if (w) { const a = MUS[w] || (MUS[w] = new Audio('assets/audio/' + w + '.mp3')); a.loop = w !== 'm_win'; a.volume = 0.32; try { a.currentTime = 0; } catch (e) { /* aún sin cargar */ } }
+  }
+  const a = musNow && MUS[musNow];
+  if (a && a.paused && !(musNow === 'm_win' && a.ended)) { const pr = a.play(); if (pr && pr.catch) pr.catch(() => {}); }
 }
 function blip(freq, dur, type = 'square', vol = 0.04, slide = 0) {
   if (!AC || muted || AC.state !== 'running') return;

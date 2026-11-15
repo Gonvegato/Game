@@ -79,6 +79,7 @@ function rerollPick() {   // Regateo
 function choosePick(i) {
   if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
   const before = GOD_KEYS.filter(mastery), o = pickOpts[i];
+  sfx('pick', 0.5);
   o.apply();
   blip(660, 0.12, 'triangle', 0.05, 500);
   if (o.god) say(o.god, 'take');

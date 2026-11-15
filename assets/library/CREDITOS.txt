@@ -8,3 +8,11 @@ Créditos y licencias del arte de terceros (ver también los Terms.txt y Readme.
 - Effect and Bullet 16x16 — paquete aportado por el dueño del juego; autor y licencia sin comprobar. Solo se usa el proyectil, dentro de assets/fx.png.
 - Free Undead Tileset Top Down — paquete aportado por el dueño del juego; su licencia remite a craftpix.net/file-licenses. Solo están en el repositorio los 25 objetos recortados que usa el juego (assets/library/extra/).
 - Alec (assets/library/alec/) — dibujado a mano para este juego con tools/make_alec.py; no procede de ningún paquete.
+
+Música y sonido (assets/audio/, todo con licencia CC0 según su página de OpenGameArt; no obliga a citar, se cita igualmente):
+- m_title «Medieval: The Bard's Tale», m_town «Medieval: The Old Tower Inn», m_battle «Medieval: Battle», m_win «Medieval: Victory Theme» — RandomMind (opengameart.org).
+- m_crypt «Dark Bishop» — ARoachIFoundOnMyPillow (opengameart.org/content/dark-bishop).
+- m_boss «Epic Boss Battle [Seamlessly Looping]» — Juhani Junkala, subido por SubspaceAudio (opengameart.org/content/boss-battle-music).
+- cast: «Magic Spell SFX» (opengameart.org/content/magic-spell-sfx).
+- hit, kill, hurt, charged, boom, relic, pick, bossdie, dodge: «150 Combat Sound Effects» (opengameart.org/node/195932), recopilación CC0 con sonidos de Kenney, CoMiGo y otros; sus fuentes están en el LICENSES.txt del paquete.
+Los archivos están recortados, igualados de volumen y convertidos a mp3.
