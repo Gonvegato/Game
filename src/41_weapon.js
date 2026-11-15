@@ -155,10 +155,9 @@ function fireBasic(target) {
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || overB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
-  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // pólvora negra: fogonazo y humo en la boca del arma
-    const mx = p.x + Math.cos(p.face) * 17, my = p.y + 1 + Math.sin(p.face) * 17;
-    S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.06 });
-    for (let i = 0; i < (g.action === 'a_rotary' ? 1 : 3); i++) S.fx.push({ k: 'smoke', x: mx, y: my, vx: Math.cos(p.face) * rnd(8, 30) + rnd(-8, 8), vy: Math.sin(p.face) * rnd(8, 30) - rnd(4, 14), t: 0, life: rnd(0.35, 0.7) });
+  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro delante de los puños
+    const mx = p.x + Math.cos(p.face) * 12, my = p.y + 1 + Math.sin(p.face) * 12;
+    S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
   }
   blip(1250, 0.07, 'square', 0.035, -700);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos

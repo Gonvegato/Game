@@ -112,14 +112,14 @@ const INTRO = [
         on(R) {
           R.dipTo(() => {
             R.a('kid').hidden = true; R.stage = 1; R.acc = 0.9; R.setCap('Años después');
-            R.add('teen', 'alec_teen', 10.4, 12.2, { amb: true }); R.add('dummy', 'decoy', 13.2, 12.2, { amb: true });
+            R.add('teen', 'alec_kid', 10.4, 12.2, { amb: true }); R.add('dummy', 'decoy', 13.2, 12.2, { amb: true });
             const s = R.a('oldsmith'); s.x = IC(15.8); s.y = IC(12); s.flip = true;
           });
         } },
       { who: 'teen', text: 'Fueron diez años. No he tenido otros mejores.' },
     ] },
   { cap: 'La última noche', room: ['intro_forja', 'shop'], amb: '#4c4166',
-    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_teen', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
+    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_s', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
     beats: [
       { wait: 2.3, who: 'teen', text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
         on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); blip(90, 0.5, 'sawtooth', 0.03, -30); } },
@@ -280,7 +280,7 @@ function introSim(R, sc, dt) {
 function introSpeakerPos(who) {
   const R = S.intro && S.intro.R, a = R && R.actors.find(q => q.id === who && !q.hidden);
   if (!a) return { x: cam.x + view.w / 2, y: cam.y + view.h * 0.55 };
-  const m = a.hero ? ATLAS.hunter_s : ATLAS[a.key];
+  const m = a.hero ? ATLAS.alec_s : ATLAS[a.key];
   return { x: a.x, y: a.y - (a.fall != null ? 10 : m ? Math.min(m.gy, m.bh) + 4 : 30) };
 }
 const introHint = () => (lastDev === 'pad' ? 'A: seguir · B: saltar la escena · Start: saltar toda la historia' : lastDev === 'touch' ? 'Toca: seguir · Esquivar: saltar la escena · «Saltar historia»: saltarla entera' : 'Espacio: seguir · Shift: saltar la escena · Esc: saltar toda la historia');
@@ -334,7 +334,7 @@ function introFrame(key, anim, i, x, y, flip, flash) {
   else ctx.drawImage(im, f[0], f[1], m.w, m.h, Math.round(x - m.ax), Math.round(y - m.gy), m.w, m.h);
 }
 function introActor(a, R) {
-  const x = Math.round(a.x), y = Math.round(a.y), m = a.hero ? ATLAS.hunter_s : ATLAS[a.key], sw = m ? clamp(m.bw / 2.4, 5, 16) : 7;
+  const x = Math.round(a.x), y = Math.round(a.y), m = a.hero ? ATLAS.alec_s : ATLAS[a.key], sw = m ? clamp(m.bw / 2.4, 5, 16) : 7;
   const shadow = w => { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.ellipse(x, y, w, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; };
   if (a.fall != null) {   // caído: con su animación de muerte si la tiene; si no, vuelca y se queda en el suelo
     if (m && m.a.die) { shadow(sw + 2); introFrame(a.key, 'die', Math.floor(a.fall * m.a.die.fps), x, y, a.flip, false); return; }
@@ -346,9 +346,7 @@ function introActor(a, R) {
   const tt = S.t + a.ph;
   if (a.hero) {
     const ang = a.aim != null ? a.aim : a.face, behind = Math.sin(ang) < -0.7, k = Math.round(a.kick);
-    if (behind) drawWeapon(x, y - 10, ang, k);
     if (!drawHero(a.walking ? 'move' : 'idle', tt, x, y, a.aim != null ? a.aim : a.face, false)) drawSprite(SPR.player, x, y, Math.cos(ang) < 0, false);
-    if (!behind) drawWeapon(x, y - 10, ang, k);
     return;
   }
   const on = a.once && R.t - a.once.t0 < a.once.dur;

@@ -549,13 +549,13 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
   return true;
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
-const heroKey = () => 'hunter_s';
+const heroKey = () => 'alec_s';
 // Alec es el cazador de Pixel Crawler: mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
-  const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'hunter_u' : 'hunter_d') : 'hunter_s', flip = key === 'hunter_s' && fx < 0;
+  const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s', flip = key === 'alec_s' && fx < 0;
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
   const tier = S.p.tier || 1, col = heroGodColor();
   if (tier >= 2) {   // aura en el suelo, que late
@@ -582,5 +582,33 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   if (tier >= 4) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.18 + 0.08 * Math.sin(S.t * 9);   // a pleno poder, brilla
     if (flip) { ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); } else ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
     ctx.restore(); }
+  // La llama de los guanteletes: del color de la deidad que más lleva, más grande cuanto más poder y cuando lanza
+  const hands = m.hands && (m.hands[anim] || m.hands.move)[i];
+  if (hands && IMG.fx) {
+    const row = fxRow(col), fw = (anim === 'atk' ? 7 : 5) + tier, fh = Math.round(fw * 1.5), ff = FXA.flame;
+    for (let h = 0; h < hands.length; h++) {
+      const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], fr = (Math.floor(S.t * 14) + h * 5) % ff.n;
+      ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 3), fw, fh);
+    }
+  }
+  return true;
+}
+// ── Efectos del paquete (assets/fx.png): ocho colores por efecto; se elige el más parecido al color pedido ──
+loadImg('fx', 'assets/fx.png');
+const FXROW = {};
+function fxRow(hex) {
+  if (hex in FXROW) return FXROW[hex];
+  const n = parseInt(String(hex).replace('#', '').slice(0, 6), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let row;
+  if (!(n >= 0) || d < 0.18 * mx) row = mx > 140 ? 6 : 7;
+  else { let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; row = h < 18 || h >= 335 ? 5 : h < 44 ? 0 : h < 70 ? 1 : h < 170 ? 2 : h < 258 ? 3 : 4; }
+  return FXROW[hex] = row;
+}
+// Dibuja un fotograma de un efecto centrado en (x, y); k = avance de 0 a 1, size = lado en píxeles del juego, rot = giro
+function drawFx(name, k, x, y, col, size, rot) {
+  const a = FXA[name]; if (!a || !IMG.fx) return false;
+  const fr = Math.min(a.n - 1, Math.max(0, Math.floor(k * a.n))), w = size, h = size * a.h / a.w;
+  if (rot != null) { ctx.save(); ctx.translate(Math.round(x), Math.round(y)); ctx.rotate(rot); ctx.drawImage(IMG.fx, fr * a.w, a.y + fxRow(col) * a.h, a.w, a.h, -w / 2, -h / 2, w, h); ctx.restore(); }
+  else ctx.drawImage(IMG.fx, fr * a.w, a.y + fxRow(col) * a.h, a.w, a.h, Math.round(x - w / 2), Math.round(y - h / 2), w, h);
   return true;
 }

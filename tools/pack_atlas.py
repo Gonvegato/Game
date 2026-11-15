@@ -62,9 +62,10 @@ CAST.update({
   'adv_archer': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Archer', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('ATK_Full', 6, 12)}),
   'adv_dwarf': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Dwarf', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Attack', 11, 16)}),
   'adv_knight': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Knight', {'idle': ('Idle', 1, 1), 'move': ('Run', 8, 12), 'atk': ('Attack', 11, 16)}),
-  'hunter_s': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Side-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Side-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Side-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Side-Sheet.png', 8, 18)}),
-  'hunter_u': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Up-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Up-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Up-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Top-Sheet.png', 8, 18)}),
-  'hunter_d': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter/', {'idle': ('Idle_Base/Idle_Down-Sheet.png', 4, 5), 'move': ('Run_Base/Run_Down-Sheet.png', 6, 12), 'dash': ('Run_Base/Run_Down-Sheet.png', 6, 22), 'atk': ('Attack_02_Base/Pierce_Down-Sheet.png', 8, 18)}),
+  # Alec, el mago de los guanteletes: dibujado a mano por tools/make_alec.py (tiras en assets/library/alec/)
+  'alec_s': ('!side', {'idle': ('idle', 4, 5), 'move': ('move', 6, 11), 'dash': ('move', 6, 20), 'atk': ('atk', 6, 18)}),
+  'alec_u': ('!up', {'idle': ('idle', 4, 5), 'move': ('move', 6, 11), 'dash': ('move', 6, 20), 'atk': ('atk', 6, 18)}),
+  'alec_d': ('!down', {'idle': ('idle', 4, 5), 'move': ('move', 6, 11), 'dash': ('move', 6, 20), 'atk': ('atk', 6, 18)}),
   'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
@@ -86,7 +87,11 @@ CAST.update({
   'oldsmith': ('@Pixel_Crawler_-_Hideout_1.0/Enemies/Baldits/Sorcerer', {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Run/Run-Sheet.png', 6, 10)}),
 })
 PC = 'assets/library/packs/'
+ALEC = json.load(open('assets/library/alec/manos.json'))   # tamaño del fotograma y dónde cae cada guantelete
 def frames_of(folder, suffix):
+    if folder.startswith('!'):   # tiras propias de Alec: «vista_animación.png», fotogramas de ancho fijo
+        im = Image.open('assets/library/alec/%s_%s.png' % (folder[1:], suffix)).convert('RGBA'); fw = ALEC['w']
+        return [im.crop((i * fw, 0, (i + 1) * fw, im.height)) for i in range(im.width // fw)]
     if folder.startswith('%'):   # tiras «Nombre_Nx1.png» del RPG HEROES & ENEMIES de overboy
         import glob as _g
         f = _g.glob(PC + folder[1:] + '_' + suffix + '_*x1.png')[0]; n = int(f.rsplit('_', 1)[1].split('x')[0]); im = Image.open(f).convert('RGBA'); w = im.width // n
@@ -128,6 +133,8 @@ for key, (folder, anims) in CAST.items():
     idle_b = loaded['idle'][0][0].getbbox()
     w, h = bb[2] - bb[0], bb[3] - bb[1]
     meta[key] = {'w': w, 'h': h, 'ax': round((idle_b[0] + idle_b[2]) / 2 - bb[0]), 'gy': ib[3] - bb[1], 'bw': idle_b[2] - idle_b[0], 'bh': idle_b[3] - idle_b[1], 'a': {}}
+    if folder.startswith('!'):   # centro de cada guantelete por fotograma, ya en coordenadas del recorte: ahí pinta el juego la llama
+        meta[key]['hands'] = {a: [[[hx - bb[0], hy - bb[1]] for hx, hy in fr] for fr in ALEC['hands'][folder[1:] + '_' + anims[a][0]]] for a in anims}
     for a in loaded:
         meta[key]['a'][a] = {'fps': loaded[a][1], 'f': []}
         for im in loaded[a][0]: items.append((key, a, im.crop(bb)))

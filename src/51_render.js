@@ -338,12 +338,12 @@ function renderWorld() {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
     const behind = Math.sin(p.face) < -0.7, kick0 = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;
-    if (behind) drawWeapon(p.x, py - 1, p.face, kick0);   // apuntando hacia arriba, el arma queda detrás
-    const packHero = drawHero(p.dodgeT > 0 ? 'dash' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', S.t, p.x, py + p.r + 2, p.face, false);
+    // Al lanzar echa los puños hacia delante: recoge mientras prepara y estira justo después del disparo
+    const casting = p.dodgeT <= 0 && (glow || kick0 > 0), castT = casting ? ((kick0 > 0 ? 2 : 0) + 0.5) / 18 : S.t;
+    const packHero = drawHero(p.dodgeT > 0 ? 'dash' : casting ? 'atk' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', castT, p.x, py + p.r + 2, p.face, false);
     if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
-    if (!packHero) drawGun(p.x, py + 1, p.face, kick); else if (!behind) drawWeapon(p.x, py - 1, p.face, kick);   // el arma que lleva, apuntando
-    if (glow) { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(p.x + fx * 17) - 1, Math.round(py + 1 + fy * 17) - 1, 2, 2); }
+    if (!packHero) drawGun(p.x, py + 1, p.face, kick);
   }
   // Anillo de ritmo: se llena mientras recarga; brilla cuando puedes disparar
   const period = periodOf(), a0 = -Math.PI / 2;
@@ -376,11 +376,18 @@ function renderWorld() {
   // Efectos sobre todo
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
-    if (f.k === 'tracer') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k; ctx.lineWidth = (2.2 * k + 0.6) * (f.w || 1); ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); }
+    if (f.k === 'tracer') {   // estela fina, el proyectil que la recorre y el impacto al llegar
+      const u = 1 - k, col = f.col || C.energy, w = f.w || 1;
+      ctx.strokeStyle = col; ctx.globalAlpha = k * 0.7; ctx.lineWidth = (1.4 * k + 0.5) * w; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.globalAlpha = 1;
+      const v = Math.min(1, u * 2.2);
+      if (v < 1) drawFx('bolt', (S.t * 16) % 1, f.x1 + (f.x2 - f.x1) * v, f.y1 + (f.y2 - f.y1) * v, col, 12 * Math.min(1.5, w), Math.atan2(f.y2 - f.y1, f.x2 - f.x1));
+      else drawFx('hit', (u * 2.2 - 1) / 1.2, f.x2, f.y2, col, 20 * Math.min(1.5, w));
+    }
     else if (f.k === 'ring') { ctx.strokeStyle = f.col; ctx.globalAlpha = k; ctx.lineWidth = 3 * k + 0.5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - 0.6 * k), 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = f.col; ctx.globalAlpha = 0.18 * k; ctx.fill(); }
     else if (f.k === 'beam') { ctx.strokeStyle = f.col || C.energy; ctx.globalAlpha = k * 0.5; ctx.lineWidth = f.w * 3 * k; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = k; ctx.lineWidth = f.w * k; ctx.stroke(); }
     else if (f.k === 'lob') { const u = f.t / f.life, x = f.x1 + (f.x2 - f.x1) * u, y = f.y1 + (f.y2 - f.y1) * u - Math.sin(u * Math.PI) * 26; const gx = Math.round(f.x1 + (f.x2 - f.x1) * u), gy = Math.round(f.y1 + (f.y2 - f.y1) * u); ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.fillRect(gx - 3, gy - 1, 6, 2); ctx.globalAlpha = 1; ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 2, 6, 4); ctx.fillRect(Math.round(x) - 2, Math.round(y) - 3, 4, 6); ctx.fillStyle = f.col; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 2, 1, 1); }
     else if (f.k === 'smoke') { const sz = k > 0.6 ? 2 : 3; ctx.fillStyle = k > 0.5 ? '#b9b3ad' : '#7d7780'; ctx.globalAlpha = 0.55 * k; ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 1, sz, sz); }
+    else if (f.k === 'flash' && f.col && drawFx('cast', 1 - k, f.x, f.y, f.col, 18)) { }
     else if (f.k === 'flash') { ctx.fillStyle = '#ffe9a8'; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y) - 1, 4, 2); ctx.fillRect(Math.round(f.x) - 1, Math.round(f.y) - 2, 2, 4); ctx.fillStyle = '#ff8a3c'; ctx.fillRect(Math.round(f.x) - 3, Math.round(f.y), 1, 1); ctx.fillRect(Math.round(f.x) + 2, Math.round(f.y) - 1, 1, 1); }
     else if (f.k === 'coin') { ctx.globalAlpha = Math.min(1, k * 3); if (!strip(VFX.coin, f.t * 16, f.x, f.y - 22 * (1 - k))) { ctx.fillStyle = RAR[3].color; ctx.fillRect(Math.round(f.x) - 2, Math.round(f.y - 22 * (1 - k)) - 2, 4, 4); } }
     else if (f.k === 'slash') { if (IMG.vfx) { ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y)); ctx.rotate(f.a); ctx.drawImage(IMG.vfx, Math.min(7, Math.floor(f.t / f.life * 8)) * 32, f.row * 32, 32, 32, -16, -16, 32, 32); ctx.restore(); } }
