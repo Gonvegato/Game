@@ -264,24 +264,58 @@ function renderWorld() {
     if (e.champ) { // la reliquia de su dios flota sobre su cabeza, en el color de la deidad
       drawRelic(e.x, e.y - e.r - 14 + Math.sin(S.t * 3 + e.x) * 1.5, e.color);
     }
-    // Lo acumulado: Ascuas a la izquierda, Veneno a la derecha, sazón arriba, aturdido en blanco
-    if (e.ember > 0) { ctx.strokeStyle = GODS.dragon.color; ctx.lineWidth = 0.8 + Math.min(3, 0.3 * e.ember); ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); wtext(String(e.ember), e.x - e.r - 6, e.y + 3, 7, GODS.dragon.color); }
-    if (e.venom > 0) { wtext(String(e.venom), e.x + e.r + 6, e.y + 3, 7, GODS.venom.color); }
-    if (e.needles > 0) { ctx.fillStyle = GODS.storm.color; for (let i = 0; i < e.needles; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; ctx.fillRect(e.x + Math.cos(a) * (e.r + 4) - 1, e.y + Math.sin(a) * (e.r + 4) - 1, 2.2, 2.2); } }
-    if (e.wet > 0) { ctx.fillStyle = GODS.tide.color; for (let i = 0; i < 3; i++) { const a = S.t * 3 + i * 2.1; ctx.fillRect(Math.round(e.x + Math.cos(a) * (e.r + 2)), Math.round(e.y + e.r - 2 + ((S.t * 9 + i * 3) % 5)), 1, 2); } }
-    if (e.root > 0) { ctx.fillStyle = GODS.wood.color; for (let i = -1; i <= 1; i++) { ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) - 1, Math.round(e.y + e.r - 3), 2, 4); ctx.fillRect(Math.round(e.x + i * (e.r * 0.7)) + (i || 1), Math.round(e.y + e.r - 5), 1, 3); } }
-    if (e.seed > 0) { ctx.fillStyle = GODS.wood.color; for (let i = 0; i < e.seed; i++) ctx.fillRect(Math.round(e.x - e.seed * 1.5 + i * 3), Math.round(e.y - e.r - 11), 2, 2); }
-    if (e.lit > 0) { ctx.fillStyle = GODS.light.color; const y0 = Math.round(e.y - e.r * 1.7 - 5), x0 = Math.round(e.x); ctx.fillRect(x0 - 1, y0 - 2, 2, 5); ctx.fillRect(x0 - 2, y0 - 1, 5, 2); ctx.globalAlpha = 0.5; ctx.fillRect(x0 - 3, y0, 7, 1); ctx.fillRect(x0, y0 - 3, 1, 7); ctx.globalAlpha = 1; }
-    if (e.sleep > 0 || e.doze > 0) wtext('z', e.x + e.r + 3 + Math.sin(S.t * 3) * 2, e.y - e.r - 2 - ((S.t * 6) % 6), 8, GODS.dream.color);
-    if (e.frozen > 0) { ctx.fillStyle = GODS.frost.color; ctx.globalAlpha = 0.45; ctx.fillRect(Math.round(e.x - e.r - 1), Math.round(e.y - e.r * 1.6), e.r * 2 + 2, Math.round(e.r * 2.7)); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(e.x - e.r), Math.round(e.y - e.r * 1.5), 2, 1); ctx.fillRect(Math.round(e.x + e.r - 2), Math.round(e.y), 1, 2); }
-    else if (e.frost > 0) { ctx.fillStyle = GODS.frost.color; for (let i = 0; i < e.frost; i++) ctx.fillRect(Math.round(e.x - e.frost * 1.5 + i * 3), Math.round(e.y + e.r + 5), 2, 2); }
-    if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; for (let i = 0; i < Math.min(3, e.bleed); i++) ctx.fillRect(Math.round(e.x - 3 + i * 3), Math.round(e.y + e.r - 1 + ((S.t * 8 + i * 2) % 4)), 1, 2); }
-    if (e.doom) { const k = clamp(e.doom.t / 5, 0, 1); ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(e.x) - 5, Math.round(e.y - e.r - 15), 10, 3); ctx.fillStyle = GODS.end.color; ctx.fillRect(Math.round(e.x) - 4, Math.round(e.y - e.r - 14), Math.round(8 * k), 1); }
-    if (e.traced > 0) { ctx.strokeStyle = C.energy; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(Math.round(e.x), Math.round(e.y - 1), e.r + 3, 0, Math.PI * 2); ctx.stroke(); }
-    if (e.nails > 0) { ctx.fillStyle = PAL.i; for (let i = 0; i < e.nails; i++) ctx.fillRect(Math.round(e.x - 4 + i * 3), Math.round(e.y - e.r - 5), 1, 3); }
-    if (e.mark > 0) { ctx.strokeStyle = GODS.shade.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(e.x - 3, e.y + e.r + 4); ctx.lineTo(e.x + 3, e.y + e.r + 4); ctx.moveTo(e.x, e.y + e.r + 2); ctx.lineTo(e.x, e.y + e.r + 8); ctx.stroke(); }
-    if (e.slowT > 0) { ctx.strokeStyle = GODS.time.color; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 7, 0, Math.PI * 2 * (1 - e.slowF)); ctx.stroke(); }
-    if (e.stun > 0) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.setLineDash([1.5, 2.5]); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, S.t * 6, S.t * 6 + Math.PI * 1.6); ctx.stroke(); ctx.setLineDash([]); }
+    // ── Estados: cada uno con su propio dibujo, para ver de un vistazo qué tiene cada enemigo ──
+    //   a los pies (zarzas, charco) · sobre el cuerpo (llama, burbujas, chispazos, destellos, hielo, sangre) ·
+    //   sobre la cabeza, en fila (calavera de la Sentencia, zetas, reloj, estrellas, diana, cruz) · y debajo, los contadores de lo que se acumula
+    {
+      const ex = Math.round(e.x), ey = Math.round(e.y), R = e.r, ph = e.x * 0.37 + e.y * 0.11, lp = (name, fps) => ((S.t * fps + ph) / FXA[name].n) % 1;
+      if (e.root > 0) drawFx('thorns', lp('thorns', 9), ex, ey + R - 6, GODS.wood.color, R * 3 + 14);                       // Raíces
+      if (e.wet > 0) {                                                                                                       // Empapado: charco y goterones
+        ctx.strokeStyle = GODS.tide.color; ctx.globalAlpha = 0.7; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(ex, ey + R + 1, R + 3 + Math.sin(S.t * 4 + ph), 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillStyle = GODS.tide.color; for (let i = 0; i < 4; i++) { const u = (S.t * 1.6 + i * 0.27 + ph) % 1; ctx.fillRect(Math.round(ex - R + (i * 0.31 % 1) * R * 2 + i * 2 - 2), Math.round(ey - R + u * (R * 2)), 1, 3); }
+        ctx.fillStyle = '#eaf8ff'; for (let i = 0; i < 4; i++) { const u = (S.t * 1.6 + i * 0.27 + ph) % 1; ctx.fillRect(Math.round(ex - R + (i * 0.31 % 1) * R * 2 + i * 2 - 2), Math.round(ey - R + u * (R * 2)), 1, 1); }
+      }
+      if (e.ember > 0) { const fw = 9 + Math.min(9, e.ember * 1.2); drawFx('flame', lp('flame', 14), ex, ey - R * 0.2 - fw * 0.35, GODS.dragon.color, fw); }                 // Ascuas: arde más cuantas más lleva
+      if (e.venom > 0) drawFx('poison', lp('poison', 12), ex, ey - R * 0.5, GODS.venom.color, R * 2.4 + 12);                 // Veneno
+      if (e.needles > 0) drawFx('aura', lp('aura', 14), ex, ey - R * 0.3, GODS.storm.color, R * 2.6 + 12);                   // Agujas
+      if (e.lit > 0) drawFx('spark', lp('spark', 12), ex, ey - R * 0.7, GODS.light.color, R * 2.4 + 12);                     // Iluminado
+      if (e.bleed > 0) { ctx.fillStyle = GODS.blood.color; const n = Math.min(5, e.bleed + 1); for (let i = 0; i < n; i++) { const u = (S.t * 1.3 + i * 0.21 + ph) % 1; ctx.fillRect(Math.round(ex - R * 0.7 + i * (R * 1.4 / n)), Math.round(ey - R * 0.2 + u * (R * 1.4)), 2, 3); } }   // Herida
+      if (e.frozen > 0) drawFx('ice', lp('ice', 5), ex, ey - R * 0.35, GODS.frost.color, R * 3.6 + 10);                      // Helado
+      // Sobre la cabeza
+      const head = [];
+      if (e.doom) head.push('doom');
+      if (e.sleep > 0 || e.doze > 0) head.push('sleep');
+      if (e.slowT > 0) head.push('clock');
+      if (e.stun > 0) head.push('stun');
+      if (e.traced > 0) head.push('traced');
+      if (e.mark > 0) head.push('mark');
+      const hy = Math.round(ey - R * 1.7 - (e.hp < e.maxHp ? 13 : 9));
+      head.forEach((k, i) => {
+        const hx = Math.round(ex + (i - (head.length - 1) / 2) * 14);
+        if (k === 'doom') {                                                                                                  // Sentencia: la calavera y, debajo, lo que le queda
+          drawFx('skull', lp('skull', 10), hx, hy - 4, GODS.end.color, 13);
+          const q = clamp(e.doom.t / 5, 0, 1); ctx.fillStyle = '#16101a'; ctx.fillRect(hx - 6, hy + 6, 12, 3); ctx.fillStyle = GODS.end.color; ctx.fillRect(hx - 5, hy + 7, Math.round(10 * q), 1);
+        } else if (k === 'sleep') drawFx('sleep', lp('sleep', 9), hx, hy - 2, GODS.dream.color, 14);                         // Dormido
+        else if (k === 'clock') drawFx('clock', lp('clock', 10), hx, hy - 1, GODS.time.color, 15);                           // Ralentizado
+        else if (k === 'stun') { for (let n = 0; n < 3; n++) { const a = S.t * 7 + n * 2.094, sx = Math.round(hx + Math.cos(a) * 6), sy = Math.round(hy + Math.sin(a) * 2.5); ctx.fillStyle = '#16101a'; ctx.fillRect(sx - 2, sy - 1, 5, 3); ctx.fillRect(sx - 1, sy - 2, 3, 5); ctx.fillStyle = '#ffe58a'; ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } }   // Aturdido: estrellas dando vueltas
+        else if (k === 'traced') { ctx.strokeStyle = '#16101a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI * 2); ctx.stroke(); ctx.strokeStyle = C.energy; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = C.energy; ctx.fillRect(hx - 1, hy - 1, 2, 2); ctx.fillRect(hx - 7, hy, 3, 1); ctx.fillRect(hx + 5, hy, 3, 1); ctx.fillRect(hx, hy - 7, 1, 3); ctx.fillRect(hx, hy + 5, 1, 3); }   // Marcado: una diana
+        else { ctx.fillStyle = '#16101a'; ctx.fillRect(hx - 2, hy - 6, 5, 12); ctx.fillRect(hx - 5, hy - 3, 11, 5); ctx.fillStyle = GODS.shade.color; ctx.fillRect(hx - 1, hy - 5, 3, 10); ctx.fillRect(hx - 4, hy - 2, 9, 3); }   // Marca de tumba: una cruz
+      });
+      // Debajo: lo que se acumula, con su color y su número
+      const cnt = [];
+      if (e.ember > 0) cnt.push([GODS.dragon.color, e.ember]);
+      if (e.venom > 0) cnt.push([GODS.venom.color, e.venom]);
+      if (e.needles > 0) cnt.push([GODS.storm.color, e.needles]);
+      if (e.frost > 0 && !(e.frozen > 0)) cnt.push([GODS.frost.color, e.frost]);
+      if (e.bleed > 0) cnt.push([GODS.blood.color, e.bleed]);
+      if (e.seed > 0) cnt.push([GODS.wood.color, e.seed]);
+      if (e.nails > 0) cnt.push([PAL.i, e.nails]);
+      cnt.forEach(([col, n], i) => {
+        const cx = Math.round(ex + (i - (cnt.length - 1) / 2) * 13) - 4, cy = Math.round(ey + R + 6);
+        ctx.fillStyle = '#16101a'; ctx.fillRect(cx - 1, cy - 1, 5, 5); ctx.fillStyle = col; ctx.fillRect(cx, cy, 3, 3);
+        wtext(String(Math.round(n)), cx + 8, cy + 4.5, 7, col);
+      });
+    }
     if (e.hp < e.maxHp) {
       const w = e.r * 2 + 4; ctx.fillStyle = C.wall; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w, 2.5);
       ctx.fillStyle = C.ink; ctx.fillRect(e.x - w / 2, e.y - e.r - 7, w * clamp(e.hp / e.maxHp, 0, 1), 2.5);
