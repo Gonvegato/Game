@@ -2167,7 +2167,23 @@ function drawDialog(k) {
     if (tail) { g.lineTo(tail.x + 8 * dp, y + h); g.lineTo(tail.x, tail.y); g.lineTo(tail.x - 8 * dp, y + h); }
     g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath(); g.fill(); g.stroke();
   };
-  if (d.i < d.lines.length) {
+  if (d.i < d.lines.length && d.lines[d.i].think) {
+    // Pensamiento o recuerdo: nadie lo dice en voz alta. Va abajo, en una franja sin borde ni pico, en cursiva y sin nombre,
+    // para que no se confunda con el bocadillo de quien habla.
+    const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], tw = Math.min(cv.width * 0.8, 640 * dp);
+    g.font = `italic 500 ${fs}px ${FONT}`;
+    const lines = wrapText(g, L.text, tw - pad * 4), shown = L.text.slice(0, Math.floor(d.ch)), h = lines.length * lh + pad * 2;
+    const bx = (cv.width - tw) / 2, by = cv.height - h - 74 * dp;
+    const gr = g.createLinearGradient(bx, 0, bx + tw, 0); gr.addColorStop(0, 'rgba(8,6,10,0)'); gr.addColorStop(0.12, 'rgba(8,6,10,0.8)'); gr.addColorStop(0.88, 'rgba(8,6,10,0.8)'); gr.addColorStop(1, 'rgba(8,6,10,0)');
+    g.fillStyle = gr; g.fillRect(bx, by, tw, h);
+    g.fillStyle = sp[1]; g.globalAlpha = 0.7; g.fillRect(bx + tw * 0.2, by, tw * 0.6, Math.max(1, dp)); g.fillRect(bx + tw * 0.2, by + h - Math.max(1, dp), tw * 0.6, Math.max(1, dp)); g.globalAlpha = 1;
+    g.textAlign = 'center'; g.fillStyle = '#d9cfbe';
+    let left = shown.length;
+    lines.forEach((t, i) => { if (left <= 0) return; g.fillText(t.slice(0, left), cv.width / 2, by + pad + i * lh); left -= t.length + 1; });
+    if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.font = `500 ${fs}px ${FONT}`; g.fillText('▸', bx + tw - pad * 2.5, by + h - pad - fs * 0.9); }
+    g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)';
+    if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);
+  } else if (d.i < d.lines.length) {
     const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], at = speakerPos(L.who), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
     g.font = `500 ${fs}px ${FONT}`;
     const lines = wrapText(g, L.text, maxW), shown = L.text.slice(0, Math.floor(d.ch));
@@ -2309,15 +2325,15 @@ const INTRO = [
       R.add('g1', 'guard', 31, 13.5);
     },
     beats: [
-      { wait: 1.5, who: 'kid', text: 'Yo era un niño cuando los ejércitos de los dioses llegaron a mi pueblo.' },
-      { wait: 1.6, who: 'kid', text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
+      { wait: 1.5, who: 'kid', think: true, text: 'Yo era un niño cuando los ejércitos de los dioses llegaron a mi pueblo.' },
+      { wait: 1.6, who: 'kid', think: true, text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
         on(R) {
           [['s1', 'pc_skel_war', 52, 13.2, 32.2, 13.4], ['s2', 'pc_skel', 53.5, 14.3, 34, 14.3], ['s3', 'pc_skel_rogue', 55, 12.7, 35, 12.8], ['s4', 'brute', 56.5, 13.9, 37, 13.9], ['s5', 'pc_skel_war', 58, 14.6, 38.6, 14.6]]
             .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); sfx('kill', 0.4,0.8); } : null));
           R.camTo.x = IC(24);
         } },
       { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
-      { wait: 3.1, min: 0.6, who: 'kid', text: 'Corrí hasta los árboles. Y miré atrás.',
+      { wait: 3.1, min: 0.6, who: 'kid', think: true, text: 'Corrí hasta los árboles. Y miré atrás.',
         on(R) {
           R.go('kid', [[4.6, 13.9]], 105, a => { a.flip = false; });
           R.a('mother').flip = false; R.go('mother', [[19.7, 12.9]], 40); R.go('sister', [[13.6, 13.3]], 30);
@@ -2335,12 +2351,12 @@ const INTRO = [
       R.add('kid', 'alec_kid', 17.9, 13.3);
     },
     beats: [
-      { wait: 1.3, who: 'kid', text: 'Por la mañana no quedaba nadie. Ni casas, ni vecinos, ni familia.',
+      { wait: 1.3, who: 'kid', think: true, text: 'Por la mañana no quedaba nadie. Ni casas, ni vecinos, ni familia.',
         on(R) { R.go(R.add('oldsmith', 'oldsmith', -2.5, 14), [[15.7, 13.6]], 56, () => { R.a('kid').flip = true; }); } },
       { who: 'oldsmith', text: '¿Queda alguien más, chico?' },
       { who: 'kid', text: 'No.' },
       { who: 'oldsmith', text: 'Pues aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
-      { wait: 1.1, who: 'kid', text: 'Era herrero. Me dio techo, trabajo y pocas palabras.',
+      { wait: 1.1, who: 'kid', think: true, text: 'Era herrero. Me dio techo, trabajo y pocas palabras.',
         on(R) { R.go('oldsmith', [[4, 14]], 38); }, ev: [[0.5, R => R.go('kid', [[5.8, 13.8]], 38)]] },
     ] },
   { cap: 'La forja', room: ['intro_forja', 'shop'], amb: '#b8a596',
@@ -2356,9 +2372,9 @@ const INTRO = [
       }
     },
     beats: [
-      { wait: 1.2, who: 'kid', text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
+      { wait: 1.2, who: 'kid', think: true, text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
       { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
-      { wait: 1.4, min: 0.9, who: 'teen', text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
+      { wait: 1.4, min: 0.9, who: 'teen', think: true, text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
         on(R) {
           R.dipTo(() => {
             R.a('kid').hidden = true; R.stage = 1; R.acc = 0.9; R.setCap('Años después');
@@ -2366,20 +2382,20 @@ const INTRO = [
             const s = R.a('oldsmith'); s.x = IC(15.8); s.y = IC(12); s.flip = true;
           });
         } },
-      { who: 'teen', text: 'Fueron diez años. No he tenido otros mejores.' },
+      { who: 'teen', think: true, text: 'Fueron diez años. No he tenido otros mejores.' },
     ] },
   { cap: 'La última noche', room: ['intro_forja', 'shop'], amb: '#4c4166',
     setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_s', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
     beats: [
-      { wait: 2.3, who: 'teen', text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
+      { wait: 2.3, who: 'teen', think: true, text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
         on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); sfx('roar', 0.5); } },
       { who: 'chosen', text: 'Herrero. Tu fragua servirá a mi señor, o no servirá a nadie.' },
       { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, atrás.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); } },
-      { wait: 1.6, min: 0.9, who: 'teen', text: 'Lo mató de un solo golpe. A mí ni me miró.',
+      { wait: 1.6, min: 0.9, who: 'teen', think: true, text: 'Lo mató de un solo golpe. A mí ni me miró.',
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
         ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); sfx('boom', 0.6); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
-      { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+      { wait: 1.2, who: 'teen', think: true, text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -2387,12 +2403,12 @@ const INTRO = [
       R.go(a, [[19, 10.9]], 54);
     },
     beats: [
-      { wait: 1, who: 'alec', text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
-      { wait: 0.6, who: 'alec', text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
+      { wait: 1, who: 'alec', think: true, text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
+      { wait: 0.6, who: 'alec', think: true, text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
-      { who: 'alec', text: 'No lo hago por el oro. Algún día mataré a los dioses.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
-      { who: 'alec', text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
+      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
     ] },
   { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
     setup(R) {
@@ -2404,7 +2420,7 @@ const INTRO = [
     },
     tick(R, dt) { introPlazaStroll(R, dt); },   // los vecinos pasean como en la plaza de verdad
     beats: [
-      { wait: 1.2, who: 'alec', text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
+      { wait: 1.2, who: 'alec', think: true, text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
         ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
       { wait: 0.5, who: 'guardia', text: '¿Alec, el mercenario que no reza? El rey te espera en el castillo.' },
       { who: 'alec', text: 'Veamos cuánto paga por la cabeza de un dios.' },
@@ -2432,12 +2448,12 @@ const ENDING = [
       R.add('alec', null, 12.5, 13.6, { hero: true, face: 0 });
     },
     beats: [
-      { wait: 6.1, min: 5.5, who: 'alec', text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
+      { wait: 6.1, min: 5.5, who: 'alec', think: true, text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
         on(R) { R.go('alec', [[18.5, 13.6]], 44, a => { a.face = 0; }); },
         ev: [[2.5, R => R.shoot('alec', 'god')],
           [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
           [3.1, R => { R.shake(6); sfx('boom', 0.55, 0.9, 0); }], [3.55, R => { R.shake(6); sfx('boom', 0.55, 1.1, 0); }], [4.0, R => { R.shake(7); R.flash = 0.4; sfx('boom', 0.6, 0.8, 0); }], [4.5, R => { R.shake(8); sfx('bossdie', 0.8, 1, 0); }]] },
-      { who: 'alec', text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
+      { who: 'alec', think: true, text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
     ] },
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
     setup(R) {
@@ -2465,7 +2481,7 @@ const ENDING = [
       R.acc += dt; if (R.acc > 0.45) { R.acc = 0; const f = R.actors.filter(q => q.area); if (f.length) f[Math.floor(Math.random() * f.length)].hop = 0.14; }
     },
     beats: [
-      { wait: 3.4, min: 0.8, who: 'alec', text: 'En la plaza ya nadie miraba al camino con miedo.' },
+      { wait: 3.4, min: 0.8, who: 'alec', think: true, text: 'En la plaza ya nadie miraba al camino con miedo.' },
       { who: 'smith', text: 'Esos guanteletes han matado a un dios. Quien los forjó sabía lo que hacía.', on(R) { R.a('alec').face = Math.PI; } },
       { who: 'alec', text: 'Lo sabía.' },
       { who: 'keeper', text: 'Tu cama sigue donde estaba, mercenario. Y esta noche invita la casa.', on(R) { R.a('alec').face = 0; } },
@@ -2476,8 +2492,8 @@ const ENDING = [
       R.go(a, [[17, 10.9]], 50);
     },
     beats: [
-      { wait: 1.6, who: 'alec', text: 'No me quedé a la fiesta. No era mía.' },
-      { wait: 0.9, who: 'alec', text: 'Queda uno menos. Faltan los demás.', on(R) { R.go('alec', [[25, 10.9]], 44); } },
+      { wait: 1.6, who: 'alec', think: true, text: 'No me quedé a la fiesta. No era mía.' },
+      { wait: 0.9, who: 'alec', think: true, text: 'Queda uno menos. Faltan los demás.', on(R) { R.go('alec', [[25, 10.9]], 44); } },
       { wait: 5.2, min: 2.6, on(R) { R.follow = null; R.camTo = null; R.go('alec', [[46, 10.9]], 50); R.endCard(`${kingdomNow().name} es libre`, 'Continuará'); } },
     ] },
 ];
@@ -2563,7 +2579,7 @@ function introUpdate(dt) {
     if (N.bt >= (B.wait == null ? 0.35 : B.wait) || (adv && N.bt >= (B.min == null ? 0.25 : B.min))) {
       if (!B.text) { introBeat(N.b + 1); return; }
       N.txt = typeof B.text === 'function' ? B.text() : B.text; N.phase = 'say';
-      S.dialog = { lines: [{ who: B.who, text: N.txt }], i: 0, ch: 0, choices: null, sel: 0, t: 0, onEnd: null };
+      S.dialog = { lines: [{ who: B.who, text: N.txt, think: !!B.think }], i: 0, ch: 0, choices: null, sel: 0, t: 0, onEnd: null };
     }
   } else {
     const d = S.dialog, len = N.txt.length; d.ch = Math.min(len, d.ch + dt * 48); d.t += dt;

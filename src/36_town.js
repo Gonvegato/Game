@@ -124,7 +124,23 @@ function drawDialog(k) {
     if (tail) { g.lineTo(tail.x + 8 * dp, y + h); g.lineTo(tail.x, tail.y); g.lineTo(tail.x - 8 * dp, y + h); }
     g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath(); g.fill(); g.stroke();
   };
-  if (d.i < d.lines.length) {
+  if (d.i < d.lines.length && d.lines[d.i].think) {
+    // Pensamiento o recuerdo: nadie lo dice en voz alta. Va abajo, en una franja sin borde ni pico, en cursiva y sin nombre,
+    // para que no se confunda con el bocadillo de quien habla.
+    const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], tw = Math.min(cv.width * 0.8, 640 * dp);
+    g.font = `italic 500 ${fs}px ${FONT}`;
+    const lines = wrapText(g, L.text, tw - pad * 4), shown = L.text.slice(0, Math.floor(d.ch)), h = lines.length * lh + pad * 2;
+    const bx = (cv.width - tw) / 2, by = cv.height - h - 74 * dp;
+    const gr = g.createLinearGradient(bx, 0, bx + tw, 0); gr.addColorStop(0, 'rgba(8,6,10,0)'); gr.addColorStop(0.12, 'rgba(8,6,10,0.8)'); gr.addColorStop(0.88, 'rgba(8,6,10,0.8)'); gr.addColorStop(1, 'rgba(8,6,10,0)');
+    g.fillStyle = gr; g.fillRect(bx, by, tw, h);
+    g.fillStyle = sp[1]; g.globalAlpha = 0.7; g.fillRect(bx + tw * 0.2, by, tw * 0.6, Math.max(1, dp)); g.fillRect(bx + tw * 0.2, by + h - Math.max(1, dp), tw * 0.6, Math.max(1, dp)); g.globalAlpha = 1;
+    g.textAlign = 'center'; g.fillStyle = '#d9cfbe';
+    let left = shown.length;
+    lines.forEach((t, i) => { if (left <= 0) return; g.fillText(t.slice(0, left), cv.width / 2, by + pad + i * lh); left -= t.length + 1; });
+    if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.font = `500 ${fs}px ${FONT}`; g.fillText('▸', bx + tw - pad * 2.5, by + h - pad - fs * 0.9); }
+    g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)';
+    if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);
+  } else if (d.i < d.lines.length) {
     const L = d.lines[d.i], sp = SPEAKER[L.who] || [L.who, '#efe6c8'], at = speakerPos(L.who), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
     g.font = `500 ${fs}px ${FONT}`;
     const lines = wrapText(g, L.text, maxW), shown = L.text.slice(0, Math.floor(d.ch));
