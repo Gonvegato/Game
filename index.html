@@ -230,6 +230,16 @@ small.gloss{display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:
 .ghost{background:none;border:1px solid var(--line);padding:9px 16px;font:600 14px/1 var(--display);border-radius:2px}
 .card.sel{border-color:var(--energy)}
 @media (max-width:520px){.cards{grid-template-columns:1fr}#hint{display:none}}
+/* Cartas de elección en filas anchas, una debajo de otra: cabecera a la izquierda, texto en el centro y glosario a la derecha */
+.cards.rows{display:flex;flex-direction:column;gap:8px}
+.cards.rows .card{flex-direction:row;align-items:stretch;gap:16px;padding:10px 14px;border-top-width:2px;border-top-color:var(--line);border-left:6px solid var(--fam);background:linear-gradient(90deg,color-mix(in srgb,var(--fam) 18%,#120e14),#120e14 42%)}
+.cards.rows .card.sel{border-color:var(--energy);border-left-color:var(--fam);transform:translateX(6px)}
+.cards.rows .ch{flex:0 0 23%;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0}
+.cards.rows .cb{flex:1 1 0;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0}
+.cards.rows .cb small{margin-top:0}
+.cards.rows small.gloss{flex:0 0 30%;margin:0;border-top:0;border-left:1px solid var(--line);padding:0 0 0 12px;justify-content:center;min-width:0}
+@media (max-width:640px){.cards.rows .card{flex-wrap:wrap;gap:8px}.cards.rows .ch,.cards.rows .cb{flex:1 1 100%}.cards.rows small.gloss{flex:1 1 100%;border-left:0;border-top:1px solid var(--line);padding:6px 0 0}}
+@media (max-height:420px){#ovBody:has(.cards.rows){gap:7px;padding:10px 14px}#ovBody:has(.cards.rows) h1{font-size:24px;padding-bottom:5px}.cards.rows{gap:5px}.cards.rows .card{padding:6px 12px}.cards.rows .card span{font-size:12px;line-height:1.25}.cards.rows .card strong{font-size:15px}}
 @media (max-height:420px){#ovBody{padding:14px;gap:9px}.keys{gap:4px}#hint{display:none}}
 </style>
 <!--/PAGE-->
