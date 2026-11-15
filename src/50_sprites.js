@@ -541,9 +541,23 @@ function drawWeapon(x, y, ang, kick) {
 }
 // ── Personajes del paquete: fotograma según la animación y el tiempo, con los pies en (x, yFeet) ──
 const charKey = e => (e.skin && ATLAS[e.skin] ? e.skin : e.champ ? 'champ' : Object.keys(TYPES).find(k => TYPES[k] === e.type));
+// Los paquetes traen pocos dibujos por animación (de 4 a 14 por ciclo, a 5-20 por segundo). El juego pinta a 60, así que entre un
+// dibujo y el siguiente se funde uno con otro: cada fotograma en pantalla es una mezcla exacta de los dos, y el movimiento no da saltos.
+let MIX = null;
+function mixFrame(im, m, a, time) {
+  const n = a.f.length, ft = time * a.fps, fl = Math.floor(ft), i = ((fl % n) + n) % n, fr = ft - fl;
+  if (n < 2 || fr < 0.06) return [im, a.f[i][0], a.f[i][1], i];
+  if (!MIX) { MIX = document.createElement('canvas'); MIX.width = 192; MIX.height = 160; }
+  if (MIX.width < m.w || MIX.height < m.h) { MIX.width = Math.max(MIX.width, m.w); MIX.height = Math.max(MIX.height, m.h); }
+  const g = MIX.getContext('2d'), j = (i + 1) % n;
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, m.w, m.h);
+  g.globalAlpha = 1 - fr; g.drawImage(im, a.f[i][0], a.f[i][1], m.w, m.h, 0, 0, m.w, m.h);
+  g.globalCompositeOperation = 'lighter'; g.globalAlpha = fr; g.drawImage(im, a.f[j][0], a.f[j][1], m.w, m.h, 0, 0, m.w, m.h);
+  return [MIX, 0, 0, i];
+}
 function drawChar(key, anim, time, x, yFeet, flip, flash) {
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
-  const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1], im = flash ? IMG.charsF : IMG.chars;
+  const a = m.a[anim] || m.a.move, [im, sx, sy] = mixFrame(flash ? IMG.charsF : IMG.chars, m, a, time);
   if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(im, sx, sy, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); ctx.restore(); }
   else ctx.drawImage(im, sx, sy, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
   return true;
@@ -565,9 +579,9 @@ function drawHero(anim, time, x, yFeet, face, flash) {
     ctx.restore();
     if (Math.random() < 0.08 * (tier - 1)) S.fx.push({ k: 'spark', x: x + rnd(-6, 6), y: yFeet - rnd(2, 20), vx: rnd(-8, 8), vy: rnd(-40, -20), t: 0, life: rnd(0.4, 0.8), col });
   }
-  const a = m.a[anim] || m.a.move, n = a.f.length, i = ((Math.floor(time * a.fps) % n) + n) % n, sx = a.f[i][0], sy = a.f[i][1];
+  const a = m.a[anim] || m.a.move, [src, sx, sy, i] = mixFrame(flash ? IMG.charsF : IMG.chars, m, a, time);
   if (!HERO_TMP) { HERO_TMP = document.createElement('canvas'); HERO_TMP.width = 64; HERO_TMP.height = 64; }
-  const t = HERO_TMP.getContext('2d'); t.clearRect(0, 0, 64, 64); t.globalCompositeOperation = 'source-over'; t.drawImage(flash ? IMG.charsF : IMG.chars, sx, sy, m.w, m.h, 0, 0, m.w, m.h);
+  const t = HERO_TMP.getContext('2d'); t.clearRect(0, 0, 64, 64); t.globalCompositeOperation = 'source-over'; t.drawImage(src, sx, sy, m.w, m.h, 0, 0, m.w, m.h);
   if (tier >= 2 && !flash) { t.globalCompositeOperation = 'source-atop'; t.globalAlpha = 0.08 + 0.07 * (tier - 1); t.fillStyle = col; t.fillRect(0, 0, m.w, m.h); t.globalAlpha = 1; }
   // contorno de 1 píxel para que se lea sobre cualquier suelo: claro al principio, del color de su deidad cuando sube de nivel
   if (!HERO_SIL) { HERO_SIL = document.createElement('canvas'); HERO_SIL.width = 64; HERO_SIL.height = 64; }
@@ -587,8 +601,9 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   if (hands && IMG.fx) {
     const row = fxRow(col), fw = (anim === 'atk' ? 7 : 5) + tier, fh = Math.round(fw * 1.5), ff = FXA.flame;
     for (let h = 0; h < hands.length; h++) {
-      const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], fr = (Math.floor(S.t * 14) + h * 5) % ff.n;
+      const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], ft = S.t * 14 + h * 5, fr = Math.floor(ft) % ff.n, mix = ft - Math.floor(ft);
       ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 3), fw, fh);
+      ctx.globalAlpha = mix; ctx.drawImage(IMG.fx, (fr + 1) % ff.n * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 3), fw, fh); ctx.globalAlpha = 1;   // la llama también se funde entre dibujos
     }
   }
   return true;
