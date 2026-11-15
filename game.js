@@ -837,7 +837,8 @@ function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
 function musicWant() {
   if (muted || !S) return null;
   const m = S.mode;
-  if (m === 'title' || m === 'intro') return 'm_title';
+  if (m === 'intro') return S.intro && S.intro.L === ENDING ? 'm_end' : 'm_title';   // el final del reino tiene su propia música
+  if (m === 'title') return 'm_title';
   if (m === 'dead') return null;
   if (m === 'win') return 'm_win';
   if (m === 'town' || S.town) return 'm_town';
@@ -1486,21 +1487,21 @@ function buildHtml(full) {
     return bits.length || extra ? `<li class="line">${bits.join('')}${extra ? `<span class="more">+ ${extra}</span>` : ''}</li>` : '';
   }
   const rows = [];
-  const row = (label, color, name, sub) => rows.push(`<li><em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>${full ? gloss(sub, 4) : ''}` : ''}</li>`);
+  const row = (label, color, name, sub, icon) => rows.push(`<li>${full && icon ? icon : ''}<em style="color:${color}">${label}</em><b>${name}</b>${sub ? `<span>${sub}</span>${full ? gloss(sub, 4) : ''}` : ''}</li>`);
   for (const k of SLOT_KEYS) {
     const cur = S.build[k];
     if (!cur) { if (full) rows.push(`<li><em>${SLOTS[k]}</em><span>Ranura libre</span></li>`); continue; }
     const D = DUO[cur.id];
-    if (D) row(SLOTS[k], RAR[3].color, D.name + ' ' + ROMAN[cur.lvl], full ? duoText(D, cur.lvl) : '');
-    else row(SLOTS[k], GODS[PIECE[cur.id].god].color, PIECE[cur.id].name + ' ' + ROMAN[cur.lvl], full ? PIECE[cur.id].desc(cur.lvl) : '');
+    if (D) row(SLOTS[k], RAR[3].color, D.name + ' ' + ROMAN[cur.lvl], full ? duoText(D, cur.lvl) : '', pic(D.a, 't'));
+    else row(SLOTS[k], GODS[PIECE[cur.id].god].color, PIECE[cur.id].name + ' ' + ROMAN[cur.lvl], full ? PIECE[cur.id].desc(cur.lvl) : '', pic(cur.id, 't'));
   }
   for (const g of GOD_KEYS) if (mastery(g)) row('Maestría', GODS[g].color, MASTERY[g].name, full ? MASTERY[g].desc : '');
   for (const R of RESO) if (res(R.id)) row('Resonancia', RAR[3].color, R.name, full ? R.desc : '');
   for (const E of ensOf(S.gun)) row('Ensamble', C.energy, E.name, full ? E.desc : '');
   for (const g of GOD_KEYS) { const a = aff(g); if (a) row('Afinidad', GODS[g].color, GODS[g].theme + ' ×' + a, full ? AFFIN[g] + (a > 1 ? ', por cada una de tus ' + a + ' piezas afines' : '') + '.' : ''); }
-  if (full) for (const k of GSLOT_KEYS) { const x = PART[S.gun[k]]; row(GSLOTS[k], C.energy, x.name, x.desc); }
+  if (full) for (const k of GSLOT_KEYS) { const x = PART[S.gun[k]]; row(GSLOTS[k], C.energy, x.name, x.desc, pic(x.id, 't')); }
   const techs = TECHS.filter(t => S.techs.has(t.id)), plans = PLANS.filter(x => S.plans.has(x.id));
-  if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
+  if (full) { for (const t of techs) row('Técnica', RAR[t.rar].color, t.name, t.desc, pic(t.id, 't')); for (const x of plans) row('Plano', C.ink, x.name, x.desc); }
   else { if (techs.length) row('Técnicas', C.dim, techs.map(t => t.name).join(', ')); if (plans.length) row('Planos', C.dim, plans.map(x => x.name).join(', ')); }
   return rows.join('');
 }
@@ -6338,7 +6339,7 @@ function renderOverlay() {
       `</div><div class="btns"><button id="bookBtn" class="ghost">Recetario</button>${pickReroll && S.rerolls > 0 ? '<button id="rrBtn" class="ghost">Volver a sortear</button>' : ''}<p class="fine">Muévete con el stick izquierdo o la cruceta (también hacia abajo), disparar para confirmar. El stick derecho desplaza la pantalla. Cargar abre el recetario${pickReroll && S.rerolls > 0 ? ' y esquivar vuelve a sortear' : ''}.</p></div>`;
   }
   ovBody.innerHTML = h;
-  ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop' || m === 'pick');
+  ovBody.classList.toggle('wide', m === 'book' || m === 'forge' || m === 'shop' || m === 'pick' || m === 'pause');
   if (m === 'forge' || m === 'shop') bindList();
   ovBody.querySelectorAll('[data-bk]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); audioInit(); bookPage = +b.dataset.bk; bookTurn(0); }));
   const rr = $('rrBtn'); if (rr) rr.addEventListener('click', () => { audioInit(); rerollPick(); });

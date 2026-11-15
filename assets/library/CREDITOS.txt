@@ -12,6 +12,7 @@ Créditos y licencias del arte de terceros (ver también los Terms.txt y Readme.
 
 Música y sonido (assets/audio/, todo con licencia CC0 según su página de OpenGameArt; no obliga a citar, se cita igualmente):
 - m_title «Medieval: The Bard's Tale», m_town «Medieval: The Old Tower Inn», m_battle «Medieval: Battle», m_win «Medieval: Victory Theme» — RandomMind (opengameart.org).
+- m_end «Fantasy: Lament for a Warrior's Soul» — RandomMind (opengameart.org/content/fantasy-lament-for-a-warriors-soul). Suena en el final del reino.
 - m_crypt «Dark Bishop» — ARoachIFoundOnMyPillow (opengameart.org/content/dark-bishop).
 - m_boss «Epic Boss Battle [Seamlessly Looping]» — Juhani Junkala, subido por SubspaceAudio (opengameart.org/content/boss-battle-music).
 - cast: «Magic Spell SFX» (opengameart.org/content/magic-spell-sfx).

@@ -50,7 +50,8 @@ function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
 function musicWant() {
   if (muted || !S) return null;
   const m = S.mode;
-  if (m === 'title' || m === 'intro') return 'm_title';
+  if (m === 'intro') return S.intro && S.intro.L === ENDING ? 'm_end' : 'm_title';   // el final del reino tiene su propia música
+  if (m === 'title') return 'm_title';
   if (m === 'dead') return null;
   if (m === 'win') return 'm_win';
   if (m === 'town' || S.town) return 'm_town';

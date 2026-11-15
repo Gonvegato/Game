@@ -202,6 +202,15 @@ small.gloss{display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:
 .bk>b{grid-column:2;font:600 15px/1.2 var(--display);color:var(--ink)}.bk>span{grid-column:2;font-size:12px;line-height:1.35;color:var(--dim)}.bk.own>span{color:#cfc4b2}
 .bklist.gl .bk{grid-template-columns:1fr}.bklist.gl .bk>b,.bklist.gl .bk>span{grid-column:1}
 .carrylist{font-size:13px}
+/* Listas completas (pausa, sinergias, lo que llevas): tarjetas con icono en vez de texto corrido */
+.build.full{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:8px;align-items:start}
+.build.full li{display:grid;grid-template-columns:1fr;column-gap:14px;row-gap:3px;align-items:start;border:2px solid var(--line);background:linear-gradient(#17121a,#120e14);padding:10px 12px;border-radius:2px}
+.build.full li:has(>.pic.t){grid-template-columns:44px 1fr}.build.full li:has(>.pic.t)>*:not(.pic){grid-column:2}
+.build.full li>em{min-width:0;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.build.full li>b{font:600 15px/1.2 var(--display);color:var(--ink)}
+.build.full li>span{flex-basis:auto;font-size:12px;line-height:1.35}
+.build.full.legends li:not(.own){opacity:.6}.build.full.legends li.own{border-color:var(--energy);background:linear-gradient(#241d14,#15110f)}
+.carry .build.full{grid-template-columns:1fr}
 .pic{display:inline-block;width:32px;height:32px;background:url(assets/icons.png) no-repeat;image-rendering:pixelated;vertical-align:middle;margin:-6px 8px -4px 0;flex:none}
 .pic.s{position:absolute;right:3px;top:3px;margin:0;transform:scale(.5);transform-origin:right top;opacity:.95}
 #build li.slot{position:relative}
