@@ -38,20 +38,7 @@ const shopAfter = (ms, r) => MTYPES[ms.type].shops.includes(r);
 const hasBoss = ms => ms.type === 'boss' || ms.type === 'god';
 const whereNow = () => { const ms = S.mission; return !ms ? '' : ms.zone + ' · ' + ms.name; };
 
-// El mapa del reino, en la forja: cuatro zonas con sus misiones y, en medio, el dios
-function mapHtml() {
-  const K = kingdomNow(), nDone = Object.keys(M.done || {}).filter(id => id.startsWith(K.id)).length;
-  const btn = (id, label, sub, locked) => `<button class="fi${isDone(id) ? ' on' : locked ? ' off' : ''}" data-act="${locked ? 'x' : 'm'}:${id}"><b>${label}</b><span>${sub}</span><i>${isDone(id) ? 'Hecha' : locked ? 'Cerrada' : payOf(missionOf(id)) + ' almas'}</i></button>`;
-  const zones = K.zones.map((Z, z) => {
-    const W = WPAL[z], open = zoneOpen(K, z), boss = TYPES[WORLDS[z].boss].name;
-    return `<section class="zone" style="--zf:${W.f[1]};--zc:${W.capHi}"><h3>${Z.name}</h3>` +
-      Z.m.map((nm, i) => btn(`${K.id}:${z}:${i}`, nm, MTYPES[MKINDS[i]].name, false)).join('') +
-      btn(`${K.id}:${z}:b`, boss, open ? 'Guardián de la zona' : 'Guardián · completa antes las tres misiones', !open) + '</section>';
-  }).join('');
-  const g = godOpen(K), G = TYPES[K.god];
-  return `<h2>Contrato: ${K.title}</h2><p class="fine">${K.lore} Llevas ${nDone} de 17 encargos.</p><ul class="legend">${['doors', 'defend', 'assault', 'boss', 'god'].map(t => `<li><b>${MTYPES[t].name}:</b> ${MTYPES[t].desc}</li>`).join('')}</ul><div class="kmap">${zones}</div>` +
-    `<section class="zone god">${btn(`${K.id}:g`, G.name, g ? 'El dios que asedia el reino' : 'El dios · derrota antes a los cuatro guardianes', !g)}</section>`;
-}
+// El mapa del reino que se ve en el tablón (mapHtml: el dibujo, los territorios por color y los marcadores de cada encargo) está en 38_map.js
 
 // Fin de una misión con éxito: se cobra el encargo y se vuelve a la forja con lo ganado
 function missionWin() {
