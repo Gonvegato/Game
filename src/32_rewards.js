@@ -36,7 +36,7 @@ function roomCleared() {
   else if (S.roomType === 'gold') { const k = 60 + 20 * W; addGold(k); got = '+' + k + ' de oro'; }
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
-  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', (ROOMS[S.roomType] || { color: C.ink }).color); blip(700, 0.2, 'triangle', 0.05, 500); }
+  if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', (ROOMS[S.roomType] || { color: C.ink }).color); sfx('ok', 0.4); }
   const onward = ms.type === 'defend' || ms.type === 'assault' || S.room + 1 >= N && hasBoss(ms) ? null : doorScreen;   // en defensa y asalto no hay puertas; antes del jefe tampoco
   if (last) afterPicks = missionWin;
   else if (shopAfter(ms, S.room)) afterPicks = openShop;     // la tienda decide después por dónde sigues
@@ -74,17 +74,17 @@ function advancePick() {
 function rerollPick() {   // Regateo
   if (S.mode !== 'pick' || !pickReroll || S.rerolls <= 0) return;
   S.rerolls -= 1; pickOpts = pickReroll(); pickSel = pickOpts.length > 2 ? 1 : 0; modeT = 0;
-  blip(500, 0.1, 'triangle', 0.05, 300); renderOverlay();
+  sfx('tick', 0.3,1.2); renderOverlay();
 }
 function choosePick(i) {
   if (S.mode !== 'pick' || modeT < 0.45 || !pickOpts[i]) return;
   const before = GOD_KEYS.filter(mastery), o = pickOpts[i];
   sfx('pick', 0.5);
   o.apply();
-  blip(660, 0.12, 'triangle', 0.05, 500);
+  sfx('pick', 0.5);
   if (o.god) say(o.god, 'take');
   checkRes();
-  for (const g of GOD_KEYS) if (mastery(g) && !before.includes(g)) { say(g, 'master'); note(S.p.x, S.p.y - 20, '¡' + MASTERY[g].name + '!', GODS[g].color, true); blip(520, 0.5, 'triangle', 0.06, 900); }
+  for (const g of GOD_KEYS) if (mastery(g) && !before.includes(g)) { say(g, 'master'); note(S.p.x, S.p.y - 20, '¡' + MASTERY[g].name + '!', GODS[g].color, true); sfx('fanfare', 0.6); }
   advancePick();
 }
 

@@ -143,13 +143,13 @@ function fireBasic(target) {
   p.idle = 0;                       // Gema de sangre
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última gema
-  if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); blip(1800, 0.09, 'sine', 0.05); }
+  if (p.crit) { mult *= S.plans.has('tempo') ? 2 : 1.5; S.stat.tempo++; note(p.x, p.y - 14, '¡Compás!', C.ember, true); sfx('chime', 0.4,1.25); }
   if (p.redhot > 0) mult *= 1.5;                                               // Al rojo
   if (p.broke) { p.broke = false; mult *= 3; note(p.x, p.y - 14, '¡Siete años!', GODS.mirror.color, true); }   // Siete años
   let onetwo = false;
   if (g.mag === 'm_drum') { if (p.shells === 1 && p.drumT === target && target) { mult *= 1.6; onetwo = true; S.stat.onetwo++; } p.drumT = target; }   // Gema doble: la segunda al mismo blanco pega más
   const imb = g.mag === 'm_charged' && p.trig % 5 === 0;
-  if (imb) { mult *= 2.5; blip(1600, 0.1, 'sine', 0.05); }
+  if (imb) { mult *= 2.5; sfx('chime', 0.45,1); }
   if (draw) mult *= (0.6 + 1.6 * p.drawPow) * (ens('siege') && p.drawPow >= 1 && braced() ? 1.6 : 1);
   if (res('furnace')) mult *= 1 + 0.4 * p.heat;                              // resonancia Fragua viva
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || overB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
@@ -160,12 +160,12 @@ function fireBasic(target) {
     S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
     sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
-  blip(1250, 0.07, 'square', 0.035, -700);
+  sfx('zap', 0.3,1.2);
   if (g.action === 'a_burst') {          // Ráfaga: tres seguidos
     barrelFire(target, mult * 0.45, big, col, reach);
-    for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1250, 0.05, 'square', 0.03, -700); barrelFire(t2, mult * 0.45, big, col, reach); if (d > 0.1 && active(t2)) stun(t2, 0.4); } } });
+    for (const d of [0.07, 0.14]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { sfx('zap', 0.25,1.2); barrelFire(t2, mult * 0.45, big, col, reach); if (d > 0.1 && active(t2)) stun(t2, 0.4); } } });
   } else barrelFire(target, mult, big, col, reach);
-  if (leg('zhuge') && draw) for (const d of [0.08, 0.16]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { blip(1400, 0.04, 'square', 0.03, -500); barrelFire(t2, mult * 0.7, false, col, reach); addVenom(t2, 2); } } });
+  if (leg('zhuge') && draw) for (const d of [0.08, 0.16]) S.timers.push({ t: d, fn: () => { const t2 = target && active(target) ? target : nearestInRange(); if (t2) { sfx('zap', 0.25,1.35); barrelFire(t2, mult * 0.7, false, col, reach); addVenom(t2, 2); } } });
   if (leg('zhuge') && draw && target && active(target)) addVenom(target, 2);
   if (imb && target && active(target)) { S.stat.blessed++; explode(target.x, target.y, 40, p.dmg * 1.2, { col: '#ffffff' }); }   // Gema bendita
   if (res('leadstorm') && p.trig % 10 === 0 && target && active(target)) discharge(target, 1, null);        // resonancia Tormenta de plomo
@@ -203,7 +203,7 @@ function fireBasic(target) {
   if (g.mag === 'm_belt') {              // la gema candente calienta los guanteletes
     p.heat = Math.min(1, p.heat + (g.action === 'a_rotary' ? 0.045 : 0.13)); p.heatT = 0.7;
     if (p.heat >= 1 && leg('organ')) { p.heat = 0; S.shake = Math.max(S.shake, 5); note(p.x, p.y - 16, '¡Salva!', C.ember, true); const near = S.enemies.filter(e => active(e) && dist(p, e) < rangeOf() + 40 && !blocked(p, e)); for (let i = 0; i < 11 && near.length; i++) { const e = near[i % near.length], d = dist(p, e) || 1; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: e.x, y2: e.y, t: 0, life: 0.12, col: C.ember, w: 1.5 }); if (active(e)) shot(e, p.dmg * 0.6, (e.x - p.x) / d, (e.y - p.y) / d, false, col); } }
-    else if (p.heat >= 1) { p.over = 1.6; p.spin = 0; p.drawing = false; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); blip(120, 0.4, 'sawtooth', 0.06, -60); if (res('furnace')) explode(p.x, p.y, 70, p.dmg * 2.5, { push: 200, col: GODS.orc.color }); }
+    else if (p.heat >= 1) { p.over = 1.6; p.spin = 0; p.drawing = false; note(p.x, p.y - 16, '¡Recalentada!', C.blood, true); sfx('burn', 0.55); if (res('furnace')) explode(p.x, p.y, 70, p.dmg * 2.5, { push: 200, col: GODS.orc.color }); }
   }
   // Brazal de coz: cada disparo te aparta del enemigo
   if (g.stock === 's_recoil' && target && g.barrel !== 'b_spike' && p.dodgeT <= 0) { const d = dist(p, target) || 1; p.x -= (target.x - p.x) / d * 9; p.y -= (target.y - p.y) / d * 9; p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4); collide(p, p.r); }
@@ -304,7 +304,7 @@ function barrelFire(target, m, big, col, reach) {
     S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
     S.fx.push({ k: 'ring', x: tx, y: ty, r: 16, t: 0, life: fl, col: C.ember });
     S.timers.push({ t: fl, fn: () => {
-      S.fx.push({ k: 'ring', x: tx, y: ty, r: leg('monsmeg') ? 68 : 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); blip(140, 0.18, 'sawtooth', 0.05, -80);
+      S.fx.push({ k: 'ring', x: tx, y: ty, r: leg('monsmeg') ? 68 : 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); sfx('boom', 0.45,0.9);
       let n = 0;
       for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = Math.hypot(e.x - tx, e.y - ty); if (d > (leg('monsmeg') ? 64 : 40) + e.r) continue; n++; if (leg('monsmeg')) stun(e, 0.6); shot(e, dm, (e.x - tx) / (d || 1), (e.y - ty) / (d || 1), big, col); }
       S.stat.bombHits += n; S.stat.bombs++;
@@ -356,7 +356,7 @@ function startDodge(a, free) {
   p.dodgeT = T.dodge.time * (p.fly ? 1.8 : 1) * (G('s_light') ? 1.3 : 1) * (G('s_roll') ? 0.65 : 1); p.inv = Math.max(p.inv, p.dodgeT + 0.06); sfx('dodge', 0.35);
   p.danced = false; p.lastDodgeT = S.t; p.dodgeFrom = { x: p.x, y: p.y }; p.isLunge = false; p.dodgeHit = new Set(); p.drawing = false; p.lanceDmg = 0;
   if (!free) { p.dodgeN -= 1; if (p.windup > 0) { p.windup = 0; p.cd = 0.1; } p.charging = false; p.charge = 0; }
-  blip(420, 0.1, 'triangle', 0.04, 500);
+  sfx('dodge', 0.35,1.2);
   if (G('a_rider') && !free) { const tg = nearestInRange(); if (tg) { S.stat.rider++; barrelFire(tg, gunDmg() * 1.3, true, slotColor('basic'), rangeOf()); } }   // Dedos de jinete
   if (lv('stone_dodge') || (G('s_geode') && !free)) addCrystal(p.x, p.y);                              // Geoda
   const td = lv('time_dodge'), sd = lv('shade_dodge');
@@ -478,7 +478,7 @@ function castCharged(snap, mult, echo) {
     for (let w = 0; w < 3; w++) S.timers.push({ t: 0.15 + w * 0.22, fn: () => {
       S.fx.push({ k: 'ring', x: tx, y: ty, r: R, t: 0, life: 0.2, col });
       for (let i = 0; i < 7; i++) { const a = Math.random() * 6.28, r = Math.random() * R, x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r; S.fx.push({ k: 'tracer', x1: x + 12, y1: y - 38, x2: x, y2: y, t: 0, life: 0.14, col }); }
-      blip(900, 0.06, 'triangle', 0.03, -400);
+      sfx('tick', 0.25,1.3);
       for (const e of S.enemies.slice()) { if (!active(e) || Math.hypot(e.x - tx, e.y - ty) > R + e.r) continue; hit(e, dmg * 0.45, 0, 0, w === 0, col); if (w === 0) chargePayoff(e); }
     } });
   } else if (CH === 'c_supp') {          // supresión: tres segundos disparando sola a todo lo que haya cerca
@@ -488,7 +488,7 @@ function castCharged(snap, mult, echo) {
       if (!near.length) return;
       const e = near[Math.floor(Math.random() * near.length)], dx = e.x - o.x, dy = e.y - o.y, d = Math.hypot(dx, dy) || 1;
       S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: e.x, y2: e.y, t: 0, life: 0.07, col });
-      if (i % 6 === 0) blip(1100, 0.04, 'square', 0.025, -500);
+      if (i % 6 === 0) sfx('zap', 0.2,1.3);
       if (echo) hit(e, dmg * 0.09, dx / d, dy / d, false, col); else shot(e, dmg * 0.09, dx / d, dy / d, false, col);
       if (i % 9 === 0) chargePayoff(e);
     } });
@@ -544,7 +544,7 @@ function castCharged(snap, mult, echo) {
     }
   } else if (CH === 'c_volley') {        // salva de ocho disparos
     for (let i = 0; i < 8; i++) S.timers.push({ t: 0.07 * i, fn: () => { const near = S.enemies.filter(e => active(e) && !blocked(o, e) && dist(o, e) < rangeOf() + 60).sort((a, b) => dist({ x: snap.tx, y: snap.ty }, a) - dist({ x: snap.tx, y: snap.ty }, b))[0]; if (!near) return; const d = dist(o, near) || 1; S.stat.volley++;
-      S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.08, col }); if (i % 2 === 0) blip(1200, 0.04, 'square', 0.03, -500);
+      S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.08, col }); if (i % 2 === 0) sfx('zap', 0.22,1.25);
       if (echo) hit(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); else shot(near, dmg * 0.2, (near.x - o.x) / d, (near.y - o.y) / d, false, col); if (i === 0) chargePayoff(near);
       if (leg('choir') && !echo) S.timers.push({ t: 0.8, fn: () => { if (!active(near)) return; S.stat.choir++; S.fx.push({ k: 'tracer', x1: o.x, y1: o.y, x2: near.x, y2: near.y, t: 0, life: 0.12, col: GODS.time.color }); onHit(near, dmg * 0.15, (near.x - o.x) / d, (near.y - o.y) / d, false, GODS.time.color, 'echo'); } }); } });
   } else if (CH === 'c_mine') {          // tres minas a tu alrededor
@@ -641,7 +641,7 @@ function fireCharged(am) {
     let die = 1; for (let i = 0; i < lc; i++) die = Math.max(die, 1 + Math.floor(Math.random() * 6));
     if (duoOn('allin')) die = Math.min(6, die + Math.floor(p.fury / 34));     // dúo Órdago
     snap.die = die; snap.bonus *= [0, 0.6, 0.8, 1, 1.3, 1.7, 3][die]; S.stat.dice++;
-    note(p.x, p.y - 20, 'Dado: ' + die, die >= 5 ? RAR[3].color : GODS.luck.color, true); blip(600 + die * 200, 0.12, 'square', 0.05);
+    note(p.x, p.y - 20, 'Dado: ' + die, die >= 5 ? RAR[3].color : GODS.luck.color, true); sfx('tick', 0.4, 0.8 + die * 0.12);
   }
   castCharged(snap, 1, false);
   if (tc) {                              // Rebobinar: se repite desde el mismo sitio
@@ -657,13 +657,13 @@ function fireCharged(am) {
   p.chargeCdMax = p.chargeCd = cd;
   if (p.snipeRefund) { p.snipeRefund = false; p.chargeCd = 0.15; }   // Brasa de verdugo
   S.shake = Math.max(S.shake, 4 + 4 * ratio);
-  blip(300, 0.3, 'sawtooth', 0.06, -220);
+  sfx('hurt', 0.7);
 }
 
 function hurtPlayer(dmg) {
   const p = S.p;
   if (p.inv > 0 || S.mode !== 'play') return;
-  if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); blip(900, 0.12, 'square', 0.06, -300); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Brazal con rodela
+  if (G('s_shield') && (p.wardCd || 0) <= 0) { p.wardCd = 6; p.inv = 0.4; S.stat.block++; note(p.x, p.y - 18, '¡Parado!', C.energy, true); sfx('block', 0.5); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 18, t: 0, life: 0.2, col: C.energy }); return; }   // Brazal con rodela
   if (duoOn('luckglass') && Math.random() < 1 / 3) { p.inv = 0.4; note(p.x, p.y - 18, 'Lo paga el Reflejo', GODS.mirror.color, true); return; }   // dúo Espejo de la suerte
   sfx('hurt', 0.7);
   p.streak = 0;                                                               // Racha: se pierde al recibir un golpe (no si lo para la rodela o se lo lleva el Reflejo)
@@ -680,10 +680,10 @@ function hurtPlayer(dmg) {
   if (p.hp <= 0 && lv('blood_passive') && !S.debtUsed) { S.debtUsed = true; p.hp = 1; p.inv = 1; note(p.x, p.y - 20, '¡Deuda!', GODS.blood.color, true); }   // Deuda: el primer golpe mortal de la sala no te mata
   S.shake = Math.max(S.shake, 6);
   gainFury(15);
-  blip(110, 0.18, 'sawtooth', 0.07, -50);
+  sfx('hurt', 0.75,0.8);
   if (p.hp <= 0 && p.revive > 0) {   // Segundo aliento
     p.revive -= 1; p.hp = Math.round(p.maxHp * (0.1 + 0.2 * tk('revive'))); p.inv = 1.5;
-    note(p.x, p.y - 18, 'Segundo aliento', C.ember, true); blip(440, 0.5, 'triangle', 0.07, 600);
+    note(p.x, p.y - 18, 'Segundo aliento', C.ember, true); sfx('heal', 0.6);
   } else if (p.hp <= 0) { p.hp = 0; endRun(false); setMode('dead'); }
 }
 

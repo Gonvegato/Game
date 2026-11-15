@@ -14,5 +14,5 @@ Música y sonido (assets/audio/, todo con licencia CC0 según su página de Open
 - m_crypt «Dark Bishop» — ARoachIFoundOnMyPillow (opengameart.org/content/dark-bishop).
 - m_boss «Epic Boss Battle [Seamlessly Looping]» — Juhani Junkala, subido por SubspaceAudio (opengameart.org/content/boss-battle-music).
 - cast: «Magic Spell SFX» (opengameart.org/content/magic-spell-sfx).
-- hit, kill, hurt, charged, boom, relic, pick, bossdie, dodge: «150 Combat Sound Effects» (opengameart.org/node/195932), recopilación CC0 con sonidos de Kenney, CoMiGo y otros; sus fuentes están en el LICENSES.txt del paquete.
+- todos los demás efectos (impactos, explosiones, menús, premios, enemigos, estados): «150 Combat Sound Effects» (opengameart.org/node/195932), recopilación CC0 con sonidos de Kenney, CoMiGo y otros; sus fuentes están en el LICENSES.txt del paquete.
 Los archivos están recortados, igualados de volumen y convertidos a mp3.

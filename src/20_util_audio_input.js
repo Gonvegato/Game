@@ -24,18 +24,18 @@ const ico = (name, tier) => `<span class="ico" style="background-position:-${ICO
 const view = { s: 1, w: 520, h: 300, cssW: 1, cssH: 1, dpr: 1 };
 const cam = { x: 0, y: 0 };
 
-// ───────────────────────── Sonido (pitidos simples) ─────────────────────────
+// ───────────────────────── Sonido (efectos grabados y música) ─────────────────────────
 let AC = null, muted = false;
 function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume().catch(() => {}); return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
   sfxLoad();
 }
-// ── Efectos grabados y música (assets/audio, todo CC0; ver assets/library/CREDITOS.txt). Si un archivo no carga, el juego sigue con los pitidos ──
+// ── Efectos grabados y música (assets/audio, todo CC0; ver assets/library/CREDITOS.txt). Si un archivo no carga, esa acción se queda sin sonido ──
 const SFX = {}, SFXT = {}, MUS = {}; let musNow = null, sfxAsked = false;
 function sfxLoad() {
   if (sfxAsked || !AC) return; sfxAsked = true;
-  for (const n of ['cast', 'hit', 'kill', 'hurt', 'charged', 'boom', 'relic', 'pick', 'bossdie', 'dodge'])
+  for (const n of ['cast', 'hit', 'kill', 'hurt', 'charged', 'boom', 'relic', 'pick', 'bossdie', 'dodge', 'tick', 'ok', 'no', 'fanfare', 'crit', 'zap', 'eshot', 'roar', 'crack', 'ice', 'burn', 'heal', 'chime', 'block'])
     fetch('assets/audio/' + n + '.mp3').then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { SFX[n] = buf; }).catch(() => {});
 }
 function sfx(name, vol = 0.5, rate = 1, gap = 0.05) {
@@ -65,16 +65,6 @@ function musicTick() {
   }
   const a = musNow && MUS[musNow];
   if (a && a.paused && !(musNow === 'm_win' && a.ended)) { const pr = a.play(); if (pr && pr.catch) pr.catch(() => {}); }
-}
-function blip(freq, dur, type = 'square', vol = 0.04, slide = 0) {
-  if (!AC || muted || AC.state !== 'running') return;
-  try {
-    const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t);
-    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.02);
-  } catch (e) { /* sin sonido */ }
 }
 
 // ───────────────────────── Entrada ─────────────────────────
@@ -176,7 +166,7 @@ function tapLock(cx, cy) {
     const d = Math.hypot(e.x - w.x, e.y - w.y) - e.r;
     if (d < 26 && d < bd) { bd = d; best = e; }
   }
-  if (best) { S.lock = best; blip(900, 0.04, 'triangle', 0.03); }
+  if (best) { S.lock = best; sfx('tick', 0.2, 1.4); }
 }
 cv.addEventListener('pointerdown', e => {
   audioInit();

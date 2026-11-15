@@ -63,7 +63,7 @@ const INTRO = [
       { wait: 1.6, who: 'kid', text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
         on(R) {
           [['s1', 'pc_skel_war', 52, 13.2, 32.2, 13.4], ['s2', 'pc_skel', 53.5, 14.3, 34, 14.3], ['s3', 'pc_skel_rogue', 55, 12.7, 35, 12.8], ['s4', 'brute', 56.5, 13.9, 37, 13.9], ['s5', 'pc_skel_war', 58, 14.6, 38.6, 14.6]]
-            .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); blip(160, 0.12, 'sawtooth', 0.04, -80); } : null));
+            .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); sfx('kill', 0.4,0.8); } : null));
           R.camTo.x = IC(24);
         } },
       { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
@@ -71,8 +71,8 @@ const INTRO = [
         on(R) {
           R.go('kid', [[4.6, 13.9]], 105, a => { a.flip = false; });
           R.a('mother').flip = false; R.go('mother', [[19.7, 12.9]], 40); R.go('sister', [[13.6, 13.3]], 30);
-          R.go('s1', [[21, 13.1]], 72, () => { R.fall('mother', -1); R.shake(3); blip(150, 0.14, 'sawtooth', 0.04, -80); });
-          R.go('s3', [[21.5, 14.3], [14.8, 13.5]], 86, () => { const s = R.a('sister'); s.path = []; R.fall(s, -1); blip(150, 0.14, 'sawtooth', 0.04, -80); });
+          R.go('s1', [[21, 13.1]], 72, () => { R.fall('mother', -1); R.shake(3); sfx('kill', 0.4,0.8); });
+          R.go('s3', [[21.5, 14.3], [14.8, 13.5]], 86, () => { const s = R.a('sister'); s.path = []; R.fall(s, -1); sfx('kill', 0.4,0.8); });
           R.go('s2', [[23.5, 14.3]], 66); R.go('s4', [[26, 13.9]], 60); R.go('s5', [[28, 14.6]], 62);
           R.houses[0].fireTo = 0.7; R.camTo.x = IC(16); R.camV = 0.9;
         } },
@@ -98,11 +98,11 @@ const INTRO = [
     tick(R, dt) {
       R.acc += dt;
       if (R.stage === 0) {   // el niño, al yunque
-        if (R.acc > 0.95) { R.acc = 0; R.a('kid').hop = 0.12; R.burst(IC(6.4), IC(10.4) - 15, 7, ['#ffe08a', '#ffb347', '#ff8a3c'], 40); blip(1250, 0.04, 'triangle', 0.02, -300); }
+        if (R.acc > 0.95) { R.acc = 0; R.a('kid').hop = 0.12; R.burst(IC(6.4), IC(10.4) - 15, 7, ['#ffe08a', '#ffb347', '#ff8a3c'], 40); sfx('crit', 0.25,1.5); }
       } else {               // el muchacho, contra el muñeco
         const t = R.a('teen'), d = R.a('dummy');
         if (R.acc > 1.5) { R.acc = 0; t.once = { anim: 'atk', t0: R.t, dur: 10 / 14 }; R.hitT = 0.3; }
-        if (R.hitT > 0) { R.hitT -= dt; if (R.hitT <= 0) { d.flash = 0.1; R.burst(d.x - 3, d.y - 11, 5, ['#efe6c8', '#c9b98a'], 34); blip(240, 0.05, 'square', 0.02, -80); } }
+        if (R.hitT > 0) { R.hitT -= dt; if (R.hitT <= 0) { d.flash = 0.1; R.burst(d.x - 3, d.y - 11, 5, ['#efe6c8', '#c9b98a'], 34); sfx('hit', 0.3); } }
       }
     },
     beats: [
@@ -122,12 +122,12 @@ const INTRO = [
     setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_s', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
     beats: [
       { wait: 2.3, who: 'teen', text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
-        on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); blip(90, 0.5, 'sawtooth', 0.03, -30); } },
+        on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); sfx('roar', 0.5); } },
       { who: 'chosen', text: 'Herrero. Tu fragua servirá a mi señor, o no servirá a nadie.' },
       { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, atrás.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); } },
       { wait: 1.6, min: 0.9, who: 'teen', text: 'Lo mató de un solo golpe. A mí ni me miró.',
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
-        ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); blip(110, 0.25, 'sawtooth', 0.06, -70); }],
+        ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); sfx('boom', 0.6); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
       { wait: 1.2, who: 'teen', text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
     ] },
@@ -173,7 +173,7 @@ let introHudOn = false, introTap = false, INTRO_LM = null;
 function playIntro() {
   newGame(); S.gun = Object.assign({}, M.gun);
   S.mode = 'intro'; modeT = 0; S.intro = { i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
-  introTap = false; renderOverlay(); introScene(0); blip(300, 0.3, 'triangle', 0.03, -120);
+  introTap = false; renderOverlay(); introScene(0); sfx('ok', 0.3,0.7);
 }
 function introEnd() {
   S.dialog = null; S.intro = null;
@@ -197,8 +197,8 @@ function introScene(i) {
     shoot(from, to) {   // un conjuro de los guanteletes: sale, llega y derriba
       const a = R.a(from), b = R.a(to); if (!a || !b || b.fall != null) return;
       a.aim = Math.atan2(b.y - a.y, b.x - a.x); a.kick = 3;
-      R.fx.push({ k: 'bolt', x1: a.x + 12, y1: a.y - 11, x2: b.x, y2: b.y - 14, t: 0, life: 0.1, hit() { R.fall(b, 1); R.burst(b.x, b.y - 14, 6, ['#efe6c8', '#c9b98a'], 60); blip(200, 0.08, 'square', 0.04, -90); } });
-      blip(520, 0.06, 'square', 0.04, -260);
+      R.fx.push({ k: 'bolt', x1: a.x + 12, y1: a.y - 11, x2: b.x, y2: b.y - 14, t: 0, life: 0.1, hit() { R.fall(b, 1); R.burst(b.x, b.y - 14, 6, ['#efe6c8', '#c9b98a'], 60); sfx('kill', 0.4,0.9); } });
+      sfx('cast', 0.4);
     },
   };
   for (const o of room.out.obs) if (o.kind === 'ihouse') { const s = HOUSES[o.hs], cx = (o.x + o.w / 2) * CELL, by = (o.y + o.h) * CELL; R.houses.push({ hs: o.hs, s, cx, by, sx: Math.round(cx - s[2] / 2), sy: by + 2 - s[3], fire: 0, fireTo: 0, char: 0, smoke: 0 }); }
@@ -219,7 +219,7 @@ function introBeat(k, fresh) {
   if (k >= sc.beats.length) { N.phase = 'hold'; N.bt = 0; return; }
   N.b = k; N.bt = 0; N.evi = 0; N.phase = 'wait';
   const B = sc.beats[k]; if (B.on) B.on(N.R);
-  if (!fresh) blip(620, 0.02, 'triangle', 0.02);
+  if (!fresh) sfx('tick', 0.15,1.3);
 }
 function introUpdate(dt) {
   const N = S.intro; if (!N) return;
@@ -234,7 +234,7 @@ function introUpdate(dt) {
     if (d.t >= 0.35 && !d.done) { d.done = true; d.fn(R); }
     if (d.t >= 0.8) R.dip = null;
   } else R.fade = Math.max(0, R.fade - dt / 0.6);
-  if (I.dodgeP && R.t > 0.25) { introFinishBeat(); N.phase = 'out'; blip(420, 0.06, 'triangle', 0.03, -160); return; }
+  if (I.dodgeP && R.t > 0.25) { introFinishBeat(); N.phase = 'out'; sfx('tick', 0.25,0.9); return; }
   if (N.phase === 'hold') { N.bt += dt; if (N.bt > 0.5) N.phase = 'out'; return; }
   const B = sc.beats[N.b]; N.bt += dt;
   if (B.ev) while (N.evi < B.ev.length && N.bt >= B.ev[N.evi][0]) B.ev[N.evi++][1](R);

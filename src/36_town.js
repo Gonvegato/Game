@@ -24,7 +24,7 @@ function openTown(from) {
   else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
   else if (!M.metKing && !back) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
 }
-function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; blip(520, 0.06, 'triangle', 0.04, 200); }
+function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; sfx('ok', 0.35); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
 function townUpdate(dt) {
   const p = S.p, mv = Math.hypot(I.mx, I.my);
@@ -44,7 +44,7 @@ function townUpdate(dt) {
     if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
     const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
   }
-  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); blip(420, 0.08, 'triangle', 0.04, 160); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
+  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); sfx('ok', 0.35,0.8); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {
@@ -86,20 +86,20 @@ function roomHtml() {
 // ───────────────────────── Conversaciones con bocadillos ─────────────────────────
 // Cada línea: quién habla y qué dice. Se escribe letra a letra; A (o Espacio) acaba la línea o pasa a la siguiente,
 // B (o Shift) se salta la conversación. Al final puede haber opciones para elegir con arriba y abajo.
-function talk(lines, choices, onEnd) { S.dialog = { lines, i: 0, ch: 0, choices: choices || null, sel: 0, t: 0, onEnd: onEnd || null }; blip(500, 0.05, 'triangle', 0.03, 120); }
+function talk(lines, choices, onEnd) { S.dialog = { lines, i: 0, ch: 0, choices: choices || null, sel: 0, t: 0, onEnd: onEnd || null }; sfx('tick', 0.25,1.1); }
 function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
   if (L) d.ch = Math.min(L.text.length, d.ch + dt * 55);
   d.t += dt;
   if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
   if (d.i >= d.lines.length && d.choices) {
-    if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; blip(700, 0.03, 'triangle', 0.03); }
+    if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; sfx('tick', 0.25); }
     if (I.atkP && d.t > 0.2) { const c = d.choices[d.sel]; S.dialog = null; modeT = 0; c.fn(); }
     return;
   }
   if (I.atkP && d.t > 0.15) {
     if (d.ch < L.text.length) d.ch = L.text.length;
-    else { d.i++; d.ch = 0; d.t = 0; if (d.i >= d.lines.length && !d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } else blip(620, 0.02, 'triangle', 0.02); }
+    else { d.i++; d.ch = 0; d.t = 0; if (d.i >= d.lines.length && !d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } else sfx('tick', 0.15,1.3); }
   }
 }
 function speakerPos(who) {

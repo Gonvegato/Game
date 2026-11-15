@@ -26,10 +26,10 @@ const aff = god => (godCount(god) >= 1 ? GSLOT_KEYS.reduce((n, k) => n + (affGod
 const ens = id => ENSEMBLES.some(E => E.id === id && E.parts.every(p => S.gun[PART[p].slot] === p));
 const leg = id => { const L = legOf(S.gun); return !!L && L.id === id; };
 function checkRes() {
-  for (const E of ensOf(S.gun)) if (!S.resSeen.has('ens_' + E.id)) { S.resSeen.add('ens_' + E.id); sayRaw('[Ensamble: ' + E.name + '. ' + E.desc + ']', C.energy); blip(760, 0.3, 'triangle', 0.05, 500); }
+  for (const E of ensOf(S.gun)) if (!S.resSeen.has('ens_' + E.id)) { S.resSeen.add('ens_' + E.id); sayRaw('[Ensamble: ' + E.name + '. ' + E.desc + ']', C.energy); sfx('fanfare', 0.55); }
   for (const g of GOD_KEYS) { const a = aff(g); if (a > 0 && (S.affSeen || (S.affSeen = {}))[g] !== a) { S.affSeen[g] = a; sayRaw('[Afinidad con ' + GODS[g].theme + ' ×' + a + ': ' + AFFIN[g] + (a > 1 ? ', por cada pieza' : '') + ']', GODS[g].color); } }
-  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Guanteletes legendarios: ' + L.name + '. ' + L.desc + ']', RAR[3].color); blip(660, 0.6, 'triangle', 0.07, 900); } }
- for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); blip(880, 0.4, 'triangle', 0.06, 700); } }
+  { const L = legOf(S.gun); if (L && !S.resSeen.has('leg_' + L.id)) { S.resSeen.add('leg_' + L.id); M.legends = M.legends || {}; M.legends[L.id] = 1; save(); sayRaw('[Guanteletes legendarios: ' + L.name + '. ' + L.desc + ']', RAR[3].color); sfx('fanfare', 0.7,0.85); } }
+ for (const R of RESO) if (!S.resSeen.has(R.id) && res(R.id)) { S.resSeen.add(R.id); sayRaw('[Resonancia: ' + R.name + '. ' + R.desc + ']', RAR[3].color); sfx('fanfare', 0.6,1.1); } }
 const dodgeMax = () => (G('s_roll') ? 1 : 0) + 1 + (S.plans.has('double') ? 1 : 0) + (tk('reflex') ? 1 : 0);
 const dodgeCdOf = () => (G('s_gasp') && S.p.hp < S.p.maxHp * 0.25 ? 0.5 : 1) * T.dodge.cd * (G('s_light') ? 0.65 : 1) * (tk('reflex') >= 2 ? 0.8 : 1) * (has('t_second') ? 0.8 : 1);
 const furyFull = () => S.p.fury >= 100;
@@ -100,9 +100,9 @@ function kill(e) {
   if (e.elite) { addGold(3); note(e.x, e.y - e.r - 10, '+3 oro', RAR[3].color); }
   if (e.elite === 'volatile') S.hazards.push({ x: e.x, y: e.y, r: 40, t: 0.9, t0: 0.9, dmg: e.dmg, col: '#ff8a3c' });   // élite volátil: revienta al morir
   stain(e); for (let i = 0; i < (e.boss ? 14 : 4); i++) S.fx.push({ k: 'smoke', x: e.x + rnd(-e.r, e.r), y: e.y + rnd(-e.r, e.r * 0.5), vx: rnd(-10, 10), vy: -rnd(8, 26), t: 0, life: rnd(0.4, 0.8) });
-  blip(160, 0.12, 'sawtooth', 0.04, -90);
+  sfx('kill', 0.3);
   if (e.boss) { S.ironRun += 2; for (const g of GOD_KEYS) if (Math.random() < 0.5) S.matsRun[g] += 1; }
-  if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); blip(880, 0.25, 'triangle', 0.05, 400); }
+  if (e.champ) { S.matsRun[e.god] += S.world; S.drop = { god: e.god, x: e.x, y: e.y }; say(e.god, 'champ'); sfx('relic', 0.6); }
   if (S.t < S.banquet) heal(4);
   { const bp = lv('wood_passive'), held = e.root > 0 || e.bram > 0;
     if (bp && held) heal(bp);                                                                  // Savia
@@ -172,7 +172,7 @@ function hit(e, dmg, ux, uy, big, col) {
   if (S.t - S.lastStop > 0.16) { S.hitstop = big ? 0.05 : 0.02; S.lastStop = S.t; }   // micropausa de impacto, sin encadenarse
   gainFury(2);
   if (e.hp > 0 && has('f_carve') && !e.boss && e.hp / e.maxHp < 0.12) { e.hp = 0; note(e.x, e.y - e.r - 12, '¡Trinchado!', GODS.feast.color); }   // Trinchar
-  if (e.hp <= 0) kill(e); else { blip(520, 0.035, 'square', 0.025); sfx('hit', 0.3, 0.9 + Math.random() * 0.3); }
+  if (e.hp <= 0) kill(e); else { sfx('hit', 0.3); sfx('hit', 0.3, 0.9 + Math.random() * 0.3); }
 }
 // Daño continuo: sin pausa ni empujón
 function dot(e, dmg, col) {
@@ -193,7 +193,7 @@ function explode(x, y, r, dmg, o) {
   const blood = has('d_blood'), vap = has('v_vapors');
   if (blood) r *= 1.3;
   S.fx.push({ k: 'ring', x, y, r, t: 0, life: 0.28, col: o.col || C.ink });
-  if (!o.soft) { S.shake = Math.max(S.shake, 4); blip(90, 0.2, 'sawtooth', 0.05, -40); }
+  if (!o.soft) { S.shake = Math.max(S.shake, 4); sfx('boom', 0.45); }
   for (const e of S.enemies.slice()) {
     if (!active(e)) continue;
     const dx = e.x - x, dy = e.y - y, d = Math.hypot(dx, dy) || 1;
@@ -241,7 +241,7 @@ function packWatch() {
   if (!n) { S.packSeen = null; return; }
   const c = caza(), now = { st: packStage(0), lit: n > petBase() ? 1 + packStage(n - 1) : 0 }, was = S.packSeen; S.packSeen = now;
   if (!was) return;
-  const pt = S.pets[0], col = GODS.beast.color, tell = (pet, short, long) => { note(pet.x, pet.y - 16, short, col, true); S.fx.push({ k: 'ring', x: pet.x, y: pet.y, r: 26, t: 0, life: 0.5, col }); sayRaw('[' + long + ' Caza: ' + c + '.]', col); blip(330, 0.35, 'triangle', 0.06, 500); };
+  const pt = S.pets[0], col = GODS.beast.color, tell = (pet, short, long) => { note(pet.x, pet.y - 16, short, col, true); S.fx.push({ k: 'ring', x: pet.x, y: pet.y, r: 26, t: 0, life: 0.5, col }); sayRaw('[' + long + ' Caza: ' + c + '.]', col); sfx('pick', 0.5,1.15); };
   if (now.st > was.st) tell(pt, now.st === 2 ? '¡Lobo alfa!' : '¡Ya es un sabueso!', now.st === 2 ? 'Tu sabueso es ahora un lobo alfa: muerde un 30% más fuerte, corre más y su mordisco alcanza a los enemigos pegados a su presa.' : 'Tu cachorro ha crecido: ya es un sabueso y muerde con toda su fuerza.');
   if (now.lit > was.lit) tell(S.pets[n - 1], now.lit === 2 ? '¡Ya es un sabueso!' : '¡Un cachorro!', now.lit === 2 ? 'El cachorro de la camada ha crecido: ya es un sabueso.' : 'Un cachorro se une a tu manada.');
 }
@@ -286,7 +286,7 @@ function freeze(e) {
   const dur = (1.5 + 0.3 * aff('frost') + (duoOn('stillness') ? 1.5 : 0)) * (mastery('frost') ? 2 : 1);
   e.frost = 0; e.frozen = e.boss ? dur * 0.5 : dur; S.stat.frozen++;
   if (e.boss) slow(e, dur, 0.4); else stun(e, dur);
-  note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); blip(1500, 0.12, 'sine', 0.04, -600);
+  note(e.x, e.y - e.r - 10, '¡Congelado!', GODS.frost.color); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.25, col: GODS.frost.color }); sfx('ice', 0.45);
   if (duoOn('hibernate')) e.napAfter = true;                                          // dúo Hibernar
   if (duoOn('glacier')) addCrystal(e.x + rnd(-12, 12), e.y + rnd(-12, 12));           // dúo Glaciar
   if (duoOn('hail') && e.needles > 0) discharge(e, 0.8, null);                        // dúo Granizo
@@ -316,7 +316,7 @@ function push(e, ux, uy, f) {
 // Golpe contra el muro (o, en un jefe Empapado, el empujón que no puede moverlo)
 function wallSlam(e, ux, uy, reef) {
   const p = S.p; S.stat.slam++;
-  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); blip(160, 0.1, 'square', 0.05, -50);
+  S.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r + 8, t: 0, life: 0.16, col: C.ink }); S.shake = Math.max(S.shake, 3); sfx('crack', 0.4,0.8);
   if (reef) { reef.life = 0; explode(reef.x, reef.y, 40, p.dmg * 1.2, { col: GODS.stone.color, skip: e }); }
   if (duoOn('steam') && e.ember > 0) { const st = e.ember; e.ember = 0; explode(e.x, e.y, 42, p.dmg * 0.35 * st, { col: GODS.dragon.color, skip: e }); }   // dúo Vapor
   if (duoOn('ram')) gainFury(20);                                        // dúo Ariete
@@ -343,7 +343,7 @@ const critChance = () => { const lb = lv('luck_basic'); return (lb ? 0.1 + 0.1 *
 const critMult = () => (mastery('luck') ? 4 : 2.5);
 function onCrit(e) {
   const p = S.p;
-  S.stat.crit++; p.pity = 0; note(e.x, e.y - e.r - 12, '¡Crítico!', GODS.luck.color, true); blip(2100, 0.06, 'square', 0.04, 300);
+  S.stat.crit++; p.pity = 0; note(e.x, e.y - e.r - 12, '¡Crítico!', GODS.luck.color, true); sfx('crit', 0.4,1.15);
   if (lv('luck_passive')) p.streak = Math.min(5, p.streak + 1);                       // Racha
   if (duoOn('jackpot')) addGold(1);                                                   // dúo Tesoro maldito
   if (duoOn('facet')) addCrystal(e.x + rnd(-14, 14), e.y + rnd(-14, 14));             // dúo Faceta
@@ -390,7 +390,7 @@ function discharge(e, mult, cas) {
   let nb = n;
   if (duoOn('rod')) { const c = S.crystals.find(k => Math.hypot(k.x - x, k.y - y) < 150); if (c) { nb *= 2; S.fx.push({ k: 'beam', x1: x, y1: y, x2: c.x, y2: c.y, t: 0, life: 0.18, w: 2, col: GODS.storm.color }); src.x = c.x; src.y = c.y; } }   // dúo Pararrayos
   S.fx.push({ k: 'ring', x, y, r: 16 + n * 3, t: 0, life: 0.22, col: GODS.storm.color });
-  blip(1000 + n * 120, 0.1, 'square', 0.04, -500);
+  sfx('zap', 0.35, 1 + n * 0.06);
   hit(e, S.p.dmg * mult * n, 0, 0, true, GODS.storm.color);
   for (let i = 0; i < Math.min(14, nb) && tg.length; i++) bolt(src, tg[i % tg.length], S.p.dmg * mult * 0.6, cas);
   if (has('r_judge')) explode(x, y, 60, S.p.dmg * 3, { col: '#ffffff' });   // Juicio

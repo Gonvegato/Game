@@ -29,7 +29,7 @@ function update(dt) {
   p.cd = Math.max(0, p.cd - dt);
   p.chargeCd = Math.max(0, p.chargeCd - dt); p.inv = Math.max(0, p.inv - dt); p.buffer = Math.max(0, p.buffer - dt);
   const ready = p.cd <= 0 && p.windup <= 0;
-  if (ready && !p.wasReady) { p.readyT = S.t; blip(1900, 0.02, 'sine', 0.012); }
+  if (ready && !p.wasReady) { p.readyT = S.t; }
   p.wasReady = ready;
   p.furyT -= dt;
   const floor = mastery('orc') ? 50 : 0;
@@ -60,7 +60,7 @@ function update(dt) {
       const score = da * 130 + d * 0.3;
       if (score < bs) { bs = score; bestE = e; }
     }
-    if (bestE) { S.lock = bestE; blip(900, 0.04, 'triangle', 0.03); }
+    if (bestE) { S.lock = bestE; sfx('tick', 0.2,1.4); }
   }
   if (am < 0.3) aimLatch = false;
   const target = (S.lock && dist(p, S.lock) - S.lock.r <= rangeOf() && (overWalls() || !blocked(p, S.lock))) ? S.lock : nearestInRange();
@@ -70,7 +70,7 @@ function update(dt) {
   if (I.chg && !p.charging && !p.drawing && p.chargeCd <= 0 && p.dodgeT <= 0 && p.windup <= 0) { p.charging = true; p.charge = 0; p.chargeDir = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face; }
   if (p.charging) {
     const before = p.charge; p.charge += dt * (1 + 0.1 * tk('armorer'));
-    if (before < T.charge.full && p.charge >= T.charge.full) blip(1500, 0.06, 'sine', 0.04);
+    if (before < T.charge.full && p.charge >= T.charge.full) sfx('chime', 0.3,1.4);
     if (am > 0.35) p.chargeDir = Math.atan2(I.ay, I.ax);
     else if (target) p.chargeDir = Math.atan2(target.y - p.y, target.x - p.x);
     p.face = p.chargeDir;
@@ -84,11 +84,11 @@ function update(dt) {
   p.runUp = g.action === 'a_semi' && p.still < 0.25 ? Math.min(1, p.runUp + dt / 3) : 0;   // Dedos de chispa: carrerilla
   { // El aspecto de Alec crece con lo que lleva encima en esta misión
     const pow = SLOT_KEYS.reduce((n, k) => n + (S.build[k] ? S.build[k].lvl : 0), 0) + S.techs.size + S.plans.size, tier = pow >= 12 ? 4 : pow >= 7 ? 3 : pow >= 3 ? 2 : 1;
-    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); blip(520, 0.4, 'triangle', 0.06, 700); } p.tier = tier; }
+    if (tier !== p.tier) { if (tier > (p.tier || 1)) { note(p.x, p.y - 26, ['', '', 'Alec se enciende', 'Alec se alza', 'Alec, el sin dios'][tier], C.energy, true); S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0, life: 0.5, col: C.energy }); sfx('fanfare', 0.5,1.1); } p.tier = tier; }
   }
   p.wardCd = Math.max(0, (p.wardCd || 0) - dt);
   p.fly2 = S.gun.action === 'a_fly' && S.t - p.lastShotT < 1.5 ? Math.min(1, p.fly2 + dt / 5) : 0;   // Dedos de volante
-  if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); blip(1400, 0.1, 'sine', 0.04, 300); } }
+  if (S.gun.action === 'a_over') { const was = p.overT; p.overT = Math.min(10, p.overT + dt); if (was < 10 && p.overT >= 10) { note(p.x, p.y - 16, 'Sobrecarga lista', C.ember); sfx('chime', 0.35,1.1); } }
   if (p.cd <= 0 && p.windup <= 0) p.idle = (p.idle || 0) + dt;   // tiempo con los guanteletes listos (Dedos de resorte, Brazal de corredor)
   if (g.barrel === 'b_flail') {   // Palma de mangual: la bola gira y golpea lo que toca
     p.orbAway = Math.max(0, p.orbAway - dt); p.orbA += dt * 5.2 * (ens('mill') && S.t - (p.lastDodgeT || -9) < 2 ? 3 : 1);
@@ -138,7 +138,7 @@ function update(dt) {
   if (g.stock === 's_heavy' && p.buttCd <= 0 && p.dodgeT <= 0) {   // Brazal herrado: codazo a quien se pegue
     const near = S.enemies.filter(e => active(e) && !e.boss && dist(p, e) < p.r + e.r + 9);
     if (near.length) {
-      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); blip(180, 0.12, 'square', 0.06, -60); note(p.x, p.y - 16, '¡Codazo!', C.ember, true);
+      p.buttCd = 2.5; S.stat.butt++; S.shake = Math.max(S.shake, 4); sfx('crit', 0.45,0.8); note(p.x, p.y - 16, '¡Codazo!', C.ember, true);
       S.fx.push({ k: 'ring', x: p.x, y: p.y, r: 26, t: 0, life: 0.18, col: C.ink });
       for (const e of near) { const d = dist(p, e) || 1; hit(e, p.dmg * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, true, C.ink); if (active(e)) { e.kx += (e.x - p.x) / d * 300; e.ky += (e.y - p.y) / d * 300; stun(e, 0.6); } }
     }
@@ -155,14 +155,14 @@ function update(dt) {
     if (I.atk && !p.drawing && p.cd <= 0 && canFire) { p.drawing = true; p.draw = 0; }
     if (p.drawing) {
       const before = p.draw; p.draw = Math.min(1, p.draw + dt / (periodOf() * 0.85));
-      if (before < 1 && p.draw >= 1) blip(1700, 0.05, 'sine', 0.04);
+      if (before < 1 && p.draw >= 1) sfx('chime', 0.3,1.5);
       if (target) p.face = Math.atan2(target.y - p.y, target.x - p.x);
       if (!I.atk) { p.drawing = false; p.drawPow = p.draw; p.cd = periodOf() * 0.3; fireBasic(target); }
     }
   } else if (A === 'a_rotary') {   // Giratorio: girar y escupir
     if (I.atk && canFire) {
       const was = p.spin; p.spin = Math.min(1, p.spin + dt / 0.5);
-      if (was < 1 && p.spin >= 1) blip(900, 0.08, 'sawtooth', 0.03, 600);
+      if (was < 1 && p.spin >= 1) sfx('chime', 0.3,0.9);
       if (p.spin >= 1 && target && p.cd <= 0) {
         p.gat -= dt;
         const step = periodOf() / 6.6;                       // unas siete veces por segundo con la cadencia base
@@ -341,7 +341,7 @@ function update(dt) {
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
       e.x = e.px; e.y = e.py; e.kx = e.ky = 0; e.stun = 0; e.aiCd -= dt;
-      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); blip(300, 0.2, 'sawtooth', 0.04, 200); } }
+      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); sfx('roar', 0.3,1.5); } }
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
@@ -350,7 +350,7 @@ function update(dt) {
     if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
       const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);
       if (kd > k.r + e.r + 3) { e.x += kx / kd * sp * dt; e.y += ky / kd * sp * dt; }
-      else { e.raidCd = (e.raidCd || 0.6) - dt; if (e.raidCd <= 0) { e.raidCd = 1.3; k.hp -= Math.max(2, e.dmg * 0.28); k.flash = 0.15; S.shake = Math.max(S.shake, 2); blip(240, 0.08, 'square', 0.04, -80); if (k.hp <= 0) { missionFail('La campana ha caído y la aldea con ella.'); return; } } }
+      else { e.raidCd = (e.raidCd || 0.6) - dt; if (e.raidCd <= 0) { e.raidCd = 1.3; k.hp -= Math.max(2, e.dmg * 0.28); k.flash = 0.15; S.shake = Math.max(S.shake, 2); sfx('crack', 0.4); if (k.hp <= 0) { missionFail('La campana ha caído y la aldea con ella.'); return; } } }
       continue;
     }
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
@@ -360,7 +360,7 @@ function update(dt) {
     if (e.type.ranged) {
       if (e.cast > 0) {
         e.cast -= dt;
-        if (e.cast <= 0) { S.shots.push({ x: e.x, y: e.y, vx: ux * 125, vy: uy * 125, r: 4, dmg: e.dmg, life: 3.5 }); e.cool = 2.4; blip(700, 0.08, 'triangle', 0.025, -300); }
+        if (e.cast <= 0) { S.shots.push({ x: e.x, y: e.y, vx: ux * 125, vy: uy * 125, r: 4, dmg: e.dmg, life: 3.5 }); e.cool = 2.4; sfx('eshot', 0.25,1); }
       } else {
         e.cool -= dt;
         const few = S.enemies.length + S.queue.length <= 2, mv = d > (few ? 140 : 195) || blocked(e, p) ? 1 : d < 120 && !few ? -1 : 0;
@@ -435,7 +435,7 @@ function update(dt) {
   for (const h of S.hazards) {
     if (!h.done) {
       h.t -= dt;
-      if (h.t <= 0) { h.done = true; h.life = h.linger || 0; h.acc = 0; S.fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, t: 0, life: 0.25, col: h.col }); blip(100, 0.15, 'sawtooth', 0.05, -40); if (dist(p, h) < h.r + p.r) hurtPlayer(h.dmg); }
+      if (h.t <= 0) { h.done = true; h.life = h.linger || 0; h.acc = 0; S.fx.push({ k: 'ring', x: h.x, y: h.y, r: h.r, t: 0, life: 0.25, col: h.col }); sfx('boom', 0.35,1.1); if (dist(p, h) < h.r + p.r) hurtPlayer(h.dmg); }
     } else { h.life -= dt; h.acc += dt; if (h.acc >= 0.5) { h.acc = 0; if (dist(p, h) < h.r + p.r) hurtPlayer(h.dmg * 0.35); } }
   }
   S.hazards = S.hazards.filter(h => !h.done || h.life > 0);
@@ -444,7 +444,7 @@ function update(dt) {
     if (l.t > 0) continue;
     const ux = Math.cos(l.a), uy = Math.sin(l.a), len = rayClip(l.x, l.y, ux, uy, 700);
     S.fx.push({ k: 'beam', x1: l.x, y1: l.y, x2: l.x + ux * len, y2: l.y + uy * len, t: 0, life: 0.18, w: l.w, col: C.blood });
-    blip(1300, 0.1, 'sawtooth', 0.04, -900);
+    sfx('zap', 0.3,0.9);
     const ex = p.x - l.x, ey = p.y - l.y, al = ex * ux + ey * uy;
     if (al > 0 && al < len && Math.abs(ex * uy - ey * ux) < l.w + p.r) hurtPlayer(l.dmg);
   }

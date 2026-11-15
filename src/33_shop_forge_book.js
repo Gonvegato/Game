@@ -31,9 +31,9 @@ function shopAct(act) {
     return;
   }
   const it = S.shop.items[+i];
-  if (it.sold || p.gold < it.price) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
-  if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { blip(140, 0.1, 'sawtooth', 0.05, -40); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
-  p.gold -= it.price; it.sold = true; blip(660, 0.1, 'triangle', 0.05, 400);
+  if (it.sold || p.gold < it.price) { sfx('no', 0.4); return; }
+  if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { sfx('no', 0.4); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
+  p.gold -= it.price; it.sold = true; sfx('ok', 0.45);
   if (it.id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.35));
   else if (it.id === 'heart') { p.maxHp += 15; p.hp += 15; }
   else if (it.id === 'plan') { S.plans.add(it.plan); p.dodgeN = dodgeMax(); }
@@ -93,15 +93,15 @@ function forgeAct(act) {
   const [k, id, n] = act.split(':');
   let ok = true;
   if (k === 'back') { closePlace(); return; }
-  if (k === 'tab') { forgeTab = id; listSel = placeTabs().findIndex(t => t[0] === id); blip(700, 0.04, 'triangle', 0.03); renderOverlay(); ov.scrollTop = 0; return; }
-  if (k === 'slot') { forgeSlot = id; blip(700, 0.04, 'triangle', 0.03); renderOverlay(); return; }
+  if (k === 'tab') { forgeTab = id; listSel = placeTabs().findIndex(t => t[0] === id); sfx('tick', 0.25); renderOverlay(); ov.scrollTop = 0; return; }
+  if (k === 'slot') { forgeSlot = id; sfx('tick', 0.25); renderOverlay(); return; }
   if (k === 'm') { startRun(missionOf(act.slice(2))); return; }
-  if (k === 'x') { blip(140, 0.1, 'sawtooth', 0.05, -40); return; }
+  if (k === 'x') { sfx('no', 0.35); return; }
   if (k === 'resume') { resumeRun(); return; }
   if (k === 'intro') { playIntro(); return; }   // desde la habitación de la posada: volver a ver la cinemática del principio
   if (k === 'p') { const x = PART[id]; if (M.parts[id] === 2) M.gun[x.slot] = id; else if (M.parts[id] === 1 && canPay(x.cost)) { pay(x.cost); M.parts[id] = 2; M.gun[x.slot] = id; } else ok = false; }
   else if (k === 't') { const nd = TREE_NODES.find(x => x.id === id), r = tk(id); if (r < nd.max && M.souls >= nd.cost[r]) { M.souls -= nd.cost[r]; M.tree[id] = r + 1; } else ok = false; }
-  blip(ok ? 660 : 140, 0.1, ok ? 'triangle' : 'sawtooth', 0.05, ok ? 400 : -40);
+  sfx(ok ? 'ok' : 'no', 0.45);
   save(); renderOverlay();
 }
 // Listas navegables con mando (forja y tienda)
@@ -144,7 +144,7 @@ function listInput() {
   const els = [...ovBody.querySelectorAll('.fi')];
   if (I.navX || I.navY) {
     const n = navPick(els, listSel, I.navX, I.navY);
-    if (n !== listSel && n >= 0) { listSel = n; els.forEach((el, i) => el.classList.toggle('sel', i === listSel)); els[listSel].scrollIntoView({ block: 'nearest' }); blip(700, 0.03, 'triangle', 0.03); }
+    if (n !== listSel && n >= 0) { listSel = n; els.forEach((el, i) => el.classList.toggle('sel', i === listSel)); els[listSel].scrollIntoView({ block: 'nearest' }); sfx('tick', 0.25); }
   }
   if (I.atkP && modeT > 0.3 && els[listSel]) els[listSel].click();
 }
