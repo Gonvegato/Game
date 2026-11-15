@@ -112,13 +112,48 @@ small.gloss{display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:
 .gold{color:var(--energy);font-weight:600}
 .keyhint{text-align:center}
 .kingdom{display:flex;flex-direction:column;gap:10px}
-.legend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px 18px;font-size:12px;color:var(--dim)}.legend b{color:var(--ink)}
 .kingdom h2{margin:0;font:400 28px/1 var(--title);color:var(--energy)}
-.kmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
-.zone{display:flex;flex-direction:column;gap:6px;min-width:0;padding:10px;border:2px solid var(--zc,var(--line));background:linear-gradient(180deg,var(--zf,var(--wall)),var(--wall) 70%)}
-.zone h3{margin:0 0 2px;font:600 15px/1.2 var(--display);color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
-.zone.god{--zc:var(--ember);align-items:stretch}
-.zone .fi.off{opacity:.55}
+/* El tablón: mapa del reino con los encargos encima, y al lado el panel del encargo señalado y la leyenda */
+#ovBody.wide:has(.kwrap){width:min(1220px,100%)}
+.kwrap{display:grid;grid-template-columns:minmax(0,896px) minmax(210px,1fr);grid-template-rows:auto auto 1fr;grid-template-areas:"map head" "map info" "map legend";gap:10px 14px;align-items:start}
+.kscroll{grid-area:map;overflow:auto;scroll-margin:12px;border:2px solid var(--line);outline:2px solid #0b080d;background:#0b080d;container-type:inline-size}
+.kworld{position:relative;min-width:520px;--mk:32px;--mk:clamp(30px,3.9cqw,36px);--lf:11px;--lf:clamp(9.5px,1.42cqw,13px)}
+.kworld canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated}
+.klab{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 7px 3px;background:color-mix(in srgb,var(--wall) 80%,transparent);border:1px solid #0b080d;border-bottom:3px solid var(--zc);pointer-events:none;white-space:nowrap;z-index:1}
+.klab b{font:600 var(--lf)/1.05 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
+.klab span{display:flex;align-items:center;gap:4px;font:600 calc(var(--lf)*.84)/1.05 var(--display);color:color-mix(in srgb,var(--zc) 62%,#fff)}
+.klab.free span{color:var(--zc)}
+.klab svg{width:.9em;height:.9em;fill:currentColor;shape-rendering:crispEdges}
+.fi.mk{position:absolute;display:grid;grid-template-columns:none;place-items:center;gap:0;width:var(--mk);height:var(--mk);padding:0;margin-top:-6px;border-radius:50%;transform:translate(-50%,-100%);transform-origin:50% calc(100% + 6px);background:var(--wall);border:2px solid var(--ink);color:var(--energy);box-shadow:0 0 0 1px #0b080d,0 3px 0 #0b080d;z-index:2}
+.fi.mk::after{content:"";position:absolute;left:50%;top:calc(100% + 1px);border:5px solid transparent;border-top:6px solid var(--ink);border-bottom:0;transform:translateX(-50%)}
+.fi.mk svg{width:60%;height:60%;fill:currentColor;shape-rendering:crispEdges}
+.fi.mk.k-boss{color:#ff8f97}.fi.mk.k-god{--mk:38px;--mk:clamp(32px,4.5cqw,42px);color:var(--ember)}
+.fi.mk.on{border-color:#7fc97a;color:var(--dim)}.fi.mk.on::after{border-top-color:#7fc97a}
+.fi.mk.off{background:#2a2128;border-color:#8a7a70;color:#8a7a70}.fi.mk.off::after{border-top-color:#8a7a70}
+.fi.mk i.st{position:absolute;right:-7px;top:-7px;grid-area:auto;display:grid;place-items:center;width:52%;height:52%;border-radius:50%;background:#3a3038;border:1px solid #0b080d;color:var(--ink)}
+.fi.mk i.st.ok{background:#3f8f4a;color:#fff}.fi.mk i.st svg{width:68%;height:68%}
+.fi.mk.sel{border-color:var(--energy);box-shadow:0 0 0 1px #0b080d,0 0 0 4px var(--energy),0 0 0 5px #0b080d,0 3px 0 5px #0b080d;transform:translate(-50%,-100%) scale(1.16);z-index:4}
+.fi.mk.sel::after{border-top-color:var(--energy);top:calc(100% + 4px)}
+.khead{grid-area:head;display:flex;flex-direction:column;gap:5px;min-width:0}
+.kinfo{grid-area:info;display:flex;flex-direction:column;gap:7px;min-width:0;padding:11px 12px 12px;background:var(--wall);border:2px solid var(--line)}
+.kinfo .eyebrow{font-size:11px;line-height:1.2}
+.kinfo h3{margin:0;font:600 18px/1.12 var(--display);color:var(--ink);text-wrap:balance}
+.kinfo p{margin:0;font-size:13px;line-height:1.4}.kinfo p.dim{color:var(--dim)}
+.kinfo p.need{color:var(--ink);border-left:3px solid var(--blood);padding-left:8px}
+.kinfo dl{margin:0;display:flex;flex-direction:column;gap:3px}.kinfo dl div{display:grid;grid-template-columns:54px 1fr;gap:8px;align-items:baseline}
+.kinfo dt{font:600 11px/1.3 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.kinfo dd{margin:0;font:600 14px/1.3 var(--display);color:var(--energy);min-width:0}.kinfo dd small{display:block;font:400 11px/1.3 var(--body);color:var(--dim)}
+.kinfo dd.ok{color:#7fc97a}.kinfo dd.no{color:var(--dim)}.kinfo dd.go{color:var(--ink)}
+.kinfo .kgo{margin-top:3px;padding:9px 16px;font-size:15px;cursor:pointer}
+.klegend{grid-area:legend;align-self:end;list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:5px 14px;font-size:12px;color:var(--dim)}
+.klegend li{display:flex;align-items:center;gap:6px}
+.klegend u{flex:none;width:14px;height:14px;background:color-mix(in srgb,var(--zc) 55%,#4a5a3a);border:2px solid var(--zc);box-sizing:border-box}
+.klegend u.held{background:repeating-linear-gradient(135deg,var(--zc) 0 2px,color-mix(in srgb,var(--zc) 45%,#120e14) 2px 5px)}
+.klegend li.ic{color:var(--energy)}.klegend li.k-boss{color:#ff8f97}.klegend li.k-god{color:var(--ember)}.klegend li.ic.ok{color:#7fc97a}.klegend li.ic:last-child{color:#a89c8a}
+.klegend svg{width:13px;height:13px;fill:currentColor;shape-rendering:crispEdges}
+@media (min-width:1000px) and (min-height:560px){.klegend{flex-direction:column;flex-wrap:nowrap;gap:5px}}
+@media (max-width:999px),(max-height:559px){.kwrap{grid-template-columns:minmax(0,1fr) minmax(200px,236px);grid-template-rows:auto 1fr auto;grid-template-areas:"map head" "map info" "legend legend";gap:8px 12px}.kingdom h2{font-size:24px}.kinfo{padding:8px 10px 10px;gap:5px}.kinfo h3{font-size:16px}.kinfo p{font-size:12px;line-height:1.35}}
+@media (max-width:640px){.kwrap{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"head" "map" "info" "legend"}}
 .forge h2{margin:0;font:600 16px/1.2 var(--display);color:var(--ember)}
 .fi{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;background:var(--wall);border:2px solid var(--line);padding:10px 12px;border-radius:2px;color:var(--ink);font:inherit;cursor:pointer}
 .fi b{font:600 15px/1.2 var(--display)}
