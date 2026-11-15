@@ -6021,17 +6021,16 @@ function renderOverlay() {
   if (m === 'play' || m === 'town' || m === 'intro') { ovBody.innerHTML = ''; return; }
   let h = '';
   if (m === 'title') {
-    h = `<p class="eyebrow">Sala de Kiteo · prototipo</p><h1>Alec, el sin dios</h1>
-      <p class="lead">Los ejércitos de los dioses arrasaron tu pueblo cuando eras un niño. Te crio un herrero: te enseñó a forjar y a pelear, y un elegido lo mató. Ahora vas de reino en reino como mercenario, con un arma hecha por ti y una sola idea: matar a los dioses.</p>
-      <p class="lead">Cada disparo te frena un instante: dispara, da un paso, dispara. Cada reino es un mapa con cuatro zonas; en cada zona hay tres encargos y un guardián. Cuando caigan los cuatro, el dios saldrá a buscarte.</p>
-      <dl class="keys">
-        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo o apuntar el cargado</dd></div>
-        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo</dd></div>
+    h = `<div class="titlebox"><p class="eyebrow">Un roguelite de ballesta y dioses</p><h1 class="logo">Alec, el sin dios</h1>
+      <p class="lead">Dispara, da un paso, dispara. Roba las técnicas de los dioses y úsalas para matarlos.</p>
+      <button id="ovBtn" class="primary big">${M.seenIntro ? 'Continuar' : 'Empezar'}</button>
+      <details class="ctl"><summary>Controles</summary><dl class="keys">
+        <div><dt>Mando</dt><dd>Stick izquierdo mover · A o RT disparar · B o RB esquivar · X o LT disparo cargado · stick derecho cambiar de objetivo · Start pausa</dd></div>
+        <div><dt>Teclado</dt><dd>WASD mover · Espacio disparar · Shift esquivar · E disparo cargado · clic en un enemigo para fijarlo · Esc pausa</dd></div>
         <div><dt>Táctil</dt><dd>Mitad izquierda mover · botones a la derecha · toca un enemigo para fijarlo</dd></div>
-      </dl>
-      <button id="ovBtn" class="primary">Empezar</button>
+      </dl></details>
       <p class="fine">Con mando: pulsa cualquier botón para que el navegador lo detecte, y después A. En el móvil, juega en horizontal.</p>
-      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo y guardia de Anokolisa (Pixel Crawler) · efectos del Fantasy RPG Pixel Pack.</p>`;
+      <p class="fine">Arte: personajes de overboy (Character Megapack) · biomas y ruinas de Androx, licencia CC BY 4.0 · mazmorras, casas, castillo, gente y armas de Anokolisa (Pixel Crawler) · familia real de Elthen · efectos del Fantasy RPG Pixel Pack.</p></div>`;
   } else if (m === 'pause') {
     h = `<p class="eyebrow">Pausa · ${whereNow()}</p><h1>${gunName(S.gun)}</h1><p class="fine">${(1 / periodOf()).toFixed(2)} disparos por segundo · ${Math.round(S.p.dmg * gunDmg())} de daño por disparo · ${Math.round(rangeOf())} de alcance · ${Math.ceil(S.p.hp)} de ${S.p.maxHp} de vida · ${Math.floor(S.p.gold)} de oro</p><div class="btns"><button id="ovBtn" class="primary">Seguir</button><button id="bookBtn" class="ghost">Recetario</button></div><ul class="build full">${buildHtml(true)}</ul><p class="fine">La partida se guarda al entrar en cada sala: puedes cerrar y continuar luego desde la forja.</p>`;
   } else if (m === 'book') h = bookHtml();
@@ -6068,6 +6067,13 @@ $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('
 $('btnMute').addEventListener('click', () => { muted = !muted; $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí'; audioInit(); });
 
 let hudKey = '';
+// Las cuatro acciones en el HUD: una casilla por acción, con el color de su deidad y el nivel en puntos
+function hudBuild() {
+  const short = { basic: 'Disparo', charge: 'Cargado', dodge: 'Esquive', passive: 'Pasiva' };
+  return SLOT_KEYS.map(k => { const cur = S.build[k]; if (!cur) return `<li class="slot empty"><em>${short[k]}</em><b>—</b></li>`;
+    const D = DUO[cur.id], col = D ? RAR[3].color : GODS[PIECE[cur.id].god].color, nm = D ? D.name : PIECE[cur.id].name;
+    return `<li class="slot" style="--c:${col}"><em>${short[k]}</em><b>${nm}</b><u>${'<i></i>'.repeat(cur.lvl)}</u></li>`; }).join('');
+}
 function renderHud() {
   const p = S.p;
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
@@ -6078,10 +6084,19 @@ function renderHud() {
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(p.reserve) : '');
   const ms = S.mission;
-  $('wave').textContent = !inRun || !ms ? '' : ms.type === 'defend' ? 'Defensa · oleada ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left : ms.type === 'assault' ? 'Asalto · campamento ' + S.room + ' de ' + roomsOf(ms) + ' · estandartes ' + (S.postsDown || 0) + ' de ' + (S.postsAll || 3) : S.bossRoom ? ms.zone + ' · ' + ms.name : ms.name + ' · sala ' + S.room + ' de ' + roomsOf(ms) + ' · quedan ' + left;
+  // Cabecera del encargo: nombre, en qué tramo vas y una fila de cuentas (hechas, la actual, tiendas y jefe)
+  if (!inRun || !ms) { $('wave').innerHTML = ''; $('pips').innerHTML = ''; }
+  else {
+    const tot = roomsOf(ms), unit = ms.type === 'defend' ? 'Oleada' : ms.type === 'assault' ? 'Campamento' : 'Sala';
+    const sub = S.bossRoom ? 'Jefe' : unit + ' ' + S.room + ' de ' + tot + (ms.type === 'assault' ? ' · estandartes ' + (S.postsDown || 0) + '/' + (S.postsAll || 3) : ' · quedan ' + left);
+    $('wave').innerHTML = `<b>${ms.name}</b><span>${MTYPES[ms.type].name} · ${sub}</span>`;
+    let h = ''; for (let i = 1; i <= tot; i++) h += `<i class="${i < S.room ? 'done' : i === S.room ? 'now' : ''}${hasBoss(ms) && i === tot ? ' boss' : ''}"></i>` + (i < tot && shopAfter(ms, i) ? '<i class="shop"></i>' : '');
+    $('pips').innerHTML = h;
+  }
   $('stats').textContent = inRun ? gunName(S.gun) : '';
-  $('res').textContent = !inRun ? '' : ['Oro ' + Math.floor(p.gold), godCount('orc') || G('a_drum') ? 'Furia ' + Math.round(p.fury) : '', S.shades.length ? 'Sombras ' + S.shades.length : '', S.soulsRun ? 'Almas ' + S.soulsRun : '', S.ironRun ? 'Hierro ' + S.ironRun : ''].filter(Boolean).join(' · ');
-  $('build').innerHTML = inRun ? buildHtml(false) : '';
+  const rc = (cls, n, t) => `<span class="rc ${cls}" title="${t}"><i></i>${n}</span>`;
+  $('res').innerHTML = !inRun ? '' : rc('gold', Math.floor(p.gold), 'Oro') + (S.soulsRun ? rc('soul', S.soulsRun, 'Almas') : '') + (S.ironRun ? rc('iron', S.ironRun, 'Hierro Místico') : '') + (godCount('orc') || G('a_drum') ? rc('fury', Math.round(p.fury), 'Furia') : '') + (S.shades.length ? rc('shade', S.shades.length, 'Sombras') : '');
+  $('build').innerHTML = inRun ? hudBuild() : '';
   $('boss').hidden = (!bo && !S.keep) || S.mode !== 'play';
   if (S.keep) { $('boss').firstElementChild.textContent = 'La campana de la aldea'; $('bossFill').style.width = clamp(S.keep.hp / S.keep.maxHp * 100, 0, 100) + '%'; }
   else if (bo) { $('boss').firstElementChild.textContent = bo.type.name; $('bossFill').style.width = clamp(bo.hp / bo.maxHp * 100, 0, 100) + '%'; }

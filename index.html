@@ -46,6 +46,62 @@ button:focus-visible{outline:2px solid var(--energy);outline-offset:2px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .chip{background:var(--panel);border:1px solid var(--line);padding:5px 9px;font-size:12px;border-radius:2px}
 
+/* HUD nuevo: barra de vida con marco, cabecera del encargo con cuentas, recursos en fichas y las cuatro acciones en casillas */
+.hp{height:18px;width:min(250px,46vw);margin-left:26px;background:#0b080d;border:2px solid #0b080d;box-shadow:0 0 0 2px var(--line),0 3px 0 2px rgba(0,0,0,.35)}
+.hp::before{content:"";position:absolute;left:-30px;top:-3px;width:22px;height:20px;background:var(--blood);clip-path:polygon(18% 0,41% 0,41% 10%,59% 10%,59% 0,82% 0,82% 10%,100% 10%,100% 50%,91% 50%,91% 60%,82% 60%,82% 70%,73% 70%,73% 80%,64% 80%,64% 90%,55% 90%,55% 100%,45% 100%,45% 90%,36% 90%,36% 80%,27% 80%,27% 70%,18% 70%,18% 60%,9% 60%,9% 50%,0 50%,0 10%,18% 10%);filter:drop-shadow(0 2px 0 #0b080d)}
+#hpFill{background:linear-gradient(#f2707a 0 30%,var(--blood) 30% 78%,#8d2733 78%);transition:width .15s}
+#hpFill::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 23px,rgba(11,8,13,.45) 23px 25px)}
+#hpTxt{font-size:12px;text-shadow:0 1px 0 #0b080d,1px 0 0 #0b080d,-1px 0 0 #0b080d,0 -1px 0 #0b080d;z-index:1}
+#wave{display:flex;flex-direction:column;gap:1px;margin-top:5px;text-shadow:0 1px 0 #0b080d,0 2px 4px rgba(0,0,0,.7)}
+#wave b{font:600 16px/1.15 var(--display);color:var(--energy)}
+#wave span{font:600 11px/1.2 var(--display);color:var(--ink);letter-spacing:.03em}
+#pips{display:flex;align-items:center;gap:3px;flex-wrap:wrap;max-width:min(320px,52vw)}
+#pips i{width:8px;height:8px;box-sizing:border-box;background:#1b151c;border:1px solid var(--line)}
+#pips i.done{background:var(--energy);border-color:#0b080d}
+#pips i.now{background:var(--ember);border-color:#fff3d6;animation:pip 1s steps(2) infinite}
+#pips i.boss{width:11px;height:11px;border-color:var(--blood);transform:rotate(45deg);margin:0 3px}
+#pips i.shop{width:5px;height:5px;border-radius:50%;background:#3d6ea8;border:0}
+@keyframes pip{50%{background:#ffd9a8}}
+#stats{font:600 11px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #0b080d}
+#res{display:flex;gap:5px;flex-wrap:wrap}
+.rc{display:inline-flex;align-items:center;gap:5px;background:rgba(18,14,20,.82);border:1px solid var(--line);padding:2px 8px 2px 5px;font:600 12px/1.3 var(--display);font-variant-numeric:tabular-nums}
+.rc i{width:9px;height:9px;box-sizing:border-box;border:1px solid #0b080d}
+.rc.gold i{background:#ffd24a;border-radius:50%}.rc.gold{color:#ffd24a}
+.rc.soul i{background:#b9c6ff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}.rc.soul{color:#b9c6ff}
+.rc.iron i{background:#c9d2e0;transform:skewX(-14deg)}.rc.iron{color:#c9d2e0}
+.rc.fury i{background:#d9a066;clip-path:polygon(50% 0,100% 100%,0 100%)}.rc.fury{color:#d9a066}
+.rc.shade i{background:#8b7fd6;border-radius:50% 50% 2px 2px}.rc.shade{color:#b3a9ee}
+#build{flex-direction:row;flex-wrap:wrap;gap:4px;max-width:min(470px,58vw)}
+#build li.slot{flex-direction:column;align-items:flex-start;gap:1px;box-sizing:border-box;width:108px;background:rgba(18,14,20,.84);border:1px solid var(--line);border-top:3px solid var(--c,var(--line));padding:3px 7px 4px}
+#build li.slot em{min-width:0;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+#build li.slot b{font:600 12px/1.15 var(--display);color:var(--c,var(--dim));max-width:100%}
+#build li.slot u{display:flex;gap:2px;text-decoration:none;height:4px}#build li.slot u i{width:6px;height:4px;background:var(--c)}
+#build li.slot.empty{opacity:.5;border-top-color:var(--line)}
+.chip{background:rgba(18,14,20,.84);border:1px solid var(--line);box-shadow:0 2px 0 #0b080d;font:600 12px/1 var(--display);padding:6px 10px}
+#sys{box-shadow:0 3px 0 rgba(0,0,0,.4)}
+#boss span{color:var(--blood);text-shadow:0 1px 0 #0b080d;letter-spacing:.06em;text-transform:uppercase}
+.bbar{height:12px;border:2px solid #0b080d;box-shadow:0 0 0 2px var(--line)}#bossFill{background:linear-gradient(#f2707a 0 30%,var(--blood) 30%)}
+@media (max-height:440px){#build li.slot{width:96px;padding:2px 6px 3px}#build li.slot b{font-size:11px}#wave b{font-size:14px}#stats{display:none}}
+
+/* Paneles con más cuerpo: marco doble, cabecera con filete, botones en relieve y cartas con banda de color */
+#ovBody{background:linear-gradient(#251d28,#1a151c 55%);border-color:#7a6248;box-shadow:inset 0 0 0 2px #2a2128,inset 0 0 0 3px #46372e,0 20px 60px rgba(0,0,0,.65)}
+#ovBody h1{padding-bottom:10px;background:linear-gradient(90deg,var(--ember),transparent 70%) left bottom/100% 2px no-repeat;text-shadow:0 3px 0 #0b080d}
+.primary,.fi.primary{box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),inset 0 2px 0 rgba(255,255,255,.25),0 3px 0 #0b080d;letter-spacing:.03em}
+.fi{background:linear-gradient(#17121a,#120e14);box-shadow:0 2px 0 #0b080d;transition:transform .08s,border-color .08s}
+.fi.sel{border-color:var(--energy);box-shadow:0 0 0 1px var(--energy),0 0 14px rgba(242,193,78,.35),0 2px 0 #0b080d;transform:translateY(-1px)}
+.fi.on:not(.tab){background:linear-gradient(#241a18,#17121a)}
+.fi.off{opacity:.62}
+.card{position:relative;border-top:5px solid var(--fam);background:linear-gradient(color-mix(in srgb,var(--fam) 13%,#120e14),#120e14 46%);box-shadow:0 3px 0 #0b080d;padding-top:12px;transition:transform .1s}
+.card.sel{border-color:var(--energy);border-top-color:var(--fam);box-shadow:0 0 0 2px var(--energy),0 0 22px rgba(242,193,78,.4);transform:translateY(-4px)}
+.card strong{font-size:17px;color:var(--ink)}
+.card span{color:#cfc4b2}
+
+.titlebox{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+#ovBody h1.logo{font-size:clamp(46px,10vw,84px);background:none;padding:0;text-shadow:0 4px 0 #7a3b12,0 7px 0 #0b080d,0 0 34px rgba(255,138,60,.35)}
+.primary.big{align-self:center;font-size:20px;padding:14px 44px}
+.ctl{align-self:stretch;text-align:left;border:1px solid var(--line);padding:6px 12px;background:rgba(11,8,13,.4)}.ctl summary{cursor:pointer;font:600 13px/1.6 var(--display);color:var(--energy)}.ctl .keys{margin-top:6px}
+#app:has(.titlebox) #hud{visibility:hidden}
+
 /* Botones táctiles */
 #touch{display:flex;align-items:flex-end;justify-content:flex-end;padding-bottom:28px}
 .pad{display:grid;grid-template-columns:auto auto;gap:12px;align-items:end;justify-items:end}
@@ -182,6 +238,7 @@ small.gloss{display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:
       <div class="stack">
         <div class="hp"><div id="hpFill"></div><div id="hpTxt"></div></div>
         <div id="wave"></div>
+        <div id="pips"></div>
         <div id="stats"></div>
         <div id="res"></div>
         <ul id="build" class="build"></ul>
