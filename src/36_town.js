@@ -99,7 +99,7 @@ function kingHtml() {
   const say = dead ? `«${god} ha caído. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar. Otros reyes preguntarán por ti.»`
     : down === 4 ? `«Los cuatro guardianes han caído y ${god} ya no tiene tras quién esconderse. Sal a buscarlo antes de que venga él.»`
     : down ? `«${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis hombres vuelven a mirar a los ojos. Quedan ${4 - down}; mientras sigan en pie, ${god} no dará la cara.»`
-    : `«Así que tú eres el mercenario que no reza. Bien. Mis soldados sí rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
+    : `«Un desconocido que se ofrece a matar a un dios. Bien. Mis soldados rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
   return `<p class="lead">${K.title}. ${K.lore.split('. ')[0]}.</p><p class="lead" style="font-style:italic">${say}</p>
     <p class="fine">Encargos cumplidos: <b>${jobs}</b> de 12 · Guardianes caídos: <b>${down}</b> de 4 · ${god}: <b>${dead ? 'muerto' : 'vivo'}</b>. Los encargos se cogen en el tablón de la plaza.</p>`;
 }
@@ -111,7 +111,8 @@ function roomHtml() {
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
     <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
-    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${M.seenEnding ? `
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${[0, 1, 2, 3].filter(z => M['seenZone' + z]).map(z => `
+    <button class="fi" data-act="zone${z}"><b>Recordar: ${K.zones[z].name}</b><span>Lo que dijeron el rey y la reina cuando cayó ${lc(TYPES[WORLDS[z].boss].name)}.</span></button>`).join('')}${M.seenEnding ? `
     <button class="fi" data-act="ending"><b>Recordar el final de ${K.name}</b><span>La caída de ${TYPES[K.god].name}, el pago del rey y el camino que sigue.</span></button>` : ''}`;
 }
 
@@ -331,7 +332,7 @@ function talkQueen() {
     { who: 'queen', text: 'Lo que uno tiene nunca es poco.' },
   ], opts) });
   opts.push({ label: 'Nada más', fn: () => {} });
-  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el mercenario también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
+  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el desconocido del tablón también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
   if (!M.queenMet) { M.queenMet = 1; save(); }
 }
 
@@ -346,7 +347,7 @@ const FIRST_TALK = {
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],
   inn: [
-    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba. La del fondo: es la única que no tiene goteras.' },
+    { who: 'keeper', text: 'Bienvenido, forastero. Así que tú eres el que se ha ofrecido al rey. Tu habitación está arriba: la del fondo, que es la única sin goteras.' },
     { who: 'keeper', text: 'El rey paga la cama. La bebida, no. No me mires así: el rey es rey, no tonto.' },
     { who: 'keeper', text: 'Ahí cuelgo tus trofeos y apunto lo que llevas hecho. Lo tuyo se guarda solo: no tienes que hacer nada.' },
   ],

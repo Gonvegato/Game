@@ -69,7 +69,7 @@ function renderOverlay() {
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
       <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cumplido: repetirlo paga la mitad)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
-      <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
+      <button id="ovBtn" class="primary">${endingDue() || zoneDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
@@ -98,7 +98,7 @@ function primaryAction(force) {
   if (S.mode === 'title') return;   // el menú principal tiene sus propios botones
   if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
-  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else openForge(); }   // tras matar al dios por primera vez, el final del reino
+  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else if (zoneDue()) playZone(S.mission.z); else openForge(); }   // tras matar al dios por primera vez, el final del reino
 }
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
 $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí';
@@ -175,5 +175,5 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, zone: z => playZone(z), get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

@@ -629,8 +629,10 @@ def frame_combo(view, i):
             front = [L for L, p in ((aR, pr), (aL, pl)) if p in ('wind', 'chamber')]
             up = [L for L, p in ((aR, pr), (aL, pl)) if p in ('strike', 'hold')]
             for L in behind: draw(img, L)
-            draw(img, lL.merged(lR, body)); draw(img, head)
-            for L in front + up: draw(img, L)
+            draw(img, lL.merged(lR, body))
+            for L in up: draw(img, L)    # de espaldas, el puño que golpea se aleja de la cámara: pasa por detrás de la cabeza
+            draw(img, head)
+            for L in front: draw(img, L)
     else:
         lean = 1 if striking else (-1 if 'wind' in (pr, pl) else 0)
         bx = X0 + lean

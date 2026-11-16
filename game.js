@@ -2084,7 +2084,7 @@ function ensHtml(g) {
     return `<li class="${on.includes(E) ? 'own' : ''}"><em>${on.includes(E) ? 'Activo' : 'Ensamble'}</em><b>${known ? E.name : '???'}</b><span>${E.parts.map(id => (M.parts[id] ? (g[PART[id].slot] === id ? '✔ ' : '') + PART[id].name : '???')).join(' + ')}${known ? '. ' + E.desc : ''}</span></li>`; }).join('') + '</ul>';
 }
 // ───────────────────────── Reinos, zonas y misiones ─────────────────────────
-// Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
+// Alec llega a su primer reino como un desconocido que se ofrece al rey; después irá de reino en reino. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
 // Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda son los guanteletes forjados y el árbol.
 // Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
@@ -2737,7 +2737,7 @@ function kingHtml() {
   const say = dead ? `«${god} ha caído. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar. Otros reyes preguntarán por ti.»`
     : down === 4 ? `«Los cuatro guardianes han caído y ${god} ya no tiene tras quién esconderse. Sal a buscarlo antes de que venga él.»`
     : down ? `«${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis hombres vuelven a mirar a los ojos. Quedan ${4 - down}; mientras sigan en pie, ${god} no dará la cara.»`
-    : `«Así que tú eres el mercenario que no reza. Bien. Mis soldados sí rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
+    : `«Un desconocido que se ofrece a matar a un dios. Bien. Mis soldados rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
   return `<p class="lead">${K.title}. ${K.lore.split('. ')[0]}.</p><p class="lead" style="font-style:italic">${say}</p>
     <p class="fine">Encargos cumplidos: <b>${jobs}</b> de 12 · Guardianes caídos: <b>${down}</b> de 4 · ${god}: <b>${dead ? 'muerto' : 'vivo'}</b>. Los encargos se cogen en el tablón de la plaza.</p>`;
 }
@@ -2749,7 +2749,8 @@ function roomHtml() {
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
     <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
-    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${M.seenEnding ? `
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${[0, 1, 2, 3].filter(z => M['seenZone' + z]).map(z => `
+    <button class="fi" data-act="zone${z}"><b>Recordar: ${K.zones[z].name}</b><span>Lo que dijeron el rey y la reina cuando cayó ${lc(TYPES[WORLDS[z].boss].name)}.</span></button>`).join('')}${M.seenEnding ? `
     <button class="fi" data-act="ending"><b>Recordar el final de ${K.name}</b><span>La caída de ${TYPES[K.god].name}, el pago del rey y el camino que sigue.</span></button>` : ''}`;
 }
 
@@ -2969,7 +2970,7 @@ function talkQueen() {
     { who: 'queen', text: 'Lo que uno tiene nunca es poco.' },
   ], opts) });
   opts.push({ label: 'Nada más', fn: () => {} });
-  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el mercenario también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
+  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el desconocido del tablón también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
   if (!M.queenMet) { M.queenMet = 1; save(); }
 }
 
@@ -2984,7 +2985,7 @@ const FIRST_TALK = {
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],
   inn: [
-    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba. La del fondo: es la única que no tiene goteras.' },
+    { who: 'keeper', text: 'Bienvenido, forastero. Así que tú eres el que se ha ofrecido al rey. Tu habitación está arriba: la del fondo, que es la única sin goteras.' },
     { who: 'keeper', text: 'El rey paga la cama. La bebida, no. No me mires así: el rey es rey, no tonto.' },
     { who: 'keeper', text: 'Ahí cuelgo tus trofeos y apunto lo que llevas hecho. Lo tuyo se guarda solo: no tienes que hacer nada.' },
   ],
@@ -3160,11 +3161,11 @@ const INTRO = [
     beats: [
       { wait: 1, who: 'alec', think: true, text: 'Tardé años en terminarlos. Cada noche, con su martillo, como le había visto hacer a él.' },
       { who: 'alec', think: true, text: 'No lanzan fuego ni rayos. Lanzan cadenas. A lo que muerden, no lo sueltan. No me los he vuelto a quitar.' },
-      { wait: 0.6, who: 'alec', think: true, text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
+      { wait: 0.6, who: 'alec', think: true, text: 'Después vinieron años de caminos. Entrené solo, contra lo que los dioses dejan suelto por ahí: esqueletos, bestias, cosas sin nombre.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
-      { who: 'alec', think: true, text: 'En las tabernas me llaman Alec, el sin dios. De todo lo que me han dado en esta vida, es lo único que me gusta.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
-      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.' },
+      { who: 'alec', think: true, text: 'Nadie sabe quién soy. Ningún rey me ha contratado nunca, ningún bardo ha cantado nada mío. Mejor: a un desconocido nadie le espera.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'Pero ya estoy listo. No busco oro ni gloria. Algún día mataré a los dioses.' },
       { who: 'alec', think: true, text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
     ] },
   { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
@@ -3177,12 +3178,14 @@ const INTRO = [
     },
     tick(R, dt) { introPlazaStroll(R, dt); },   // los vecinos pasean como en la plaza de verdad
     beats: [
-      { wait: 1.2, who: 'alec', think: true, text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
+      { wait: 1.2, who: 'alec', think: true, text: () => `${kingdomNow().name}. El primer reino al que llego con algo que ofrecer. Dicen que su rey paga en hierro y no hace preguntas.`,
         ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
       { who: 'alec', think: true, text: () => `Desde el camino se ve el humo del Umbral. ${TYPES[kingdomNow().god].name} ya tiene medio reino, y la gente de aquí lo sabe: nadie levanta la voz en el mercado.` },
-      { wait: 0.5, who: 'guardia', text: '¿Alec, el mercenario que no reza? El rey te espera en el castillo.' },
-      { who: 'alec', text: 'Veamos cuánto paga por la cabeza de un dios.' },
-      { who: 'guardia', text: 'Pagar, paga. Lo que no sé es cuántos han vuelto a cobrar.' },
+      { wait: 0.5, who: 'guardia', text: () => `¡Eh, tú! A ti no te había visto nunca. ¿Quién eres y qué buscas en ${kingdomNow().name}?` },
+      { who: 'alec', text: 'Me llamo Alec. Vengo a ver al rey.' },
+      { who: 'guardia', text: 'Medio reino quiere ver al rey. ¿Y qué le traes tú, que no llevas ni escudo?' },
+      { who: 'alec', text: 'La cabeza de su dios. Si me deja ir a buscarla.' },
+      { who: 'guardia', text: 'Ya. Sube al castillo. Hoy recibe a cualquiera: hace semanas que nadie se ofrece a nada.' },
     ] },
   // El rey cuenta qué ha pasado en el reino (kingStory, en 36_town.js: es lo mismo que te cuenta si se lo vuelves a preguntar)
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
@@ -3192,13 +3195,17 @@ const INTRO = [
       R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
     },
     beats: [
-      { wait: 2.9, min: 0.8, who: 'king', text: 'Así que tú eres Alec. Te imaginaba más alto.' },
-      { who: 'alec', text: 'Y yo a vos más rico. Me dijeron que pagáis en hierro.' },
-      { who: 'king', text: 'Pago. Pero antes vas a escuchar lo que ha pasado aquí, porque quiero que sepas contra qué te vendes.' },
+      { wait: 2.9, min: 0.8, who: 'king', text: '¿Y tú quién eres? No llevas estandarte ni escudo. Mi guardia dice que vienes a ofrecerte.' },
+      { who: 'alec', text: 'Me llamo Alec. No vengo de ningún ejército ni sirvo a ningún señor.' },
+      { who: 'alec', text: 'He oído lo que le pasa a vuestro reino. He venido a acabar con ello.' },
+      { who: 'king', text: 'Muchos vinieron a decirme lo mismo, con mejores armaduras que la tuya. Escucha primero lo que ha pasado aquí, y luego dime si sigues queriendo.' },
       ...kingStory(),
-      { who: 'queen', text: 'Por eso te llamamos a ti. Dicen que no le rezas a nadie.' },
-      { who: 'alec', text: 'A los dioses no se les reza. Se les cobra.' },
-      { who: 'king', text: 'Entonces cobra. Los encargos están en el tablón de la plaza. Vuelve a verme cuando quieras: te contaré cómo funciona esto.' },
+      { who: 'king', text: '¿Y bien? ¿Sigues queriendo?' },
+      { who: 'alec', text: 'Cuatro guardianes y un dios. Dadme vuestros encargos y vuestro hierro, y os devolveré vuestro reino.' },
+      { who: 'queen', text: '¿Por qué tú, si nadie te conoce?' },
+      { who: 'alec', text: 'Porque nadie más ha venido. Y porque a mí los dioses ya no pueden quitarme nada: me lo quitaron todo hace mucho.' },
+      { who: 'king', text: 'Un desconocido sin dios y sin escudo. O estás loco, o eres justo lo que este reino necesita.' },
+      { who: 'king', text: 'Los encargos están en el tablón de la plaza. Cumple uno y hablaremos de hierro. Vuelve a verme cuando quieras: te explicaré cómo funciona esto.' },
     ] },
 ];
 
@@ -3281,12 +3288,68 @@ const ENDING = [
     ] },
 ];
 
+// ── Tras cada zona liberada (al caer su guardián por primera vez): el rey recibe a Alec en el salón del trono ──
+// De la incredulidad del principio a creerse que de verdad puede matar al dios. Después del cuarto, la caída del dios (ENDING).
+function throneScene(cap, beats) {
+  return { cap, room: ['hall', 'hall'], amb: '#cdbcae',
+    setup(R) {
+      const cx = NAV.cols >> 1;
+      for (const n of R.room.out.npcs) R.add(n.key === 'king' || n.key === 'queen' ? n.key : null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+      R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
+    }, beats };
+}
+const zoneFell = z => { const n = kingdomNow().zones[z].name; return n + (/^(Las|Los) /.test(n) ? ' han caído' : ' ha caído'); };   // «Las Criptas han caído», «El Nido ha caído»
+const ZONE_SCENES = [
+  [throneScene(() => zoneFell(0), [
+    { wait: 2.9, min: 0.8, who: 'king', text: '¿Ya de vuelta? ¿Qué ha pasado? Te di por muerto, o por huido, que aquí viene a ser lo mismo.' },
+    { who: 'alec', text: () => `${kingdomNow().zones[0].name} están limpias. ${TYPES[WORLDS[0].boss].name} no volverá a levantarse.` },
+    { who: 'king', text: '¿Cómo que…? ¿Tú solo? Mandé allí a una compañía entera y no volvió nadie.' },
+    { who: 'queen', text: 'Es imposible. Nadie llega del camino, sin nombre ni escudo, y tumba al guardián de un dios en una semana.' },
+    { who: 'alec', text: 'Pues alguien acaba de hacerlo.' },
+    { who: 'king', text: () => `Que alguien suba a las almenas y mire hacia ${lc(kingdomNow().zones[0].name)}. ¡Ahora!` },
+    { wait: 1.2, who: 'queen', text: 'Ya no sale humo de allí. Por primera vez en un año, ya no sale humo.' },
+    { who: 'king', text: 'Muy bien, Alec. Uno. Quedan tres. No voy a mentirte: sigo pensando que la suerte se acaba.' },
+    { who: 'alec', text: 'No ha sido suerte.' },
+  ])],
+  [throneScene(() => zoneFell(1), [
+    { wait: 2.9, min: 0.8, who: 'king', text: () => `Me lo han contado los aldeanos de ${kingdomNow().zones[1].m[1].replace('La aldea de ', '')} antes que mis propios exploradores. ${TYPES[WORLDS[1].boss].name}, muerta.` },
+    { who: 'alec', text: () => `${kingdomNow().zones[1].name} está limpio. La seda arde bien.` },
+    { who: 'queen', text: 'Dos guardianes. Hace un mes nadie en este castillo se atrevía ni a nombrarlos.' },
+    { who: 'king', text: 'Mis consejeros dicen que eres el enviado de algún dios rival. Que esto es una guerra entre ellos, y tú solo su arma.' },
+    { who: 'alec', text: 'No sirvo a ningún dios. Precisamente por eso funciona.' },
+    { who: 'queen', text: 'Entonces, ¿qué eres?' },
+    { who: 'alec', text: 'Alguien a quien un ejército como estos se lo quitó todo. Hace mucho, en un pueblo que ya no sale en los mapas.' },
+    { who: 'king', text: 'Empiezo a creerte. Y empiezo a creerme otra cosa, que me asusta más: que de verdad puedes conseguirlo.' },
+  ])],
+  [throneScene(() => zoneFell(2), [
+    { wait: 2.9, min: 0.8, who: 'queen', text: () => `Los picadores de ${lc(kingdomNow().zones[2].name)} han vuelto a casa. Con los ojos de su color, Alec. Eso no puede ser.` },
+    { who: 'alec', text: () => `Lo que llevaban dentro se fue cuando cayó ${lc(TYPES[WORLDS[2].boss].name)}.` },
+    { who: 'king', text: () => `Tres de cuatro. ¿Sabes lo que significa? Si cae el último, ${lc(TYPES[kingdomNow().god].name)} tendrá que bajar de su trono de ceniza.` },
+    { who: 'queen', text: 'Y entonces vendrá a por ti. A por todos nosotros.' },
+    { who: 'alec', text: 'Que venga. Llevo esperándole desde que tenía nueve años.' },
+    { who: 'king', text: 'He mandado forjar una corona de hierro para el día que caiga. Hasta ayer me parecía una locura.' },
+    { who: 'queen', text: 'Hoy le he oído reírse. Hacía un año que no se reía.' },
+  ])],
+  [throneScene(() => zoneFell(3), [
+    { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[WORLDS[3].boss].name} ha caído. Los cuatro, Alec. ¡Los cuatro!` },
+    { who: 'queen', text: 'La gente canta tu nombre en la plaza. Un nombre que hace unas semanas no conocía nadie.' },
+    { who: 'alec', text: 'Que no canten todavía. Queda él.' },
+    { who: 'king', text: () => `${TYPES[kingdomNow().god].name} ya no tiene detrás de quién esconderse. Mis exploradores dicen que el cielo ${deN(kingdomNow().zones[3].name)} arde día y noche: te está esperando.` },
+    { who: 'queen', text: 'No tienes por qué ir. Has hecho más de lo que nadie podía pedirte.' },
+    { who: 'alec', text: 'Vine a matar a un dios. No me voy a ir con el trabajo a medias.' },
+    { who: 'king', text: 'Entonces ve. Y vuelve. Este reino no tiene hierro suficiente para pagarte, pero encontraremos la forma.' },
+  ])],
+];
+function playZone(z) { playScenes(ZONE_SCENES[z], 'seenZone' + z, 'hall'); }
+// La escena de una zona se debe la primera vez que cae su guardián
+const zoneDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'boss' && ZONE_SCENES[S.mission.z] && !M['seenZone' + S.mission.z];
+
 // ── Poner en marcha, pasar de escena y acabar ──
 let introHudOn = false, introTap = false, INTRO_LM = null;
 // El motor reproduce una lista de escenas: la del principio (INTRO) o el final de un reino (ENDING). «seen» es la marca que deja en el guardado.
-function playScenes(L, seen) {
+function playScenes(L, seen, after) {
   newGame(); S.gun = Object.assign({}, M.gun);
-  S.mode = 'intro'; modeT = 0; S.intro = { L, seen, i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
+  S.mode = 'intro'; modeT = 0; S.intro = { L, seen, after, i: 0, b: 0, bt: 0, evi: 0, phase: 'wait', txt: '', R: null };
   introTap = false; renderOverlay(); introScene(0); sfx('ok', 0.3,0.7);
 }
 function playIntro() { playScenes(INTRO, 'seenIntro'); }
@@ -3294,10 +3357,10 @@ function playEnding() { playScenes(ENDING, 'seenEnding'); }
 // El final se debe la primera vez que cae el dios del reino (o, en guardados de antes de que existiera, la próxima vez que caiga)
 const endingDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'god' && !M.seenEnding;
 function introEnd() {
-  const seen = S.intro && S.intro.seen;
+  const seen = S.intro && S.intro.seen, after = S.intro && S.intro.after;
   S.dialog = null; S.intro = null;
   if (seen && !M[seen]) { M[seen] = 1; save(); }
-  openTown();
+  openTown(after);   // tras una escena del salón del trono, sigues allí
 }
 function introScene(i) {
   const N = S.intro, sc = N.L[i], room = buildRoom(!!sc.room[2], sc.room[0], sc.room[1]);   // room: [generador, tamaño, ¿arena de jefe?]
@@ -3551,7 +3614,7 @@ function introDraw() {
 }
 
 // El botón «Recordar el final» de la habitación de la posada (data-act="ending"): se atiende aquí, delante de forgeAct
-{ const act0 = forgeAct; forgeAct = function (act) { if (act === 'ending') { playEnding(); return; } act0(act); }; }
+{ const act0 = forgeAct; forgeAct = function (act) { if (act === 'ending') { playEnding(); return; } const z = /^zone(\d)$/.exec(act); if (z) { playZone(+z[1]); return; } act0(act); }; }
 // ───────────────────────── El mapa del reino (tablón de encargos) ─────────────────────────
 // En el tablón no hay una lista: hay un mapa dibujado del reino. Cada territorio se tiñe del color del guardián que lo tiene
 // tomado y, cuando cae, pasa al color del reino. Los encargos son marcadores (.fi) puestos sobre el mapa: la navegación
@@ -7451,7 +7514,7 @@ function renderOverlay() {
   } else if (m === 'win') {
     h = `<p class="eyebrow">${S.mission.zone} · ${MTYPES[S.mission.type].name}</p><h1>${S.mission.type === 'god' ? 'Un dios menos' : 'Encargo cumplido'}</h1>
       <p class="lead">${S.mission.name}: ${S.kills} bajas. El reino paga ${S.pay} almas${S.first ? '' : ' (ya lo habías cumplido: repetirlo paga la mitad)'}. Te llevas ${lootTxt()} a la forja${S.found ? ', y entre los restos encuentras una pieza: ' + S.found : ''}.</p>${newGodHtml(S.newGod)}
-      <button id="ovBtn" class="primary">${endingDue() ? 'Seguir' : 'A la plaza'}</button>`;
+      <button id="ovBtn" class="primary">${endingDue() || zoneDue() ? 'Seguir' : 'A la plaza'}</button>`;
   } else if (m === 'forge') h = forgeHtml();
   else if (m === 'shop') h = shopHtml();
   else if (m === 'pick') {
@@ -7480,7 +7543,7 @@ function primaryAction(force) {
   if (S.mode === 'title') return;   // el menú principal tiene sus propios botones
   if (S.mode === 'pause') setMode('play');
   else if (S.mode === 'book') closeBook();
-  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else openForge(); }   // tras matar al dios por primera vez, el final del reino
+  else if ((S.mode === 'dead' || S.mode === 'win') && (force || modeT > 0.8)) { if (endingDue()) playEnding(); else if (zoneDue()) playZone(S.mission.z); else openForge(); }   // tras matar al dios por primera vez, el final del reino
 }
 $('btnPause').addEventListener('click', () => { if (S.mode === 'play') setMode('pause'); else if (S.mode === 'pause') setMode('play'); });
 $('btnMute').textContent = muted ? 'Sonido: no' : 'Sonido: sí';
@@ -7557,5 +7620,5 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, zone: z => playZone(z), get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 })();

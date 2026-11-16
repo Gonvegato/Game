@@ -1,5 +1,5 @@
 // ───────────────────────── Reinos, zonas y misiones ─────────────────────────
-// Alec va de reino en reino como mercenario. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
+// Alec llega a su primer reino como un desconocido que se ofrece al rey; después irá de reino en reino. Cada reino es un mapa con cuatro zonas; cada zona tiene tres misiones
 // de tipos distintos y un guardián. Al caer los cuatro guardianes aparece el dios que asedia el reino.
 // Cada misión empieza de cero: lo que robas a los dioses no sale de ella. Lo que queda son los guanteletes forjados y el árbol.
 // Las misiones son largas (unos 20-30 minutos) para que dé tiempo a montar una build. rooms: cuántos tramos tiene; shops: tras cuáles hay tienda.
