@@ -164,9 +164,7 @@ function fireBasic(target) {
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || overB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
-  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro en el puño
-    const { x: mx, y: my } = heroHand(target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, p.punch.hand);   // en el puño que lanza
-    S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
+  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // el sonido del conjuro (sin destello: el color va en los guanteletes y la cadena)
     sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
   sfx('zap', 0.3,1.2);

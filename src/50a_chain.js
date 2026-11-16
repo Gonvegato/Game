@@ -25,6 +25,16 @@ function headPixels(ang, L = 11, half = 3) {
   }
   HEAD_CACHE.set(key, out); return out;
 }
+// Los mismos tonos en RGB, para teñir píxeles (los guanteletes de Alec, en 50_sprites.js)
+function rampRGB(col) {
+  const n = parseInt(String(col).replace('#', '').slice(0, 6), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; let h = 0; const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = ((h * 60) % 360 + 360) % 360;
+  const S0 = s < 0.12 ? 0.14 : Math.max(0.35, s);
+  const rgb = (ss, ll) => { ss = clamp(ss, 0, 1); const c2 = (1 - Math.abs(2 * ll - 1)) * ss, x = c2 * (1 - Math.abs((h / 60) % 2 - 1)), m = ll - c2 / 2;
+    const [a, b2, c3] = h < 60 ? [c2, x, 0] : h < 120 ? [x, c2, 0] : h < 180 ? [0, c2, x] : h < 240 ? [0, x, c2] : h < 300 ? [x, 0, c2] : [c2, 0, x]; return [a, b2, c3].map(v => Math.round((v + m) * 255)); };
+  return { hi: rgb(S0 * 0.75, 0.82), base: rgb(S0, 0.56), sh: rgb(S0 * 0.9, 0.36), deep: rgb(S0 * 0.8, 0.2) };
+}
 // Rampa de 5 tonos y halo a partir del color del disparo
 const RAMP_CACHE = new Map();
 function chainRamp(col) {

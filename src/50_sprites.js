@@ -578,6 +578,24 @@ function heroHand(face, hand) {
   const yFeet = (p.dodgeT > 0 && p.fly ? p.y - 5 : p.y) + p.r + 2;
   return { x: flip ? p.x + m.ax - h[0] : p.x - m.ax + h[0], y: yFeet - m.gy + h[1] - 2 };
 }
+// Los guanteletes de Alec, del color de su cadena (el del disparo): una copia del atlas con los cuatro tonos de metal de los guanteletes
+// (los de tools/make_mage.py: brillo, base, sombra y sombra honda) cambiados por la rampa de ese color. Se rehace solo al cambiar de color.
+const GAUNT_TONES = { '227,234,242': 'hi', '151,163,184': 'base', '95,106,132': 'sh', '55,62,82': 'deep' };
+let GAUNT_IMG = null, GAUNT_COL = null;
+function gauntImg(col) {
+  if (!IMG.chars) return null;
+  if (GAUNT_IMG && GAUNT_COL === col) return GAUNT_IMG;
+  const cv = GAUNT_IMG || document.createElement('canvas'); cv.width = IMG.chars.width; cv.height = IMG.chars.height;
+  const g = cv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(IMG.chars, 0, 0);
+  const R = rampRGB(col);
+  for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
+    for (const a in m.a) for (const [fx, fy] of m.a[a].f) {
+      const d = g.getImageData(fx, fy, m.w, m.h), px = d.data;
+      for (let i = 0; i < px.length; i += 4) { const t = px[i + 3] && GAUNT_TONES[px[i] + ',' + px[i + 1] + ',' + px[i + 2]]; if (t) { const c = R[t]; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; } }
+      g.putImageData(d, fx, fy);
+    } }
+  GAUNT_IMG = cv; GAUNT_COL = col; return cv;
+}
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
   const { key, flip } = heroView(face);
@@ -590,7 +608,7 @@ function drawHero(anim, time, x, yFeet, face, flash) {
     ctx.restore();
     if (Math.random() < 0.08 * (tier - 1)) S.fx.push({ k: 'spark', x: x + rnd(-6, 6), y: yFeet - rnd(2, 20), vx: rnd(-8, 8), vy: rnd(-40, -20), t: 0, life: rnd(0.4, 0.8), col });
   }
-  const a = m.a[anim] || m.a.move, [src, sx, sy, i] = mixFrame(flash ? IMG.charsF : IMG.chars, m, a, time);
+  const a = m.a[anim] || m.a.move, [src, sx, sy, i] = mixFrame(flash ? IMG.charsF : gauntImg(slotColor('basic')) || IMG.chars, m, a, time);   // guanteletes del color de la cadena
   if (!HERO_TMP) { HERO_TMP = document.createElement('canvas'); HERO_TMP.width = 64; HERO_TMP.height = 64; }
   const t = HERO_TMP.getContext('2d'); t.clearRect(0, 0, 64, 64); t.globalCompositeOperation = 'source-over'; t.drawImage(src, sx, sy, m.w, m.h, 0, 0, m.w, m.h);
   if (tier >= 2 && !flash) { t.globalCompositeOperation = 'source-atop'; t.globalAlpha = 0.08 + 0.07 * (tier - 1); t.fillStyle = col; t.fillRect(0, 0, m.w, m.h); t.globalAlpha = 1; }
@@ -607,16 +625,6 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   if (tier >= 4) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.18 + 0.08 * Math.sin(S.t * 9);   // a pleno poder, brilla
     if (flip) { ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); } else ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
     ctx.restore(); }
-  // La llama de los guanteletes: del color de la deidad que más lleva, más grande cuanto más poder y cuando lanza
-  const hands = m.hands && (m.hands[anim] || m.hands.move)[i];
-  if (hands && IMG.fx) {
-    const row = fxRow(col), fw = (anim.startsWith('atk') ? 5 : 3) + Math.floor(tier / 2), fh = Math.round(fw * 1.5), ff = FXA.flame;
-    for (let h = 0; h < hands.length; h++) {
-      const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], ft = S.t * 14 + h * 5, fr = Math.floor(ft) % ff.n, mix = ft - Math.floor(ft);
-      ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh);
-      ctx.globalAlpha = mix; ctx.drawImage(IMG.fx, (fr + 1) % ff.n * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh); ctx.globalAlpha = 1;   // la llama también se funde entre dibujos
-    }
-  }
   return true;
 }
 // ── La caída de un jefe o de un dios: se tambalea entre estallidos y rayos de luz, y luego se deshace de arriba abajo en ceniza.

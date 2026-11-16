@@ -4386,9 +4386,7 @@ function fireBasic(target) {
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || overB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
-  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro en el puño
-    const { x: mx, y: my } = heroHand(target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, p.punch.hand);   // en el puño que lanza
-    S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
+  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // el sonido del conjuro (sin destello: el color va en los guanteletes y la cadena)
     sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
   sfx('zap', 0.3,1.2);
@@ -6069,6 +6067,24 @@ function heroHand(face, hand) {
   const yFeet = (p.dodgeT > 0 && p.fly ? p.y - 5 : p.y) + p.r + 2;
   return { x: flip ? p.x + m.ax - h[0] : p.x - m.ax + h[0], y: yFeet - m.gy + h[1] - 2 };
 }
+// Los guanteletes de Alec, del color de su cadena (el del disparo): una copia del atlas con los cuatro tonos de metal de los guanteletes
+// (los de tools/make_mage.py: brillo, base, sombra y sombra honda) cambiados por la rampa de ese color. Se rehace solo al cambiar de color.
+const GAUNT_TONES = { '227,234,242': 'hi', '151,163,184': 'base', '95,106,132': 'sh', '55,62,82': 'deep' };
+let GAUNT_IMG = null, GAUNT_COL = null;
+function gauntImg(col) {
+  if (!IMG.chars) return null;
+  if (GAUNT_IMG && GAUNT_COL === col) return GAUNT_IMG;
+  const cv = GAUNT_IMG || document.createElement('canvas'); cv.width = IMG.chars.width; cv.height = IMG.chars.height;
+  const g = cv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(IMG.chars, 0, 0);
+  const R = rampRGB(col);
+  for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
+    for (const a in m.a) for (const [fx, fy] of m.a[a].f) {
+      const d = g.getImageData(fx, fy, m.w, m.h), px = d.data;
+      for (let i = 0; i < px.length; i += 4) { const t = px[i + 3] && GAUNT_TONES[px[i] + ',' + px[i + 1] + ',' + px[i + 2]]; if (t) { const c = R[t]; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; } }
+      g.putImageData(d, fx, fy);
+    } }
+  GAUNT_IMG = cv; GAUNT_COL = col; return cv;
+}
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
   const { key, flip } = heroView(face);
@@ -6081,7 +6097,7 @@ function drawHero(anim, time, x, yFeet, face, flash) {
     ctx.restore();
     if (Math.random() < 0.08 * (tier - 1)) S.fx.push({ k: 'spark', x: x + rnd(-6, 6), y: yFeet - rnd(2, 20), vx: rnd(-8, 8), vy: rnd(-40, -20), t: 0, life: rnd(0.4, 0.8), col });
   }
-  const a = m.a[anim] || m.a.move, [src, sx, sy, i] = mixFrame(flash ? IMG.charsF : IMG.chars, m, a, time);
+  const a = m.a[anim] || m.a.move, [src, sx, sy, i] = mixFrame(flash ? IMG.charsF : gauntImg(slotColor('basic')) || IMG.chars, m, a, time);   // guanteletes del color de la cadena
   if (!HERO_TMP) { HERO_TMP = document.createElement('canvas'); HERO_TMP.width = 64; HERO_TMP.height = 64; }
   const t = HERO_TMP.getContext('2d'); t.clearRect(0, 0, 64, 64); t.globalCompositeOperation = 'source-over'; t.drawImage(src, sx, sy, m.w, m.h, 0, 0, m.w, m.h);
   if (tier >= 2 && !flash) { t.globalCompositeOperation = 'source-atop'; t.globalAlpha = 0.08 + 0.07 * (tier - 1); t.fillStyle = col; t.fillRect(0, 0, m.w, m.h); t.globalAlpha = 1; }
@@ -6098,16 +6114,6 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   if (tier >= 4) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.18 + 0.08 * Math.sin(S.t * 9);   // a pleno poder, brilla
     if (flip) { ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, -m.ax, Math.round(yFeet - m.gy), m.w, m.h); } else ctx.drawImage(HERO_TMP, 0, 0, m.w, m.h, Math.round(x - m.ax), Math.round(yFeet - m.gy), m.w, m.h);
     ctx.restore(); }
-  // La llama de los guanteletes: del color de la deidad que más lleva, más grande cuanto más poder y cuando lanza
-  const hands = m.hands && (m.hands[anim] || m.hands.move)[i];
-  if (hands && IMG.fx) {
-    const row = fxRow(col), fw = (anim.startsWith('atk') ? 5 : 3) + Math.floor(tier / 2), fh = Math.round(fw * 1.5), ff = FXA.flame;
-    for (let h = 0; h < hands.length; h++) {
-      const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], ft = S.t * 14 + h * 5, fr = Math.floor(ft) % ff.n, mix = ft - Math.floor(ft);
-      ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh);
-      ctx.globalAlpha = mix; ctx.drawImage(IMG.fx, (fr + 1) % ff.n * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh); ctx.globalAlpha = 1;   // la llama también se funde entre dibujos
-    }
-  }
   return true;
 }
 // ── La caída de un jefe o de un dios: se tambalea entre estallidos y rayos de luz, y luego se deshace de arriba abajo en ceniza.
@@ -6197,6 +6203,16 @@ function headPixels(ang, L = 11, half = 3) {
     out.push([x, y, u > L - 2.5 && av < 0.8 ? 's' : av < 0.6 ? 'm' : v * lit > 0 ? 'l' : 'd']);
   }
   HEAD_CACHE.set(key, out); return out;
+}
+// Los mismos tonos en RGB, para teñir píxeles (los guanteletes de Alec, en 50_sprites.js)
+function rampRGB(col) {
+  const n = parseInt(String(col).replace('#', '').slice(0, 6), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; let h = 0; const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = ((h * 60) % 360 + 360) % 360;
+  const S0 = s < 0.12 ? 0.14 : Math.max(0.35, s);
+  const rgb = (ss, ll) => { ss = clamp(ss, 0, 1); const c2 = (1 - Math.abs(2 * ll - 1)) * ss, x = c2 * (1 - Math.abs((h / 60) % 2 - 1)), m = ll - c2 / 2;
+    const [a, b2, c3] = h < 60 ? [c2, x, 0] : h < 120 ? [x, c2, 0] : h < 180 ? [0, c2, x] : h < 240 ? [0, x, c2] : h < 300 ? [x, 0, c2] : [c2, 0, x]; return [a, b2, c3].map(v => Math.round((v + m) * 255)); };
+  return { hi: rgb(S0 * 0.75, 0.82), base: rgb(S0, 0.56), sh: rgb(S0 * 0.9, 0.36), deep: rgb(S0 * 0.8, 0.2) };
 }
 // Rampa de 5 tonos y halo a partir del color del disparo
 const RAMP_CACHE = new Map();
