@@ -9,6 +9,7 @@ movimiento. Del puñetazo, que trae una preparación larga, se arma una tira de 
 y el 6.º (golpe): los fotogramas de PixelLab que mejor sirven para cada cosa cambian según la vista.
 Escribe assets/library/alec/{down,side,up}_{idle,move,atk}.png y manos.json (sin manos: el dibujo ya trae la brasa).
 Uso: python3 -I tools/import_alec_pixellab.py
+Ojo: ya no es el Alec del juego (ahora lo genera tools/make_mage.py); ejecutarlo sobrescribe las tiras de assets/library/alec/.
 """
 import os, json
 from PIL import Image

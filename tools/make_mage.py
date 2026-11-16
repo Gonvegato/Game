@@ -1,0 +1,451 @@
+#!/usr/bin/env python3
+"""Mago de los guanteletes: pelo rojo en wolf cut, túnica negra y dos guanteletes de metal.
+
+Estética Pixel Crawler: contorno casi negro de 1 px, luz desde arriba a la izquierda, 3-4 tonos por
+material, ojos con párpado negro, blanco en dos tonos e iris en dos tonos.
+Salida en el formato de assets/library/alec/: tiras {down,up,side}_{idle,move,atk}.png con
+fotogramas de 40x40, más manos.json (dónde cae cada puño, para la llama del juego).
+Uso: python3 make_mage.py <carpeta_salida>
+"""
+import json, math, os, sys
+from PIL import Image
+
+
+def hx(s): s = s.lstrip('#'); return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4))
+
+
+PAL = {k: hx(v) for k, v in {
+    # pelo rojo: sombra, sombra media, base, luz, brillo
+    'a': '#5a171c', 'Z': '#7d2222', 'A': '#a52d26', 'B': '#d24c2d', 'C': '#f28a4a',
+    # piel
+    'S': '#f2c49b', 'q': '#c97f58', 'Q': '#8e4630',
+    # ojos (los mismos tonos que la aldeana del juego)
+    'k': '#141412', 'w': '#a7acae', 'W': '#fffcfc', 'I': '#23610e', 'i': '#4cb528',
+    # túnica negra: luz, base, sombra, sombra honda; ribete rojo; cinturón y hebilla
+    'U': '#4a4560', 'T': '#2e2b3d', 't': '#1f1d2a', 'u': '#16141e',
+    'Y': '#a8353a', 'y': '#6e2027',
+    'b': '#7a4a2c', 'V': '#4e2c1c', 'g': '#f0c04a',
+    # guanteletes: brillo, base, sombra, sombra honda
+    'N': '#e3eaf2', 'M': '#97a3b8', 'm': '#5f6a84', 'n': '#373e52',
+    # pantalón y botas
+    'P': '#2a2734', 'p': '#1b1922', 'O': '#6a4330', 'o': '#43291e',
+}.items()}
+OUTLINE = hx('#141412')
+FW = FH = 40
+
+HEAD = {
+ 'S': [
+  "....a.aaaa.a....",
+  "...aAaABAAaAa...",
+  "..aABCBBAAAAZa..",
+  ".aABCBABAAAAZZa.",
+  "aABBAAAAAAAAAZZa",
+  "aAAAAAAaaAAAAZZa",
+  "aAAAAAaSSaAAAAZa",
+  "aAaSAaSSSSaAqaZa",
+  "aAaSSaSSSSaSqaZa",
+  "aAaSkkkSSkkkqaZa",
+  "aAaSSwISSIwSqaZa",
+  "aAaqSWiSSiWqqaZa",
+  "aAaqSSSSqSSqqaZa",
+  ".aAaqSSqqSqqaZa.",
+  ".aAaqSSSSSqqaZa.",
+  "aAaAa.qSSq.aZaZa",
+  "a.aAa......aZa.a",
+  "..a.a......a.a..",
+ ],
+ 'N': [
+  "....a.aaaa.a....",
+  "...aAaABAAaAa...",
+  "..aABCBBAAAAZa..",
+  ".aABCBABAAAAZZa.",
+  "aABBAAAAAAAAAZZa",
+  "aAAAAAAAAAAAAZZa",
+  "aABBAAAaAAAAZZZa",
+  "aAAAAAaAAaAAAZZa",
+  "aAaAAAaAAaAAZaZa",
+  "aAaAAaAAAAaAZaZa",
+  "aAAaAaAAAAaZaZZa",
+  ".aAaAaAAAAaZaZa.",
+  ".aAaAAaAAaZZaZa.",
+  "aAaAaAaAAaZaZaZa",
+  "aAaAaAaaaaZaZaZa",
+  "a.aAa.aAZa.aZa.a",
+  "..a.a..aa..a.a..",
+  "................",
+ ],
+ 'E': [
+  "...a.aaaaa.a....",
+  "..aAaABAAAaAa...",
+  ".aABCBBAAAAAAa..",
+  ".aBCBABAAAAABAa.",
+  "aABBAAAAAAAABAAa",
+  "aAAAAAAAAAAAAAAa",
+  "aAAAAaAAAAAAAAaa",
+  "aAAAaAAAAaSSAAa.",
+  "aAAaAAAAaSaaSAa.",
+  "aAAaAAAAaSSkkkS.",
+  "aAaAAAAAaSSwISSS",
+  ".aaZAAAAaqSWiSS.",
+  ".aZZaAAZaaqSSqq.",
+  "aZaZaZaaa.qSSSq.",
+  "aZaZaZa...qSq...",
+  "a.aZa.a.........",
+  "..a.a...........",
+  "................",
+ ],
+}
+
+BODY = {
+ 'S': ["...UUTTTTTtt....",
+       "..UUTTTYYTTttt..",
+       "..UTTTTYYTTttt..",
+       "..UTTTTYYTtttt..",
+       "..UTTTTYYTtttt..",
+       "..bbbbbggbbVVV..",
+       "...UTTTYYTtt....",
+       "..UTTTTYYTtttt..",
+       "..UTTtTYYTtutt..",
+       ".UTTTtTYYTttutt.",
+       ".UTTtTTYYTtuttu.",
+       ".yYYYYYYYYYyyyy."],
+ 'N': ["...UUTTTTTtt....",
+       "..UUTTTTTTTttt..",
+       "..UTTTTTTTTttt..",
+       "..UTTTTtTTtttt..",
+       "..UTTTTtTTtttt..",
+       "..bbbbbbbbbVVV..",
+       "...UTTTtTTtt....",
+       "..UTTTTtTTtttt..",
+       "..UTTtTtTTtutt..",
+       ".UTTTtTtTTttutt.",
+       ".UTTtTTtTTtuttu.",
+       ".yYYYYYYYYYyyyy."],
+ 'E': ["....UUTTTt......",
+       "...UUTTTTTTt....",
+       "...UTTTTTTTY....",
+       "...UTTTTTTtY....",
+       "...UTTTTTttY....",
+       "...bbbbbbVVg....",
+       "....UTTTTttY....",
+       "...UTTTTTttY....",
+       "...UTTtTTtttY...",
+       "..UTTTtTTtutY...",
+       "..UTtTTTttutY...",
+       "..yYYYYYYYyyy..."],
+}
+LEG = ["PPp", "OOo", "OOo", "ooo"]
+LEG_SIDE = ["PPp", "OOOo", "OOOo", "oooo"]
+
+for d in HEAD:
+    assert len(HEAD[d]) == 18 and all(len(r) == 16 for r in HEAD[d]), d
+    assert len(BODY[d]) == 12 and all(len(r) == 16 for r in BODY[d]), d
+
+X0 = 12               # columna de las plantillas de 16 dentro del lienzo de 40
+LEG_Y = 34            # las botas acaban en la fila 37
+TORSO_Y = LEG_Y - 12  # 22
+HEAD_Y = TORSO_Y - 15 # 7
+
+DARKER = {'N': 'M', 'M': 'm', 'm': 'n', 'n': 'n', 'U': 'T', 'T': 't', 't': 'u',
+          'P': 'p', 'O': 'o', 'o': 'o'}
+
+
+class Layer:
+    def __init__(self): self.px = {}
+    def put(self, x, y, c):
+        if 0 <= x < FW and 0 <= y < FH: self.px[(x, y)] = c
+    def stamp(self, rows, x0, y0):
+        for y, r in enumerate(rows):
+            for x, c in enumerate(r):
+                if c != '.': self.put(x0 + x, y0 + y, c)
+    def recolor(self, m):
+        self.px = {k: m.get(v, v) for k, v in self.px.items()}
+        return self
+    def merged(self, *others):
+        L = Layer(); L.px = dict(self.px)
+        for o in others: L.px.update(o.px)
+        return L
+
+
+def draw(img, L):
+    """Pinta la capa con su contorno de 1 px por fuera."""
+    p = img.load()
+    for (x, y) in L.px:
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            q = (x + dx, y + dy)
+            if q not in L.px and 0 <= q[0] < FW and 0 <= q[1] < FH:
+                p[q] = OUTLINE + (255,)
+    for (x, y), c in L.px.items():
+        p[x, y] = PAL[c] + (255,)
+
+
+# ---------------- guanteletes ----------------
+def arm_front(x, y, flip=False, sleeve=3, length=6):
+    """Brazo colgando visto de frente o de espaldas (4 de ancho). x = columna izquierda.
+    Guantelete por placas: borde ensanchado, junta, placa del antebrazo y puño con nudillos."""
+    L = Layer()
+    row = (lambda cs: cs) if not flip else (lambda cs: cs[::-1])
+    for i in range(sleeve):
+        for k, c in enumerate(row(['U', 'T', 'T', 't'])): L.put(x + k, y + i, c)
+    cy = y + sleeve
+    ox = -1 if not flip else 0          # el borde sobresale hacia fuera
+    for k, c in enumerate(row(['N', 'N', 'N', 'M', 'm'])): L.put(x + ox + k, cy, c)
+    for k, c in enumerate(row(['m', 'M', 'M', 'm', 'n'])): L.put(x + ox + k, cy + 1, c)
+    for i in range(2, length):
+        cs = ['N', 'M', 'M', 'm'] if i in (2, 3) else ['M', 'M', 'm', 'm']
+        for k, c in enumerate(row(cs)): L.put(x + k, cy + i, c)
+    for k, c in enumerate(row(['N', 'm', 'N', 'n'])): L.put(x + k, cy + length, c)   # nudillos
+    return L, (x + 2, cy + length)
+
+
+def arm_side(x, y, swing=0):
+    """Brazo de perfil (3 de ancho). swing >= 2: codo doblado con el antebrazo hacia delante;
+    swing < 0: el brazo se va hacia atrás."""
+    L = Layer()
+    for i in range(3):
+        for k, c in enumerate(['U', 'T', 't']): L.put(x + k, y + i, c)
+    if swing >= 2:                                   # antebrazo horizontal, puño delante
+        for k, c in enumerate(['N', 'N', 'M', 'm']): L.put(x - 1 + k, y + 3, c)
+        n = swing + 1
+        for j in range(n):
+            for r, c in enumerate(['N' if 0 < j < n - 1 else 'M', 'M', 'm']): L.put(x + 1 + j, y + 4 + r, c)
+        fx = x + 1 + n
+        for r, c in enumerate(['M', 'm', 'n']): L.put(fx, y + 4 + r, c)
+        for k, c in enumerate(['m', 'm']): L.put(x + k, y + 4 + k, 'm')
+        return L, (fx, y + 6)
+    s = max(-2, min(1, swing))
+    for k, c in enumerate(['N', 'N', 'M', 'm']): L.put(x - 1 + k + (s if s < 0 else 0) // 2, y + 3, c)
+    for i in range(4, 9):
+        o = s if i >= 5 else s // 2
+        for k, c in enumerate(['N' if i in (5, 6) else 'M', 'M', 'm']): L.put(x + k + o, y + i, c)
+    for k, c in enumerate(['N', 'm', 'n']): L.put(x + k + s, y + 9, c)
+    return L, (x + 1 + s, y + 9)
+
+
+def arm_punch_side(x, y, length=9):
+    """Brazo de perfil estirado hacia la derecha. y = fila del hombro."""
+    L = Layer()
+    for i in range(length):
+        xx = x + i
+        if i < 3:   cs = ['U', 'T', 'T', 't']; y0 = y
+        elif i == 3: cs = ['N', 'N', 'M', 'M', 'm', 'n']; y0 = y - 1
+        elif i == 4: cs = ['m', 'm', 'm', 'n']; y0 = y          # junta
+        else:       cs = ['N' if i < length - 1 else 'M', 'M', 'M', 'm']; y0 = y
+        for r, c in enumerate(cs): L.put(xx, y0 + r, c)
+    fx = x + length
+    for j, cs in enumerate([['N', 'M', 'M', 'M', 'm'], ['N', 'N', 'M', 'm', 'm'], ['M', 'm', 'N', 'm', 'n']]):
+        for r, c in enumerate(cs): L.put(fx + j, y - 1 + r, c)
+    return L, (fx + 2, y + 1)
+
+
+def arm_punch_up(x, y_shoulder, reach):
+    """Brazo estirado hacia el fondo (puñetazo de espaldas): sube junto a la cabeza."""
+    L = Layer(); top = y_shoulder - reach
+    for yy in range(y_shoulder - 2, y_shoulder + 2):
+        for k, c in enumerate(['t', 'T', 'T', 'U']): L.put(x + k, yy, c)
+    for k, c in enumerate(['m', 'M', 'N', 'N', 'N']): L.put(x - 1 + k, y_shoulder - 3, c)
+    for k, c in enumerate(['n', 'm', 'M', 'M', 'm']): L.put(x - 1 + k, y_shoulder - 4, c)
+    for yy in range(top + 3, y_shoulder - 4):
+        cs = ['n', 'm', 'm', 'M'] if yy == top + 5 else ['m', 'M', 'M', 'N']
+        for k, c in enumerate(cs): L.put(x + k, yy, c)
+    for yy in range(top, top + 3):
+        for k, c in enumerate(['m', 'M', 'N', 'N']): L.put(x + k, yy, c)
+    for k, c in enumerate(['n', 'N', 'm', 'N']): L.put(x + k, top, c)
+    return L, (x + 2, top)
+
+
+FIST_BIG = [".NNNNMm.",
+            "NMNMNMMm",
+            "MmMmMmMm",
+            "MmMmMmMm",
+            "NNNNMMmm",
+            "MMMMmmmm",
+            ".mmmmmn."]
+FIST_SMALL = [".NNMm.",
+              "NMNMMm",
+              "MmMmMm",
+              "NNNMmm",
+              ".mmmn."]
+CUFF_BIG = ["NNNMMMMmmm",
+            "mMMMMMMMmn",
+            ".mmmmmmmn."]
+CUFF_SMALL = ["NNMMMmmm",
+              ".mmmmmn."]
+
+
+def fist_front(cx, cy, big=True):
+    """Puño visto de frente, viniendo hacia la cámara: se ven los nudillos, los dedos y el pulgar,
+    con el borde del guantelete asomando alrededor de la muñeca."""
+    t = FIST_BIG if big else FIST_SMALL; cu = CUFF_BIG if big else CUFF_SMALL
+    x0, y0 = cx - len(t[0]) // 2, cy - len(t) // 2
+    cuff = Layer(); cuff.stamp(cu, cx - len(cu[0]) // 2, y0 - 1)
+    fist = Layer(); fist.stamp(t, x0, y0)
+    return cuff, fist, (cx, y0)
+
+
+# ---------------- fotogramas ----------------
+ATK_POSE = ['ready', 'wind', 'wind', 'hit', 'hit', 'hit2', 'back', 'ready']
+RUN_LY = [1, 0, -1, -2, -1, 0]           # altura de cada pie al correr (de frente): + adelante, - levantado
+RUN_RY = [-2, -1, 0, 1, 0, -1]
+RUN_BOB = [0, -1, -1, 0, -1, -1]
+RUN_SWAY = [1, 1, 0, -1, -1, 0]
+
+
+def clamp1(v): return max(-1, min(1, v))
+
+
+HAIR = set('aZABC')
+
+
+def head_layer(view, x, y, anim, bob, lag_x=0, idle_i=None):
+    """Cabeza; las puntas del pelo (filas 12 en adelante) llegan tarde a los movimientos."""
+    L = Layer(); rows = HEAD[view]
+    L.stamp(rows, x, y)
+    lag_y = 1 if (anim == 'move' and bob < 0) else 0
+    if idle_i is not None:
+        lag_y = [0, 0, -1, 0][idle_i]
+        if view == 'E': lag_x = [0, 0, 0, -1][idle_i]
+    if not (lag_x or lag_y): return L
+    tips = [(x + xx, y + k, c) for k in range(12, len(rows)) for xx, c in enumerate(rows[k]) if c in HAIR]
+    if lag_y <= 0:                        # se mueven: quitar las originales
+        for px, py, _ in tips: L.px.pop((px, py), None)
+    face = {p for p, c in L.px.items() if c not in HAIR}
+    for px, py, c in tips:
+        q = (px + lag_x, py + lag_y)
+        if q not in face: L.put(q[0], q[1], c)
+    return L
+
+
+def body_layer(view, x, y, sway=0):
+    L = Layer()
+    for r, row in enumerate(BODY[view]):
+        L.stamp([row], x + (sway if r >= 9 else 0), y + r)
+    return L
+
+
+def leg_layer(rows, x, y, back=False):
+    L = Layer(); L.stamp(rows, x, y)
+    if back: L.recolor(DARKER)
+    return L
+
+
+def frame(view, anim, i):
+    img = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
+    hands = []
+    pose = ATK_POSE[i] if anim == 'atk' else None
+    bob = 0; lean = 0; sway = 0
+    if anim == 'idle': bob = [0, 0, 1, 1][i]
+    elif anim == 'move': bob = RUN_BOB[i]; sway = RUN_SWAY[i]
+    else: bob = 1 if pose == 'wind' else 0
+    ty = TORSO_Y + bob
+
+    if view in 'SN':
+        # piernas
+        if anim == 'move':
+            ly, ry = RUN_LY[i], RUN_RY[i]
+        elif pose in ('hit', 'hit2'):
+            ly, ry = 1, -1
+        else:
+            ly = ry = 0
+        lx = 1 if ly < -1 else 0; rx = -1 if ry < -1 else 0
+        lL = leg_layer(LEG, X0 + 4 + lx, LEG_Y + ly, back=ly < -1)
+        lR = leg_layer(LEG, X0 + 9 + rx, LEG_Y + ry, back=ry < -1)
+        body = body_layer(view, X0, ty, sway)
+        if view == 'N':   # de espaldas, la pierna «adelantada» es la que se aleja
+            lL = leg_layer(LEG, X0 + 4 + lx, LEG_Y + ly, back=ly > 0)
+            lR = leg_layer(LEG, X0 + 9 + rx, LEG_Y + ry, back=ry > 0)
+        draw(img, lL.merged(lR, body))
+
+        # brazos
+        if anim == 'move':
+            dl, dr = clamp1(ry), clamp1(ly)            # brazo contrario a la pierna
+        else:
+            dl = dr = 0
+        def arm_l(d): return arm_front(X0 - 1 + (1 if d > 0 else 0), ty + 1 + d, sleeve=3 if d >= 0 else 2)
+        def arm_r(d): return arm_front(X0 + 13 - (1 if d > 0 else 0), ty + 1 + d, flip=True, sleeve=3 if d >= 0 else 2)
+        head = head_layer(view, X0, HEAD_Y + bob, anim, bob, idle_i=i if anim == 'idle' else None)
+        if view == 'S':
+            draw(img, head)
+            if anim != 'atk':
+                (al, hl), (ar, hr) = arm_l(dl), arm_r(dr)
+                draw(img, al); draw(img, ar); hands += [hl, hr]
+            else:
+                al, hl = arm_front(X0 - 1, ty, length=5)                 # el izquierdo, en guardia
+                draw(img, al); hands.append(hl)
+                if pose in ('ready', 'back'):
+                    ar, hr = arm_r(0)
+                elif pose == 'wind':
+                    ar, hr = arm_front(X0 + 14, ty - 1, flip=True, sleeve=2, length=5)
+                else:
+                    sl = Layer()
+                    for yy in range(ty + 1, ty + 4):
+                        for k, c in enumerate(['T', 'T', 't']): sl.put(X0 + 11 + k, yy, c)
+                    for yy in range(ty + 4, ty + 6):
+                        for k, c in enumerate(['U', 'T', 't']): sl.put(X0 + 10 + k, yy, c)
+                    cuff, fl, hr = fist_front(X0 + 9, ty + 10 + (0 if pose == 'hit' else -1), big=pose == 'hit')
+                    draw(img, sl.merged(cuff)); ar = fl
+                draw(img, ar); hands.append(hr)
+        else:  # N
+            if anim != 'atk':
+                (al, hl), (ar, hr) = arm_l(-dl), arm_r(-dr)
+                draw(img, head); draw(img, al); draw(img, ar); hands += [hl, hr]
+            else:
+                al, hl = arm_front(X0 - 1, ty + 1); hands.append(hl)
+                if pose in ('hit', 'hit2'):
+                    draw(img, head); draw(img, al)
+                    ar, hr = arm_punch_up(X0 + 13, ty + 2, 12 if pose == 'hit' else 10)
+                else:
+                    w = pose == 'wind'
+                    draw(img, head); draw(img, al)
+                    ar, hr = arm_front(X0 + 13 + w, ty + 1 - w, flip=True, sleeve=3 - w)
+                draw(img, ar); hands.append(hr)
+    else:  # perfil, mirando a la derecha
+        a = i / 6 * 2 * math.pi
+        if anim == 'move':
+            lean = 1
+            ns = round(4 * math.cos(a)); fs = -ns
+            nl = max(0, round(2 * math.sin(a))); fl = max(0, round(2 * math.sin(a + math.pi)))
+            near, far = (ns, -nl), (fs, -fl)
+            arm_sw = max(-2, min(3, -round(4 * math.cos(a))))
+        elif pose in ('hit', 'hit2'):
+            lean = 1; near, far = (2, 0), (-3, 0); arm_sw = 0
+        elif pose == 'wind':
+            lean = -1; near, far = (0, 0), (-1, 0); arm_sw = -3
+        else:
+            near, far = (1, 0), (-1, 0); arm_sw = 1 if anim == 'atk' else 0
+        bx = X0 + lean
+        # brazo lejano (detrás del cuerpo, más oscuro): solo se ve al balancearse
+        if anim == 'move':
+            fa, _ = arm_side(bx + 6, ty + 1, swing=-arm_sw)
+            draw(img, fa.recolor(DARKER))
+        draw(img, leg_layer(LEG_SIDE, bx + 5 + far[0], LEG_Y + far[1], back=True))
+        body = body_layer(view, bx, ty, -1 if anim == 'move' and i % 3 else 0)
+        draw(img, leg_layer(LEG_SIDE, bx + 7 + near[0], LEG_Y + near[1]).merged(body))
+        draw(img, head_layer(view, bx, HEAD_Y + bob, anim, bob, lag_x=-1 if (anim == 'move' or pose in ('hit', 'hit2')) else 0, idle_i=i if anim == 'idle' else None))
+        if pose in ('hit', 'hit2'):
+            g, h = arm_punch_side(bx + 7, ty + 1, length=9 if pose == 'hit' else 8)
+        else:
+            g, h = arm_side(bx + 7 - (1 if pose == 'wind' else 0), ty + 1, swing=arm_sw)
+        draw(img, g); hands.append(h)
+    return img, hands
+
+
+VIEWS = {'down': 'S', 'up': 'N', 'side': 'E'}
+NFR = {'idle': 4, 'move': 6, 'atk': 8}
+
+if __name__ == '__main__':
+    out = sys.argv[1] if len(sys.argv) > 1 else '.'
+    os.makedirs(out, exist_ok=True)
+    manos = {'w': FW, 'h': FH, 'hands': {}}
+    for vname, v in VIEWS.items():
+        for anim, n in NFR.items():
+            strip = Image.new('RGBA', (FW * n, FH), (0, 0, 0, 0))
+            hs = []
+            for i in range(n):
+                f, h = frame(v, anim, i)
+                strip.alpha_composite(f, (FW * i, 0))
+                hs.append([list(p) for p in h])
+            strip.save(os.path.join(out, f'{vname}_{anim}.png'))
+            manos['hands'][f'{vname}_{anim}'] = hs
+    json.dump(manos, open(os.path.join(out, 'manos.json'), 'w'))
+    print('ok')
