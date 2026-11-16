@@ -209,7 +209,7 @@ function interiorRoom(g, c, r, kind) {
     put('castle', [144, 203, 32, 57], cx, 4.6, 0, 0);
     for (const [x, y] of [[5.5, 8], [c - 5.5, 8], [5.5, 12], [c - 5.5, 12]]) { put('castle', [368, 10, 48, 36], x, y, 3, 1); put('castle', [304, 11, 32, 11], x, y + 1.1, 0, 0); }
     put('castle', [320, 44, 48, 20], cx, 7.4, 3, 1); put('bio', 'barrel0', c - 3.4, 6, 1, 1); put('bio', 'barrel2', c - 3.4, 7, 1, 1); put('castle', [336, 1, 32, 26], 3.6, 6, 2, 1);
-    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'adv_dwarf', x: 4.4, y: 12.4 }, { key: 'adv_archer', x: c - 4.2, y: 9.4, flip: true }, { key: 'cit_tavern_a', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
+    OUT.npcs.push({ key: 'keeper', x: cx, y: 6.6 }, { key: 'adv_dwarf', x: 4.4, y: 12.4 }, { key: 'adv_archer', x: c - 4.2, y: 9.4, flip: true }, { key: 'adv_knight', x: 8.5, y: 10 }, { key: 'cit_tavern_b', x: c - 8.5, y: 13.4, flip: true }, { key: 'cit_peasant', x: 4, y: 9.6 });
     OUT.spots.push({ x: cx * CELL, y: 8.6 * CELL, id: 'inn', label: 'Pedir la habitación' });
   }
   OUT.spots.push({ x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
@@ -299,7 +299,7 @@ function cityGen(g, c, r, kid) {
   OUT.npcs.push({ key: 'smith', x: FG.x + 1.2, y: FG.y + 5.6 }, { key: 'keeper', x: IN.x + 2.5, y: IN.y + 4.4, flip: true },
     { key: 'decoy', x: GY.x + 3, y: GY.y + 4 }, { key: 'post', x: GY.x + 6.5, y: GY.y + 3.4 }, { key: 'turret', x: GY.x + 4.5, y: GY.y + 7.6 }, { key: 'trainer', x: GY.x + 9.5, y: GY.y + 6.2 }, { key: 'decoy', x: GY.x + 11, y: GY.y + 8 },
     { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
-    { key: 'cit_tavern_a', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', x: cx - 10, y: 21 }, { key: 'villager', x: cx + 8, y: 21, flip: true });
+    { key: 'cit_peasant', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', x: cx - 10, y: 21 }, { key: 'villager', x: cx + 8, y: 21, flip: true });
   OUT.wander.push({ key: 'adv_knight', area: [PL.x + 1, PL.y + 1, PL.w - 2, PL.h - 4] }, { key: 'cit_peasant', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] }, { key: 'cit_tavern_b', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] },
     { key: 'villager', area: [PL.x + 2, PL.y + 3, PL.w - 4, 5] }, { key: 'cit_peasant', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] }, { key: 'villager', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] },
     { key: 'cit_peasant', area: [4, S1, c - 8, 3] }, { key: 'cit_tavern_b', area: [4, S1, c - 8, 3] }, { key: 'villager', area: [4, S2, c - 8, 3] }, { key: 'cit_peasant', area: [4, S2, c - 8, 3] },

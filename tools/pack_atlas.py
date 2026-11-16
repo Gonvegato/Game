@@ -48,9 +48,9 @@ CAST.update({
   'decoy': ('Dummy_LVL1', {'idle': ('Idle', 2, 3), 'move': ('Idle', 2, 3)}),
   'post': ('Dummy_LVL2', {'idle': ('Idle', 2, 3), 'move': ('Idle', 2, 3), 'atk': ('Spinning', 8, 12)}),
   'turret': ('Dummy_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Spinning', 12, 14)}),
-  'villager': ('Dwarfette_LVL1', {'idle': ('Idle', 6, 6), 'move': ('Move', 8, 10)}),
-  'smith': ('Dwarfette_LVL3', {'idle': ('Idle', 5, 5), 'move': ('Idle', 5, 5)}),
-  'trainer': ('Dwarfette_LVL4', {'idle': ('Idle', 7, 6), 'move': ('Idle', 7, 6)}),
+  'villager': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_B", {'idle': ('Idle/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk/Walk_Side-Sheet.png', 6, 9)}),   # antes la enana Dwarfette
+  'smith': ('@Pixel_Crawler_-_Cemetery_0.4/Entities/Characters/A_Hunter', {'idle': ('Idle_Base/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Base/Walk_Side-Sheet.png', 6, 9)}),   # la herrera: cuero y sombrero
+  'trainer': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Knight", {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Run/Run-Sheet.png', 6, 10)}),   # la instructora, con armadura
   'guard': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Soldier', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
   'guard_k': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Knight', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
   'priest': ('@Pixel_Crawler_-_Castle_Environment_0.3/Enemies/Royal Crew/Priest', {'idle': ('Idle-Sheet.png', 4, 5), 'move': ('Run-Sheet.png', 6, 10)}),
@@ -66,7 +66,7 @@ CAST.update({
   'alec_s': ('!side', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
   'alec_u': ('!up', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
   'alec_d': ('!down', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
-  'keeper': ('Dwarfette_LVL2', {'idle': ('Idle', 8, 6), 'move': ('Idle', 8, 6)}),
+  'keeper': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_A", {'idle': ('Idle_Hold/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Hold/Walk_Side-Sheet.png', 6, 9)}),   # la posadera, con su bandeja
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
 def pcmob(key, d, sub):
