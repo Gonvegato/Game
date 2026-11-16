@@ -10,6 +10,6 @@ DRIVE=4481105; DIR=1060
 up() { curl -sS -m 600 -X POST "https://api.infomaniak.com/3/drive/$DRIVE/upload?directory_id=$DIR&file_name=$1&total_size=$(stat -c %s "dist/$1")&conflict=version" -H "Content-Type: application/octet-stream" --data-binary @"dist/$1" | grep -q '"result":"success"' && echo "subido $1" || { echo "FALLO al subir $1"; exit 1; }; }
 V=$(cat dist/www/version.txt)
 up "kiteo-$V.zip"
-if [ "$1" = apk ]; then up "$(basename dist/SalaDeKiteo-*.apk)"; fi
+if [ "$1" = apk ]; then up "SalaDeKiteo-$(sed -n 's/.*"apk":{"v":\([0-9]*\).*/\1/p' dist/version.json).apk"; fi   # el APK de la versión de app que anuncia version.json
 up version.json        # el último: hasta que no cambia, las apps siguen con la versión anterior
 echo "publicada la versión $V del juego"
