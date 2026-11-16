@@ -27,12 +27,17 @@ function openTown(from) {
 }
 function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M[kflag('metKing')]) { M[kflag('metKing')] = 1; save(); } renderOverlay(); ov.scrollTop = 0; sfx('ok', 0.35); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
+const TOWN_SPEED = 106;   // al paso por la ciudad (antes 96)
 function townUpdate(dt) {
   const p = S.p, mv = Math.hypot(I.mx, I.my);
   S.t += dt;
   if (S.dialog) { talkUpdate(dt); return; }   // mientras se habla, Alec no se mueve
-  p.x += I.mx * 96 * dt; p.y += I.my * 96 * dt;
-  if (mv > 0.2) p.face = Math.atan2(I.my, I.mx);
+  // En la ciudad también se esquiva: el mismo acelerón que en combate, sin cargas (solo un respiro entre uno y otro)
+  p.tdCd = Math.max(0, (p.tdCd || 0) - dt);
+  if (I.dodgeP && p.tdCd <= 0 && !(p.tdT > 0)) { const a = mv > 0.2 ? Math.atan2(I.my, I.mx) : p.face; p.tdx = Math.cos(a); p.tdy = Math.sin(a); p.tdT = T.dodge.time; p.tdCd = 0.35; p.face = a; sfx('dodge', 0.35, 1.2); }
+  for (const f of S.fx) f.t += dt; S.fx = S.fx.filter(f => f.t < f.life);   // la estela del esquive se apaga
+  if (p.tdT > 0) { p.tdT -= dt; p.x += p.tdx * TOWN_SPEED * T.dodge.mult * dt; p.y += p.tdy * TOWN_SPEED * T.dodge.mult * dt; if (Math.random() < 0.7) S.fx.push({ k: 'ghost', x: p.x, y: p.y, t: 0, life: 0.18 }); }
+  else { p.x += I.mx * TOWN_SPEED * dt; p.y += I.my * TOWN_SPEED * dt; if (mv > 0.2) p.face = Math.atan2(I.my, I.mx); }
   p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4);
   collide(p, p.r);
   let near = null, bd = 30;

@@ -4,6 +4,8 @@
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
 const CAMP_GAP = 24, CAMP_START = 20;
+// Filas del tejado de una casa por encima de su pared: también son muro (el fondo es una imagen plana y, si no, se andaría por encima del tejado)
+const ROOF_ROWS = 5;
 const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], vast: [92, 62], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
@@ -200,7 +202,7 @@ const ROOM_GEN = {
     OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], decor: [], fires: [] };
     outBorder(g, c, r);
     const cx = c >> 1, cy = r >> 1;
-    [[0.2, 0.3], [0.8, 0.3], [0.2, 0.78], [0.8, 0.78]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 2, 6, 4, 'house', { v: i }));
+    [[0.2, 0.3], [0.8, 0.3], [0.2, 0.78], [0.8, 0.78]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 2 - ROOF_ROWS, 6, 4 + ROOF_ROWS, 'house', { v: i, roof: ROOF_ROWS }));
     OUT.paves.push([cx - 1, 2, 2, r - 4], [2, cy - 1, c - 4, 2], [cx - 4, cy - 3, 8, 6]);
     const lane = (x, y, w, h) => x + w > cx - 3 && x < cx + 3 || y + h > cy - 3 && y < cy + 3 || (x + w > cx - 6 && x < cx + 6 && y + h > cy - 5 && y < cy + 5);   // calles y plazuela
     const put = (w, h, pad, fn) => { for (let t = 0; t < 80; t++) { const x = ri(4, c - 5 - w), y = ri(4, r - 5 - h); if (lane(x, y, w, h) || !areaFree(g, x - pad, y - pad, w + 2 * pad, h + 2 * pad)) continue; fn(x, y); return true; } return false; };
@@ -305,11 +307,11 @@ function cityGen(g, c, r, kid) {
   // La forja (oeste): el edificio con su letrero, y delante el yunque, la fragua y el banco
   const HS = CITY_HOUSES.map((h, i) => Object.assign({ i }, h)), trade = t => HS.find(h => h.trade === t);
   const FG = { x: 6, y: S1 + 6 };
-  deco(FG.x, FG.y, 8, 3, 'chouse', { i: trade('forge').i }); res(FG.x - 1, FG.y - 6, 10, 9);
+  deco(FG.x, FG.y - ROOF_ROWS, 8, 3 + ROOF_ROWS, 'chouse', { i: trade('forge').i }); res(FG.x - 1, FG.y - 6, 10, 9);
   deco(FG.x - 2, FG.y + 5, 3, 2, 'prop', { k: 'anvil' }); deco(FG.x + 7, FG.y + 5, 2, 2, 'prop', { k: 'furnace' }); deco(FG.x + 10, FG.y + 5, 3, 1, 'prop', { k: 'workbench' }); res(FG.x - 3, FG.y + 3, 17, 6);   // la puerta queda libre
   // La posada (nordeste): el edificio, su terraza con bancos y toneles
   const IN = { x: EX + 7, y: 12 };
-  deco(IN.x, IN.y, 8, 3, 'chouse', { i: trade('inn').i }); res(IN.x - 1, IN.y - 6, 10, 9);
+  deco(IN.x, IN.y - ROOF_ROWS, 8, 3 + ROOF_ROWS, 'chouse', { i: trade('inn').i }); res(IN.x - 1, IN.y - 6, 10, 9);
   deco(IN.x - 1, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 6, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 9, IN.y + 2, 1, 1, 'barrel', { v: 0 }); deco(IN.x + 9, IN.y + 1, 1, 1, 'barrel', { v: 1 }); deco(IN.x - 2, IN.y + 2, 2, 1, 'prop', { k: 'table' });
   res(IN.x - 3, IN.y + 3, 14, 4);
   // El patio de armas (suroeste), vallado, con la entrada al norte
@@ -322,7 +324,7 @@ function cityGen(g, c, r, kid) {
   const st = CITY_STYLE[kid] || CITY_STYLE.default, pool = HS.filter(h => !h.trade && (!st.roofs || st.roofs.includes(h.roof)) && (!st.walls || st.walls.includes(h.wall)));
   const bigs = pool.filter(h => h.size === 'big'), smalls = pool.filter(h => h.size === 'small');
   const bld = Array.from({ length: r }, () => new Uint8Array(c));   // solo edificios y cosas que tapan una puerta (las calles no)
-  for (const o of OUT.obs) for (let j = o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (bld[j]) bld[j][i] = 1;
+  for (const o of OUT.obs) for (let j = o.kind === 'chouse' ? o.y + ROOF_ROWS : o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (bld[j]) bld[j][i] = 1;
   const roofz = Array.from({ length: r }, () => new Uint8Array(c));   // lo que tapa el tejado de cada casa: ahí no puede quedar una puerta
   const doorOk = (x, y) => y < r - 2 && [x, x + 1].every(i => !g[y][i] && !bld[y][i] && !roofz[y][i]);
   // de abajo arriba y de izquierda a derecha, cada casa en el primer sitio donde cabe; de vez en cuando se deja un claro
@@ -330,7 +332,7 @@ function cityGen(g, c, r, kid) {
     const big = Math.random() < 0.38, w = big ? 8 : 6, h = 3, L = big ? bigs : smalls;
     if (!L.length || !free(x, fy - 5, w, h + 5) || !doorOk(x + (w >> 1) - 1, fy + h)) { x++; continue; }
     if (Math.random() < 0.22) { x += ri(3, 6); continue; }   // claro: huerto, árbol o nada
-    deco(x, fy, w, h, 'chouse', { i: L[ri(0, L.length - 1)].i }); res(x, fy - 5, w, h + 5); res(x + (w >> 1) - 1, fy + h, 2, 1);
+    deco(x, fy - ROOF_ROWS, w, h + ROOF_ROWS, 'chouse', { i: L[ri(0, L.length - 1)].i }); res(x, fy - 5, w, h + 5); res(x + (w >> 1) - 1, fy + h, 2, 1);
     for (let j = fy; j < fy + h; j++) for (let k = x; k < x + w; k++) bld[j][k] = 1;
     for (let j = fy - 5; j < fy; j++) for (let k = x; k < x + w; k++) if (roofz[j]) roofz[j][k] = 1;
     x += w + (Math.random() < 0.4 ? 2 : 1);

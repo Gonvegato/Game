@@ -9,7 +9,7 @@ const T = {
   room: { w: 880, h: 580 },
   viewArea: 520 * 300,          // unidades de mundo visibles (área constante)
   player: {
-    r: 7, speed: 82, hp: 85, dmg: 19,   // menos vida y más pegada que al principio (antes 100 y 12): el trasgo cae en dos disparos y los grandes no son esponjas
+    r: 7, speed: 90, hp: 85, dmg: 19,   // menos vida y más pegada que al principio (antes 100 y 12): el trasgo cae en dos disparos y los grandes no son esponjas
     as: 0.95,                   // disparos por segundo
     range: 185,
     windupFrac: 0.22,           // parte del ciclo de ataque en la que te frenas
@@ -2225,6 +2225,8 @@ function setupAssault() {
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
 const CAMP_GAP = 24, CAMP_START = 20;
+// Filas del tejado de una casa por encima de su pared: también son muro (el fondo es una imagen plana y, si no, se andaría por encima del tejado)
+const ROOF_ROWS = 5;
 const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], vast: [92, 62], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
@@ -2421,7 +2423,7 @@ const ROOM_GEN = {
     OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], decor: [], fires: [] };
     outBorder(g, c, r);
     const cx = c >> 1, cy = r >> 1;
-    [[0.2, 0.3], [0.8, 0.3], [0.2, 0.78], [0.8, 0.78]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 2, 6, 4, 'house', { v: i }));
+    [[0.2, 0.3], [0.8, 0.3], [0.2, 0.78], [0.8, 0.78]].forEach(([fx, fy], i) => ob(g, Math.floor(c * fx) - 3, Math.floor(r * fy) - 2 - ROOF_ROWS, 6, 4 + ROOF_ROWS, 'house', { v: i, roof: ROOF_ROWS }));
     OUT.paves.push([cx - 1, 2, 2, r - 4], [2, cy - 1, c - 4, 2], [cx - 4, cy - 3, 8, 6]);
     const lane = (x, y, w, h) => x + w > cx - 3 && x < cx + 3 || y + h > cy - 3 && y < cy + 3 || (x + w > cx - 6 && x < cx + 6 && y + h > cy - 5 && y < cy + 5);   // calles y plazuela
     const put = (w, h, pad, fn) => { for (let t = 0; t < 80; t++) { const x = ri(4, c - 5 - w), y = ri(4, r - 5 - h); if (lane(x, y, w, h) || !areaFree(g, x - pad, y - pad, w + 2 * pad, h + 2 * pad)) continue; fn(x, y); return true; } return false; };
@@ -2526,11 +2528,11 @@ function cityGen(g, c, r, kid) {
   // La forja (oeste): el edificio con su letrero, y delante el yunque, la fragua y el banco
   const HS = CITY_HOUSES.map((h, i) => Object.assign({ i }, h)), trade = t => HS.find(h => h.trade === t);
   const FG = { x: 6, y: S1 + 6 };
-  deco(FG.x, FG.y, 8, 3, 'chouse', { i: trade('forge').i }); res(FG.x - 1, FG.y - 6, 10, 9);
+  deco(FG.x, FG.y - ROOF_ROWS, 8, 3 + ROOF_ROWS, 'chouse', { i: trade('forge').i }); res(FG.x - 1, FG.y - 6, 10, 9);
   deco(FG.x - 2, FG.y + 5, 3, 2, 'prop', { k: 'anvil' }); deco(FG.x + 7, FG.y + 5, 2, 2, 'prop', { k: 'furnace' }); deco(FG.x + 10, FG.y + 5, 3, 1, 'prop', { k: 'workbench' }); res(FG.x - 3, FG.y + 3, 17, 6);   // la puerta queda libre
   // La posada (nordeste): el edificio, su terraza con bancos y toneles
   const IN = { x: EX + 7, y: 12 };
-  deco(IN.x, IN.y, 8, 3, 'chouse', { i: trade('inn').i }); res(IN.x - 1, IN.y - 6, 10, 9);
+  deco(IN.x, IN.y - ROOF_ROWS, 8, 3 + ROOF_ROWS, 'chouse', { i: trade('inn').i }); res(IN.x - 1, IN.y - 6, 10, 9);
   deco(IN.x - 1, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 6, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 9, IN.y + 2, 1, 1, 'barrel', { v: 0 }); deco(IN.x + 9, IN.y + 1, 1, 1, 'barrel', { v: 1 }); deco(IN.x - 2, IN.y + 2, 2, 1, 'prop', { k: 'table' });
   res(IN.x - 3, IN.y + 3, 14, 4);
   // El patio de armas (suroeste), vallado, con la entrada al norte
@@ -2543,7 +2545,7 @@ function cityGen(g, c, r, kid) {
   const st = CITY_STYLE[kid] || CITY_STYLE.default, pool = HS.filter(h => !h.trade && (!st.roofs || st.roofs.includes(h.roof)) && (!st.walls || st.walls.includes(h.wall)));
   const bigs = pool.filter(h => h.size === 'big'), smalls = pool.filter(h => h.size === 'small');
   const bld = Array.from({ length: r }, () => new Uint8Array(c));   // solo edificios y cosas que tapan una puerta (las calles no)
-  for (const o of OUT.obs) for (let j = o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (bld[j]) bld[j][i] = 1;
+  for (const o of OUT.obs) for (let j = o.kind === 'chouse' ? o.y + ROOF_ROWS : o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (bld[j]) bld[j][i] = 1;
   const roofz = Array.from({ length: r }, () => new Uint8Array(c));   // lo que tapa el tejado de cada casa: ahí no puede quedar una puerta
   const doorOk = (x, y) => y < r - 2 && [x, x + 1].every(i => !g[y][i] && !bld[y][i] && !roofz[y][i]);
   // de abajo arriba y de izquierda a derecha, cada casa en el primer sitio donde cabe; de vez en cuando se deja un claro
@@ -2551,7 +2553,7 @@ function cityGen(g, c, r, kid) {
     const big = Math.random() < 0.38, w = big ? 8 : 6, h = 3, L = big ? bigs : smalls;
     if (!L.length || !free(x, fy - 5, w, h + 5) || !doorOk(x + (w >> 1) - 1, fy + h)) { x++; continue; }
     if (Math.random() < 0.22) { x += ri(3, 6); continue; }   // claro: huerto, árbol o nada
-    deco(x, fy, w, h, 'chouse', { i: L[ri(0, L.length - 1)].i }); res(x, fy - 5, w, h + 5); res(x + (w >> 1) - 1, fy + h, 2, 1);
+    deco(x, fy - ROOF_ROWS, w, h + ROOF_ROWS, 'chouse', { i: L[ri(0, L.length - 1)].i }); res(x, fy - 5, w, h + 5); res(x + (w >> 1) - 1, fy + h, 2, 1);
     for (let j = fy; j < fy + h; j++) for (let k = x; k < x + w; k++) bld[j][k] = 1;
     for (let j = fy - 5; j < fy; j++) for (let k = x; k < x + w; k++) if (roofz[j]) roofz[j][k] = 1;
     x += w + (Math.random() < 0.4 ? 2 : 1);
@@ -2768,12 +2770,17 @@ function openTown(from) {
 }
 function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M[kflag('metKing')]) { M[kflag('metKing')] = 1; save(); } renderOverlay(); ov.scrollTop = 0; sfx('ok', 0.35); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
+const TOWN_SPEED = 106;   // al paso por la ciudad (antes 96)
 function townUpdate(dt) {
   const p = S.p, mv = Math.hypot(I.mx, I.my);
   S.t += dt;
   if (S.dialog) { talkUpdate(dt); return; }   // mientras se habla, Alec no se mueve
-  p.x += I.mx * 96 * dt; p.y += I.my * 96 * dt;
-  if (mv > 0.2) p.face = Math.atan2(I.my, I.mx);
+  // En la ciudad también se esquiva: el mismo acelerón que en combate, sin cargas (solo un respiro entre uno y otro)
+  p.tdCd = Math.max(0, (p.tdCd || 0) - dt);
+  if (I.dodgeP && p.tdCd <= 0 && !(p.tdT > 0)) { const a = mv > 0.2 ? Math.atan2(I.my, I.mx) : p.face; p.tdx = Math.cos(a); p.tdy = Math.sin(a); p.tdT = T.dodge.time; p.tdCd = 0.35; p.face = a; sfx('dodge', 0.35, 1.2); }
+  for (const f of S.fx) f.t += dt; S.fx = S.fx.filter(f => f.t < f.life);   // la estela del esquive se apaga
+  if (p.tdT > 0) { p.tdT -= dt; p.x += p.tdx * TOWN_SPEED * T.dodge.mult * dt; p.y += p.tdy * TOWN_SPEED * T.dodge.mult * dt; if (Math.random() < 0.7) S.fx.push({ k: 'ghost', x: p.x, y: p.y, t: 0, life: 0.18 }); }
+  else { p.x += I.mx * TOWN_SPEED * dt; p.y += I.my * TOWN_SPEED * dt; if (mv > 0.2) p.face = Math.atan2(I.my, I.mx); }
   p.x = clamp(p.x, p.r + 4, T.room.w - p.r - 4); p.y = clamp(p.y, p.r + 4, T.room.h - p.r - 4);
   collide(p, p.r);
   let near = null, bd = 30;
@@ -7787,7 +7794,7 @@ function roomBgOut() {
     else if (o.kind === 'house') items.push({ by, fn: () => {   // casas montadas con el Pixel Crawler Free Pack; si no han cargado, la dibujada a mano
       const hs = IMG.houses, list = o.big ? [0, 1, 4] : [2, 3, 5], h = HOUSES[list[o.v % list.length] + (o.ruin ? 6 : 0)];
       if (hs) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 4, by - 2, W - 4, 5); g.drawImage(hs, h[0], h[1], h[2], h[3], Math.round(cx - h[2] / 2), by + 2 - h[3], h[2], h[3]); }
-      else drawHouse(g, X, Y - (o.big ? 18 : 12), W, H + (o.big ? 18 : 12), o.v);
+      else { const rp = (o.roof || 0) * CELL; drawHouse(g, X, Y + rp - (o.big ? 18 : 12), W, H - rp + (o.big ? 18 : 12), o.v); }
     } });
     else if (o.kind === 'board') items.push({ by, fn: () => {   // el tablón de encargos: dos postes, un tablero y pergaminos clavados
       shadow(cx, by, 15); g.fillStyle = '#4a2e22'; g.fillRect(X + 2, Y - 10, 3, 26); g.fillRect(X + W - 5, Y - 10, 3, 26);
