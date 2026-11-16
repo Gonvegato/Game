@@ -183,7 +183,7 @@ const ROOM_GEN = {
     fillRect(g, cx - 1, 5, 2, 1);                                                 // el trono
     for (const x of [5, c - 7]) for (const y of [8, 13]) fillRect(g, x, y, 2, 2);  // columnas
     OUT.npcs.push({ key: 'king', x: cx, y: 6.15 }, { key: 'queen', x: cx + 1.6, y: 6.9, flip: true }, { key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
-    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Hablar con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Hablar con el rey' }, { x: (cx + 2.4) * CELL, y: 7.9 * CELL, id: 'queen', label: 'Hablar con la reina' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
   // La forja y la posada por dentro: muros alrededor, la puerta abajo, muebles del paquete y quien atiende
@@ -298,8 +298,10 @@ function cityGen(g, c, r, kid) {
   // Gente: quien atiende cada sitio, los guardias del castillo y vecinos paseando por la plaza y las calles
   OUT.npcs.push({ key: 'smith', x: FG.x + 1.2, y: FG.y + 5.6 }, { key: 'keeper', x: IN.x + 2.5, y: IN.y + 4.4, flip: true },
     { key: 'decoy', x: GY.x + 3, y: GY.y + 4 }, { key: 'post', x: GY.x + 6.5, y: GY.y + 3.4 }, { key: 'turret', x: GY.x + 4.5, y: GY.y + 7.6 }, { key: 'trainer', x: GY.x + 9.5, y: GY.y + 6.2 }, { key: 'decoy', x: GY.x + 11, y: GY.y + 8 },
-    { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
-    { key: 'cit_peasant', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', x: cx - 10, y: 21 }, { key: 'villager', x: cx + 8, y: 21, flip: true });
+    { key: 'guard', id: 'g_puerta', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', id: 'g_puente', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
+    { key: 'cit_peasant', id: 'v_terraza', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', id: 'v_mercado', x: cx - 10, y: 21 }, { key: 'villager', id: 'v_pozo', x: cx + 8, y: 21, flip: true },
+    { key: 'adv_knight', id: 'v_patio', x: GY.x + GY.w + 1.5, y: GY.y + 2 });
+  for (const n of OUT.npcs) if (n.id) OUT.spots.push({ x: n.x * CELL, y: (n.y + 0.9) * CELL, id: 'talk', who: n.id, label: 'Hablar' });   // vecinos con los que se puede hablar (CITY_TALK, 36_town.js)
   OUT.wander.push({ key: 'adv_knight', area: [PL.x + 1, PL.y + 1, PL.w - 2, PL.h - 4] }, { key: 'cit_peasant', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] }, { key: 'cit_tavern_b', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] },
     { key: 'villager', area: [PL.x + 2, PL.y + 3, PL.w - 4, 5] }, { key: 'cit_peasant', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] }, { key: 'villager', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] },
     { key: 'cit_peasant', area: [4, S1, c - 8, 3] }, { key: 'cit_tavern_b', area: [4, S1, c - 8, 3] }, { key: 'villager', area: [4, S2, c - 8, 3] }, { key: 'cit_peasant', area: [4, S2, c - 8, 3] },

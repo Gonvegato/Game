@@ -45,7 +45,7 @@ function townUpdate(dt) {
     if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
     const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
   }
-  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); sfx('ok', 0.35,0.8); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
+  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); sfx('ok', 0.35,0.8); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (near.id === 'queen' && inside === 'throne') talkQueen(); else if (near.id === 'talk') talkTown(near.who); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {
@@ -137,7 +137,7 @@ function talkUpdate(dt) {
 function speakerPos(who) {
   if (S.intro) return introSpeakerPos(who);   // en la cinemática hablan sus actores
   if (who === 'alec') return { x: S.p.x, y: S.p.y - 26 };
-  const n = S.town && S.town.npcs.find(q => q.key === who);
+  const n = S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
   return n ? { x: n.x * CELL, y: n.y * CELL - 30 } : { x: S.p.x, y: S.p.y - 26 };
 }
 const SPEAKER = { smith: ['La herrera', '#ff9a5c'], keeper: ['La posadera', '#e6c07a'], trainer: ['La instructora', '#9fe09a'], king: ['El rey', '#f2c14e'], queen: ['La reina', '#e6a0c4'], alec: ['Alec', '#9fd3ff'] };
@@ -196,10 +196,25 @@ function drawDialog(k) {
   g.restore();
 }
 // El rey: la primera vez te explica el contrato entero; después te dice cómo vas y te deja preguntar
+// Nombres con artículo («El Umbral», «La Matriarca del Fango») en mitad de frase: «el Umbral»; y con «de» delante, «del Umbral»
+const lc = n => n.replace(/^(El|La|Los|Las) /, m => m.toLowerCase());
+const deN = n => /^El /.test(n) ? 'del ' + n.slice(3) : 'de ' + lc(n);
+// Lo que ha pasado en el reino, contado por el rey (en la cinemática del principio y cada vez que se lo preguntas)
+function kingStory() {
+  const K = kingdomNow(), god = TYPES[K.god].name, Z = K.zones.map(z => z.name), B = [0, 1, 2, 3].map(i => TYPES[WORLDS[i].boss].name);
+  return [
+    { who: 'king', text: `Hace un año, el cielo sobre ${lc(Z[3])} se abrió como una herida. De ahí bajó ${lc(god)}, el dios de la guerra.` },
+    { who: 'king', text: 'No pidió oro ni oraciones. Pidió soldados. Las aldeas que se los dieron, perdieron a sus hijos. Las que no, ardieron.' },
+    { who: 'king', text: `Después repartió el reino entre sus ejércitos. Los muertos se levantaron en ${lc(Z[0])}. Las bestias anidaron en ${lc(Z[1])}. En ${lc(Z[2])}, los picadores dejaron de picar y empezaron a obedecer.` },
+    { who: 'king', text: `Y en cada sitio dejó un guardián: ${lc(B[0])}, ${lc(B[1])}, ${lc(B[2])} y ${lc(B[3])}. Mientras sigan en pie, ${lc(god)} no se mueve ${deN(Z[3])}. No le hace falta.` },
+    { who: 'king', text: 'Mandé a mis caballeros. Volvieron tres de cada diez. Algunos, con los ojos rojos y rezándole a quien los había vencido: ahora los llaman elegidos.' },
+    { who: 'king', text: 'Los sacerdotes dicen que hay que ofrecerle algo para que se vaya. Yo he enterrado a demasiada gente para creérmelo.' },
+  ];
+}
 function kingExplain() {
   const K = kingdomNow(), god = TYPES[K.god].name, zones = K.zones.map(z => z.name);
   return [
-    { who: 'king', text: `El ${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).join(', ')} y ${zones[3]}.` },
+    { who: 'king', text: `${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).map(lc).join(', ')} y ${lc(zones[3])}.` },
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
     { who: 'king', text: 'Por el camino robarás técnicas a los dioses menores. Úsalas sin miedo: solo te duran ese encargo.' },
@@ -222,33 +237,111 @@ function kingProgress() {
 function talkKing() {
   const first = !M.metKing;
   if (first) { M.metKing = 1; save(); }
-  const opts = [{ label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
+  const opts = [{ label: '¿Qué pasó en el reino?', fn: () => talk(kingStory(), opts) }, { label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
   if (first) talk([
-    { who: 'king', text: 'Así que tú eres Alec, el mercenario que no reza. Acércate.' },
-    { who: 'alec', text: 'Me dijeron que pagáis en hierro.' },
-    { who: 'king', text: 'Y pago bien. Escucha, porque solo lo diré una vez.' },
+    { who: 'king', text: 'Ya sabes lo que ha pasado en mi reino, Alec. Ahora te diré cómo vas a arreglarlo.' },
+    { who: 'alec', text: 'Os escucho. Mientras paguéis, os escucho.' },
     ...kingExplain(),
     { who: 'queen', text: 'No le asustes. Es el primero en meses que se ofrece voluntario.' },
     { who: 'alec', text: '¿Y si mato a vuestro dios?' },
     { who: 'king', text: 'Entonces te deberé más de lo que puedo pagar. Ve. El tablón está en la plaza.' },
+    { who: 'queen', text: 'Y vuelve de vez en cuando. Aquí arriba solo nos llegan malas noticias: alguna buena no nos vendría mal.' },
   ], opts);
   else talk(kingProgress(), opts);
+}
+
+// Vecinos de la ciudad con los que se puede hablar. Cada uno tiene varias cosas que decir y van saliendo por turnos;
+// lo que cuentan cambia según cómo vaya el reino: al principio (0), con encargos hechos (1), con guardianes caídos (2) y con el dios muerto (3).
+const CITY_TALK = {
+  g_puerta: { name: 'Un guardia del castillo', col: '#cfd6de', lines: [
+    ['El rey recibe a quien quiera. Pero no le hagas perder el tiempo: duerme poco y lo poco que duerme, mal.', 'Antes éramos cuarenta en la guardia. Ahora somos doce. Los demás se fueron al Umbral con el capitán.', 'La reina baja cada mañana a ver a los heridos. El rey dice que es peligroso. Ella dice que más peligroso es no hacerlo.'],
+    ['Han vuelto a llegar carros de las aldeas que limpias. Poca cosa: grano, leña. Pero llegan.', 'El capitán de la guardia no se cree lo que cuentan de ti. Yo sí: te he visto volver.'],
+    ['Dicen que has tumbado a un guardián. Hasta el sacerdote ha dejado de hablar de sacrificios.', 'Si caen los cuatro, el dios tendrá que salir de su agujero. Entonces sí que vamos a necesitar suerte.'],
+    ['No me lo creo todavía. El Primer Puño, muerto. Esta puerta está abierta para ti a cualquier hora, Alec.'] ] },
+  g_puente: { name: 'Un guardia del puente', col: '#cfd6de', lines: [
+    ['Por este puente entra lo poco que llega de fuera. Desde que cayó Fuenteseca, casi nada.', 'Si ves a alguien cruzar con los ojos rojos, no le dejes hablar. Los elegidos convencen. Luego matan.', 'El arroyo baja del Nido. Hace un año traía truchas. Ahora trae seda.'],
+    ['Ayer cruzó una familia de Robledal. Dijeron que un mercenario les había limpiado la aldea. ¿Fuiste tú?', 'Cada vez cruza más gente hacia dentro y menos hacia fuera. Buena señal, supongo.'],
+    ['Los mercaderes vuelven a preguntar por los caminos. Les digo que esperen. Que tú todavía no has acabado.'],
+    ['Han vuelto los mercaderes de verdad. Con mulas y todo. Ya ni me acordaba de cómo sonaban las mulas.'] ] },
+  v_mercado: { name: 'Una vecina', col: '#e6c07a', lines: [
+    ['El pan ha subido otra vez. Con el Nido infestado, el trigo del norte no llega.', 'Mi marido se fue a las Minas de Cristal a trabajar. No ha vuelto. Bueno: dicen que volvió, pero que ya no era él.', 'No te acerques mucho a la plaza por la noche. Los guardias ven bichos en cada sombra, y a veces aciertan.'],
+    ['Dicen que eres un mercenario sin dios. Mi madre dice que eso trae mala suerte. Yo digo que peor suerte que esta, imposible.', 'Han vuelto a abrir la panadería del puente. Algo es algo.'],
+    ['¿Sabes que los niños juegan a ser tú? Uno hace de dios, otro de Alec, y el dios siempre pierde. Les encanta.'],
+    ['Esta noche hay fiesta en la plaza. Si vienes, te invito a algo. Bueno, te invita la posadera, que tiene más dinero que yo.'] ] },
+  v_pozo: { name: 'Un vecino', col: '#e6c07a', lines: [
+    ['El pozo es lo único de la ciudad que no ha cambiado en un año. Por eso vengo aquí.', 'Yo era carretero. Ahora no hay caminos que valgan. Así que cargo agua.', '¿Has visto el castillo? Antes tenía estandartes de colores. El rey los quitó todos: dice que no hay nada que celebrar.'],
+    ['He oído que en las aldeas te dejan comida en la puerta para que pases por allí. Como a los santos. Qué cosas.', 'Si vas al Nido, no toques la seda. Mi cuñado la tocó.'],
+    ['Esta mañana el rey ha mandado colgar un estandarte. Uno solo. Ya es algo.'],
+    ['Ya puedo volver a ser carretero. A ver quién me enseña a conducir el carro otra vez.'] ] },
+  v_terraza: { name: 'Una clienta de la posada', col: '#e6c07a', lines: [
+    ['La posadera no te cobra a ti, ¿verdad? A mí me cobra hasta el aire.', 'Aquí se oye todo lo que pasa en el reino. Lo malo es que todo lo que pasa en el reino es malo.', 'Dicen que la herrera fue soldado antes que herrera. No sé si creérmelo. Bueno, sí: has visto cómo da martillazos.'],
+    ['Esta noche se brindaba por ti en la barra. No te emociones: también se brindaba por la lluvia.'],
+    ['Un cliente decía que los guardianes eran inmortales. Le he dicho que fuera a decírtelo a ti.'],
+    ['Dicen que vas a seguir hacia otro reino. Llévate una botella. Allí no tendrán vino como este.'] ] },
+  v_patio: { name: 'Un recluta', col: '#9fe09a', lines: [
+    ['La instructora nos hace correr alrededor del patio hasta que vomitamos. Dice que en el campo de batalla el que corre vive.', 'Me alisté porque mi pueblo está en las Criptas. Quiero volver. Aunque sea para enterrar a los míos.', 'No te ofendas, pero la instructora dice que pelear como tú es de cobardes: golpear y salir corriendo. Luego dice que es lo más listo que ha visto.'],
+    ['Ayer aguanté diez vueltas al patio. La instructora dijo «bien». Es la primera vez que le oigo decirlo.'],
+    ['Cuando caigan todos los guardianes, nos mandarán a limpiar lo que quede. Más vale que tú hayas dejado poco.'],
+    ['Ahora entrenamos por si vuelven. La instructora dice que siempre vuelven. Ojalá se equivoque.'] ] },
+};
+function townStage() {
+  const K = kingdomNow(), down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
+  return isDone(K.id + ':g') ? 3 : down ? 2 : jobs ? 1 : 0;
+}
+function talkTown(who) {
+  const C2 = CITY_TALK[who]; if (!C2) return;
+  SPEAKER[who] = [C2.name, C2.col];
+  const st = townStage(), pool = C2.lines.slice(0, st + 1).flat().filter((_, i, a) => st === 0 || i >= a.length - C2.lines[st].length - 1);   // lo de ahora y algo de antes
+  M.talkN = M.talkN || {}; const n = M.talkN[who] = ((M.talkN[who] || 0) + 1);
+  talk([{ who, text: pool[(n - 1) % pool.length] }]);
+}
+
+// La reina: quién es, cómo ve el reino y qué piensa de Alec. Lo que cuenta cambia según lo que lleves hecho.
+function queenNews() {
+  const K = kingdomNow(), god = TYPES[K.god].name, down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
+  if (isDone(K.id + ':g')) return [{ who: 'queen', text: `Esta mañana he bajado al mercado sin escolta. Hacía un año que no podía. La gente ya no habla ${deN(god)}: habla de ti.` }, { who: 'queen', text: 'No te pido que te quedes. Solo que sepas que aquí tienes una casa.' }];
+  if (down >= 3) return [{ who: 'queen', text: `Ya solo le queda un guardián. ${god} lo sabe: por las noches, desde las almenas, se ve arder el cielo sobre ${lc(K.zones[3].name)}.` }];
+  if (down) return [{ who: 'queen', text: `${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Las madres han vuelto a dejar salir a los niños a la plaza. No sabes lo que eso vale.` }];
+  if (jobs) return [{ who: 'queen', text: 'Me cuentan lo que haces ahí fuera. Los aldeanos que salvas vienen a la ciudad a contarlo, y cada vez lo cuentan más grande.' }];
+  return [{ who: 'queen', text: 'El rey no duerme. Se pasa la noche mirando el mapa, como si mirándolo fuera a cambiar.' }, { who: 'queen', text: 'Tú no pareces de los que miran mapas.' }];
+}
+function talkQueen() {
+  const K = kingdomNow(), opts = [];
+  opts.push({ label: '¿Quién sois?', fn: () => talk([
+    { who: 'queen', text: `Nací en ${K.zones[3].m[1].replace('La aldea de ', '')}, en ${lc(K.zones[3].name)}. Mi padre hacía tejas. Me casé con un rey porque bailaba fatal y me hizo reír.` },
+    { who: 'queen', text: `Ahora ${K.zones[3].m[1].replace('La aldea de ', '')} está bajo el estandarte negro. Si pasas por allí, mira si sigue en pie la casa de las tejas rojas.` },
+    { who: 'alec', text: 'Si sigue en pie, os lo diré.' },
+  ], opts) });
+  opts.push({ label: '¿Cómo está el reino?', fn: () => talk(queenNews(), opts) });
+  opts.push({ label: '¿Qué pensáis de mí?', fn: () => talk([
+    { who: 'queen', text: 'Que no haces esto por nosotros, y que no lo escondes. Lo prefiero a cien caballeros que juraban que sí.' },
+    { who: 'queen', text: 'Y que algo te quitaron los dioses hace mucho. Tienes la misma mirada que el rey cuando mira el mapa.' },
+    { who: 'alec', text: 'Me quitaron lo que tenía. No era mucho.' },
+    { who: 'queen', text: 'Lo que uno tiene nunca es poco.' },
+  ], opts) });
+  opts.push({ label: 'Nada más', fn: () => {} });
+  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el mercenario también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
+  if (!M.queenMet) { M.queenMet = 1; save(); }
 }
 
 // La primera vez que usas la forja, la posada o el patio de armas, quien lo atiende te explica para qué sirve
 const FIRST_TALK = {
   forge: [
     { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esos guanteletes.' },
+    { who: 'smith', text: 'Hm. Buen metal, y mejor mano. Quien los hizo sabía lo que se hacía. ¿Cadenas? Nunca había visto unos que lanzaran cadenas.' },
+    { who: 'alec', text: 'Los terminé yo. Los empezó otro.' },
     { who: 'smith', text: 'Tienen cinco partes: Palma, Dedos, Gema, Brazal y Brasa. Cada una cambia una cosa de cómo lanzas tus conjuros.' },
     { who: 'smith', text: 'En los encargos encontrarás piezas nuevas. Tráeme Hierro Místico y materiales y te las forjo. Una vez forjada, la pieza es tuya para siempre.' },
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],
   inn: [
-    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba.' },
+    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba. La del fondo: es la única que no tiene goteras.' },
+    { who: 'keeper', text: 'El rey paga la cama. La bebida, no. No me mires así: el rey es rey, no tonto.' },
     { who: 'keeper', text: 'Ahí cuelgo tus trofeos y apunto lo que llevas hecho. Lo tuyo se guarda solo: no tienes que hacer nada.' },
   ],
   gym: [
     { who: 'trainer', text: '¿Vienes a entrenar? Las almas que traes de los encargos se gastan aquí.' },
+    { who: 'trainer', text: 'Te he visto pelear desde la muralla. Golpeas y te apartas. Mis reclutas lo llaman cobardía. Yo lo llamo seguir vivo.' },
     { who: 'trainer', text: 'Cada habilidad que aprendes te hace más fuerte para siempre: más vida, más daño, más esquives… Elige con cabeza.' },
   ],
 };

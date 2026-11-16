@@ -44,7 +44,7 @@ ROOM_GEN.intro_camino = function (g, c, r) {
 };
 
 // Quién habla en los bocadillos (las líneas de Alec niño y muchacho son su voz de ahora, contando)
-Object.assign(SPEAKER, { kid: ['Alec', '#9fd3ff'], teen: ['Alec', '#9fd3ff'], mother: ['Su madre', '#e6c07a'], oldsmith: ['El herrero', '#ff9a5c'], chosen: ['El elegido', '#e0524a'], guardia: ['Un guardia', '#cfd6de'] });
+Object.assign(SPEAKER, { sister: ['Su hermana', '#f0b8c8'], kid: ['Alec', '#9fd3ff'], teen: ['Alec', '#9fd3ff'], mother: ['Su madre', '#e6c07a'], oldsmith: ['El herrero', '#ff9a5c'], chosen: ['El elegido', '#e0524a'], guardia: ['Un guardia', '#cfd6de'] });
 
 // ── El guion: cada escena monta su sala y sus actores; cada tiempo («beat») puede mover cosas (on), programar golpes (ev: [segundo, función])
 // y, tras una espera, enseñar una línea. Al pasar de línea, lo que quedara a medias se da por hecho, para que la escena no se descoloque. ──
@@ -61,13 +61,18 @@ const INTRO = [
     },
     beats: [
       { wait: 1.5, who: 'kid', think: true, text: 'Yo era un niño cuando los ejércitos de los dioses llegaron a mi pueblo.' },
-      { wait: 1.6, who: 'kid', think: true, text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
+      { who: 'kid', think: true, text: 'Se llamaba Hontanar. Cuarenta vecinos, un pozo y un camino que no llevaba a ninguna parte. Nadie sabía rezar a nada más grande que la lluvia.' },
+      { who: 'sister', text: '¡Alec! ¡Las casas del final están ardiendo! ¡Y viene gente por el camino!' },
+      { who: 'mother', text: 'No es gente. Quedaos detrás de mí y no hagáis ruido.' },
+      { who: 'kid', think: true, text: 'Mi madre decía que a los ejércitos de los dioses no se les mira a la cara. Que pasan, como las tormentas, y que lo único que se puede hacer es esperar.' },
+      { wait: 1.6, who: 'kid', think: true, text: 'Esa noche no pasaron de largo. No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
         on(R) {
           [['s1', 'pc_skel_war', 52, 13.2, 32.2, 13.4], ['s2', 'pc_skel', 53.5, 14.3, 34, 14.3], ['s3', 'pc_skel_rogue', 55, 12.7, 35, 12.8], ['s4', 'brute', 56.5, 13.9, 37, 13.9], ['s5', 'pc_skel_war', 58, 14.6, 38.6, 14.6]]
             .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); sfx('kill', 0.4,0.8); } : null));
           R.camTo.x = IC(24);
         } },
-      { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
+      { who: 'kid', text: '¡Madre! ¡Han matado al guardia! ¡Vienen hacia aquí!' },
+      { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás! ¡Corre!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
       { wait: 3.1, min: 0.6, who: 'kid', think: true, text: 'Corrí hasta los árboles. Y miré atrás.',
         on(R) {
           R.go('kid', [[4.6, 13.9]], 105, a => { a.flip = false; });
@@ -77,6 +82,8 @@ const INTRO = [
           R.go('s2', [[23.5, 14.3]], 66); R.go('s4', [[26, 13.9]], 60); R.go('s5', [[28, 14.6]], 62);
           R.houses[0].fireTo = 0.7; R.camTo.x = IC(16); R.camV = 0.9;
         } },
+      { who: 'kid', think: true, text: 'Mi madre se puso delante para que yo llegara. Mi hermana tropezó en la calle. Yo tenía nueve años y estaba escondido detrás de un árbol.' },
+      { who: 'kid', think: true, text: 'Ninguno de aquellos esqueletos sabía nuestros nombres. Obedecían a algo que ni siquiera estaba allí.' },
     ] },
   { cap: 'A la mañana siguiente', room: ['intro_pueblo', 'intro_pueblo'], amb: '#a49fb2',
     setup(R) {
@@ -86,12 +93,18 @@ const INTRO = [
       R.add('kid', 'alec_kid', 17.9, 13.3);
     },
     beats: [
-      { wait: 1.3, who: 'kid', think: true, text: 'Por la mañana no quedaba nadie. Ni casas, ni vecinos, ni familia.',
+      { wait: 1.3, who: 'kid', think: true, text: 'Volví cuando dejó de oler a humo. No quedaba nadie. Ni casas, ni vecinos, ni familia.',
         on(R) { R.go(R.add('oldsmith', 'oldsmith', -2.5, 14), [[15.7, 13.6]], 56, () => { R.a('kid').flip = true; }); } },
+      { who: 'kid', think: true, text: 'Por el camino llegó un hombre con un carro y un martillo al cinto. Venía de la ciudad, a vender clavos.' },
       { who: 'oldsmith', text: '¿Queda alguien más, chico?' },
       { who: 'kid', text: 'No.' },
-      { who: 'oldsmith', text: 'Pues aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
-      { wait: 1.1, who: 'kid', think: true, text: 'Era herrero. Me dio techo, trabajo y pocas palabras.',
+      { who: 'oldsmith', text: '¿Viste quién fue?' },
+      { who: 'kid', text: 'Esqueletos. Venían por el camino, con una bandera negra. Mi madre dijo que pasarían de largo.' },
+      { who: 'oldsmith', text: 'A veces pasan. Los ejércitos de los dioses no buscan nada, chico: van de un lado a otro y lo que dejan detrás les da igual.' },
+      { who: 'kid', text: '¿Y por qué nadie los para?' },
+      { who: 'oldsmith', text: 'Porque todos rezan para que pasen por el pueblo de al lado. Y casi siempre funciona.' },
+      { who: 'oldsmith', text: 'Aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
+      { wait: 1.1, who: 'kid', think: true, text: 'Era herrero. Me dio techo, trabajo y pocas palabras. Nunca le pregunté su nombre, y él nunca me lo dijo.',
         on(R) { R.go('oldsmith', [[4, 14]], 38); }, ev: [[0.5, R => R.go('kid', [[5.8, 13.8]], 38)]] },
     ] },
   { cap: 'La forja', room: ['intro_forja', 'shop'], amb: '#b8a596',
@@ -109,6 +122,8 @@ const INTRO = [
     beats: [
       { wait: 1.2, who: 'kid', think: true, text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
       { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
+      { who: 'kid', text: '¿Y si lo golpeo más fuerte?' },
+      { who: 'oldsmith', text: 'Entonces lo romperás más fuerte. Mira dónde cae el martillo, no cuánto pesa.' },
       { wait: 1.4, min: 0.9, who: 'teen', think: true, text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
         on(R) {
           R.dipTo(() => {
@@ -117,20 +132,29 @@ const INTRO = [
             const s = R.a('oldsmith'); s.x = IC(15.8); s.y = IC(12); s.flip = true;
           });
         } },
-      { who: 'teen', think: true, text: 'Fueron diez años. No he tenido otros mejores.' },
+      { who: 'oldsmith', text: 'Golpea y apártate. Quien se queda quieto delante de algo más grande que él, se muere.' },
+      { who: 'teen', text: '¿Así se mata a un dios?' },
+      { who: 'oldsmith', text: 'A un dios no se le mata, chico. Se le sobrevive. Y con suerte, se le cobra.' },
+      { who: 'teen', think: true, text: 'Por las noches trabajaba en unos guanteletes de metal. No me dejaba tocarlos. Decía que aún no estaban acabados, y que yo tampoco.' },
+      { who: 'teen', think: true, text: 'Fueron pocos años. No he tenido otros mejores.' },
     ] },
+  // El niño sigue siendo un niño cuando matan al herrero: no sale a defenderle, se esconde
   { cap: 'La última noche', room: ['intro_forja', 'shop'], amb: '#4c4166',
-    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_s', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
+    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('kid', 'alec_kid', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
     beats: [
-      { wait: 2.3, who: 'teen', think: true, text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
+      { wait: 2.3, who: 'kid', think: true, text: 'Una noche entró en la forja un elegido: un hombre al que un dios había prestado su poder, y que ya no sabía devolverlo.',
         on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); sfx('roar', 0.5); } },
-      { who: 'chosen', text: 'Herrero. Tu fragua servirá a mi señor, o no servirá a nadie.' },
-      { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, atrás.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); } },
-      { wait: 1.6, min: 0.9, who: 'teen', think: true, text: 'Lo mató de un solo golpe. A mí ni me miró.',
+      { who: 'chosen', text: 'Herrero. Me han dicho que forjas un acero que no se dobla.' },
+      { who: 'oldsmith', text: 'Te han dicho bien. Y no está en venta.' },
+      { who: 'chosen', text: 'No he venido a comprar. Tu fragua servirá a mi señor, o no servirá a nadie.' },
+      { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, escóndete detrás del banco. Ahora.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); R.go('kid', [[4.3, 7.6]], 70, a => { a.flip = false; }); } },
+      { who: 'kid', think: true, text: 'Me escondí detrás del banco de trabajo. Era un crío. No habría podido hacer nada, y los dos lo sabíamos.' },
+      { wait: 1.6, min: 0.9, who: 'kid', think: true, text: 'Lo mató de un solo golpe. A mí ni me buscó: para él yo no existía.',
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
         ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); sfx('boom', 0.6); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
-      { wait: 1.2, who: 'teen', think: true, text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+      { who: 'kid', think: true, text: 'Antes de cerrar los ojos, el herrero me miró. Movió los labios. No le oí, pero lo entendí: «No le reces a nadie».' },
+      { wait: 1.2, who: 'kid', think: true, text: 'Lo enterré al amanecer, detrás de la forja. Me quedé con su martillo y con los guanteletes que nunca me dejó tocar.', on(R) { R.go('kid', [[6.5, 12]], 30); } },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -138,27 +162,47 @@ const INTRO = [
       R.go(a, [[19, 10.9]], 54);
     },
     beats: [
-      { wait: 1, who: 'alec', think: true, text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
+      { wait: 1, who: 'alec', think: true, text: 'Tardé años en terminarlos. Cada noche, con su martillo, como le había visto hacer a él.' },
+      { who: 'alec', think: true, text: 'No lanzan fuego ni rayos. Lanzan cadenas. A lo que muerden, no lo sueltan. No me los he vuelto a quitar.' },
       { wait: 0.6, who: 'alec', think: true, text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
-      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'En las tabernas me llaman Alec, el sin dios. De todo lo que me han dado en esta vida, es lo único que me gusta.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.' },
       { who: 'alec', think: true, text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
     ] },
   { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
     setup(R) {
-      const r = NAV.rows, cx = NAV.cols >> 1;
+      const cx = NAV.cols >> 1;
       introPlazaFolk(R);
       const a = R.add('alec', null, cx, 33, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);   // entra por la avenida
       R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
-      const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
+      const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x && q.y < IC(10)) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
     },
     tick(R, dt) { introPlazaStroll(R, dt); },   // los vecinos pasean como en la plaza de verdad
     beats: [
       { wait: 1.2, who: 'alec', think: true, text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
         ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
+      { who: 'alec', think: true, text: () => `Desde el camino se ve el humo del Umbral. ${TYPES[kingdomNow().god].name} ya tiene medio reino, y la gente de aquí lo sabe: nadie levanta la voz en el mercado.` },
       { wait: 0.5, who: 'guardia', text: '¿Alec, el mercenario que no reza? El rey te espera en el castillo.' },
       { who: 'alec', text: 'Veamos cuánto paga por la cabeza de un dios.' },
+      { who: 'guardia', text: 'Pagar, paga. Lo que no sé es cuántos han vuelto a cobrar.' },
+    ] },
+  // El rey cuenta qué ha pasado en el reino (kingStory, en 36_town.js: es lo mismo que te cuenta si se lo vuelves a preguntar)
+  { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
+    setup(R) {
+      const cx = NAV.cols >> 1;
+      for (const n of R.room.out.npcs) R.add(n.key === 'king' || n.key === 'queen' ? n.key : null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+      R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
+    },
+    beats: [
+      { wait: 2.9, min: 0.8, who: 'king', text: 'Así que tú eres Alec. Te imaginaba más alto.' },
+      { who: 'alec', text: 'Y yo a vos más rico. Me dijeron que pagáis en hierro.' },
+      { who: 'king', text: 'Pago. Pero antes vas a escuchar lo que ha pasado aquí, porque quiero que sepas contra qué te vendes.' },
+      ...kingStory(),
+      { who: 'queen', text: 'Por eso te llamamos a ti. Dicen que no le rezas a nadie.' },
+      { who: 'alec', text: 'A los dioses no se les reza. Se les cobra.' },
+      { who: 'king', text: 'Entonces cobra. Los encargos están en el tablón de la plaza. Vuelve a verme cuando quieras: te contaré cómo funciona esto.' },
     ] },
 ];
 
@@ -189,6 +233,7 @@ const ENDING = [
           [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
           [3.1, R => { R.shake(6); sfx('boom', 0.55, 0.9, 0); }], [3.55, R => { R.shake(6); sfx('boom', 0.55, 1.1, 0); }], [4.0, R => { R.shake(7); R.flash = 0.4; sfx('boom', 0.6, 0.8, 0); }], [4.5, R => { R.shake(8); sfx('bossdie', 0.8, 1, 0); }]] },
       { who: 'alec', think: true, text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
+      { who: 'alec', think: true, text: 'Esperaba sentir algo. Alivio, rabia, lo que fuera. Solo sentí cansancio, y ganas de que el herrero lo hubiera visto.' },
     ] },
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
     setup(R) {
@@ -201,6 +246,9 @@ const ENDING = [
       { who: 'king', text: () => `${kingdomNow().name} es libre. Y te lo debe a ti.` },
       { who: 'alec', text: () => `No lo he hecho por ${kingdomNow().name}.` },
       { who: 'queen', text: 'Lo sabemos. Por eso te pagamos.' },
+      { who: 'king', text: 'Los sacerdotes ya dicen que fue voluntad de otro dios. Que tú solo fuiste su mano.' },
+      { who: 'alec', text: 'Decidles que esa mano cobra aparte.' },
+      { who: 'queen', text: 'Se lo diremos. Y diremos tu nombre en la plaza, aunque no te guste. La gente necesita saber que se puede.' },
     ] },
   { cap: 'La plaza', room: ['plaza', 'plaza'], amb: null,
     setup(R) {
@@ -220,7 +268,10 @@ const ENDING = [
       { wait: 3.4, min: 0.8, who: 'alec', think: true, text: 'En la plaza ya nadie miraba al camino con miedo.' },
       { who: 'smith', text: 'Esos guanteletes han matado a un dios. Quien los forjó sabía lo que hacía.', on(R) { R.a('alec').face = Math.PI; } },
       { who: 'alec', text: 'Lo sabía.' },
+      { who: 'smith', text: '¿Era tu maestro?' },
+      { who: 'alec', text: 'Era herrero. Me dio techo, trabajo y pocas palabras. Con eso le bastó.' },
       { who: 'keeper', text: 'Tu cama sigue donde estaba, mercenario. Y esta noche invita la casa.', on(R) { R.a('alec').face = 0; } },
+      { who: 'keeper', text: 'Y no pongas esa cara. Por una vez en un año, en esta ciudad se celebra algo.' },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {

@@ -581,19 +581,19 @@ function heroHand(face, hand) {
 // Los guanteletes de Alec, del color de su cadena (el del disparo): una copia del atlas con los cuatro tonos de metal de los guanteletes
 // (los de tools/make_mage.py: brillo, base, sombra y sombra honda) cambiados por la rampa de ese color. Se rehace solo al cambiar de color.
 const GAUNT_TONES = { '227,234,242': 'hi', '151,163,184': 'base', '95,106,132': 'sh', '55,62,82': 'deep' };
-let GAUNT_IMG = null, GAUNT_COL = null;
+let GAUNT_IMG = null, GAUNT_COL = null, GAUNT_FAIL = false;
 function gauntImg(col) {
-  if (!IMG.chars) return null;
+  if (!IMG.chars || GAUNT_FAIL) return null;   // si el navegador no deja leer los píxeles (juego abierto como archivo local), guanteletes de metal
   if (GAUNT_IMG && GAUNT_COL === col) return GAUNT_IMG;
   const cv = GAUNT_IMG || document.createElement('canvas'); cv.width = IMG.chars.width; cv.height = IMG.chars.height;
   const g = cv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(IMG.chars, 0, 0);
   const R = rampRGB(col);
-  for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
+  try { for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
     for (const a in m.a) for (const [fx, fy] of m.a[a].f) {
       const d = g.getImageData(fx, fy, m.w, m.h), px = d.data;
       for (let i = 0; i < px.length; i += 4) { const t = px[i + 3] && GAUNT_TONES[px[i] + ',' + px[i + 1] + ',' + px[i + 2]]; if (t) { const c = R[t]; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; } }
       g.putImageData(d, fx, fy);
-    } }
+    } } } catch (e) { GAUNT_FAIL = true; return null; }
   GAUNT_IMG = cv; GAUNT_COL = col; return cv;
 }
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }

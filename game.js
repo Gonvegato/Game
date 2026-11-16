@@ -2349,7 +2349,7 @@ const ROOM_GEN = {
     fillRect(g, cx - 1, 5, 2, 1);                                                 // el trono
     for (const x of [5, c - 7]) for (const y of [8, 13]) fillRect(g, x, y, 2, 2);  // columnas
     OUT.npcs.push({ key: 'king', x: cx, y: 6.15 }, { key: 'queen', x: cx + 1.6, y: 6.9, flip: true }, { key: 'guard_k', x: cx - 2.5, y: 7.6 }, { key: 'guard_k', x: cx + 2.5, y: 7.6, flip: true }, { key: 'guard', x: cx - 3, y: r - 3.2 }, { key: 'guard', x: cx + 3, y: r - 3.2, flip: true }, { key: 'priest', x: 3.6, y: 7 });
-    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Hablar con el rey' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
+    OUT.spots.push({ x: cx * CELL, y: 7.4 * CELL, id: 'king', label: 'Hablar con el rey' }, { x: (cx + 2.4) * CELL, y: 7.9 * CELL, id: 'queen', label: 'Hablar con la reina' }, { x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
     return [cx, r - 4];
   },
   // La forja y la posada por dentro: muros alrededor, la puerta abajo, muebles del paquete y quien atiende
@@ -2464,8 +2464,10 @@ function cityGen(g, c, r, kid) {
   // Gente: quien atiende cada sitio, los guardias del castillo y vecinos paseando por la plaza y las calles
   OUT.npcs.push({ key: 'smith', x: FG.x + 1.2, y: FG.y + 5.6 }, { key: 'keeper', x: IN.x + 2.5, y: IN.y + 4.4, flip: true },
     { key: 'decoy', x: GY.x + 3, y: GY.y + 4 }, { key: 'post', x: GY.x + 6.5, y: GY.y + 3.4 }, { key: 'turret', x: GY.x + 4.5, y: GY.y + 7.6 }, { key: 'trainer', x: GY.x + 9.5, y: GY.y + 6.2 }, { key: 'decoy', x: GY.x + 11, y: GY.y + 8 },
-    { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
-    { key: 'cit_peasant', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', x: cx - 10, y: 21 }, { key: 'villager', x: cx + 8, y: 21, flip: true });
+    { key: 'guard', id: 'g_puerta', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', id: 'g_puente', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
+    { key: 'cit_peasant', id: 'v_terraza', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', id: 'v_mercado', x: cx - 10, y: 21 }, { key: 'villager', id: 'v_pozo', x: cx + 8, y: 21, flip: true },
+    { key: 'adv_knight', id: 'v_patio', x: GY.x + GY.w + 1.5, y: GY.y + 2 });
+  for (const n of OUT.npcs) if (n.id) OUT.spots.push({ x: n.x * CELL, y: (n.y + 0.9) * CELL, id: 'talk', who: n.id, label: 'Hablar' });   // vecinos con los que se puede hablar (CITY_TALK, 36_town.js)
   OUT.wander.push({ key: 'adv_knight', area: [PL.x + 1, PL.y + 1, PL.w - 2, PL.h - 4] }, { key: 'cit_peasant', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] }, { key: 'cit_tavern_b', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] },
     { key: 'villager', area: [PL.x + 2, PL.y + 3, PL.w - 4, 5] }, { key: 'cit_peasant', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] }, { key: 'villager', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] },
     { key: 'cit_peasant', area: [4, S1, c - 8, 3] }, { key: 'cit_tavern_b', area: [4, S1, c - 8, 3] }, { key: 'villager', area: [4, S2, c - 8, 3] }, { key: 'cit_peasant', area: [4, S2, c - 8, 3] },
@@ -2676,7 +2678,7 @@ function townUpdate(dt) {
     if (d < 0.1) { const [ax, ay, aw, ah] = n.area; n.tx = ax + Math.random() * aw; n.ty = ay + Math.random() * ah; n.wait = 1 + Math.random() * 3; continue; }
     const st = Math.min(d, 1.4 * dt); n.x += dx / d * st; n.y += dy / d * st; n.walking = true; n.flip = dx < 0;
   }
-  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); sfx('ok', 0.35,0.8); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
+  if (near && I.atkP && modeT > 0.3) { const inside = S.out && S.out.interior; if (near.id === 'exit') openTown({ throne: 'castle', forge: 'forgeOut', inn: 'innOut' }[inside]); else if (!inside && ['king', 'forge', 'inn'].includes(near.id)) { openTown({ king: 'hall', forge: 'forge', inn: 'inn' }[near.id]); sfx('ok', 0.35,0.8); } else if (near.id === 'king' && inside === 'throne') talkKing(); else if (near.id === 'queen' && inside === 'throne') talkQueen(); else if (near.id === 'talk') talkTown(near.who); else if (FIRST_TALK[near.id] && !(M.met || {})[near.id]) { M.met = M.met || {}; M.met[near.id] = 1; save(); const id = near.id; talk(FIRST_TALK[id], null, () => openPlace(id)); } else openPlace(near.id); }
 }
 // Vecinos, muñecos del patio y el aviso del sitio más cercano
 function drawTown() {
@@ -2768,7 +2770,7 @@ function talkUpdate(dt) {
 function speakerPos(who) {
   if (S.intro) return introSpeakerPos(who);   // en la cinemática hablan sus actores
   if (who === 'alec') return { x: S.p.x, y: S.p.y - 26 };
-  const n = S.town && S.town.npcs.find(q => q.key === who);
+  const n = S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
   return n ? { x: n.x * CELL, y: n.y * CELL - 30 } : { x: S.p.x, y: S.p.y - 26 };
 }
 const SPEAKER = { smith: ['La herrera', '#ff9a5c'], keeper: ['La posadera', '#e6c07a'], trainer: ['La instructora', '#9fe09a'], king: ['El rey', '#f2c14e'], queen: ['La reina', '#e6a0c4'], alec: ['Alec', '#9fd3ff'] };
@@ -2827,10 +2829,25 @@ function drawDialog(k) {
   g.restore();
 }
 // El rey: la primera vez te explica el contrato entero; después te dice cómo vas y te deja preguntar
+// Nombres con artículo («El Umbral», «La Matriarca del Fango») en mitad de frase: «el Umbral»; y con «de» delante, «del Umbral»
+const lc = n => n.replace(/^(El|La|Los|Las) /, m => m.toLowerCase());
+const deN = n => /^El /.test(n) ? 'del ' + n.slice(3) : 'de ' + lc(n);
+// Lo que ha pasado en el reino, contado por el rey (en la cinemática del principio y cada vez que se lo preguntas)
+function kingStory() {
+  const K = kingdomNow(), god = TYPES[K.god].name, Z = K.zones.map(z => z.name), B = [0, 1, 2, 3].map(i => TYPES[WORLDS[i].boss].name);
+  return [
+    { who: 'king', text: `Hace un año, el cielo sobre ${lc(Z[3])} se abrió como una herida. De ahí bajó ${lc(god)}, el dios de la guerra.` },
+    { who: 'king', text: 'No pidió oro ni oraciones. Pidió soldados. Las aldeas que se los dieron, perdieron a sus hijos. Las que no, ardieron.' },
+    { who: 'king', text: `Después repartió el reino entre sus ejércitos. Los muertos se levantaron en ${lc(Z[0])}. Las bestias anidaron en ${lc(Z[1])}. En ${lc(Z[2])}, los picadores dejaron de picar y empezaron a obedecer.` },
+    { who: 'king', text: `Y en cada sitio dejó un guardián: ${lc(B[0])}, ${lc(B[1])}, ${lc(B[2])} y ${lc(B[3])}. Mientras sigan en pie, ${lc(god)} no se mueve ${deN(Z[3])}. No le hace falta.` },
+    { who: 'king', text: 'Mandé a mis caballeros. Volvieron tres de cada diez. Algunos, con los ojos rojos y rezándole a quien los había vencido: ahora los llaman elegidos.' },
+    { who: 'king', text: 'Los sacerdotes dicen que hay que ofrecerle algo para que se vaya. Yo he enterrado a demasiada gente para creérmelo.' },
+  ];
+}
 function kingExplain() {
   const K = kingdomNow(), god = TYPES[K.god].name, zones = K.zones.map(z => z.name);
   return [
-    { who: 'king', text: `El ${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).join(', ')} y ${zones[3]}.` },
+    { who: 'king', text: `${god} se ha quedado con medio reino. Sus ejércitos salen de cuatro sitios: ${zones.slice(0, 3).map(lc).join(', ')} y ${lc(zones[3])}.` },
     { who: 'king', text: 'En cada zona hay tres encargos, y los tienes en el tablón de la plaza: limpiar un lugar sala a sala, defender una aldea o asaltar un campamento.' },
     { who: 'king', text: 'Cuando cumplas los tres de una zona, saldrá su guardián. Mata a los cuatro guardianes y el dios no tendrá dónde esconderse.' },
     { who: 'king', text: 'Por el camino robarás técnicas a los dioses menores. Úsalas sin miedo: solo te duran ese encargo.' },
@@ -2853,33 +2870,111 @@ function kingProgress() {
 function talkKing() {
   const first = !M.metKing;
   if (first) { M.metKing = 1; save(); }
-  const opts = [{ label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
+  const opts = [{ label: '¿Qué pasó en el reino?', fn: () => talk(kingStory(), opts) }, { label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
   if (first) talk([
-    { who: 'king', text: 'Así que tú eres Alec, el mercenario que no reza. Acércate.' },
-    { who: 'alec', text: 'Me dijeron que pagáis en hierro.' },
-    { who: 'king', text: 'Y pago bien. Escucha, porque solo lo diré una vez.' },
+    { who: 'king', text: 'Ya sabes lo que ha pasado en mi reino, Alec. Ahora te diré cómo vas a arreglarlo.' },
+    { who: 'alec', text: 'Os escucho. Mientras paguéis, os escucho.' },
     ...kingExplain(),
     { who: 'queen', text: 'No le asustes. Es el primero en meses que se ofrece voluntario.' },
     { who: 'alec', text: '¿Y si mato a vuestro dios?' },
     { who: 'king', text: 'Entonces te deberé más de lo que puedo pagar. Ve. El tablón está en la plaza.' },
+    { who: 'queen', text: 'Y vuelve de vez en cuando. Aquí arriba solo nos llegan malas noticias: alguna buena no nos vendría mal.' },
   ], opts);
   else talk(kingProgress(), opts);
+}
+
+// Vecinos de la ciudad con los que se puede hablar. Cada uno tiene varias cosas que decir y van saliendo por turnos;
+// lo que cuentan cambia según cómo vaya el reino: al principio (0), con encargos hechos (1), con guardianes caídos (2) y con el dios muerto (3).
+const CITY_TALK = {
+  g_puerta: { name: 'Un guardia del castillo', col: '#cfd6de', lines: [
+    ['El rey recibe a quien quiera. Pero no le hagas perder el tiempo: duerme poco y lo poco que duerme, mal.', 'Antes éramos cuarenta en la guardia. Ahora somos doce. Los demás se fueron al Umbral con el capitán.', 'La reina baja cada mañana a ver a los heridos. El rey dice que es peligroso. Ella dice que más peligroso es no hacerlo.'],
+    ['Han vuelto a llegar carros de las aldeas que limpias. Poca cosa: grano, leña. Pero llegan.', 'El capitán de la guardia no se cree lo que cuentan de ti. Yo sí: te he visto volver.'],
+    ['Dicen que has tumbado a un guardián. Hasta el sacerdote ha dejado de hablar de sacrificios.', 'Si caen los cuatro, el dios tendrá que salir de su agujero. Entonces sí que vamos a necesitar suerte.'],
+    ['No me lo creo todavía. El Primer Puño, muerto. Esta puerta está abierta para ti a cualquier hora, Alec.'] ] },
+  g_puente: { name: 'Un guardia del puente', col: '#cfd6de', lines: [
+    ['Por este puente entra lo poco que llega de fuera. Desde que cayó Fuenteseca, casi nada.', 'Si ves a alguien cruzar con los ojos rojos, no le dejes hablar. Los elegidos convencen. Luego matan.', 'El arroyo baja del Nido. Hace un año traía truchas. Ahora trae seda.'],
+    ['Ayer cruzó una familia de Robledal. Dijeron que un mercenario les había limpiado la aldea. ¿Fuiste tú?', 'Cada vez cruza más gente hacia dentro y menos hacia fuera. Buena señal, supongo.'],
+    ['Los mercaderes vuelven a preguntar por los caminos. Les digo que esperen. Que tú todavía no has acabado.'],
+    ['Han vuelto los mercaderes de verdad. Con mulas y todo. Ya ni me acordaba de cómo sonaban las mulas.'] ] },
+  v_mercado: { name: 'Una vecina', col: '#e6c07a', lines: [
+    ['El pan ha subido otra vez. Con el Nido infestado, el trigo del norte no llega.', 'Mi marido se fue a las Minas de Cristal a trabajar. No ha vuelto. Bueno: dicen que volvió, pero que ya no era él.', 'No te acerques mucho a la plaza por la noche. Los guardias ven bichos en cada sombra, y a veces aciertan.'],
+    ['Dicen que eres un mercenario sin dios. Mi madre dice que eso trae mala suerte. Yo digo que peor suerte que esta, imposible.', 'Han vuelto a abrir la panadería del puente. Algo es algo.'],
+    ['¿Sabes que los niños juegan a ser tú? Uno hace de dios, otro de Alec, y el dios siempre pierde. Les encanta.'],
+    ['Esta noche hay fiesta en la plaza. Si vienes, te invito a algo. Bueno, te invita la posadera, que tiene más dinero que yo.'] ] },
+  v_pozo: { name: 'Un vecino', col: '#e6c07a', lines: [
+    ['El pozo es lo único de la ciudad que no ha cambiado en un año. Por eso vengo aquí.', 'Yo era carretero. Ahora no hay caminos que valgan. Así que cargo agua.', '¿Has visto el castillo? Antes tenía estandartes de colores. El rey los quitó todos: dice que no hay nada que celebrar.'],
+    ['He oído que en las aldeas te dejan comida en la puerta para que pases por allí. Como a los santos. Qué cosas.', 'Si vas al Nido, no toques la seda. Mi cuñado la tocó.'],
+    ['Esta mañana el rey ha mandado colgar un estandarte. Uno solo. Ya es algo.'],
+    ['Ya puedo volver a ser carretero. A ver quién me enseña a conducir el carro otra vez.'] ] },
+  v_terraza: { name: 'Una clienta de la posada', col: '#e6c07a', lines: [
+    ['La posadera no te cobra a ti, ¿verdad? A mí me cobra hasta el aire.', 'Aquí se oye todo lo que pasa en el reino. Lo malo es que todo lo que pasa en el reino es malo.', 'Dicen que la herrera fue soldado antes que herrera. No sé si creérmelo. Bueno, sí: has visto cómo da martillazos.'],
+    ['Esta noche se brindaba por ti en la barra. No te emociones: también se brindaba por la lluvia.'],
+    ['Un cliente decía que los guardianes eran inmortales. Le he dicho que fuera a decírtelo a ti.'],
+    ['Dicen que vas a seguir hacia otro reino. Llévate una botella. Allí no tendrán vino como este.'] ] },
+  v_patio: { name: 'Un recluta', col: '#9fe09a', lines: [
+    ['La instructora nos hace correr alrededor del patio hasta que vomitamos. Dice que en el campo de batalla el que corre vive.', 'Me alisté porque mi pueblo está en las Criptas. Quiero volver. Aunque sea para enterrar a los míos.', 'No te ofendas, pero la instructora dice que pelear como tú es de cobardes: golpear y salir corriendo. Luego dice que es lo más listo que ha visto.'],
+    ['Ayer aguanté diez vueltas al patio. La instructora dijo «bien». Es la primera vez que le oigo decirlo.'],
+    ['Cuando caigan todos los guardianes, nos mandarán a limpiar lo que quede. Más vale que tú hayas dejado poco.'],
+    ['Ahora entrenamos por si vuelven. La instructora dice que siempre vuelven. Ojalá se equivoque.'] ] },
+};
+function townStage() {
+  const K = kingdomNow(), down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
+  return isDone(K.id + ':g') ? 3 : down ? 2 : jobs ? 1 : 0;
+}
+function talkTown(who) {
+  const C2 = CITY_TALK[who]; if (!C2) return;
+  SPEAKER[who] = [C2.name, C2.col];
+  const st = townStage(), pool = C2.lines.slice(0, st + 1).flat().filter((_, i, a) => st === 0 || i >= a.length - C2.lines[st].length - 1);   // lo de ahora y algo de antes
+  M.talkN = M.talkN || {}; const n = M.talkN[who] = ((M.talkN[who] || 0) + 1);
+  talk([{ who, text: pool[(n - 1) % pool.length] }]);
+}
+
+// La reina: quién es, cómo ve el reino y qué piensa de Alec. Lo que cuenta cambia según lo que lleves hecho.
+function queenNews() {
+  const K = kingdomNow(), god = TYPES[K.god].name, down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
+  if (isDone(K.id + ':g')) return [{ who: 'queen', text: `Esta mañana he bajado al mercado sin escolta. Hacía un año que no podía. La gente ya no habla ${deN(god)}: habla de ti.` }, { who: 'queen', text: 'No te pido que te quedes. Solo que sepas que aquí tienes una casa.' }];
+  if (down >= 3) return [{ who: 'queen', text: `Ya solo le queda un guardián. ${god} lo sabe: por las noches, desde las almenas, se ve arder el cielo sobre ${lc(K.zones[3].name)}.` }];
+  if (down) return [{ who: 'queen', text: `${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Las madres han vuelto a dejar salir a los niños a la plaza. No sabes lo que eso vale.` }];
+  if (jobs) return [{ who: 'queen', text: 'Me cuentan lo que haces ahí fuera. Los aldeanos que salvas vienen a la ciudad a contarlo, y cada vez lo cuentan más grande.' }];
+  return [{ who: 'queen', text: 'El rey no duerme. Se pasa la noche mirando el mapa, como si mirándolo fuera a cambiar.' }, { who: 'queen', text: 'Tú no pareces de los que miran mapas.' }];
+}
+function talkQueen() {
+  const K = kingdomNow(), opts = [];
+  opts.push({ label: '¿Quién sois?', fn: () => talk([
+    { who: 'queen', text: `Nací en ${K.zones[3].m[1].replace('La aldea de ', '')}, en ${lc(K.zones[3].name)}. Mi padre hacía tejas. Me casé con un rey porque bailaba fatal y me hizo reír.` },
+    { who: 'queen', text: `Ahora ${K.zones[3].m[1].replace('La aldea de ', '')} está bajo el estandarte negro. Si pasas por allí, mira si sigue en pie la casa de las tejas rojas.` },
+    { who: 'alec', text: 'Si sigue en pie, os lo diré.' },
+  ], opts) });
+  opts.push({ label: '¿Cómo está el reino?', fn: () => talk(queenNews(), opts) });
+  opts.push({ label: '¿Qué pensáis de mí?', fn: () => talk([
+    { who: 'queen', text: 'Que no haces esto por nosotros, y que no lo escondes. Lo prefiero a cien caballeros que juraban que sí.' },
+    { who: 'queen', text: 'Y que algo te quitaron los dioses hace mucho. Tienes la misma mirada que el rey cuando mira el mapa.' },
+    { who: 'alec', text: 'Me quitaron lo que tenía. No era mucho.' },
+    { who: 'queen', text: 'Lo que uno tiene nunca es poco.' },
+  ], opts) });
+  opts.push({ label: 'Nada más', fn: () => {} });
+  talk([{ who: 'queen', text: M.queenMet ? 'Alec. ¿Vienes a por noticias o a darlas?' : 'Así que el mercenario también habla con reinas. Siéntate, si quieres: el rey tardará.' }], opts);
+  if (!M.queenMet) { M.queenMet = 1; save(); }
 }
 
 // La primera vez que usas la forja, la posada o el patio de armas, quien lo atiende te explica para qué sirve
 const FIRST_TALK = {
   forge: [
     { who: 'smith', text: 'Así que tú eres el que se ha ofrecido. Déjame ver esos guanteletes.' },
+    { who: 'smith', text: 'Hm. Buen metal, y mejor mano. Quien los hizo sabía lo que se hacía. ¿Cadenas? Nunca había visto unos que lanzaran cadenas.' },
+    { who: 'alec', text: 'Los terminé yo. Los empezó otro.' },
     { who: 'smith', text: 'Tienen cinco partes: Palma, Dedos, Gema, Brazal y Brasa. Cada una cambia una cosa de cómo lanzas tus conjuros.' },
     { who: 'smith', text: 'En los encargos encontrarás piezas nuevas. Tráeme Hierro Místico y materiales y te las forjo. Una vez forjada, la pieza es tuya para siempre.' },
     { who: 'smith', text: 'Algunas piezas se llevan bien entre sí o con ciertas técnicas. Lo verás en la pestaña de Sinergias.' },
   ],
   inn: [
-    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba.' },
+    { who: 'keeper', text: 'Bienvenido, mercenario. Tu habitación está arriba. La del fondo: es la única que no tiene goteras.' },
+    { who: 'keeper', text: 'El rey paga la cama. La bebida, no. No me mires así: el rey es rey, no tonto.' },
     { who: 'keeper', text: 'Ahí cuelgo tus trofeos y apunto lo que llevas hecho. Lo tuyo se guarda solo: no tienes que hacer nada.' },
   ],
   gym: [
     { who: 'trainer', text: '¿Vienes a entrenar? Las almas que traes de los encargos se gastan aquí.' },
+    { who: 'trainer', text: 'Te he visto pelear desde la muralla. Golpeas y te apartas. Mis reclutas lo llaman cobardía. Yo lo llamo seguir vivo.' },
     { who: 'trainer', text: 'Cada habilidad que aprendes te hace más fuerte para siempre: más vida, más daño, más esquives… Elige con cabeza.' },
   ],
 };
@@ -2929,7 +3024,7 @@ ROOM_GEN.intro_camino = function (g, c, r) {
 };
 
 // Quién habla en los bocadillos (las líneas de Alec niño y muchacho son su voz de ahora, contando)
-Object.assign(SPEAKER, { kid: ['Alec', '#9fd3ff'], teen: ['Alec', '#9fd3ff'], mother: ['Su madre', '#e6c07a'], oldsmith: ['El herrero', '#ff9a5c'], chosen: ['El elegido', '#e0524a'], guardia: ['Un guardia', '#cfd6de'] });
+Object.assign(SPEAKER, { sister: ['Su hermana', '#f0b8c8'], kid: ['Alec', '#9fd3ff'], teen: ['Alec', '#9fd3ff'], mother: ['Su madre', '#e6c07a'], oldsmith: ['El herrero', '#ff9a5c'], chosen: ['El elegido', '#e0524a'], guardia: ['Un guardia', '#cfd6de'] });
 
 // ── El guion: cada escena monta su sala y sus actores; cada tiempo («beat») puede mover cosas (on), programar golpes (ev: [segundo, función])
 // y, tras una espera, enseñar una línea. Al pasar de línea, lo que quedara a medias se da por hecho, para que la escena no se descoloque. ──
@@ -2946,13 +3041,18 @@ const INTRO = [
     },
     beats: [
       { wait: 1.5, who: 'kid', think: true, text: 'Yo era un niño cuando los ejércitos de los dioses llegaron a mi pueblo.' },
-      { wait: 1.6, who: 'kid', think: true, text: 'No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
+      { who: 'kid', think: true, text: 'Se llamaba Hontanar. Cuarenta vecinos, un pozo y un camino que no llevaba a ninguna parte. Nadie sabía rezar a nada más grande que la lluvia.' },
+      { who: 'sister', text: '¡Alec! ¡Las casas del final están ardiendo! ¡Y viene gente por el camino!' },
+      { who: 'mother', text: 'No es gente. Quedaos detrás de mí y no hagáis ruido.' },
+      { who: 'kid', think: true, text: 'Mi madre decía que a los ejércitos de los dioses no se les mira a la cara. Que pasan, como las tormentas, y que lo único que se puede hacer es esperar.' },
+      { wait: 1.6, who: 'kid', think: true, text: 'Esa noche no pasaron de largo. No pidieron nada. Quemaron las casas y mataron a quien salía de ellas.',
         on(R) {
           [['s1', 'pc_skel_war', 52, 13.2, 32.2, 13.4], ['s2', 'pc_skel', 53.5, 14.3, 34, 14.3], ['s3', 'pc_skel_rogue', 55, 12.7, 35, 12.8], ['s4', 'brute', 56.5, 13.9, 37, 13.9], ['s5', 'pc_skel_war', 58, 14.6, 38.6, 14.6]]
             .forEach(([id, key, x, y, tx, ty]) => R.go(R.add(id, key, x, y, { flip: true }), [[tx, ty]], 90, id === 's1' ? () => { R.fall('g1', -1); R.shake(3); sfx('kill', 0.4,0.8); } : null));
           R.camTo.x = IC(24);
         } },
-      { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
+      { who: 'kid', text: '¡Madre! ¡Han matado al guardia! ¡Vienen hacia aquí!' },
+      { wait: 0.6, who: 'mother', text: '¡Corre, Alec! ¡Al bosque, y no mires atrás! ¡Corre!', on(R) { R.houses[1].fireTo = 0.85; R.a('mother').flip = true; R.camTo.x = IC(21); } },
       { wait: 3.1, min: 0.6, who: 'kid', think: true, text: 'Corrí hasta los árboles. Y miré atrás.',
         on(R) {
           R.go('kid', [[4.6, 13.9]], 105, a => { a.flip = false; });
@@ -2962,6 +3062,8 @@ const INTRO = [
           R.go('s2', [[23.5, 14.3]], 66); R.go('s4', [[26, 13.9]], 60); R.go('s5', [[28, 14.6]], 62);
           R.houses[0].fireTo = 0.7; R.camTo.x = IC(16); R.camV = 0.9;
         } },
+      { who: 'kid', think: true, text: 'Mi madre se puso delante para que yo llegara. Mi hermana tropezó en la calle. Yo tenía nueve años y estaba escondido detrás de un árbol.' },
+      { who: 'kid', think: true, text: 'Ninguno de aquellos esqueletos sabía nuestros nombres. Obedecían a algo que ni siquiera estaba allí.' },
     ] },
   { cap: 'A la mañana siguiente', room: ['intro_pueblo', 'intro_pueblo'], amb: '#a49fb2',
     setup(R) {
@@ -2971,12 +3073,18 @@ const INTRO = [
       R.add('kid', 'alec_kid', 17.9, 13.3);
     },
     beats: [
-      { wait: 1.3, who: 'kid', think: true, text: 'Por la mañana no quedaba nadie. Ni casas, ni vecinos, ni familia.',
+      { wait: 1.3, who: 'kid', think: true, text: 'Volví cuando dejó de oler a humo. No quedaba nadie. Ni casas, ni vecinos, ni familia.',
         on(R) { R.go(R.add('oldsmith', 'oldsmith', -2.5, 14), [[15.7, 13.6]], 56, () => { R.a('kid').flip = true; }); } },
+      { who: 'kid', think: true, text: 'Por el camino llegó un hombre con un carro y un martillo al cinto. Venía de la ciudad, a vender clavos.' },
       { who: 'oldsmith', text: '¿Queda alguien más, chico?' },
       { who: 'kid', text: 'No.' },
-      { who: 'oldsmith', text: 'Pues aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
-      { wait: 1.1, who: 'kid', think: true, text: 'Era herrero. Me dio techo, trabajo y pocas palabras.',
+      { who: 'oldsmith', text: '¿Viste quién fue?' },
+      { who: 'kid', text: 'Esqueletos. Venían por el camino, con una bandera negra. Mi madre dijo que pasarían de largo.' },
+      { who: 'oldsmith', text: 'A veces pasan. Los ejércitos de los dioses no buscan nada, chico: van de un lado a otro y lo que dejan detrás les da igual.' },
+      { who: 'kid', text: '¿Y por qué nadie los para?' },
+      { who: 'oldsmith', text: 'Porque todos rezan para que pasen por el pueblo de al lado. Y casi siempre funciona.' },
+      { who: 'oldsmith', text: 'Aquí ya no haces nada. Ven: en mi forja hace falta quien mueva el fuelle.' },
+      { wait: 1.1, who: 'kid', think: true, text: 'Era herrero. Me dio techo, trabajo y pocas palabras. Nunca le pregunté su nombre, y él nunca me lo dijo.',
         on(R) { R.go('oldsmith', [[4, 14]], 38); }, ev: [[0.5, R => R.go('kid', [[5.8, 13.8]], 38)]] },
     ] },
   { cap: 'La forja', room: ['intro_forja', 'shop'], amb: '#b8a596',
@@ -2994,6 +3102,8 @@ const INTRO = [
     beats: [
       { wait: 1.2, who: 'kid', think: true, text: 'Me crio entre el yunque y la fragua. Primero me enseñó a forjar.' },
       { who: 'oldsmith', text: 'El hierro no perdona las prisas. Otra vez.' },
+      { who: 'kid', text: '¿Y si lo golpeo más fuerte?' },
+      { who: 'oldsmith', text: 'Entonces lo romperás más fuerte. Mira dónde cae el martillo, no cuánto pesa.' },
       { wait: 1.4, min: 0.9, who: 'teen', think: true, text: 'Después, a pelear. Decía que quien forja algo y no sabe usarlo solo fabrica chatarra.',
         on(R) {
           R.dipTo(() => {
@@ -3002,20 +3112,29 @@ const INTRO = [
             const s = R.a('oldsmith'); s.x = IC(15.8); s.y = IC(12); s.flip = true;
           });
         } },
-      { who: 'teen', think: true, text: 'Fueron diez años. No he tenido otros mejores.' },
+      { who: 'oldsmith', text: 'Golpea y apártate. Quien se queda quieto delante de algo más grande que él, se muere.' },
+      { who: 'teen', text: '¿Así se mata a un dios?' },
+      { who: 'oldsmith', text: 'A un dios no se le mata, chico. Se le sobrevive. Y con suerte, se le cobra.' },
+      { who: 'teen', think: true, text: 'Por las noches trabajaba en unos guanteletes de metal. No me dejaba tocarlos. Decía que aún no estaban acabados, y que yo tampoco.' },
+      { who: 'teen', think: true, text: 'Fueron pocos años. No he tenido otros mejores.' },
     ] },
+  // El niño sigue siendo un niño cuando matan al herrero: no sale a defenderle, se esconde
   { cap: 'La última noche', room: ['intro_forja', 'shop'], amb: '#4c4166',
-    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('teen', 'alec_s', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
+    setup(R) { R.props.push({ x: IC(6.4), y: IC(10.4), draw: introAnvil }); R.add('kid', 'alec_kid', 6, 12.2); R.add('oldsmith', 'oldsmith', 8.6, 11.6); },
     beats: [
-      { wait: 2.3, who: 'teen', think: true, text: 'Una noche entró en la forja un elegido: un hombre corrompido por el poder de un dios.',
+      { wait: 2.3, who: 'kid', think: true, text: 'Una noche entró en la forja un elegido: un hombre al que un dios había prestado su poder, y que ya no sabía devolverlo.',
         on(R) { R.go(R.add('chosen', 'champ', 10.5, 17.4, { glow: '255,70,60' }), [[10.5, 13.6], [12.2, 12.3]], 44); sfx('roar', 0.5); } },
-      { who: 'chosen', text: 'Herrero. Tu fragua servirá a mi señor, o no servirá a nadie.' },
-      { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, atrás.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); } },
-      { wait: 1.6, min: 0.9, who: 'teen', think: true, text: 'Lo mató de un solo golpe. A mí ni me miró.',
+      { who: 'chosen', text: 'Herrero. Me han dicho que forjas un acero que no se dobla.' },
+      { who: 'oldsmith', text: 'Te han dicho bien. Y no está en venta.' },
+      { who: 'chosen', text: 'No he venido a comprar. Tu fragua servirá a mi señor, o no servirá a nadie.' },
+      { wait: 0.9, who: 'oldsmith', text: 'Aquí no se forja para ningún dios. Alec, escóndete detrás del banco. Ahora.', on(R) { R.go('oldsmith', [[9.9, 11.8]], 36); R.go('kid', [[4.3, 7.6]], 70, a => { a.flip = false; }); } },
+      { who: 'kid', think: true, text: 'Me escondí detrás del banco de trabajo. Era un crío. No habría podido hacer nada, y los dos lo sabíamos.' },
+      { wait: 1.6, min: 0.9, who: 'kid', think: true, text: 'Lo mató de un solo golpe. A mí ni me buscó: para él yo no existía.',
         on(R) { const c = R.a('chosen'); c.once = { anim: 'atk', t0: R.t, dur: 8 / 16 }; R.go(c, [[11.2, 12]], 170); },
         ev: [[0.26, R => { const s = R.a('oldsmith'); s.path = []; s.flip = true; R.fall(s, -1); R.fx.push({ k: 'slash', x: s.x + 2, y: s.y - 14, a: Math.PI, t: 0, life: 0.3 }); R.flash = 0.7; R.shake(7); R.burst(s.x, s.y - 14, 10, ['#ffe08a', '#e0524a', '#ffffff'], 70); sfx('boom', 0.6); }],
           [1.25, R => R.go('chosen', [[10.5, 13.6], [10.5, 17.6]], 50, INTRO_GONE)]] },
-      { wait: 1.2, who: 'teen', think: true, text: 'Enterré al herrero y me quedé con su martillo y sus guanteletes.', on(R) { R.go('teen', [[6.5, 12]], 30); } },
+      { who: 'kid', think: true, text: 'Antes de cerrar los ojos, el herrero me miró. Movió los labios. No le oí, pero lo entendí: «No le reces a nadie».' },
+      { wait: 1.2, who: 'kid', think: true, text: 'Lo enterré al amanecer, detrás de la forja. Me quedé con su martillo y con los guanteletes que nunca me dejó tocar.', on(R) { R.go('kid', [[6.5, 12]], 30); } },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -3023,27 +3142,47 @@ const INTRO = [
       R.go(a, [[19, 10.9]], 54);
     },
     beats: [
-      { wait: 1, who: 'alec', think: true, text: 'Con su martillo terminé estos guanteletes. No me los he vuelto a quitar.' },
+      { wait: 1, who: 'alec', think: true, text: 'Tardé años en terminarlos. Cada noche, con su martillo, como le había visto hacer a él.' },
+      { who: 'alec', think: true, text: 'No lanzan fuego ni rayos. Lanzan cadenas. A lo que muerden, no lo sueltan. No me los he vuelto a quitar.' },
       { wait: 0.6, who: 'alec', think: true, text: 'Desde entonces voy de reino en reino. Cobro por matar lo que los dioses envían.',
         on(R) { R.go(R.add('k1', 'pc_skel_war', 44, 10.8, { flip: true }), [[29, 10.8]], 72); R.go(R.add('k2', 'pc_skel', 46, 11.4, { flip: true }), [[31.5, 11.3]], 72); },
         ev: [[2.0, R => R.shoot('alec', 'k1')], [2.7, R => R.shoot('alec', 'k2')]] },
-      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'En las tabernas me llaman Alec, el sin dios. De todo lo que me han dado en esta vida, es lo único que me gusta.', on(R) { R.a('alec').aim = null; R.go('alec', [[23, 10.9]], 40); } },
+      { who: 'alec', think: true, text: 'No lo hago por el oro. Algún día mataré a los dioses.' },
       { who: 'alec', think: true, text: 'Y cuando caigan, echaré abajo su mundo. Piedra a piedra.' },
     ] },
   { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
     setup(R) {
-      const r = NAV.rows, cx = NAV.cols >> 1;
+      const cx = NAV.cols >> 1;
       introPlazaFolk(R);
       const a = R.add('alec', null, cx, 33, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);   // entra por la avenida
       R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
-      const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
+      const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x && q.y < IC(10)) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
     },
     tick(R, dt) { introPlazaStroll(R, dt); },   // los vecinos pasean como en la plaza de verdad
     beats: [
       { wait: 1.2, who: 'alec', think: true, text: () => `El siguiente contrato me trae a ${kingdomNow().name}. Su rey paga en hierro y no hace preguntas.`,
         ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
+      { who: 'alec', think: true, text: () => `Desde el camino se ve el humo del Umbral. ${TYPES[kingdomNow().god].name} ya tiene medio reino, y la gente de aquí lo sabe: nadie levanta la voz en el mercado.` },
       { wait: 0.5, who: 'guardia', text: '¿Alec, el mercenario que no reza? El rey te espera en el castillo.' },
       { who: 'alec', text: 'Veamos cuánto paga por la cabeza de un dios.' },
+      { who: 'guardia', text: 'Pagar, paga. Lo que no sé es cuántos han vuelto a cobrar.' },
+    ] },
+  // El rey cuenta qué ha pasado en el reino (kingStory, en 36_town.js: es lo mismo que te cuenta si se lo vuelves a preguntar)
+  { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
+    setup(R) {
+      const cx = NAV.cols >> 1;
+      for (const n of R.room.out.npcs) R.add(n.key === 'king' || n.key === 'queen' ? n.key : null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+      R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
+    },
+    beats: [
+      { wait: 2.9, min: 0.8, who: 'king', text: 'Así que tú eres Alec. Te imaginaba más alto.' },
+      { who: 'alec', text: 'Y yo a vos más rico. Me dijeron que pagáis en hierro.' },
+      { who: 'king', text: 'Pago. Pero antes vas a escuchar lo que ha pasado aquí, porque quiero que sepas contra qué te vendes.' },
+      ...kingStory(),
+      { who: 'queen', text: 'Por eso te llamamos a ti. Dicen que no le rezas a nadie.' },
+      { who: 'alec', text: 'A los dioses no se les reza. Se les cobra.' },
+      { who: 'king', text: 'Entonces cobra. Los encargos están en el tablón de la plaza. Vuelve a verme cuando quieras: te contaré cómo funciona esto.' },
     ] },
 ];
 
@@ -3074,6 +3213,7 @@ const ENDING = [
           [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
           [3.1, R => { R.shake(6); sfx('boom', 0.55, 0.9, 0); }], [3.55, R => { R.shake(6); sfx('boom', 0.55, 1.1, 0); }], [4.0, R => { R.shake(7); R.flash = 0.4; sfx('boom', 0.6, 0.8, 0); }], [4.5, R => { R.shake(8); sfx('bossdie', 0.8, 1, 0); }]] },
       { who: 'alec', think: true, text: 'Un dios sangra como cualquiera. Solo tarda más en caer.', on(R) { R.a('alec').aim = null; } },
+      { who: 'alec', think: true, text: 'Esperaba sentir algo. Alivio, rabia, lo que fuera. Solo sentí cansancio, y ganas de que el herrero lo hubiera visto.' },
     ] },
   { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#cdbcae',
     setup(R) {
@@ -3086,6 +3226,9 @@ const ENDING = [
       { who: 'king', text: () => `${kingdomNow().name} es libre. Y te lo debe a ti.` },
       { who: 'alec', text: () => `No lo he hecho por ${kingdomNow().name}.` },
       { who: 'queen', text: 'Lo sabemos. Por eso te pagamos.' },
+      { who: 'king', text: 'Los sacerdotes ya dicen que fue voluntad de otro dios. Que tú solo fuiste su mano.' },
+      { who: 'alec', text: 'Decidles que esa mano cobra aparte.' },
+      { who: 'queen', text: 'Se lo diremos. Y diremos tu nombre en la plaza, aunque no te guste. La gente necesita saber que se puede.' },
     ] },
   { cap: 'La plaza', room: ['plaza', 'plaza'], amb: null,
     setup(R) {
@@ -3105,7 +3248,10 @@ const ENDING = [
       { wait: 3.4, min: 0.8, who: 'alec', think: true, text: 'En la plaza ya nadie miraba al camino con miedo.' },
       { who: 'smith', text: 'Esos guanteletes han matado a un dios. Quien los forjó sabía lo que hacía.', on(R) { R.a('alec').face = Math.PI; } },
       { who: 'alec', text: 'Lo sabía.' },
+      { who: 'smith', text: '¿Era tu maestro?' },
+      { who: 'alec', text: 'Era herrero. Me dio techo, trabajo y pocas palabras. Con eso le bastó.' },
       { who: 'keeper', text: 'Tu cama sigue donde estaba, mercenario. Y esta noche invita la casa.', on(R) { R.a('alec').face = 0; } },
+      { who: 'keeper', text: 'Y no pongas esa cara. Por una vez en un año, en esta ciudad se celebra algo.' },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -6070,19 +6216,19 @@ function heroHand(face, hand) {
 // Los guanteletes de Alec, del color de su cadena (el del disparo): una copia del atlas con los cuatro tonos de metal de los guanteletes
 // (los de tools/make_mage.py: brillo, base, sombra y sombra honda) cambiados por la rampa de ese color. Se rehace solo al cambiar de color.
 const GAUNT_TONES = { '227,234,242': 'hi', '151,163,184': 'base', '95,106,132': 'sh', '55,62,82': 'deep' };
-let GAUNT_IMG = null, GAUNT_COL = null;
+let GAUNT_IMG = null, GAUNT_COL = null, GAUNT_FAIL = false;
 function gauntImg(col) {
-  if (!IMG.chars) return null;
+  if (!IMG.chars || GAUNT_FAIL) return null;   // si el navegador no deja leer los píxeles (juego abierto como archivo local), guanteletes de metal
   if (GAUNT_IMG && GAUNT_COL === col) return GAUNT_IMG;
   const cv = GAUNT_IMG || document.createElement('canvas'); cv.width = IMG.chars.width; cv.height = IMG.chars.height;
   const g = cv.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(IMG.chars, 0, 0);
   const R = rampRGB(col);
-  for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
+  try { for (const key of ['alec_s', 'alec_u', 'alec_d']) { const m = ATLAS[key]; if (!m) continue;
     for (const a in m.a) for (const [fx, fy] of m.a[a].f) {
       const d = g.getImageData(fx, fy, m.w, m.h), px = d.data;
       for (let i = 0; i < px.length; i += 4) { const t = px[i + 3] && GAUNT_TONES[px[i] + ',' + px[i + 1] + ',' + px[i + 2]]; if (t) { const c = R[t]; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; } }
       g.putImageData(d, fx, fy);
-    } }
+    } } } catch (e) { GAUNT_FAIL = true; return null; }
   GAUNT_IMG = cv; GAUNT_COL = col; return cv;
 }
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
