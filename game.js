@@ -4211,7 +4211,7 @@ function kmSelect(mk) {
   body.addEventListener('pointerover', hover); body.addEventListener('pointermove', hover);
   body.addEventListener('click', e => {
     const mk = e.target.closest ? e.target.closest('.fi.mk') : null;
-    if (mk && e.isTrusted && ptr !== 'mouse' && !mk.classList.contains('sel')) { e.stopPropagation(); e.preventDefault(); audioInit(); sfx('tick', 0.25); kmSelect(mk); return; }
+    if (mk && (DUAL.tap || (e.isTrusted && ptr !== 'mouse')) && !mk.classList.contains('sel')) { e.stopPropagation(); e.preventDefault(); audioInit(); sfx('tick', 0.25); kmSelect(mk); return; }
     const go = e.target.closest ? e.target.closest('.kgo') : null;
     if (go) { audioInit(); forgeAct('m:' + go.dataset.go); }
   }, true);
@@ -8097,9 +8097,9 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
   resize(); pollInput(); modeT += dt; musicTick();
   const m = S.mode;
-  if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
-  if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
-  if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (I.tabL || I.tabR || I.navX) bookTurn(I.tabL || I.navX < 0 ? -1 : 1); else if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
+  if (m !== 'play' && Math.abs(I.ay) > 0.2 && !dualScroll(I.ay * 900 * dt)) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
+  if ((m === 'pause' || m === 'dead' || m === 'win' || m === 'title') && !dualScroll(I.my * 700 * dt)) ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
+  if (m === 'book') { if (!dualScroll(I.my * 700 * dt)) ov.scrollTop += I.my * 700 * dt; if (I.tabL || I.tabR || I.navX) bookTurn(I.tabL || I.navX < 0 ? -1 : 1); else if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'town') townUpdate(dt);
   else if (m === 'intro') introUpdate(dt);
@@ -8129,7 +8129,7 @@ window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: 
 // estilos) y, mientras juegas, tu build completa con la vida y el oro. Las conversaciones siguen arriba, con el juego.
 // El menú de arriba no se borra: se queda invisible y del tamaño exacto de la pantalla de abajo, para que el mando lo recorra
 // igual que se ve abajo y para que un toque abajo («el elemento número i») se pulse aquí en el mismo sitio.
-const DUAL = { on: false, sent: '', canv: '', hud: '', t: 0 };
+const DUAL = { tap: false, top: '', on: false, sent: '', canv: '', hud: '', t: 0 };
 const dualTop = (() => { const d = document.createElement('div'); d.id = 'dualTop'; d.hidden = true; document.getElementById('app').appendChild(d); return d; })();
 function dualSend(o) { try { window.KiteoDual.toPanel(JSON.stringify(o)); } catch (e) { /* sin segunda pantalla */ } }
 function dualOn() {
@@ -8138,14 +8138,50 @@ function dualOn() {
   if (has) dualSync();
 }
 function dualOff() { DUAL.on = false; document.body.classList.remove('dual'); dualTop.hidden = true; }
-// Lo que pide la pantalla de abajo
+// Lo que pide la pantalla de abajo. Un toque abajo se pulsa aquí marcado como dedo (DUAL.tap): en el mapa, el primer toque señala y el segundo acepta
 window.dualRecv = function (s) {
   const m = JSON.parse(s);
   if (m.type === 'size') { document.documentElement.style.setProperty('--pw', m.w + 'px'); document.documentElement.style.setProperty('--ph', m.h + 'px'); DUAL.sent = ''; dualSync(); }
   else if (m.type === 'ready') { if (!DUAL.on) dualOn(); DUAL.sent = ''; DUAL.hud = ''; DUAL.canv = ''; dualSync(); }
   else if (m.type === 'choice') talkPick(m.i);
-  else if (m.type === 'click') { const el = ovBody.querySelectorAll('*')[m.i]; if (el) { audioInit(); el.click(); } }
+  else if (m.type === 'click') { const el = ovBody.querySelectorAll('*')[m.i]; if (el) { audioInit(); if (dualMark(el)) return; DUAL.tap = true; try { el.click(); } finally { DUAL.tap = false; } } }
 };
+// Lo que tiene descripción (cartas, piezas, ramas del árbol, lo que vende la tienda): el primer toque lo señala y arriba se lee
+// entero; el segundo lo elige. Las pestañas, «Volver» y los demás botones van al primer toque.
+const dualTwoTap = it => it.classList.contains('card') || /^(p|t|buy):/.test(it.dataset.act || '');
+function dualMark(el) {
+  const it = el.closest('.card, .fi'); if (!it || !ovBody.contains(it) || it.classList.contains('sel') || !dualTwoTap(it)) return false;
+  if (it.classList.contains('card')) { pickSel = +it.dataset.i; ovBody.querySelectorAll('.card').forEach((c, i) => c.classList.toggle('sel', i === pickSel)); }
+  else { const els = [...ovBody.querySelectorAll('.fi')]; listSel = els.indexOf(it); els.forEach((x, i) => x.classList.toggle('sel', i === listSel)); }
+  sfx('tick', 0.25); return true;
+}
+// Arriba, mientras hay un menú abajo: lo que se lee. El texto del menú (títulos, explicaciones, la build en la pausa) y, al lado,
+// lo señalado en grande: la carta o la pieza con su glosario, o en el tablón el mapa grande con el encargo señalado.
+function dualDetail(urls) {
+  const noIds = h => h.replace(/\sid="[^"]*"/g, '');   // copias sin id: que $('...') siga encontrando los botones de verdad
+  const c = ovBody.cloneNode(true);
+  c.querySelectorAll('button, .fi, .tabs, .cards, .kwrap, canvas').forEach(e => e.remove());
+  c.querySelectorAll('section, .gunwrap, .forge').forEach(e => { if (!e.querySelector('p, li, blockquote')) e.remove(); });
+  let focus = '', side = '';
+  const kw = ovBody.querySelector('.kwrap');
+  if (kw) {
+    const w = kw.querySelector('.kworld').cloneNode(true), cv = w.querySelector('canvas');
+    if (cv) { const im = document.createElement('img'); im.src = urls[0] || ''; im.className = 'dmap'; cv.replaceWith(im); }
+    const info = kw.querySelector('.kinfo').cloneNode(true); info.querySelectorAll('button').forEach(e => e.remove());
+    const head = kw.querySelector('.khead'), leg = kw.querySelector('.klegend');
+    focus = `<div class="dt-map">${w.outerHTML}</div>`;
+    side = `${info.outerHTML}${head ? head.outerHTML : ''}${leg ? leg.outerHTML : ''}`;   // primero el encargo señalado
+  } else {
+    const sel = ovBody.querySelector('.card.sel, .fi.sel');
+    if (sel && dualTwoTap(sel)) focus = `<div class="dt-focus">${sel.classList.contains('card') ? `<div class="cards">${sel.outerHTML}</div>` : sel.outerHTML}</div>`;
+  }
+  const two = ovBody.querySelector('.card, .fi[data-act^="p:"], .fi[data-act^="t:"], .fi[data-act^="buy:"], .fi.mk');
+  const hint = two ? `<p class="dt-hint">Abajo: un toque señala y otro elige · o con la cruceta y A</p>` : '';
+  if (kw) c.querySelectorAll('p.fine, .kingdom > p').forEach(e => e.remove());   // en el tablón, lo que importa es el encargo señalado
+  return noIds(`<div class="dt${focus ? '' : ' solo'}${kw ? ' map' : ''}"><div class="dt-text">${kw ? c.innerHTML.replace(/<h1>.*?<\/h1>/, '') + side : c.innerHTML}</div>${focus}</div>${hint}`);
+}
+// Los sticks desplazan lo que se lee: con dos pantallas, el texto de arriba
+function dualScroll(dy) { const t = DUAL.on && dualTop.querySelector('.dt-text'); if (t) { t.scrollTop += dy; return true; } return false; }
 // Manda el menú (si hay) cuando cambia; los lienzos (el mapa del tablón) como imagen
 function dualSync() {
   if (!DUAL.on) return;
@@ -8161,14 +8197,22 @@ function dualSync() {
   }
   const ovEl = $('overlay'), show = !ovEl.hidden && S.mode !== 'play' && S.mode !== 'town' && S.mode !== 'intro';
   dualTop.hidden = !show;
-  if (show) dualTop.innerHTML = S.mode === 'title' ? '<p class="logo">Alec, el sin dios</p><p class="fine">Elige en la pantalla de abajo</p>' : '<p class="fine">↓ En la pantalla de abajo</p>';
   const html = show ? ovBody.innerHTML : '', key = show + '|' + ovBody.className + '|' + html;
   let canv = '';
   const cs = show ? [...ovBody.querySelectorAll('canvas')] : [];
   const urls = cs.map(c => { try { return c.toDataURL(); } catch (e) { return ''; } });
   canv = urls.join('|');
+  if (show) { const t = dualDetail(urls); if (t !== DUAL.top) {
+    const o = dualTop.querySelector('.dt-text'), st = o ? o.scrollTop : 0, same = S.mode + '|' + (ovBody.querySelector('h1') || {}).textContent;
+    DUAL.top = t; dualTop.innerHTML = t; const n = dualTop.querySelector('.dt-text'); if (n && same === DUAL.topKey) n.scrollTop = st; DUAL.topKey = same; } }
   if (key !== DUAL.sent) { DUAL.sent = key; DUAL.canv = canv; dualSend({ type: 'ov', show, html, cls: ovBody.className, canv: urls }); }
   else if (show && canv !== DUAL.canv) { DUAL.canv = canv; dualSend({ type: 'ov', show, canv: urls }); }
+}
+// La build de la partida, con las ranuras libres juntas en una línea en vez de una caja cada una
+function dualBuild() {
+  const free = SLOT_KEYS.filter(k => !S.build[k]).map(k => SLOTS[k]);
+  const rows = buildHtml(true).split('</li>').filter(r => r && !r.includes('Ranura libre')).map(r => r + '</li>').join('');
+  return `${free.length ? `<p class="free">Libre: ${free.join(' · ')}</p>` : ''}<ul class="build full">${rows}</ul>`;
 }
 // Sin menú: la build, la vida y el oro (en partida), o el reino y lo que llevas ganado (en la ciudad)
 function dualHud() {
@@ -8177,7 +8221,7 @@ function dualHud() {
   if (S.mode === 'play' && S.mission) {
     const p = S.p, ms = S.mission;
     h = `<p class="where">${ms.zone} · ${ms.name}</p><div class="dh"><b class="life">${Math.ceil(p.hp)} / ${p.maxHp} de vida</b><b class="coin">${Math.floor(p.gold)} de oro</b><span>${S.soulsRun || 0} almas · ${S.ironRun || 0} de Hierro</span></div>
-      <h2>${gunName(S.gun)}</h2><ul class="build full">${buildHtml(true)}</ul>`;
+      <h2>${gunName(S.gun)}</h2>${dualBuild()}`;
   } else if (S.mode === 'town' || S.mode === 'play') {
     const K = kingdomNow();
     h = `<p class="where">${K.title}</p><div class="dh"><b>${M.souls} almas</b><b>${M.iron} de Hierro Místico</b></div><h2>${gunName(S.gun)}</h2>

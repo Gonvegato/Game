@@ -26,7 +26,7 @@
         if (was || key !== screenKey) { ov.scrollTop = 0; body.scrollTop = 0; }
         screenKey = key;
       } else if (m.canv) paintCanvases(m.canv);
-      const sel = body.querySelector('.sel'); if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });   // lo que señala el mando, a la vista
+      const sel = body.querySelector('.kgo') || body.querySelector('.sel'); if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });   // en el tablón, el botón de aceptar   // lo que señala el mando, a la vista
     } else if (m.type === 'hud') hud.innerHTML = m.html;
   };
   // Un toque: lo más concreto que se ha tocado dentro del menú, por su posición entre todos sus elementos

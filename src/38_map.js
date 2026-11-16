@@ -368,7 +368,7 @@ function kmSelect(mk) {
   body.addEventListener('pointerover', hover); body.addEventListener('pointermove', hover);
   body.addEventListener('click', e => {
     const mk = e.target.closest ? e.target.closest('.fi.mk') : null;
-    if (mk && e.isTrusted && ptr !== 'mouse' && !mk.classList.contains('sel')) { e.stopPropagation(); e.preventDefault(); audioInit(); sfx('tick', 0.25); kmSelect(mk); return; }
+    if (mk && (DUAL.tap || (e.isTrusted && ptr !== 'mouse')) && !mk.classList.contains('sel')) { e.stopPropagation(); e.preventDefault(); audioInit(); sfx('tick', 0.25); kmSelect(mk); return; }
     const go = e.target.closest ? e.target.closest('.kgo') : null;
     if (go) { audioInit(); forgeAct('m:' + go.dataset.go); }
   }, true);

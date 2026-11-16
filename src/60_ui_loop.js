@@ -150,9 +150,9 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
   resize(); pollInput(); modeT += dt; musicTick();
   const m = S.mode;
-  if (m !== 'play' && Math.abs(I.ay) > 0.2) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
-  if (m === 'pause' || m === 'dead' || m === 'win' || m === 'title') ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
-  if (m === 'book') { ov.scrollTop += I.my * 700 * dt; if (I.tabL || I.tabR || I.navX) bookTurn(I.tabL || I.navX < 0 ? -1 : 1); else if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
+  if (m !== 'play' && Math.abs(I.ay) > 0.2 && !dualScroll(I.ay * 900 * dt)) ov.scrollTop += I.ay * 900 * dt;   // en cualquier menú, el stick derecho desplaza la pantalla
+  if ((m === 'pause' || m === 'dead' || m === 'win' || m === 'title') && !dualScroll(I.my * 700 * dt)) ov.scrollTop += I.my * 700 * dt;   // donde no hay nada que elegir, el izquierdo también
+  if (m === 'book') { if (!dualScroll(I.my * 700 * dt)) ov.scrollTop += I.my * 700 * dt; if (I.tabL || I.tabR || I.navX) bookTurn(I.tabL || I.navX < 0 ? -1 : 1); else if (modeT > 0.25 && (I.atkP || I.dodgeP || I.chgP || I.startP)) closeBook(); }
   else if ((m === 'pick' || m === 'pause') && I.chgP) openBook();
   else if (m === 'town') townUpdate(dt);
   else if (m === 'intro') introUpdate(dt);
