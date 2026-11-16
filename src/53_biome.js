@@ -1,6 +1,6 @@
 // ───────────────────────── Exteriores: suelos y decorado del paquete de biomas (byandrox, itch.io) ─────────────────────────
 // La sala se pinta una vez: hierba, agua con sus orillas, caminos, y encima rocas, árboles y casas ordenados de arriba abajo.
-loadImg('biome', 'assets/biomes.png'); loadImg('outdoor', 'assets/outdoor.png'); loadImg('town', 'assets/town.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png');
+loadImg('biome', 'assets/biomes.png'); loadImg('outdoor', 'assets/outdoor.png'); loadImg('town', 'assets/town.png'); loadImg('ruins', 'assets/ruins.png'); loadImg('houses', 'assets/houses.png'); loadImg('cityhouses', 'assets/cityhouses.png');
 const BIO = {
   grass: { tiles: [0, 0], inner: [64, 0], water: [64, 32], base: '#819447' },
   tree: [[243, 32, 26, 32], [246, 65, 20, 31], [272, 65, 16, 31], [292, 67, 24, 29], [243, 100, 24, 26], [276, 102, 22, 24], [245, 8, 21, 21], [272, 37, 16, 22]],
@@ -55,7 +55,7 @@ function drawHouse(g, X, Y, W, H, v) {
 function roomBgOut() {
   const im = IMG.biome;
   if (ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls && (ROOM_BG.ok || !im)) return ROOM_BG;
-  if (!IMG.houses && S.out.obs.some(o => o.kind === 'house') && im) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
+  if ((!IMG.houses && S.out.obs.some(o => o.kind === 'house') || !IMG.cityhouses && S.out.obs.some(o => o.kind === 'chouse')) && im) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
   const TH = THEMES[S.out.theme] || THEMES.grass;
   if (im && !IMG.outdoor) return ROOM_BG && ROOM_BG.out && ROOM_BG.walls === S.walls ? ROOM_BG : (ROOM_BG = { c: document.createElement('canvas'), walls: S.walls, world: S.world, torches: [], out: true, ok: false });
   const c = NAV.cols, r = NAV.rows, O = S.out, B = BIO[TH.biome] || BIO.grass, cvs = document.createElement('canvas'), g = cvs.getContext('2d'), Mg = BG_M;
@@ -157,6 +157,10 @@ function roomBgOut() {
     } });
     else if (o.kind === 'barrel') items.push({ by, fn: () => { shadow(cx, by, 7); stand(BIO.barrel[o.v % 3], cx, by); } });
     else if (o.kind === 'well') items.push({ by, fn: () => { shadow(cx, by + 2, 13); stand(BIO.well, cx, by + 3); } });
+    else if (o.kind === 'chouse') items.push({ by, fn: () => {   // casas de las ciudades (tools/pack_city_houses.py)
+      const hs = IMG.cityhouses, h = CITY_HOUSES[o.i] && CITY_HOUSES[o.i].r; if (!hs || !h) return;
+      g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 4, by - 2, W - 4, 5); g.drawImage(hs, h[0], h[1], h[2], h[3], Math.round(cx - h[2] / 2), by + 2 - h[3], h[2], h[3]);
+    } });
     else if (o.kind === 'house') items.push({ by, fn: () => {   // casas montadas con el Pixel Crawler Free Pack; si no han cargado, la dibujada a mano
       const hs = IMG.houses, list = o.big ? [0, 1, 4] : [2, 3, 5], h = HOUSES[list[o.v % list.length] + (o.ruin ? 6 : 0)];
       if (hs) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + 4, by - 2, W - 4, 5); g.drawImage(hs, h[0], h[1], h[2], h[3], Math.round(cx - h[2] / 2), by + 2 - h[3], h[2], h[3]); }

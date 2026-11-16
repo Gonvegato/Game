@@ -16,135 +16,157 @@ def hx(s): s = s.lstrip('#'); return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4
 
 PAL = {k: hx(v) for k, v in {
     # pelo rojo: sombra, sombra media, base, luz, brillo
-    'a': '#5a171c', 'Z': '#7d2222', 'A': '#a52d26', 'B': '#d24c2d', 'C': '#f28a4a',
+    'a': '#4a1219', 'Z': '#6e1c22', 'A': '#9a2727', 'B': '#c9402c', 'C': '#ef7a4a', 'z': '#7a3530',
     # piel
-    'S': '#f2c49b', 'q': '#c97f58', 'Q': '#8e4630',
+    'S': '#f3c9a5', 'q': '#c67f66', 'Q': '#8e4630',
     # ojos (los mismos tonos que la aldeana del juego)
     'k': '#141412', 'w': '#a7acae', 'W': '#fffcfc', 'I': '#23610e', 'i': '#4cb528',
     # túnica negra: luz, base, sombra, sombra honda; ribete rojo; cinturón y hebilla
-    'U': '#4a4560', 'T': '#2e2b3d', 't': '#1f1d2a', 'u': '#16141e',
+    # gabardina negra
+    'U': '#4a4864', 'T': '#26242f', 't': '#1a1920', 'u': '#111015',
+    # camiseta blanca
+    'H': '#eeece8', 'h': '#b8b5c4',
     'Y': '#a8353a', 'y': '#6e2027',
     'b': '#7a4a2c', 'V': '#4e2c1c', 'g': '#f0c04a',
     # guanteletes: brillo, base, sombra, sombra honda
     'N': '#e3eaf2', 'M': '#97a3b8', 'm': '#5f6a84', 'n': '#373e52',
     # pantalón y botas
-    'P': '#2a2734', 'p': '#1b1922', 'O': '#6a4330', 'o': '#43291e',
+    'P': '#3c3b48', 'p': '#2a2932', 'O': '#4a3f3c', 'o': '#2c2524',
 }.items()}
 OUTLINE = hx('#141412')
+
+# Variantes de pelo y ojos (python3 make_mage.py <salida> <variante>)
+VARIANTS = {
+    'rojo':   {},
+    'negro':  {'a': '#1a1924', 'Z': '#25243a', 'A': '#33324c', 'B': '#4c4a6e', 'C': '#7b78a8', 'z': '#3a3442',
+               'I': '#4a2a86', 'i': '#a070e8'},
+    'blanco': {'a': '#6f7088', 'Z': '#9a9cb2', 'A': '#c4c6d6', 'B': '#e4e6ef', 'C': '#ffffff', 'z': '#9a8e94',
+               'I': '#4a2a86', 'i': '#a070e8'},
+}
 FW = FH = 40
 
 HEAD = {
  'S': [
   "....a.aaaa.a....",
   "...aAaABAAaAa...",
-  "..aABCBBAAAAZa..",
-  ".aABCBABAAAAZZa.",
+  "..aABCBBAABAAZa.",
+  ".aABCBABAAAAAZZa",
   "aABBAAAAAAAAAZZa",
-  "aAAAAAAaaAAAAZZa",
-  "aAAAAAaSSaAAAAZa",
-  "aAaSAaSSSSaAqaZa",
-  "aAaSSaSSSSaSqaZa",
-  "aAaSkkkSSkkkqaZa",
-  "aAaSSwISSIwSqaZa",
-  "aAaqSWiSSiWqqaZa",
-  "aAaqSSSSqSSqqaZa",
-  ".aAaqSSqqSqqaZa.",
-  ".aAaqSSSSSqqaZa.",
-  "aAaAa.qSSq.aZaZa",
-  "a.aAa......aZa.a",
-  "..a.a......a.a..",
+  "aAAAAAAAAAAAAAZa",
+  "aAazAqAAAqAAzaAa",
+  ".aazSaaSSaaqzaa.",
+  "..azkkkSSkkkza..",
+  "..aSSwISSIwSSa..",
+  "..aqSWiSSiWqqa..",
+  "...aqSSSqSqqa...",
+  "....aqSSSSqa....",
+  "..aZ..qSSq..Za..",
  ],
  'N': [
   "....a.aaaa.a....",
   "...aAaABAAaAa...",
-  "..aABCBBAAAAZa..",
-  ".aABCBABAAAAZZa.",
+  "..aABCBBAABAAZa.",
+  ".aABCBABAAAAAZZa",
   "aABBAAAAAAAAAZZa",
-  "aAAAAAAAAAAAAZZa",
-  "aABBAAAaAAAAZZZa",
-  "aAAAAAaAAaAAAZZa",
-  "aAaAAAaAAaAAZaZa",
-  "aAaAAaAAAAaAZaZa",
-  "aAAaAaAAAAaZaZZa",
-  ".aAaAaAAAAaZaZa.",
-  ".aAaAAaAAaZZaZa.",
-  "aAaAaAaAAaZaZaZa",
-  "aAaAaAaaaaZaZaZa",
-  "a.aAa.aAZa.aZa.a",
-  "..a.a..aa..a.a..",
-  "................",
+  "aAAAAAAAAAAAAAZa",
+  "aAazAABAAAAZzaAa",
+  ".aazAAAaAAAZzaa.",
+  "..SzAAAaAAAZzS..",
+  "..qzAAAaAAZZzq..",
+  "..azAAAaAAZZza..",
+  "...aAAAaAAZZa...",
+  "...aAAAaAZZa....",
+  "...aAAaAAZaZa...",
+  "....aAa..aZa....",
+  "....a.a..a.a....",
  ],
  'E': [
   "...a.aaaaa.a....",
+
   "..aAaABAAAaAa...",
-  ".aABCBBAAAAAAa..",
-  ".aBCBABAAAAABAa.",
-  "aABBAAAAAAAABAAa",
-  "aAAAAAAAAAAAAAAa",
-  "aAAAAaAAAAAAAAaa",
-  "aAAAaAAAAaSSAAa.",
-  "aAAaAAAAaSaaSAa.",
-  "aAAaAAAAaSSkkkS.",
-  "aAaAAAAAaSSwISSS",
-  ".aaZAAAAaqSWiSS.",
-  ".aZZaAAZaaqSSqq.",
-  "aZaZaZaaa.qSSSq.",
-  "aZaZaZa...qSq...",
-  "a.aZa.a.........",
-  "..a.a...........",
-  "................",
+
+  ".aABCBBAAAAABAa.",
+
+  "aABCBABAAAABAAAa",
+
+  "aAAAzzzzzAAAAAa.",
+
+  "aAAAAzzzAAAAAaa.",
+
+  "aAAAzzzzaAqAAa..",
+
+  "aAAAzzzzSSaaAa..",
+
+  "aAAAzSqzSSkkkS..",
+
+  "aAAAzSSzSSwISSS.",
+
+  "aAAAazqzqSWiSS..",
+
+  "aAAAAAazqqSSSq..",
+
+  "aAZAAAa...qSq...",
+
+  "..aZAZa.........",
+
+  "..a.aa..........",
  ],
 }
+HW = 16   # ancho de la cabeza
 
 BODY = {
- 'S': ["...UUTTTTTtt....",
-       "..UUTTTYYTTttt..",
-       "..UTTTTYYTTttt..",
-       "..UTTTTYYTtttt..",
-       "..UTTTTYYTtttt..",
-       "..bbbbbggbbVVV..",
-       "...UTTTYYTtt....",
-       "..UTTTTYYTtttt..",
-       "..UTTtTYYTtutt..",
-       ".UTTTtTYYTttutt.",
-       ".UTTtTTYYTtuttu.",
-       ".yYYYYYYYYYyyyy."],
- 'N': ["...UUTTTTTtt....",
-       "..UUTTTTTTTttt..",
-       "..UTTTTTTTTttt..",
-       "..UTTTTtTTtttt..",
-       "..UTTTTtTTtttt..",
-       "..bbbbbbbbbVVV..",
-       "...UTTTtTTtt....",
-       "..UTTTTtTTtttt..",
-       "..UTTtTtTTtutt..",
-       ".UTTTtTtTTttutt.",
-       ".UTTtTTtTTtuttu.",
-       ".yYYYYYYYYYyyyy."],
- 'E': ["....UUTTTt......",
-       "...UUTTTTTTt....",
-       "...UTTTTTTTY....",
-       "...UTTTTTTtY....",
-       "...UTTTTTttY....",
-       "...bbbbbbVVg....",
-       "....UTTTTttY....",
-       "...UTTTTTttY....",
-       "...UTTtTTtttY...",
-       "..UTTTtTTtutY...",
-       "..UTtTTTttutY...",
-       "..yYYYYYYYyyy..."],
+ 'S': ["....UTHHHHtt....",
+       "...UTUHHHHUtt...",
+       "...UTUHHHHUtt...",
+       "...UTUHHHhUtt...",
+       "....UUHHHhUt....",
+       "....UUHHhhUt....",
+       "....UUhhhhUt....",
+       "....UUPPPpUt....",
+       "...UTUPPPpUtt...",
+       "...UTUPPPpUtt...",
+       "..UTTUPPPpUttt..",
+       "..UTtUPPPpUtut..",
+       "..uuTUPPPpUuuu.."],
+ 'N': ["....UTTTTTtt....",
+       "...UTTTTTTTtt...",
+       "...UTTTTTTTtt...",
+       "...UTTTTTTttt...",
+       "....UTTTTTtt....",
+       "....UTTTTTtt....",
+       "....UTTTTttt....",
+       "....UTTTTttt....",
+       "...UTTTtTTttt...",
+       "...UTTTtTTtut...",
+       "..UTTTTtTTtutt..",
+       "..UTtTTtTTtutu..",
+       "..uuTtTtTTtuuu.."],
+ 'E': [".....UTTTH......",
+       "....UTTTTHH.....",
+       "....UTTTTHH.....",
+       "....UTTTtHh.....",
+       ".....UTTtHh.....",
+       ".....UTTtHh.....",
+       ".....UTTthh.....",
+       ".....UTTtPp.....",
+       "....UTTtTPpt....",
+       "....UTTtTPpt....",
+       "...UTTtTtPpt....",
+       "...UTtTTtPpt....",
+       "...uuuTttPpu...."],
 }
-LEG = ["PPp", "OOo", "OOo", "ooo"]
-LEG_SIDE = ["PPp", "OOOo", "OOOo", "oooo"]
+LEG = ["PPp", "PPp", "PPp", "PPp", "OOo", "OOo", "ooo"]
+LEG_SIDE = ["PPp", "PPp", "PPp", "PPp", "OOOo", "OOOo", "oooo"]
 
 for d in HEAD:
-    assert len(HEAD[d]) == 18 and all(len(r) == 16 for r in HEAD[d]), d
-    assert len(BODY[d]) == 12 and all(len(r) == 16 for r in BODY[d]), d
+    assert all(len(r) == HW for r in HEAD[d]), (d, [i for i, r in enumerate(HEAD[d]) if len(r) != HW])
+    assert len(BODY[d]) == 13 and all(len(r) == 16 for r in BODY[d]), d
 
 X0 = 12               # columna de las plantillas de 16 dentro del lienzo de 40
-LEG_Y = 34            # las botas acaban en la fila 37
-TORSO_Y = LEG_Y - 12  # 22
-HEAD_Y = TORSO_Y - 15 # 7
+LEG_Y = 31            # las botas acaban en la fila 37
+TORSO_Y = LEG_Y - 13  # 18
+HEAD_Y = TORSO_Y - 13 # 5
+HX = 0                # desplazamiento de la cabeza sobre el cuerpo
 
 DARKER = {'N': 'M', 'M': 'm', 'm': 'n', 'n': 'n', 'U': 'T', 'T': 't', 't': 'u',
           'P': 'p', 'O': 'o', 'o': 'o'}
@@ -180,22 +202,64 @@ def draw(img, L):
 
 
 # ---------------- guanteletes ----------------
-def arm_front(x, y, flip=False, sleeve=3, length=6):
-    """Brazo colgando visto de frente o de espaldas (4 de ancho). x = columna izquierda.
-    Guantelete por placas: borde ensanchado, junta, placa del antebrazo y puño con nudillos."""
+def arm_front(x, y, flip=False, sleeve=5, length=4, slant=0):
+    """Brazo visto de frente o de espaldas (3 de ancho). x = columna izquierda.
+    Guantelete por placas: borde algo más ancho, junta, placa del antebrazo y nudillos.
+    slant: cuántos píxeles se va el puño hacia el centro del cuerpo (brazo que se adelanta al correr)."""
     L = Layer()
+    sg = 1 if not flip else -1
     row = (lambda cs: cs) if not flip else (lambda cs: cs[::-1])
+    def d(i): return sg * round(slant * i / max(1, length))
+    y += 1                               # el hombro cae: la manga empieza por debajo de la línea del cuello
     for i in range(sleeve):
-        for k, c in enumerate(row(['U', 'T', 'T', 't'])): L.put(x + k, y + i, c)
+        for k, c in enumerate(row(['U', 'T', 't'])):
+            if i == 0 and k == (0 if not flip else 2): continue     # hombro redondeado por fuera
+            L.put(x + k, y + i, c)
     cy = y + sleeve
-    ox = -1 if not flip else 0          # el borde sobresale hacia fuera
-    for k, c in enumerate(row(['N', 'N', 'N', 'M', 'm'])): L.put(x + ox + k, cy, c)
-    for k, c in enumerate(row(['m', 'M', 'M', 'm', 'n'])): L.put(x + ox + k, cy + 1, c)
-    for i in range(2, length):
-        cs = ['N', 'M', 'M', 'm'] if i in (2, 3) else ['M', 'M', 'm', 'm']
-        for k, c in enumerate(row(cs)): L.put(x + k, cy + i, c)
-    for k, c in enumerate(row(['N', 'm', 'N', 'n'])): L.put(x + k, cy + length, c)   # nudillos
-    return L, (x + 2, cy + length)
+    ox = -1 if not flip else 0          # el borde sobresale un píxel hacia fuera
+    for k, c in enumerate(row(['N', 'N', 'M', 'm'])): L.put(x + ox + k + d(0), cy, c)
+    for i in range(1, length):
+        cs = ['m', 'm', 'n'] if i == 1 else (['N', 'M', 'm'] if i in (2, 3) else ['M', 'M', 'm'])
+        for k, c in enumerate(row(cs)): L.put(x + k + d(i), cy + i, c)
+        if d(i) != d(i - 1):            # rellena el escalón de la diagonal
+            L.put(x + 1 + d(i - 1), cy + i, row(cs)[1])
+    for k, c in enumerate(row(['N', 'm', 'n'])): L.put(x + k + d(length), cy + length, c)   # nudillos
+    return L, (x + 1 + d(length), cy + length)
+
+
+RUN_ARM_R = [2, 1, -1, -2, -1, 1]       # brazo derecho: + adelante, - atrás (el izquierdo, al revés)
+
+
+def run_front(view, i, img, hands):
+    """Carrera de frente (S) o de espaldas (N) con los brazos balanceándose de verdad."""
+    bob = RUN_BOB[i]; ty = TORSO_Y + bob
+    ly, ry = RUN_LY[i], RUN_RY[i]
+    lx = 1 if ly < -1 else 0; rx = -1 if ry < -1 else 0
+    back_l = (ly < -1) if view == 'S' else (ly > 0)
+    back_r = (ry < -1) if view == 'S' else (ry > 0)
+    lL = leg_layer(LEG, X0 + 4 + lx, LEG_Y + ly, back=back_l)
+    lR = leg_layer(LEG, X0 + 9 + rx, LEG_Y + ry, back=back_r)
+    body = body_layer(view, X0, ty, RUN_SWAY[i])
+    head = head_layer(view, X0, HEAD_Y + bob, 'move', bob)
+    arms_back, arms_front = [], []
+    for side, ph in (('L', -RUN_ARM_R[i]), ('R', RUN_ARM_R[i])):
+        vis = ph if view == 'S' else -ph      # de espaldas, el brazo que se adelanta se aleja de la cámara
+        flip = side == 'R'
+        bx = X0 + 1 if side == 'L' else X0 + 12
+        out = -1 if side == 'L' else 1
+        if vis > 0:
+            L, h = arm_front(bx, ty + 1 + (1 if vis == 2 else 0), flip=flip, slant=3 if vis == 2 else 1)
+            arms_front.append((L, h))
+        elif vis < 0:
+            L, h = arm_front(bx + (out if vis == -2 else 0), ty, flip=flip, sleeve=3 if vis == -1 else 2, length=3 if vis == -1 else 2)
+            if vis == -2: L.recolor(DARKER)
+            arms_back.append((L, h))
+        else:
+            arms_front.append(arm_front(bx, ty + 1, flip=flip))
+    for L, h in arms_back: draw(img, L); hands.append(h)
+    draw(img, lL.merged(lR, body))
+    draw(img, head)
+    for L, h in arms_front: draw(img, L); hands.append(h)
 
 
 def arm_side(x, y, swing=0):
@@ -203,9 +267,11 @@ def arm_side(x, y, swing=0):
     swing < 0: el brazo se va hacia atrás."""
     L = Layer()
     for i in range(3):
-        for k, c in enumerate(['U', 'T', 't']): L.put(x + k, y + i, c)
+        for k, c in enumerate(['U', 'T', 't']):
+            if i == 0 and k == 0: continue                         # hombro redondeado
+            L.put(x + k, y + i, c)
     if swing >= 2:                                   # antebrazo horizontal, puño delante
-        for k, c in enumerate(['N', 'N', 'M', 'm']): L.put(x - 1 + k, y + 3, c)
+        for k, c in enumerate(['U', 'T', 't']): L.put(x + k, y + 3, c)
         n = swing + 1
         for j in range(n):
             for r, c in enumerate(['N' if 0 < j < n - 1 else 'M', 'M', 'm']): L.put(x + 1 + j, y + 4 + r, c)
@@ -213,64 +279,61 @@ def arm_side(x, y, swing=0):
         for r, c in enumerate(['M', 'm', 'n']): L.put(fx, y + 4 + r, c)
         for k, c in enumerate(['m', 'm']): L.put(x + k, y + 4 + k, 'm')
         return L, (fx, y + 6)
-    s = max(-2, min(1, swing))
-    for k, c in enumerate(['N', 'N', 'M', 'm']): L.put(x - 1 + k + (s if s < 0 else 0) // 2, y + 3, c)
-    for i in range(4, 9):
-        o = s if i >= 5 else s // 2
-        for k, c in enumerate(['N' if i in (5, 6) else 'M', 'M', 'm']): L.put(x + k + o, y + i, c)
+    s = max(-4, min(1, swing))
+    for i in range(3, 5):                                          # manga más larga
+        for k, c in enumerate(['U', 'T', 't']): L.put(x + k + (s * (i - 2)) // 6, y + i, c)
+    for k, c in enumerate(['N', 'N', 'M', 'm']): L.put(x - 1 + k + s // 2, y + 5, c)
+    for i in range(6, 9):
+        o = s if i >= 7 else s // 2
+        for k, c in enumerate(['N' if i == 7 else 'M', 'M', 'm']): L.put(x + k + o, y + i, c)
     for k, c in enumerate(['N', 'm', 'n']): L.put(x + k + s, y + 9, c)
     return L, (x + 1 + s, y + 9)
 
 
-def arm_punch_side(x, y, length=9):
+def arm_punch_side(x, y, length=8):
     """Brazo de perfil estirado hacia la derecha. y = fila del hombro."""
     L = Layer()
     for i in range(length):
         xx = x + i
-        if i < 3:   cs = ['U', 'T', 'T', 't']; y0 = y
-        elif i == 3: cs = ['N', 'N', 'M', 'M', 'm', 'n']; y0 = y - 1
-        elif i == 4: cs = ['m', 'm', 'm', 'n']; y0 = y          # junta
-        else:       cs = ['N' if i < length - 1 else 'M', 'M', 'M', 'm']; y0 = y
+        if i < 5:    cs = ['U', 'T', 't']; y0 = y
+        elif i == 5: cs = ['N', 'N', 'M', 'm']; y0 = y - 1
+        elif i == 6: cs = ['m', 'm', 'n']; y0 = y          # junta
+        else:        cs = ['N', 'M', 'm']; y0 = y
         for r, c in enumerate(cs): L.put(xx, y0 + r, c)
     fx = x + length
-    for j, cs in enumerate([['N', 'M', 'M', 'M', 'm'], ['N', 'N', 'M', 'm', 'm'], ['M', 'm', 'N', 'm', 'n']]):
+    for j, cs in enumerate([['N', 'M', 'M', 'm'], ['M', 'm', 'N', 'n']]):
         for r, c in enumerate(cs): L.put(fx + j, y - 1 + r, c)
-    return L, (fx + 2, y + 1)
+    return L, (fx + 1, y)
 
 
 def arm_punch_up(x, y_shoulder, reach):
     """Brazo estirado hacia el fondo (puñetazo de espaldas): sube junto a la cabeza."""
     L = Layer(); top = y_shoulder - reach
-    for yy in range(y_shoulder - 2, y_shoulder + 2):
-        for k, c in enumerate(['t', 'T', 'T', 'U']): L.put(x + k, yy, c)
-    for k, c in enumerate(['m', 'M', 'N', 'N', 'N']): L.put(x - 1 + k, y_shoulder - 3, c)
-    for k, c in enumerate(['n', 'm', 'M', 'M', 'm']): L.put(x - 1 + k, y_shoulder - 4, c)
-    for yy in range(top + 3, y_shoulder - 4):
-        cs = ['n', 'm', 'm', 'M'] if yy == top + 5 else ['m', 'M', 'M', 'N']
+    for yy in range(y_shoulder - 4, y_shoulder + 2):
+        for k, c in enumerate(['t', 'T', 'U']): L.put(x + k, yy, c)
+    for k, c in enumerate(['m', 'M', 'N', 'N']): L.put(x - 1 + k, y_shoulder - 5, c)
+    for yy in range(top + 2, y_shoulder - 5):
+        cs = ['n', 'm', 'm'] if yy == top + 3 else ['m', 'M', 'N']
         for k, c in enumerate(cs): L.put(x + k, yy, c)
-    for yy in range(top, top + 3):
-        for k, c in enumerate(['m', 'M', 'N', 'N']): L.put(x + k, yy, c)
-    for k, c in enumerate(['n', 'N', 'm', 'N']): L.put(x + k, top, c)
-    return L, (x + 2, top)
+    for yy in range(top, top + 2):
+        for k, c in enumerate(['m', 'M', 'N']): L.put(x + k, yy, c)
+    for k, c in enumerate(['n', 'N', 'm']): L.put(x + k, top, c)
+    return L, (x + 1, top)
 
 
-FIST_BIG = [".NNNNMm.",
-            "NMNMNMMm",
-            "MmMmMmMm",
-            "MmMmMmMm",
-            "NNNNMMmm",
-            "MMMMmmmm",
+FIST_BIG = [".NNMm.",
+            "NMNMMm",
+            "MmMmMm",
+            "NNNMmm",
+            ".mmmn."]
+FIST_SMALL = [".NMm.",
+              "NmMmm",
+              "MMMmm",
+              ".mmn."]
+CUFF_BIG = ["NNNMMmmm",
             ".mmmmmn."]
-FIST_SMALL = [".NNMm.",
-              "NMNMMm",
-              "MmMmMm",
-              "NNNMmm",
+CUFF_SMALL = ["NNMMmm",
               ".mmmn."]
-CUFF_BIG = ["NNNMMMMmmm",
-            "mMMMMMMMmn",
-            ".mmmmmmmn."]
-CUFF_SMALL = ["NNMMMmmm",
-              ".mmmmmn."]
 
 
 def fist_front(cx, cy, big=True):
@@ -294,19 +357,20 @@ RUN_SWAY = [1, 1, 0, -1, -1, 0]
 def clamp1(v): return max(-1, min(1, v))
 
 
-HAIR = set('aZABC')
+HAIR = set('aZABCz')
 
 
 def head_layer(view, x, y, anim, bob, lag_x=0, idle_i=None):
     """Cabeza; las puntas del pelo (filas 12 en adelante) llegan tarde a los movimientos."""
     L = Layer(); rows = HEAD[view]
+    x += HX
     L.stamp(rows, x, y)
     lag_y = 1 if (anim == 'move' and bob < 0) else 0
     if idle_i is not None:
         lag_y = [0, 0, -1, 0][idle_i]
         if view == 'E': lag_x = [0, 0, 0, -1][idle_i]
     if not (lag_x or lag_y): return L
-    tips = [(x + xx, y + k, c) for k in range(12, len(rows)) for xx, c in enumerate(rows[k]) if c in HAIR]
+    tips = [(x + xx, y + k, c) for k in range(11, len(rows)) for xx, c in enumerate(rows[k]) if c in HAIR]
     if lag_y <= 0:                        # se mueven: quitar las originales
         for px, py, _ in tips: L.px.pop((px, py), None)
     face = {p for p, c in L.px.items() if c not in HAIR}
@@ -319,7 +383,7 @@ def head_layer(view, x, y, anim, bob, lag_x=0, idle_i=None):
 def body_layer(view, x, y, sway=0):
     L = Layer()
     for r, row in enumerate(BODY[view]):
-        L.stamp([row], x + (sway if r >= 9 else 0), y + r)
+        L.stamp([row], x + (sway if r >= 10 else 0), y + r)
     return L
 
 
@@ -339,7 +403,9 @@ def frame(view, anim, i):
     else: bob = 1 if pose == 'wind' else 0
     ty = TORSO_Y + bob
 
-    if view in 'SN':
+    if view in 'SN' and anim == 'move':
+        run_front(view, i, img, hands)
+    elif view in 'SN':
         # piernas
         if anim == 'move':
             ly, ry = RUN_LY[i], RUN_RY[i]
@@ -361,8 +427,8 @@ def frame(view, anim, i):
             dl, dr = clamp1(ry), clamp1(ly)            # brazo contrario a la pierna
         else:
             dl = dr = 0
-        def arm_l(d): return arm_front(X0 - 1 + (1 if d > 0 else 0), ty + 1 + d, sleeve=3 if d >= 0 else 2)
-        def arm_r(d): return arm_front(X0 + 13 - (1 if d > 0 else 0), ty + 1 + d, flip=True, sleeve=3 if d >= 0 else 2)
+        def arm_l(d): return arm_front(X0 + 1 + (1 if d > 0 else 0), ty + 1 + d, sleeve=5 if d >= 0 else 4)
+        def arm_r(d): return arm_front(X0 + 12 - (1 if d > 0 else 0), ty + 1 + d, flip=True, sleeve=5 if d >= 0 else 4)
         head = head_layer(view, X0, HEAD_Y + bob, anim, bob, idle_i=i if anim == 'idle' else None)
         if view == 'S':
             draw(img, head)
@@ -370,17 +436,17 @@ def frame(view, anim, i):
                 (al, hl), (ar, hr) = arm_l(dl), arm_r(dr)
                 draw(img, al); draw(img, ar); hands += [hl, hr]
             else:
-                al, hl = arm_front(X0 - 1, ty, length=5)                 # el izquierdo, en guardia
+                al, hl = arm_front(X0 + 1, ty, length=3)             # el izquierdo, en guardia
                 draw(img, al); hands.append(hl)
                 if pose in ('ready', 'back'):
                     ar, hr = arm_r(0)
                 elif pose == 'wind':
-                    ar, hr = arm_front(X0 + 14, ty - 1, flip=True, sleeve=2, length=5)
+                    ar, hr = arm_front(X0 + 13, ty - 1, flip=True, sleeve=4, length=3)
                 else:
                     sl = Layer()
-                    for yy in range(ty + 1, ty + 4):
+                    for yy in range(ty + 2, ty + 5):
                         for k, c in enumerate(['T', 'T', 't']): sl.put(X0 + 11 + k, yy, c)
-                    for yy in range(ty + 4, ty + 6):
+                    for yy in range(ty + 5, ty + 7):
                         for k, c in enumerate(['U', 'T', 't']): sl.put(X0 + 10 + k, yy, c)
                     cuff, fl, hr = fist_front(X0 + 9, ty + 10 + (0 if pose == 'hit' else -1), big=pose == 'hit')
                     draw(img, sl.merged(cuff)); ar = fl
@@ -390,14 +456,14 @@ def frame(view, anim, i):
                 (al, hl), (ar, hr) = arm_l(-dl), arm_r(-dr)
                 draw(img, head); draw(img, al); draw(img, ar); hands += [hl, hr]
             else:
-                al, hl = arm_front(X0 - 1, ty + 1); hands.append(hl)
+                al, hl = arm_front(X0 + 1, ty + 1); hands.append(hl)
                 if pose in ('hit', 'hit2'):
                     draw(img, head); draw(img, al)
-                    ar, hr = arm_punch_up(X0 + 13, ty + 2, 12 if pose == 'hit' else 10)
+                    ar, hr = arm_punch_up(X0 + 12, ty + 2, 11 if pose == 'hit' else 9)
                 else:
                     w = pose == 'wind'
                     draw(img, head); draw(img, al)
-                    ar, hr = arm_front(X0 + 13 + w, ty + 1 - w, flip=True, sleeve=3 - w)
+                    ar, hr = arm_front(X0 + 12 + w, ty + 1 - w, flip=True, sleeve=5 - w)
                 draw(img, ar); hands.append(hr)
     else:  # perfil, mirando a la derecha
         a = i / 6 * 2 * math.pi
@@ -406,7 +472,7 @@ def frame(view, anim, i):
             ns = round(4 * math.cos(a)); fs = -ns
             nl = max(0, round(2 * math.sin(a))); fl = max(0, round(2 * math.sin(a + math.pi)))
             near, far = (ns, -nl), (fs, -fl)
-            arm_sw = max(-2, min(3, -round(4 * math.cos(a))))
+            arm_sw = max(-4, min(4, -round(5 * math.cos(a))))
         elif pose in ('hit', 'hit2'):
             lean = 1; near, far = (2, 0), (-3, 0); arm_sw = 0
         elif pose == 'wind':
@@ -423,7 +489,7 @@ def frame(view, anim, i):
         draw(img, leg_layer(LEG_SIDE, bx + 7 + near[0], LEG_Y + near[1]).merged(body))
         draw(img, head_layer(view, bx, HEAD_Y + bob, anim, bob, lag_x=-1 if (anim == 'move' or pose in ('hit', 'hit2')) else 0, idle_i=i if anim == 'idle' else None))
         if pose in ('hit', 'hit2'):
-            g, h = arm_punch_side(bx + 7, ty + 1, length=9 if pose == 'hit' else 8)
+            g, h = arm_punch_side(bx + 7, ty + 2, length=9 if pose == 'hit' else 8)
         else:
             g, h = arm_side(bx + 7 - (1 if pose == 'wind' else 0), ty + 1, swing=arm_sw)
         draw(img, g); hands.append(h)
@@ -435,6 +501,8 @@ NFR = {'idle': 4, 'move': 6, 'atk': 8}
 
 if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else '.'
+    var = sys.argv[2] if len(sys.argv) > 2 else 'negro'
+    PAL.update({k: hx(v) for k, v in VARIANTS[var].items()})
     os.makedirs(out, exist_ok=True)
     manos = {'w': FW, 'h': FH, 'hands': {}}
     for vname, v in VIEWS.items():

@@ -149,7 +149,7 @@ const INTRO = [
     setup(R) {
       const r = NAV.rows, cx = NAV.cols >> 1;
       introPlazaFolk(R);
-      const a = R.add('alec', null, cx, r - 4.6, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);
+      const a = R.add('alec', null, cx, 33, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);   // entra por la avenida
       R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
       const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
     },
@@ -209,7 +209,8 @@ const ENDING = [
       const a = R.add('alec', null, cx, 7.4, { hero: true, face: Math.PI / 2 }); R.follow = a; R.followOff = [0, IC(1)]; R.cam.x = a.x; R.cam.y = a.y + IC(1);
       R.go(a, [[cx, 12.8]], 46, q => { q.face = Math.PI / 2; });
       // la herrera y la posadera dejan lo suyo y salen a su encuentro
-      for (const [key, pts] of [['smith', [[11, 14.4], [cx - 2.7, 13.3]]], ['keeper', [[c - 11, 14.4], [cx + 2.7, 13.4]]]]) { const n = R.actors.find(q => q.key === key); if (n) { n.id = key; n.amb = false; R.go(n, pts, 84); } }
+      // (la forja y la posada quedan lejos, en sus barrios: llegan por las calles que entran a la plaza)
+      for (const [key, from, pts] of [['smith', [cx - 15, 14.4], [[cx - 12, 14.4], [cx - 2.7, 13.3]]], ['keeper', [cx + 15, 14.4], [[cx + 12, 14.4], [cx + 2.7, 13.4]]]]) { const n = R.actors.find(q => q.key === key); if (n) { n.id = key; n.amb = false; n.x = from[0] * IC(1); n.y = from[1] * IC(1); R.go(n, pts, 84); } }
     },
     tick(R, dt) {   // los vecinos pasean; de vez en cuando alguno da un brinco
       introPlazaStroll(R, dt);

@@ -476,6 +476,7 @@ function renderWorld() {
   lights();
   // Flechas en el borde de la pantalla hacia lo que importa y no se ve: estandartes, la campana, el arma caída
   ctx.setTransform(1, 0, 0, 1, -cam.x, -cam.y);
+  if (S.town && !S.dialog) townPointers();   // en la ciudad: la forja, la posada, el patio, el tablón y el castillo
   const pointer = (x, y, col) => {
     if (x > cam.x + 6 && x < cam.x + view.w - 6 && y > cam.y + 6 && y < cam.y + view.h - 6) return;
     const px = Math.round(clamp(x, cam.x + 12, cam.x + view.w - 12)), py = Math.round(clamp(y, cam.y + 34, cam.y + view.h - 16)), a = Math.atan2(y - py, x - px), b = Math.floor(S.t * 4) % 2;

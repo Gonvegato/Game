@@ -63,6 +63,36 @@ function drawTown() {
   }
   if (tw.near && !S.dialog) wtext(lastDev === 'pad' ? 'A: entrar' : lastDev === 'touch' ? 'Disparar: entrar' : 'Espacio: entrar', p.x, p.y + 22, 6, C.ink, 0.95);
 }
+// Flechas con el icono de cada sitio de la ciudad, en el borde de la pantalla y apuntando hacia él. Cuando el sitio ya se ve
+// en pantalla (te has acercado), su flecha desaparece y queda el letrero de encima.
+function townPointers() {
+  const tw = S.town, im = IMG.cityhouses; if (!tw || !im || (S.out && S.out.interior)) return;
+  const R = 11, L = cam.x + 16, Rt = cam.x + view.w - 16, T = cam.y + Math.max(30, view.h * 0.22), B0 = cam.y + view.h - 16, B1 = cam.y + view.h * 0.74;   // ni bajo los botones de arriba ni sobre la barra de vida (abajo a la izquierda)
+  const ox = cam.x + view.w / 2, oy = cam.y + view.h / 2, placed = [];
+  for (const s of tw.spots) {
+    const ic = PLACE_ICON[s.id]; if (!ic) continue;
+    const x = s.x, y = s.y - 14;
+    if (x > cam.x + 4 && x < cam.x + view.w - 4 && y > cam.y + 4 && y < cam.y + view.h - 4) continue;
+    // desde el centro de la pantalla hacia el sitio, hasta el borde del recuadro: cada flecha sale por su lado
+    const dx = x - ox, dy = y - oy, kx = dx > 0 ? (Rt - ox) / dx : dx < 0 ? (L - ox) / dx : 1e9, B = dy > 0 && ox + dx * Math.min(kx, (B0 - oy) / dy) < cam.x + view.w * 0.32 ? B1 : B0, k = Math.min(kx, dy > 0 ? (B - oy) / dy : dy < 0 ? (T - oy) / dy : 1e9);
+    let px = ox + dx * k, py = oy + dy * k;
+    for (let n = 0; n < 6 && placed.some(([qx, qy]) => Math.hypot(qx - px, qy - py) < 2 * R + 4); n++) {   // si pisa a otra, se corre por el borde
+      if (px <= L + 1 || px >= Rt - 1) py = clamp(py + (py > oy ? -1 : 1) * (2 * R + 5), T, B0); else px = clamp(px + (px > ox ? -1 : 1) * (2 * R + 5), L, Rt);
+    }
+    placed.push([px, py]); px = Math.round(px); py = Math.round(py);
+    const a = Math.atan2(y - py, x - px), b = Math.floor(S.t * 3) % 2;
+    ctx.save(); ctx.translate(px, py);
+    ctx.save(); ctx.rotate(a);   // la punta, por fuera del círculo, hacia el sitio
+    ctx.fillStyle = '#16101a'; ctx.beginPath(); ctx.moveTo(R + 7 + b, 0); ctx.lineTo(R - 2, -6); ctx.lineTo(R - 2, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#efe6c8'; ctx.beginPath(); ctx.moveTo(R + 5 + b, 0); ctx.lineTo(R - 1, -4); ctx.lineTo(R - 1, 4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#16101a'; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2e2636'; ctx.beginPath(); ctx.arc(0, 0, R - 1, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#efe6c8'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, R - 1.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.drawImage(im, ic[0], ic[1], ic[2], ic[3], -8, -8, 16, 16);
+    ctx.restore();
+  }
+}
 // El rey: por qué te ha contratado y cuánto falta
 function kingHtml() {
   const K = kingdomNow(), down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length, god = TYPES[K.god].name, dead = isDone(K.id + ':g');

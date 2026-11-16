@@ -3,7 +3,7 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [52, 40], hall: [24, 22], shop: [22, 16] };
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -164,39 +164,15 @@ const ROOM_GEN = {
     for (let i = 0; i < 2; i++) put(3, 2, 2, (x, y) => ob(g, x, y, 3, 2, 'ref', { r: R(T.big) }));
     return [cx, cy + 4];
   },
-  // La plaza del reino: el castillo arriba; la plaza mayor empedrada con el pozo, el tablón y el mercado; la forja con su patio
-  // a la izquierda y la posada con su terraza a la derecha; abajo el patio de armas vallado, el huerto, más casas y el arroyo
+  // La ciudad del reino: el castillo arriba y, debajo, la plaza mayor con el pozo, el tablón y el mercado. De la plaza salen la
+  // avenida y las calles empedradas, y entre ellas, barrios de casas desperdigadas con sus huertos, árboles y vallas. Cada oficio
+  // está en un barrio: la forja al oeste, la posada al nordeste y el patio de armas al suroeste (las flechas del borde de la
+  // pantalla llevan hasta ellos). Abajo, el arroyo con sus puentes. El plano sale siempre igual en el mismo reino (semilla del
+  // reino) y las casas siguen el estilo del reino (CITY_STYLE), para que cada ciudad se distinga por sus casas.
   plaza(g, c, r) {
-    OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], wander: [] };
-    outBorder(g, c, r);
-    const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL }), deco = (x, y, w, h, kind, extra) => ob(g, x, y, w, h, kind, extra);
-    deco(cx - 11, 0, 22, 5, 'castle');
-    deco(3, 9, 8, 3, 'house', { v: 0, big: true }); deco(c - 11, 9, 8, 3, 'house', { v: 1, big: true });   // forja y posada
-    deco(4, 3, 6, 2, 'house', { v: 0 }); deco(c - 10, 3, 6, 2, 'house', { v: 1 });                         // casas junto al castillo
-    deco(c - 11, 27, 8, 3, 'house', { v: 2, big: true }); deco(c - 19, 28, 6, 2, 'house', { v: 2 });           // casas del sur
-    // la plaza mayor y sus calles
-    OUT.paves.push([13, 8, c - 26, 15], [cx - 2, 5, 4, 3], [cx - 2, 23, 4, r - 23 - 4], [9, 13, 4, 3], [c - 13, 13, 4, 3]);
-    deco(cx - 1, 15, 2, 1, 'well'); deco(cx + 6, 11, 2, 1, 'board');
-    for (const [x, v] of [[15, 0], [19, 1], [c - 21, 2], [c - 17, 0]]) deco(x, 19, 3, 1, 'stall', { v });          // el mercado
-    // patio de la forja
-    deco(3, 14, 3, 2, 'prop', { k: 'anvil' }); deco(7, 14, 2, 2, 'prop', { k: 'furnace' }); deco(3, 17, 3, 1, 'prop', { k: 'workbench' });
-    // terraza de la posada
-    deco(c - 9, 15, 3, 1, 'prop', { k: 'bench' }); deco(c - 5, 15, 2, 1, 'barrel', { v: 0 }); deco(c - 9, 18, 3, 1, 'prop', { k: 'bench' }); deco(c - 4, 17, 1, 1, 'barrel', { v: 1 });
-    // patio de armas, vallado
-    for (let x = 4; x < 14; x++) { if (x < 8 || x > 9) deco(x, 24, 1, 1, 'fence', { horiz: 1 }); deco(x, r - 10, 1, 1, 'fence', { horiz: 1 }); }
-    for (let y = 25; y < r - 10; y++) { deco(4, y, 1, 1, 'fence', { horiz: 0 }); deco(13, y, 1, 1, 'fence', { horiz: 0 }); }
-    // huerto
-    deco(c - 24, 31, 2, 2, 'prop', { k: 'scarecrow' }); deco(c - 21, 32, 2, 1, 'prop', { k: 'hay' }); deco(c - 9, 32, 2, 1, 'prop', { k: 'hay' });
-    // árboles y arbustos sueltos
-    for (const [x, y, k] of [[13, 4, 'shrub'], [c - 15, 4, 'shrub2'], [16, 26, 'bush3'], [18, 30, 'bush1'], [c - 4, 21, 'bush2'], [11, 21, 'bush4'], [c - 24, 25, 'shrub'], [3, 21, 'bush2']]) deco(x, y, 2, 2, 'prop', { k });
-    for (let y = r - 6; y < r - 3; y++) for (let x = 2; x < c - 2; x++) if (x < cx - 2 || x > cx + 1) g[y][x] = 2;   // el arroyo, con su puente
-    OUT.bridges.push({ x: cx - 1, y: r - 6, h: 3 }, { x: cx, y: r - 6, h: 3 });
-    OUT.npcs.push({ key: 'smith', x: 6.5, y: 17 }, { key: 'keeper', x: c - 6.5, y: 14, flip: true }, { key: 'decoy', x: 7, y: 28 }, { key: 'post', x: 10.5, y: 27 }, { key: 'turret', x: 8.5, y: 29.6 }, { key: 'trainer', x: 11.5, y: 29.2 },
-      { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'cit_tavern_a', x: c - 8, y: 17.2 }, { key: 'villager', x: 17, y: 21 }, { key: 'villager', x: c - 19, y: 21, flip: true });
-    OUT.wander.push({ key: 'adv_knight', area: [14, 9, c - 28, 12] }, { key: 'cit_peasant', area: [14, 9, c - 28, 9] }, { key: 'cit_tavern_b', area: [14, 9, c - 28, 9] }, { key: 'cit_peasant', area: [cx - 2, 23, 4, 7] }, { key: 'villager', area: [14, 12, c - 28, 6] }, { key: 'cit_tavern_b', area: [c - 12, 13, 8, 4] });
-    OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(7, 12.6), { id: 'forge', label: 'La forja' }), Object.assign(P(c - 7, 12.6), { id: 'inn', label: 'La posada' }),
-      Object.assign(P(9, 25.6), { id: 'gym', label: 'El patio de armas' }), Object.assign(P(cx + 7, 12.7), { id: 'board', label: 'El tablón de encargos' }));
-    return [cx, 12];
+    const kd = typeof kingdomNow === 'function' ? kingdomNow() : null, kid = kd ? kd.id : 'valdehierro';
+    const rand0 = Math.random; Math.random = seeded(kid + ':ciudad');
+    try { return cityGen(g, c, r, kid); } finally { Math.random = rand0; }
   },
   // El salón del trono: muros alrededor, alfombra hasta el trono, guardias a los lados y la puerta abajo
   hall(g, c, r) {
@@ -238,6 +214,101 @@ function interiorRoom(g, c, r, kind) {
   }
   OUT.spots.push({ x: cx * CELL, y: (r - 1.2) * CELL, id: 'exit', label: 'Salir a la plaza' });
   return [cx, r - 4];
+}
+// Números al azar repetibles a partir de un texto (para que la ciudad de un reino sea siempre la misma)
+function seeded(str) {
+  let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  let a = h >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+// Estilo de las casas de cada reino: qué colores de tejado y qué paredes se ven en su ciudad (casas en src/49_cityhouses.js)
+const CITY_STYLE = {
+  valdehierro: { roofs: ['brown', 'red', 'ochre', 'slate'], walls: null },
+  default:     { roofs: null, walls: null },
+};
+function cityGen(g, c, r, kid) {
+  OUT = { biome: 'grass', obs: [], spots: [], npcs: [], paths: [], bridges: [], paves: [], wander: [], decor: [] };
+  outBorder(g, c, r);
+  const cx = c >> 1, P = (x, y) => ({ x: x * CELL, y: y * CELL }), deco = (x, y, w, h, kind, extra) => ob(g, x, y, w, h, kind, extra);
+  const occ = Array.from({ length: r }, () => new Uint8Array(c));   // lo ocupado o reservado: calles, edificios con su tejado, patios
+  const res = (x, y, w, h) => { for (let j = Math.max(0, y); j < Math.min(r, y + h); j++) for (let i = Math.max(0, x); i < Math.min(c, x + w); i++) occ[j][i] = 1; };
+  const free = (x, y, w, h) => { if (x < 2 || y < 2 || x + w > c - 2 || y + h > r - 2) return false; for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (occ[j][i] || g[j][i]) return false; return true; };
+  const pave = (x, y, w, h) => { OUT.paves.push([x, y, w, h]); res(x, y, w, h); };
+  // el castillo y la plaza mayor
+  deco(cx - 11, 0, 22, 5, 'castle'); res(cx - 13, 0, 26, 6);
+  const PL = { x: cx - 14, y: 8, w: 28, h: 14 };
+  pave(cx - 2, 5, 4, 3); pave(PL.x, PL.y, PL.w, PL.h);
+  deco(cx - 1, 15, 2, 1, 'well'); deco(cx + 7, 11, 2, 1, 'board');
+  for (const [x, v] of [[cx - 12, 0], [cx - 8, 1], [cx + 5, 2], [cx + 9, 0]]) deco(x, 19, 3, 1, 'stall', { v });
+  // calles: la avenida hasta el arroyo, dos calles de este a oeste y dos de norte a sur, y las que unen la plaza con ellas
+  const WX = 20, EX = c - 23, S1 = 27, S2 = 48, RV = r - 8;
+  pave(cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h); pave(cx - 2, RV + 3, 4, r - 2 - RV - 3);
+  pave(2, S1, c - 4, 3); pave(2, S2, c - 4, 3);
+  pave(WX, 6, 3, RV - 6); pave(EX, 6, 3, RV - 6);
+  pave(WX + 3, 13, PL.x - WX - 3, 3); pave(PL.x + PL.w, 13, EX - PL.x - PL.w, 3);
+  // el arroyo, con un puente en cada calle que lo cruza
+  for (let y = RV; y < RV + 3; y++) for (let x = 2; x < c - 2; x++) { const st = (x >= cx - 2 && x < cx + 2) || (x >= WX && x < WX + 3) || (x >= EX && x < EX + 3); if (!st) g[y][x] = 2; }
+  for (const [x0, w] of [[cx - 2, 4], [WX, 3], [EX, 3]]) for (let x = x0; x < x0 + w; x++) OUT.bridges.push({ x, y: RV, h: 3 });
+  res(2, RV - 1, c - 4, 5);
+  // La forja (oeste): el edificio con su letrero, y delante el yunque, la fragua y el banco
+  const HS = CITY_HOUSES.map((h, i) => Object.assign({ i }, h)), trade = t => HS.find(h => h.trade === t);
+  const FG = { x: 6, y: S1 + 6 };
+  deco(FG.x, FG.y, 8, 3, 'chouse', { i: trade('forge').i }); res(FG.x - 1, FG.y - 6, 10, 9);
+  deco(FG.x - 2, FG.y + 5, 3, 2, 'prop', { k: 'anvil' }); deco(FG.x + 7, FG.y + 5, 2, 2, 'prop', { k: 'furnace' }); deco(FG.x + 10, FG.y + 5, 3, 1, 'prop', { k: 'workbench' }); res(FG.x - 3, FG.y + 3, 17, 6);   // la puerta queda libre
+  // La posada (nordeste): el edificio, su terraza con bancos y toneles
+  const IN = { x: EX + 7, y: 12 };
+  deco(IN.x, IN.y, 8, 3, 'chouse', { i: trade('inn').i }); res(IN.x - 1, IN.y - 6, 10, 9);
+  deco(IN.x - 1, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 6, IN.y + 5, 3, 1, 'prop', { k: 'bench' }); deco(IN.x + 9, IN.y + 2, 1, 1, 'barrel', { v: 0 }); deco(IN.x + 9, IN.y + 1, 1, 1, 'barrel', { v: 1 }); deco(IN.x - 2, IN.y + 2, 2, 1, 'prop', { k: 'table' });
+  res(IN.x - 3, IN.y + 3, 14, 4);
+  // El patio de armas (suroeste), vallado, con la entrada al norte
+  const GY = { x: 4, y: S2 + 4, w: 14, h: 11 };
+  for (let x = GY.x; x < GY.x + GY.w; x++) { if (x < GY.x + 5 || x > GY.x + 8) deco(x, GY.y, 1, 1, 'fence', { horiz: 1 }); deco(x, GY.y + GY.h - 1, 1, 1, 'fence', { horiz: 1 }); }
+  for (let y = GY.y + 1; y < GY.y + GY.h - 1; y++) { deco(GY.x, y, 1, 1, 'fence', { horiz: 0 }); deco(GY.x + GY.w - 1, y, 1, 1, 'fence', { horiz: 0 }); }
+  res(GY.x - 1, GY.y - 2, GY.w + 2, GY.h + 3);
+  // Las casas: en filas dentro de cada manzana, con la puerta hacia la calle de abajo o hacia el patio, y huecos sueltos que
+  // luego son huertos o árboles. Del estilo del reino.
+  const st = CITY_STYLE[kid] || CITY_STYLE.default, pool = HS.filter(h => !h.trade && (!st.roofs || st.roofs.includes(h.roof)) && (!st.walls || st.walls.includes(h.wall)));
+  const bigs = pool.filter(h => h.size === 'big'), smalls = pool.filter(h => h.size === 'small');
+  const bld = Array.from({ length: r }, () => new Uint8Array(c));   // solo edificios y cosas que tapan una puerta (las calles no)
+  for (const o of OUT.obs) for (let j = o.y; j < o.y + o.h; j++) for (let i = o.x; i < o.x + o.w; i++) if (bld[j]) bld[j][i] = 1;
+  const roofz = Array.from({ length: r }, () => new Uint8Array(c));   // lo que tapa el tejado de cada casa: ahí no puede quedar una puerta
+  const doorOk = (x, y) => y < r - 2 && [x, x + 1].every(i => !g[y][i] && !bld[y][i] && !roofz[y][i]);
+  // de abajo arriba y de izquierda a derecha, cada casa en el primer sitio donde cabe; de vez en cuando se deja un claro
+  for (let fy = RV - 5; fy >= 7; fy--) for (let x = 2; x < c - 8;) {
+    const big = Math.random() < 0.38, w = big ? 8 : 6, h = 3, L = big ? bigs : smalls;
+    if (!L.length || !free(x, fy - 5, w, h + 5) || !doorOk(x + (w >> 1) - 1, fy + h)) { x++; continue; }
+    if (Math.random() < 0.22) { x += ri(3, 6); continue; }   // claro: huerto, árbol o nada
+    deco(x, fy, w, h, 'chouse', { i: L[ri(0, L.length - 1)].i }); res(x, fy - 5, w, h + 5); res(x + (w >> 1) - 1, fy + h, 2, 1);
+    for (let j = fy; j < fy + h; j++) for (let k = x; k < x + w; k++) bld[j][k] = 1;
+    for (let j = fy - 5; j < fy; j++) for (let k = x; k < x + w; k++) if (roofz[j]) roofz[j][k] = 1;
+    x += w + (Math.random() < 0.4 ? 2 : 1);
+  }
+  // Huertos vallados, árboles, matorrales y la vida de las calles en lo que queda libre
+  const put = (w, h, pad, fn) => { for (let t = 0; t < 120; t++) { const x = ri(3, c - 4 - w), y = ri(7, RV - 2 - h); if (!free(x - pad, y - pad, w + 2 * pad, h + 2 * pad)) continue; fn(x, y); res(x - 1, y - 1, w + 2, h + 2); return true; } return false; };
+  for (let i = 0; i < 7; i++) put(6, 4, 1, (x, y) => {
+    for (let k = 0; k < 6; k++) { if (k !== 2 && k !== 3) deco(x + k, y, 1, 1, 'fence', { horiz: 1 }); deco(x + k, y + 3, 1, 1, 'fence', { horiz: 1 }); }
+    if (Math.random() < 0.5) deco(x + 2, y + 1, 2, 2, 'prop', { k: 'scarecrow' }); else for (let k = 0; k < 3; k++) OUT.decor.push({ r: BIO.deco[9], x: x + 1 + k * 1.6, y: y + 2.4, shadow: false });
+  });
+  for (let i = 0; i < 26; i++) put(2, 2, 1, (x, y) => deco(x, y, 2, 2, 'tree', { v: ri(0, 23) }));
+  for (let i = 0; i < 18; i++) put(2, 2, 0, (x, y) => deco(x, y, 2, 2, 'prop', { k: ['bush1', 'bush2', 'bush3', 'bush4', 'shrub', 'shrub2'][ri(0, 5)] }));
+  for (let i = 0; i < 6; i++) put(2, 1, 1, (x, y) => deco(x, y, 2, 1, 'prop', { k: 'hay' }));
+  for (let i = 0; i < 10; i++) put(1, 1, 1, (x, y) => deco(x, y, 1, 1, 'barrel', { v: ri(0, 2) }));
+  for (let i = 0; i < 3; i++) put(2, 1, 2, (x, y) => deco(x, y, 2, 1, 'well'));
+  for (let i = 0; i < 5; i++) put(3, 1, 1, (x, y) => deco(x, y, 3, 1, 'prop', { k: 'bench' }));
+  for (let x = 4; x < c - 4; x += ri(3, 6)) if (Math.random() < 0.6) { const y = r - 4; if (!g[y][x] && !occ[y][x]) deco(x, y, 2, 1, 'tree', { v: ri(0, 23) }); }   // la ribera sur
+  // Gente: quien atiende cada sitio, los guardias del castillo y vecinos paseando por la plaza y las calles
+  OUT.npcs.push({ key: 'smith', x: FG.x + 1.2, y: FG.y + 5.6 }, { key: 'keeper', x: IN.x + 2.5, y: IN.y + 4.4, flip: true },
+    { key: 'decoy', x: GY.x + 3, y: GY.y + 4 }, { key: 'post', x: GY.x + 6.5, y: GY.y + 3.4 }, { key: 'turret', x: GY.x + 4.5, y: GY.y + 7.6 }, { key: 'trainer', x: GY.x + 9.5, y: GY.y + 6.2 }, { key: 'decoy', x: GY.x + 11, y: GY.y + 8 },
+    { key: 'guard', x: cx - 3.2, y: 7.4 }, { key: 'guard', x: cx + 3.2, y: 7.4, flip: true }, { key: 'guard', x: cx - 3.4, y: RV - 1.2 }, { key: 'guard', x: cx + 3.4, y: RV - 1.2, flip: true },
+    { key: 'cit_tavern_a', x: IN.x + 8, y: IN.y + 5.2, flip: true }, { key: 'villager', x: cx - 10, y: 21 }, { key: 'villager', x: cx + 8, y: 21, flip: true });
+  OUT.wander.push({ key: 'adv_knight', area: [PL.x + 1, PL.y + 1, PL.w - 2, PL.h - 4] }, { key: 'cit_peasant', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] }, { key: 'cit_tavern_b', area: [PL.x + 1, PL.y + 1, PL.w - 2, 8] },
+    { key: 'villager', area: [PL.x + 2, PL.y + 3, PL.w - 4, 5] }, { key: 'cit_peasant', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] }, { key: 'villager', area: [cx - 2, PL.y + PL.h, 4, RV - PL.y - PL.h] },
+    { key: 'cit_peasant', area: [4, S1, c - 8, 3] }, { key: 'cit_tavern_b', area: [4, S1, c - 8, 3] }, { key: 'villager', area: [4, S2, c - 8, 3] }, { key: 'cit_peasant', area: [4, S2, c - 8, 3] },
+    { key: 'adv_dwarf', area: [WX, 8, 3, RV - 10] }, { key: 'cit_peasant', area: [EX, 8, 3, RV - 10] }, { key: 'adv_archer', area: [IN.x - 2, IN.y + 4, 10, 2] });
+  OUT.spots.push(Object.assign(P(cx, 5.6), { id: 'king', label: 'Subir al castillo' }), Object.assign(P(FG.x + 4, FG.y + 4.1), { id: 'forge', label: 'La forja' }),
+    Object.assign(P(IN.x + 4, IN.y + 4.1), { id: 'inn', label: 'La posada' }), Object.assign(P(GY.x + 7, GY.y - 0.4), { id: 'gym', label: 'El patio de armas' }),
+    Object.assign(P(cx + 8, 12.7), { id: 'board', label: 'El tablón de encargos' }));
+  OUT.plaza = PL;
+  return [cx, 14];
 }
 let ROOM_FORCE = null;   // solo para pruebas
 const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall', 'forgeroom', 'innroom'].includes(k));
