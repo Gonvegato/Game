@@ -23,9 +23,9 @@ function openTown(from) {
   if (from === 'hall') sayRaw('[El salón del trono de ' + kingdomNow().name + '.]', C.energy);
   else if (from === 'forge') sayRaw('[La forja. Huele a hierro y a carbón.]', C.energy);
   else if (from === 'inn') sayRaw('[La posada. Hay sitio junto al fuego.]', C.energy);
-  else if (!M.metKing && !back) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
+  else if (!M[kflag('metKing')] && !back) sayRaw('[El rey de ' + kingdomNow().name + ' te espera en el castillo. Los encargos están en el tablón.]', C.energy);
 }
-function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M.metKing) { M.metKing = 1; save(); } renderOverlay(); ov.scrollTop = 0; sfx('ok', 0.35); }
+function openPlace(id) { forgePlace = id; S.mode = 'forge'; modeT = 0; listSel = -1; forgeTab = PLACES[id].tabs[0]; if (id === 'king' && !M[kflag('metKing')]) { M[kflag('metKing')] = 1; save(); } renderOverlay(); ov.scrollTop = 0; sfx('ok', 0.35); }
 function closePlace() { S.mode = 'town'; modeT = 0; renderOverlay(); }
 function townUpdate(dt) {
   const p = S.p, mv = Math.hypot(I.mx, I.my);
@@ -99,20 +99,20 @@ function kingHtml() {
   const say = dead ? `«${god} ha caído. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar. Otros reyes preguntarán por ti.»`
     : down === 4 ? `«Los cuatro guardianes han caído y ${god} ya no tiene tras quién esconderse. Sal a buscarlo antes de que venga él.»`
     : down ? `«${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis hombres vuelven a mirar a los ojos. Quedan ${4 - down}; mientras sigan en pie, ${god} no dará la cara.»`
-    : `«Un desconocido que se ofrece a matar a un dios. Bien. Mis soldados rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
+    : K.id !== 'valdehierro' ? `«El de Valdehierro. Aquí un nombre no basta: ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que bajar de su tribunal.»` : `«Un desconocido que se ofrece a matar a un dios. Bien. Mis soldados rezaban, y mira de qué les sirvió. ${K.lore.split('. ')[1] || ''} Cuatro guardianes le sostienen; mátalos y ${god} tendrá que salir. Pago en hierro y no hago preguntas.»`;
   return `<p class="lead">${K.title}. ${K.lore.split('. ')[0]}.</p><p class="lead" style="font-style:italic">${say}</p>
     <p class="fine">Encargos cumplidos: <b>${jobs}</b> de 12 · Guardianes caídos: <b>${down}</b> de 4 · ${god}: <b>${dead ? 'muerto' : 'vivo'}</b>. Los encargos se cogen en el tablón de la plaza.</p>`;
 }
 // Tu habitación en la posada: lo que llevas hecho
 function roomHtml() {
   const K = kingdomNow(), hrs = (M.time || 0) / 3600, hm = h => (h < 1 ? Math.round(h * 60) + ' min' : h.toFixed(1) + ' h');
-  const heads = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).map(z => TYPES[WORLDS[z].boss].name); if (isDone(K.id + ':g')) heads.push(TYPES[K.god].name);
+  const heads = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).map(z => TYPES[zoneBoss(K, z)].name); if (isDone(K.id + ':g')) heads.push(TYPES[K.god].name);
   const forged = PARTS.filter(x => M.parts[x.id] === 2).length, known = PARTS.filter(x => M.parts[x.id]).length;
   return `<p class="lead">Una cama, un baúl y una pared para los trofeos. Aquí se guarda todo lo que haces: no hace falta que hagas nada para guardar.</p>
     <div class="forge"><section><h3>Trofeos en la pared</h3>${heads.length ? heads.map(h => `<p class="fine">· ${h}</p>`).join('') : '<p class="fine">La pared está vacía. Todavía.</p>'}</section>
     <section><h3>El baúl</h3><p class="fine">${M.runs} encargos aceptados, ${M.wins} cumplidos · ${hm(hrs)} de camino · ${M.earned || 0} almas ganadas en total</p><p class="fine">${known} piezas de guantelete descubiertas de ${PARTS.length}, ${forged} forjadas</p><p class="fine">Ahora llevas: ${gunName(M.gun)}</p></section></div>
-    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${[0, 1, 2, 3].filter(z => M['seenZone' + z]).map(z => `
-    <button class="fi" data-act="zone${z}"><b>Recordar: ${K.zones[z].name}</b><span>Lo que dijeron el rey y la reina cuando cayó ${lc(TYPES[WORLDS[z].boss].name)}.</span></button>`).join('')}${M.seenEnding ? `
+    <button class="fi" data-act="intro"><b>Recordar cómo empezó todo</b><span>El pueblo, el herrero, el elegido y el camino hasta aquí: la historia de Alec, otra vez.</span></button>${[0, 1, 2, 3].filter(z => M[kflag('seenZone' + z)]).map(z => `
+    <button class="fi" data-act="zone${z}"><b>Recordar: ${K.zones[z].name}</b><span>Lo que dijeron el rey y la reina cuando cayó ${lc(TYPES[zoneBoss(K, z)].name)}.</span></button>`).join('')}${M[kflag('seenEnding')] ? `
     <button class="fi" data-act="ending"><b>Recordar el final de ${K.name}</b><span>La caída de ${TYPES[K.god].name}, el pago del rey y el camino que sigue.</span></button>` : ''}`;
 }
 
@@ -214,7 +214,8 @@ const lc = n => n.replace(/^(El|La|Los|Las) /, m => m.toLowerCase());
 const deN = n => /^El /.test(n) ? 'del ' + n.slice(3) : 'de ' + lc(n);
 // Lo que ha pasado en el reino, contado por el rey (en la cinemática del principio y cada vez que se lo preguntas)
 function kingStory() {
-  const K = kingdomNow(), god = TYPES[K.god].name, Z = K.zones.map(z => z.name), B = [0, 1, 2, 3].map(i => TYPES[WORLDS[i].boss].name);
+  if (KSTORY[kingdomNow().id]) return KSTORY[kingdomNow().id]();
+  const K = kingdomNow(), god = TYPES[K.god].name, Z = K.zones.map(z => z.name), B = [0, 1, 2, 3].map(i => TYPES[zoneBoss(K, i)].name);
   return [
     { who: 'king', text: `Hace un año, el cielo sobre ${lc(Z[3])} se abrió como una herida. De ahí bajó ${lc(god)}, el dios de la guerra.` },
     { who: 'king', text: 'No pidió oro ni oraciones. Pidió soldados. Las aldeas que se los dieron, perdieron a sus hijos. Las que no, ardieron.' },
@@ -224,6 +225,16 @@ function kingStory() {
     { who: 'king', text: 'Los sacerdotes dicen que hay que ofrecerle algo para que se vaya. Yo he enterrado a demasiada gente para creérmelo.' },
   ];
 }
+// Lo que cuenta el rey de los demás reinos
+const KSTORY = {
+  torrealba: () => { const K = KINGDOMS.find(k => k.id === 'torrealba'), Z = K.zones.map(z => z.name), B = [0, 1, 2, 3].map(i => TYPES[zoneBoss(K, i)].name); return [
+    { who: 'king', text: 'El Juez Sin Rostro no llegó hace un año, como vuestro Primer Puño. Lleva aquí desde antes que mi abuelo. Nadie recuerda Torrealba sin él.' },
+    { who: 'king', text: 'No pide soldados ni oraciones. Juzga. Cada luna llena, su tribunal condena a una aldea entera. Y sus alguaciles cumplen la sentencia.' },
+    { who: 'king', text: `Tiene cuatro guardianes: ${lc(B[0])} en ${lc(Z[0])}, ${lc(B[1])} en ${lc(Z[1])}, ${lc(B[2])} en ${lc(Z[2])} y ${lc(B[3])} en ${lc(Z[3])}.` },
+    { who: 'king', text: 'Mis abuelos le mandaron ejércitos. Mi padre le mandó ofrendas. Yo le mandé a mi hermano a negociar. El tribunal lo juzgó. Volvió con los ojos rojos.' },
+    { who: 'king', text: 'Aquí nadie cree que se le pueda matar. Lo de Valdehierro nos llegó como llegan los cuentos: tarde y con el dios cada vez más pequeño.' },
+  ]; },
+};
 function kingExplain() {
   const K = kingdomNow(), god = TYPES[K.god].name, zones = K.zones.map(z => z.name);
   return [
@@ -241,16 +252,18 @@ function kingProgress() {
   if (isDone(K.id + ':g')) return [   // el reino es libre: de momento no hay más encargos que los que ya conoce
     { who: 'king', text: `${god} ha caído y ${K.name} es libre. No sé qué eres, Alec, pero mi reino te debe más de lo que puedo pagar.` },
     { who: 'king', text: 'Por ahora no tengo encargos nuevos que darte. Los del tablón siguen ahí: repite los que quieras. Pagan menos, pero pagan.' },
-    { who: 'queen', text: 'Otros reyes ya preguntan por ti. Cuando llegue su carta, serás el primero en saberlo.' }];
+    ...(KINGDOMS[KINGDOMS.indexOf(K) + 1] ? [{ who: 'queen', text: `Ha llegado una carta de ${KINGDOMS[KINGDOMS.indexOf(K) + 1].name}. Su rey ha oído hablar de ti. No mucho, y no todo bueno, pero ha oído.` }, { who: 'queen', text: 'Cuando quieras ir, díselo al rey. Aquí siempre tendrás una casa.' }]
+      : [{ who: 'queen', text: 'Otros reyes ya preguntan por ti. Cuando llegue su carta, serás el primero en saberlo.' }])];
   if (down === 4) return [{ who: 'king', text: `Los cuatro guardianes han caído. ${god} ya no tiene tras quién esconderse: búscalo en el tablón antes de que venga él.` }];
   if (down) return [{ who: 'king', text: `${down === 1 ? 'Un guardián menos' : down + ' guardianes menos'}. Mis soldados vuelven a mirar a los ojos.` }, { who: 'king', text: `Quedan ${4 - down}. Mientras sigan en pie, ${god} no dará la cara.` }];
   if (jobs) return [{ who: 'king', text: `${jobs === 1 ? 'Un encargo cumplido' : jobs + ' encargos cumplidos'}. Bien. Cumple los tres de una zona y saldrá su guardián.` }];
   return [{ who: 'king', text: 'El tablón de la plaza sigue lleno de encargos, mercenario. ¿A qué esperas?' }];
 }
 function talkKing() {
-  const first = !M.metKing;
-  if (first) { M.metKing = 1; save(); }
-  const opts = [{ label: '¿Qué pasó en el reino?', fn: () => talk(kingStory(), opts) }, { label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
+  const first = !M[kflag('metKing')];
+  if (first) { M[kflag('metKing')] = 1; save(); }
+  const travel = KINGDOMS.map((K2, i) => K2 !== kingdomNow() && kingdomOpen(i) ? { label: 'Viajar a ' + K2.name, fn: () => travelTo(i) } : null).filter(Boolean);   // ir a otro reino (37_intro.js)
+  const opts = [...travel, { label: '¿Qué pasó en el reino?', fn: () => talk(kingStory(), opts) }, { label: 'Explícame otra vez cómo va esto', fn: () => talk(kingExplain(), opts) }, { label: 'Ver cómo voy en el reino', fn: () => openPlace('king') }, { label: 'Nada más. Me voy', fn: () => {} }];
   if (first) talk([
     { who: 'king', text: 'Ya sabes lo que ha pasado en mi reino, Alec. Ahora te diré cómo vas a arreglarlo.' },
     { who: 'alec', text: 'Os escucho. Mientras paguéis, os escucho.' },
@@ -297,12 +310,45 @@ const CITY_TALK = {
     ['Cuando caigan todos los guardianes, nos mandarán a limpiar lo que quede. Más vale que tú hayas dejado poco.'],
     ['Ahora entrenamos por si vuelven. La instructora dice que siempre vuelven. Ojalá se equivoque.'] ] },
 };
+// Lo que dicen los vecinos de Torrealba (mismos sitios y mismas etapas que en Valdehierro)
+const CITY_TALK_K = { torrealba: {
+  g_puerta: { name: 'Un guardia del castillo', col: '#cfd6de', lines: [
+    ['¿El de Valdehierro? Pasa. El rey te recibe… más por curiosidad que por fe, te aviso.', 'Aquí la guardia no defiende el castillo del Juez. Lo defiende de la gente que quiere entregarle el reino a cambio de piedad.'],
+    ['Dicen que en Valdehierro mataste a un dios. Aquí dicen que era de los pequeños. Yo no digo nada: te he visto volver.'],
+    ['Ha caído un guardián del Juez. Ningún guardia de esta puerta lo había visto nunca. Ni nuestros padres.'],
+    ['El tribunal está vacío. Esta mañana la gente ha subido a mirarlo. Nadie se atrevía a entrar.'] ] },
+  g_puente: { name: 'Un guardia del puente', col: '#cfd6de', lines: [
+    ['Por este puente pasan los condenados cada luna llena. Los alguaciles no dan explicaciones. Ni hace falta.', 'Si oyes campanas de noche, no salgas. Es el tribunal leyendo una sentencia.'],
+    ['Han dejado de pasar condenados. No sé si por ti o porque al Juez se le han acabado las aldeas.'],
+    ['Los mercaderes de la costa preguntan si es verdad lo que se cuenta. Les digo que vengan a verlo.'],
+    ['Han quitado la horca del puente. Llevaba ahí desde antes de que yo naciera.'] ] },
+  v_mercado: { name: 'Una vecina', col: '#e6c07a', lines: [
+    ['¿Tú eres el de los cuentos de Valdehierro? Te imaginaba más alto. Bueno, y con barba.', 'Aquí no se habla del Juez en voz alta. Dicen que oye su nombre.'],
+    ['Mi hermana vive en Salobral. Dice que los salineros han vuelto a trabajar. Que fuiste tú.'],
+    ['Los niños ya no juegan a juicios. Juegan a ser tú. Uno hace de Juez y siempre pierde.'],
+    ['Esta noche nadie va a dormir. Nadie quiere perderse la primera noche sin el Juez.'] ] },
+  v_pozo: { name: 'Un vecino', col: '#e6c07a', lines: [
+    ['Mi abuelo decía que el Juez es justo. Mi abuelo murió condenado. Así de justo es.', 'El agua del pozo sabe a sal desde que los Salares se perdieron.'],
+    ['¿Ves el estandarte del castillo? Lo han subido otra vez. Hacía años que estaba a media asta.'],
+    ['El agua del pozo vuelve a saber a agua. Parece una tontería. No lo es.'],
+    ['Ya no tengo miedo de la luna llena. No sabes lo que es eso.'] ] },
+  v_terraza: { name: 'Una clienta de la posada', col: '#e6c07a', lines: [
+    ['En esta posada se apostaba cuánto duraban los mercenarios. Contigo nadie se atreve a apostar.', 'Dicen que lo de Valdehierro lo exageran los bardos. Yo digo que los bardos siempre se quedan cortos.'],
+    ['Ya no se apuesta contra ti. Se apuesta por cuánto tardas.'],
+    ['El tabernero ha bautizado un vino con tu nombre. Es malísimo. Se vende muchísimo.'],
+    ['¿Te vas ya? Siempre os vais. Bueno: a donde vayas, que tiemble su dios.'] ] },
+  v_patio: { name: 'Un recluta', col: '#9fe09a', lines: [
+    ['En Torrealba no hay instructores como la de Valdehierro. Aquí te enseñan a arrodillarte bien.', 'Me alisté para que no me juzgaran a mí. Aquí, o eres alguacil o eres condenado.'],
+    ['Ahora entrenamos de verdad. Desde que tú llegaste, nadie quiere aprender a arrodillarse.'],
+    ['Cuando caiga el Juez, ¿qué haremos los soldados? Nunca hemos peleado contra nadie más.'],
+    ['Esto de no tener miedo se aprende. Me está costando, pero se aprende.'] ] },
+} };
 function townStage() {
   const K = kingdomNow(), down = [0, 1, 2, 3].filter(z => isDone(`${K.id}:${z}:b`)).length, jobs = Object.keys(M.done || {}).filter(id => id.startsWith(K.id) && /:\d$/.test(id)).length;
   return isDone(K.id + ':g') ? 3 : down ? 2 : jobs ? 1 : 0;
 }
 function talkTown(who) {
-  const C2 = CITY_TALK[who]; if (!C2) return;
+  const C2 = ((CITY_TALK_K[kingdomNow().id] || CITY_TALK)[who]); if (!C2) return;
   SPEAKER[who] = [C2.name, C2.col];
   const st = townStage(), pool = C2.lines.slice(0, st + 1).flat().filter((_, i, a) => st === 0 || i >= a.length - C2.lines[st].length - 1);   // lo de ahora y algo de antes
   M.talkN = M.talkN || {}; const n = M.talkN[who] = ((M.talkN[who] || 0) + 1);

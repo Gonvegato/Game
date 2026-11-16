@@ -271,7 +271,9 @@ function renderWorld() {
       const step = e.stun <= 0 && active(e) && Math.floor(S.t * (e.type.speed > 80 ? 11 : 6) + e.x * 0.13) % 2 === 1;
       const ck = charKey(e), acting = e.wind > 0 || e.cast > 0 || e.lungeWind > 0 || e.lungeT > 0 || e.leapT > 0 || e.aimT > 0 || (e.boss && ['slam', 'chargeWind', 'charge', 'cast', 'leap'].includes(e.act));
       const still = e.stun > 0 || e.sleep > 0 || e.frozen > 0 || e.root > 0 || (e.boss && (e.act === 'rest' || e.act === 'dazed'));
-      if (ATLAS[ck] && drawChar(ck, acting ? 'atk' : still ? 'idle' : 'move', e.frozen > 0 ? 0 : S.t + e.x * 0.013, e.x, e.y + e.r + (e.boss ? 4 : 2) - air - (e.type.fly ? 6 + Math.sin(S.t * 8 + e.x) * 2 : 0), Math.cos(e.dir) < 0, e.flash > 0)) { /* dibujado con el paquete */ }
+      const sc = e.type.scale || 1, fy = e.y + e.r + (e.boss ? 4 : 2) - air - (e.type.fly ? 6 + Math.sin(S.t * 8 + e.x) * 2 : 0);   // scale: jefes dibujados al doble (escala entera, sin emborronar)
+      if (sc !== 1 && ATLAS[ck]) { ctx.save(); ctx.translate(Math.round(e.x), Math.round(fy)); ctx.scale(sc, sc); drawChar(ck, acting ? 'atk' : still ? 'idle' : 'move', e.frozen > 0 ? 0 : S.t + e.x * 0.013, 0, 0, Math.cos(e.dir) < 0, e.flash > 0); ctx.restore(); }
+      else if (ATLAS[ck] && drawChar(ck, acting ? 'atk' : still ? 'idle' : 'move', e.frozen > 0 ? 0 : S.t + e.x * 0.013, e.x, fy, Math.cos(e.dir) < 0, e.flash > 0)) { /* dibujado con el paquete */ }
       else if (sp) drawSprite(sp, e.x, e.y + e.r + (e.boss ? 3 : 1) - air - (step && !sp.b ? 1 : 0), Math.cos(e.dir) < 0, e.flash > 0, step);
       else { shapePath(e.type.shape, e.x, e.y, e.r, e.dir); ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color; ctx.fill(); }
     }

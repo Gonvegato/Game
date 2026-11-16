@@ -23,6 +23,12 @@ CAST = {
   'colossus': ('Mimic_LVL4', {'idle': ('Idle', 8, 8), 'move': ('Move', 8, 10), 'atk': ('Dash_Full', 14, 14)}),
   'nameless': ('Sorcerer_LVL4', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 12), 'atk': ('Dash_Full', 10, 12)}),
   'firstfist': ('GameMaster', {'idle': ('Idle', 12, 10), 'move': ('Idle', 12, 10), 'atk': ('ATK', 16, 14)}),
+  # Torrealba, el segundo reino: sus cuatro guardianes y su dios
+  'k2_salt': ('RhinoMonster_07_Frozen', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 11), 'atk': ('Charge_RunLoop', 6, 16)}),
+  'k2_hang': ('Orc_Barbare_02 (Blue Skinned)', {'idle': ('Idle', 1, 1), 'move': ('Move', 5, 7), 'atk': ('ATK_Full', 12, 14)}),
+  'k2_bailiff': ('Knight_LVL3', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 12), 'atk': ('Dash', 10, 14)}),
+  'k2_exec': ('RhinoMonster_04_Devil', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Charge_RunLoop', 6, 16)}),
+  'k2_judge': ('Knight_LVL4', {'idle': ('Idle', 2, 3), 'move': ('Move', 12, 10), 'atk': ('Dash', 10, 12)}),
 }
 # ── Variantes: mismo papel, otro aspecto según la zona, el rasgo de élite o la deidad ──
 def gob(n, c): return (n + ' (' + c + ' Skinned)')

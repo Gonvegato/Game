@@ -48,6 +48,18 @@ const KMAPS = {
   },
 };
 
+// Torrealba: el mismo trazado que Valdehierro visto en un espejo (la costa al otro lado), con sus propios suelos y colores
+KMAPS.torrealba = (() => {
+  const V = KMAPS.valdehierro, c = V.cols, fx = ([x, y, ...r]) => [c - x, y, ...r];
+  return Object.assign({}, V, {
+    free: '#9fd3ff', biomes: ['peaks', 'forest', 'crypt', 'ash'],
+    land: V.land.map(row => row.split('').reverse().join('')),
+    castle: fx(V.castle), label: fx(V.label), god: fx(V.god),
+    zones: V.zones.map(z => ({ label: fx(z.label), m: z.m.map(fx), boss: fx(z.boss) })),
+    river: V.river.map(fx), roads: V.roads.map(r => r.map(fx)),
+    props: V.props.map(([k, x, y, ...r]) => [k, c - x, y, ...r]),
+  });
+})();
 // ── Lo que sabe pintar el mapa: suelos (una baldosa de biomes.png, a veces teñida), recortes de las hojas y dibujos propios ──
 const KM_GROUND = {
   water:  { tile: [64, 32], mul: '#8ab0e2' },
@@ -84,7 +96,7 @@ const KM_SITE = {
 };
 const KM_KIND = ['gate', 'village', 'camp'];   // en el mismo orden que MKINDS
 const kmSiteOf = (kind, biome) => (KM_SITE[kind].up ? { draw: kind, up: KM_SITE[kind].up } : { draw: KM_SITE[kind][biome][0], up: KM_SITE[kind][biome][1] });
-const kmBoss = (K, z) => TYPES[K.zones[z].boss || WORLDS[z].boss];
+const kmBoss = (K, z) => TYPES[zoneBoss(K, z)];
 const kmFree = (K, z) => isDone(`${K.id}:${z}:b`);
 const kmHash = (x, y, k = 0) => { let h = (Math.round(x) * 374761393 + Math.round(y) * 668265263 + k * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 const kmNoise = (t, k) => { const i = Math.floor(t), f = t - i, a = kmHash(i, k, 91), b = kmHash(i + 1, k, 91); return a + (b - a) * f * f * (3 - 2 * f); };

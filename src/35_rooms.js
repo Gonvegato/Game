@@ -273,6 +273,7 @@ function seeded(str) {
 // Estilo de las casas de cada reino: qué colores de tejado y qué paredes se ven en su ciudad (casas en src/49_cityhouses.js)
 const CITY_STYLE = {
   valdehierro: { roofs: ['brown', 'red', 'ochre', 'slate'], walls: null },
+  torrealba:   { roofs: ['slate', 'blue', 'teal', 'plum'], walls: ['plaster', 'brick', 'timber'] },   // un reino frío y viejo: tejados de pizarra y piedra
   default:     { roofs: null, walls: null },
 };
 function cityGen(g, c, r, kid) {

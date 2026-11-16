@@ -226,14 +226,14 @@ function introPlazaStroll(R, dt) {
   }
 }
 const ENDING = [
-  { cap: 'El Umbral', room: ['arena', 'boss', true], world: 4, amb: '#a08a96',
+  { cap: () => kingdomNow().zones[3].name, room: ['arena', 'boss', true], world: 4, amb: '#a08a96',
     setup(R) {
       R.cam.x = IC(23.5); R.cam.y = IC(12);
-      R.add('god', 'firstfist', 27.5, 13.2, { flip: true, glow: '255,120,60' });
+      R.add('god', kingdomNow().god, 27.5, 13.2, { flip: true, glow: '255,120,60' });
       R.add('alec', null, 12.5, 13.6, { hero: true, face: 0 });
     },
     beats: [
-      { wait: 6.1, min: 5.5, who: 'alec', think: true, text: () => `${TYPES[kingdomNow().god].name}. El dios de la guerra. Medio reino rezaba para que no viniera.`,
+      { wait: 6.1, min: 5.5, who: 'alec', think: true, text: () => { const K = kingdomNow(), t = K.godTitle || 'un dios'; return `${TYPES[K.god].name}. ${t[0].toUpperCase() + t.slice(1)}. Medio reino rezaba para que no viniera.`; },
         on(R) { R.go('alec', [[18.5, 13.6]], 44, a => { a.face = 0; }); },
         ev: [[2.5, R => R.shoot('alec', 'god')],
           [2.72, R => { const g = R.a('god'); g.glow = null; R.flash = 0.7; R.shake(9); R.burst(g.x, g.y - 50, 16, ['#ffe08a', '#e0524a', '#ffffff'], 110); sfx('boom', 0.6); }],
@@ -272,12 +272,12 @@ const ENDING = [
     },
     beats: [
       { wait: 3.4, min: 0.8, who: 'alec', think: true, text: 'En la plaza ya nadie miraba al camino con miedo.' },
-      { who: 'smith', text: 'Esos guanteletes han matado a un dios. Quien los forjó sabía lo que hacía.', on(R) { R.a('alec').face = Math.PI; } },
+      { who: 'smith', text: () => { const n = KINGDOMS.filter(k => isDone(k.id + ':g')).length; return `Esos guanteletes han matado a ${['un dios', 'un dios', 'dos dioses', 'tres dioses', 'cuatro dioses', 'cinco dioses'][n] || n + ' dioses'}. Quien los forjó sabía lo que hacía.`; }, on(R) { R.a('alec').face = Math.PI; } },
       { who: 'alec', text: 'Lo sabía.' },
       { who: 'smith', text: '¿Era tu maestro?' },
       { who: 'alec', text: 'Era herrero. Me dio techo, trabajo y pocas palabras. Con eso le bastó.' },
       { who: 'keeper', text: 'Tu cama sigue donde estaba, mercenario. Y esta noche invita la casa.', on(R) { R.a('alec').face = 0; } },
-      { who: 'keeper', text: 'Y no pongas esa cara. Por una vez en un año, en esta ciudad se celebra algo.' },
+      { who: 'keeper', text: 'Y no pongas esa cara. Por una vez en mucho tiempo, en esta ciudad se celebra algo.' },
     ] },
   { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#d6ad90',
     setup(R) {
@@ -302,10 +302,10 @@ function throneScene(cap, beats) {
     }, beats };
 }
 const zoneFell = z => { const n = kingdomNow().zones[z].name; return n + (/^(Las|Los) /.test(n) ? ' han caído' : ' ha caído'); };   // «Las Criptas han caído», «El Nido ha caído»
-const ZONE_SCENES = [
+const ZONE_SCENES = { valdehierro: [
   [throneScene(() => zoneFell(0), [
     { wait: 2.9, min: 0.8, who: 'king', text: '¿Ya de vuelta? ¿Qué ha pasado? Te di por muerto, o por huido, que aquí viene a ser lo mismo.' },
-    { who: 'alec', text: () => `${kingdomNow().zones[0].name} están limpias. ${TYPES[WORLDS[0].boss].name} no volverá a levantarse.` },
+    { who: 'alec', text: () => `${kingdomNow().zones[0].name} están limpias. ${TYPES[zoneBoss(kingdomNow(), 0)].name} no volverá a levantarse.` },
     { who: 'king', text: '¿Cómo que…? ¿Tú solo? Mandé allí a una compañía entera y no volvió nadie.' },
     { who: 'queen', text: 'Es imposible. Nadie llega del camino, sin nombre ni escudo, y tumba al guardián de un dios en una semana.' },
     { who: 'alec', text: 'Pues alguien acaba de hacerlo.' },
@@ -315,7 +315,7 @@ const ZONE_SCENES = [
     { who: 'alec', text: 'No ha sido suerte.' },
   ])],
   [throneScene(() => zoneFell(1), [
-    { wait: 2.9, min: 0.8, who: 'king', text: () => `Me lo han contado los aldeanos de ${kingdomNow().zones[1].m[1].replace('La aldea de ', '')} antes que mis propios exploradores. ${TYPES[WORLDS[1].boss].name}, muerta.` },
+    { wait: 2.9, min: 0.8, who: 'king', text: () => `Me lo han contado los aldeanos de ${kingdomNow().zones[1].m[1].replace('La aldea de ', '')} antes que mis propios exploradores. ${TYPES[zoneBoss(kingdomNow(), 1)].name}, muerta.` },
     { who: 'alec', text: () => `${kingdomNow().zones[1].name} está limpio. La seda arde bien.` },
     { who: 'queen', text: 'Dos guardianes. Hace un mes nadie en este castillo se atrevía ni a nombrarlos.' },
     { who: 'king', text: 'Mis consejeros dicen que eres el enviado de algún dios rival. Que esto es una guerra entre ellos, y tú solo su arma.' },
@@ -326,7 +326,7 @@ const ZONE_SCENES = [
   ])],
   [throneScene(() => zoneFell(2), [
     { wait: 2.9, min: 0.8, who: 'queen', text: () => `Los picadores de ${lc(kingdomNow().zones[2].name)} han vuelto a casa. Con los ojos de su color, Alec. Eso no puede ser.` },
-    { who: 'alec', text: () => `Lo que llevaban dentro se fue cuando cayó ${lc(TYPES[WORLDS[2].boss].name)}.` },
+    { who: 'alec', text: () => `Lo que llevaban dentro se fue cuando cayó ${lc(TYPES[zoneBoss(kingdomNow(), 2)].name)}.` },
     { who: 'king', text: () => `Tres de cuatro. ¿Sabes lo que significa? Si cae el último, ${lc(TYPES[kingdomNow().god].name)} tendrá que bajar de su trono de ceniza.` },
     { who: 'queen', text: 'Y entonces vendrá a por ti. A por todos nosotros.' },
     { who: 'alec', text: 'Que venga. Llevo esperándole desde que tenía nueve años.' },
@@ -334,7 +334,7 @@ const ZONE_SCENES = [
     { who: 'queen', text: 'Hoy le he oído reírse. Hacía un año que no se reía.' },
   ])],
   [throneScene(() => zoneFell(3), [
-    { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[WORLDS[3].boss].name} ha caído. Los cuatro, Alec. ¡Los cuatro!` },
+    { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[zoneBoss(kingdomNow(), 3)].name} ha caído. Los cuatro, Alec. ¡Los cuatro!` },
     { who: 'queen', text: 'La gente canta tu nombre en la plaza. Un nombre que hace unas semanas no conocía nadie.' },
     { who: 'alec', text: 'Que no canten todavía. Queda él.' },
     { who: 'king', text: () => `${TYPES[kingdomNow().god].name} ya no tiene detrás de quién esconderse. Mis exploradores dicen que el cielo ${deN(kingdomNow().zones[3].name)} arde día y noche: te está esperando.` },
@@ -342,10 +342,90 @@ const ZONE_SCENES = [
     { who: 'alec', text: 'Vine a matar a un dios. No me voy a ir con el trabajo a medias.' },
     { who: 'king', text: 'Entonces ve. Y vuelve. Este reino no tiene hierro suficiente para pagarte, pero encontraremos la forma.' },
   ])],
-];
-function playZone(z) { playScenes(ZONE_SCENES[z], 'seenZone' + z, 'hall'); }
+],
+  // Torrealba: del «aquí dicen que tu dios era de los pequeños» a «nadie podrá decir eso de ti»
+  torrealba: [
+    [throneScene(() => zoneFell(0), [
+      { wait: 2.9, min: 0.8, who: 'king', text: () => `${kingdomNow().zones[0].name}. Bien. Mis consejeros dicen que ${lc(TYPES[zoneBoss(kingdomNow(), 0)].name)} era la más débil de los cuatro.` },
+      { who: 'alec', text: 'Vuestros consejeros no la han visto de cerca.' },
+      { who: 'queen', text: 'Los salineros han vuelto a las eras. Mi padre trabajó en ellas hasta que… Da igual. Sigue.' },
+      { who: 'king', text: 'Uno. Lo de Valdehierro también empezó con uno, supongo.' },
+      { who: 'alec', text: 'Y acabó con un dios menos.' },
+    ])],
+    [throneScene(() => zoneFell(1), [
+      { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[zoneBoss(kingdomNow(), 1)].name}. He visto a ese monstruo colgar a cien hombres en una tarde. Y tú vuelves andando.` },
+      { who: 'alec', text: 'Con rasguños. Pero vuelvo.' },
+      { who: 'queen', text: 'En el mercado ya no dicen que lo de Valdehierro fuera suerte. Ahora dicen que eres otro dios.' },
+      { who: 'alec', text: 'Los dioses no sangran tan a menudo.' },
+      { who: 'king', text: 'Empiezo a pensar que los cuentos se quedaban cortos.' },
+    ])],
+    [throneScene(() => zoneFell(2), [
+      { wait: 2.9, min: 0.8, who: 'queen', text: () => `${TYPES[zoneBoss(kingdomNow(), 2)].name} ha caído. Era el que leía las sentencias. Nadie en este reino le había visto nunca la cara.` },
+      { who: 'alec', text: 'No tenía. Debajo del yelmo solo había polvo.' },
+      { who: 'king', text: 'Tres. El Juez ya sabe tu nombre, Alec. Esta noche el cielo del tribunal se ha puesto rojo.' },
+      { who: 'alec', text: 'Bien. Que sepa a quién va a juzgar.' },
+    ])],
+    [throneScene(() => zoneFell(3), [
+      { wait: 2.9, min: 0.8, who: 'king', text: () => `${TYPES[zoneBoss(kingdomNow(), 3)].name}. Los cuatro. Hace dos lunas me reía del que decía que esto se podía hacer.` },
+      { who: 'queen', text: 'El reino entero está mirando al tribunal. Nadie duerme.' },
+      { who: 'alec', text: 'Que miren. Voy a bajar a por él.' },
+      { who: 'king', text: 'Cuando cayó el Primer Puño, dijeron que era un dios pequeño. Cuando caiga el Juez, nadie podrá volver a decir eso de ti.' },
+    ])],
+  ],
+};
+// La llegada a cada reino nuevo: el camino, la plaza y el rey. Alec ya no es un desconocido, pero aquí no le toman en serio
+const ARRIVAL = {
+  torrealba: [
+    { cap: 'El camino', room: ['intro_camino', 'intro_camino'], amb: '#b8c4d6',
+      setup(R) { const a = R.add('alec', null, 2, 10.9, { hero: true, face: 0 }); R.follow = a; R.followOff = [IC(5), -IC(1)]; R.cam.x = a.x + IC(5); R.cam.y = a.y - IC(1); R.go(a, [[22, 10.9]], 50); },
+      beats: [
+        { wait: 1.2, who: 'alec', think: true, text: 'Valdehierro quedó atrás. Allí ya saben mi nombre. Más allá de las montañas, no tanto.' },
+        { who: 'alec', think: true, text: 'Las noticias viajan despacio por los pasos de montaña, y llegan torcidas. En una venta decían que maté a un dios con las manos desnudas. En otra, que el dios se cayó solo.' },
+        { who: 'alec', think: true, text: 'Torrealba es otra cosa. Su dios no pide soldados: juzga. Y en este reino nadie ha ganado nunca un juicio.' },
+      ] },
+    { cap: () => kingdomNow().title, room: ['plaza', 'plaza'], amb: null,
+      setup(R) {
+        const cx = NAV.cols >> 1; introPlazaFolk(R);
+        const a = R.add('alec', null, cx, 33, { hero: true, face: -Math.PI / 2 }); R.follow = a; R.followOff = [0, -IC(2.5)]; R.cam.x = a.x; R.cam.y = a.y - IC(2.5);
+        R.go(a, [[cx, 19.3]], 60, q => { q.face = 0; });
+        const gd = R.actors.find(q => q.key === 'guard' && q.x > a.x && q.y < IC(10)) || R.add(null, 'guard', cx + 3.2, 7.4); gd.id = 'guardia'; gd.amb = false;
+      },
+      tick(R, dt) { introPlazaStroll(R, dt); },
+      beats: [
+        { wait: 1.2, who: 'alec', think: true, text: 'Una ciudad de piedra gris. La gente camina mirando al suelo, como si el suelo pudiera denunciarles.',
+          ev: [[1.7, R => { const cx = NAV.cols >> 1; R.go('guardia', [[cx + 2.6, 9.2], [cx + 2.6, 18.4], [cx + 1.9, 19.2]], 66, q => { q.flip = true; }); }]] },
+        { wait: 0.5, who: 'guardia', text: 'Alto. Esos guanteletes… ¿Eres Alec? ¿El de Valdehierro?' },
+        { who: 'alec', text: 'El mismo.' },
+        { who: 'guardia', text: 'Aquí dicen que lo de Valdehierro fue suerte. Que su dios era de los pequeños.' },
+        { who: 'alec', text: 'Que lo digan. Vengo a ver al rey.' },
+        { who: 'guardia', text: 'Te está esperando. Más por curiosidad que por fe, te lo advierto.' },
+      ] },
+    { cap: 'El salón del trono', room: ['hall', 'hall'], amb: '#b9c0cc',
+      setup(R) {
+        const cx = NAV.cols >> 1;
+        for (const n of R.room.out.npcs) R.add(n.key === 'king' || n.key === 'queen' ? n.key : null, n.key, n.x, n.y, { flip: !!n.flip, amb: true });
+        R.go(R.add('alec', null, cx, NAV.rows - 2.6, { hero: true, face: -Math.PI / 2 }), [[cx, 9.8]], 62, a => { a.face = -Math.PI / 2; });
+      },
+      beats: [
+        { wait: 2.9, min: 0.8, who: 'king', text: 'El mercenario de Valdehierro. He oído tu historia. Tres veces, y las tres distinta.' },
+        { who: 'alec', text: 'La verdadera es la más corta: había un dios, y ya no lo hay.' },
+        { who: 'king', text: 'El Primer Puño era un dios de la guerra en un reino de pastores. El nuestro es otra cosa. Escucha.' },
+        ...KSTORY.torrealba(),
+        { who: 'queen', text: 'Te pagaremos si vuelves. No antes. Aquí ya hemos pagado demasiado por adelantado.' },
+        { who: 'alec', text: 'Me basta.' },
+        { who: 'king', text: 'Demuéstrame que lo de Valdehierro no fue suerte. Los encargos están en el tablón de la plaza.' },
+      ] },
+  ],
+};
+// Viajar a otro reino: la primera vez, su llegada; después, directo a su ciudad
+function travelTo(i) {
+  M.kingdom = i; M.run = null; save();
+  const K = KINGDOMS[i];
+  if (ARRIVAL[K.id] && !M['seenArrival_' + K.id]) playScenes(ARRIVAL[K.id], 'seenArrival_' + K.id); else openTown();
+}
+function playZone(z) { const L = ZONE_SCENES[kingdomNow().id]; if (L && L[z]) playScenes(L[z], kflag('seenZone' + z), 'hall'); else openTown('hall'); }
 // La escena de una zona se debe la primera vez que cae su guardián
-const zoneDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'boss' && ZONE_SCENES[S.mission.z] && !M['seenZone' + S.mission.z];
+const zoneDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'boss' && (ZONE_SCENES[kingdomNow().id] || [])[S.mission.z] && !M[kflag('seenZone' + S.mission.z)];
 
 // ── Poner en marcha, pasar de escena y acabar ──
 let introHudOn = false, introTap = false, INTRO_LM = null;
@@ -356,9 +436,9 @@ function playScenes(L, seen, after) {
   introTap = false; renderOverlay(); introScene(0); sfx('ok', 0.3,0.7);
 }
 function playIntro() { playScenes(INTRO, 'seenIntro'); }
-function playEnding() { playScenes(ENDING, 'seenEnding'); }
+function playEnding() { playScenes(ENDING, kflag('seenEnding')); }
 // El final se debe la primera vez que cae el dios del reino (o, en guardados de antes de que existiera, la próxima vez que caiga)
-const endingDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'god' && !M.seenEnding;
+const endingDue = () => !!S && S.mode === 'win' && !!S.mission && S.mission.type === 'god' && !M[kflag('seenEnding')];
 function introEnd() {
   const seen = S.intro && S.intro.seen, after = S.intro && S.intro.after;
   S.dialog = null; S.intro = null;

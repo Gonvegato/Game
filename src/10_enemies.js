@@ -18,6 +18,12 @@ const TYPES = {
   colossus:  { name: 'El Cofre Voraz',         r: 26, hp: 2100, speed: 34, dmg: 34, shape: 'square',  color: '#4aa7b8', boss: true, phases: 2, kit: ['lasers', 'ring', 'charge', 'slam'],        sum: 'sniper' },
   nameless:  { name: 'El Sin Nombre',          r: 22, hp: 3000, speed: 54, dmg: 36, shape: 'diamond', color: '#d8d2e8', boss: true, phases: 3, kit: ['slam', 'charge', 'ring', 'fan', 'leap', 'lasers', 'pools', 'summon'], sum: 'brute' },
   // Dioses: el jefe final de un reino
+  // Torrealba: guardianes y dios del segundo reino (más vida y más daño: el reino de un dios mucho más fuerte)
+  k2_salt:    { name: 'La Bestia de Sal',        r: 24, hp: 2600, speed: 54, dmg: 40, shape: 'square',  color: '#cfe6f0', boss: true, scale: 2, phases: 2, kit: ['charge', 'slam', 'ring'],                        sum: 'lancer' },
+  k2_hang:    { name: 'El Verdugo de la Ciénaga', r: 22, hp: 3200, speed: 58, dmg: 42, shape: 'circle',  color: '#4a7ab8', boss: true, scale: 2, phases: 2, kit: ['leap', 'slam', 'fan', 'summon'],                 sum: 'brute' },
+  k2_bailiff: { name: 'El Alguacil',             r: 24, hp: 3900, speed: 50, dmg: 44, shape: 'square',  color: '#9aa4b8', boss: true, phases: 3, kit: ['charge', 'ring', 'lasers', 'slam'],             sum: 'sniper' },
+  k2_exec:    { name: 'El Ejecutor',             r: 26, hp: 4800, speed: 60, dmg: 48, shape: 'diamond', color: '#c0392b', boss: true, scale: 2, phases: 3, kit: ['charge', 'leap', 'ring', 'fan', 'pools', 'summon'], sum: 'lancer' },
+  k2_judge:   { name: 'El Juez Sin Rostro',      r: 30, hp: 7000, speed: 52, dmg: 52, shape: 'square',  color: '#e8e0c8', boss: true, scale: 2, phases: 3, kit: ['slam', 'charge', 'leap', 'ring', 'lasers', 'summon'], sum: 'lancer' },
   firstfist: { name: 'El Primer Puño',         r: 28, hp: 3400, speed: 50, dmg: 38, shape: 'square',  color: '#d9a066', boss: true, phases: 3, kit: ['slam', 'charge', 'leap', 'ring', 'summon'], sum: 'brute' },
 };
 const RPW = 5;   // salas por mundo, antes de la tienda y el jefe

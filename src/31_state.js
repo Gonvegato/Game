@@ -38,11 +38,11 @@ function startRun(mission) {
 // Entrar en la siguiente sala (o en el jefe del mundo)
 function nextWave() {
   S.wave += 1;
-  const ms = S.mission, n = S.wave, r = n, W = ms.z + 1, world = WORLDS[W - 1], K = KINGDOMS.find(x => x.id === ms.k);
+  const ms = S.mission, n = S.wave, r = n, K = KINGDOMS.find(x => x.id === ms.k), W = zoneWorld(K, ms.z) + 1, world = WORLDS[W - 1];   // el paisaje y los enemigos de la zona
   S.world = W; S.room = r; S.bossRoom = hasBoss(ms) && r === roomsOf(ms);
   // Nivel de dificultad: sube con la zona y con lo adentro que estés de la misión
-  S.lvl = ms.z * 2.5 + (ms.type === 'doors' ? r : ms.type === 'defend' ? r * 1.15 : ms.type === 'assault' ? 1 + r * 2.6 : ms.type === 'boss' ? 2 + r * 1.3 : 9 + r * 1.2);
-  const first = ms.z === 0 && ms.type === 'doors' && r === 1 && !isDone(ms.id), bossKey = ms.type === 'god' ? K.god : world.boss;
+  S.lvl = (K.lvl0 || 0) + ms.z * 2.5 + (ms.type === 'doors' ? r : ms.type === 'defend' ? r * 1.15 : ms.type === 'assault' ? 1 + r * 2.6 : ms.type === 'boss' ? 2 + r * 1.3 : 9 + r * 1.2);
+  const first = ms.z === 0 && ms.type === 'doors' && r === 1 && !isDone(ms.id), bossKey = ms.type === 'god' ? K.god : zoneBoss(K, ms.z);
   S.roomType = S.bossRoom ? 'boss' : ms.type === 'defend' || ms.type === 'assault' ? ms.type : S.next.type; S.god = S.roomType === 'god' ? S.next.god : null;
   C.floor = world.floor; C.tile = world.tile; S.keep = null; S.defWave = ms.type === 'defend' ? r : 0;
   const list = [];

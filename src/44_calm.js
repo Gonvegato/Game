@@ -93,7 +93,7 @@ function openDoors(scr, extra) {
 }
 // Antes del jefe: una sola puerta, la suya
 function bossDoor() {
-  const ms = S.mission, boss = ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name;
+  const ms = S.mission, boss = ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[zoneBoss(KINGDOMS.find(x => x.id === ms.k), ms.z)].name;
   openDoors(null, [{ tag: ms.type === 'god' ? 'Dios' : 'Guardián', name: 'La puerta de ' + lc(boss), desc: 'Detrás espera ' + lc(boss) + '. No hay vuelta atrás.', color: C.blood, ico: ['helm', 1], apply: () => {} }]);
 }
 // La puerta del campamento del buhonero: una sala sin enemigos con su tienda; de allí se sigue por otra puerta

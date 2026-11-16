@@ -25,7 +25,7 @@ function keeperHtml() {
   return `<div class="keeper"><i style="width:${m.w}px;height:${m.h}px;background-position:-${f[0]}px -${f[1]}px"></i><span><b style="color:#d9b26a">${S.keep ? 'La tendera de la aldea' : 'El buhonero'}:</b> «${line}»</span></div>`;
 }
 function shopHtml() {
-  const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
+  const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[zoneBoss(KINGDOMS.find(x => x.id === ms.k), ms.z)].name) : '';
   const icoOf = it => ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0);
   return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}${tipBox(S.shop.tip)}
     <div class="shopwrap"><div><div class="stalls">` +

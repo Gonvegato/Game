@@ -11,7 +11,7 @@ const MTYPES = {
   god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas y, al final, el dios. Hay dos tiendas.' },
 };
 const KINGDOMS = [
-  { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro',
+  { id: 'valdehierro', name: 'Valdehierro', title: 'El reino de Valdehierro', godTitle: 'el dios de la guerra',
     lore: 'El rey de Valdehierro paga en hierro y no hace preguntas. Los ejércitos del Primer Puño ya han tomado medio reino.',
     god: 'firstfist', zones: [
       { name: 'Las Criptas',          m: ['El osario viejo', 'La aldea de Fuenteseca', 'El campamento de los profanadores'] },
@@ -19,14 +19,30 @@ const KINGDOMS = [
       { name: 'Las Minas de Cristal', m: ['El pozo hondo', 'La aldea de Peñablanca', 'El campamento de los picadores'] },
       { name: 'El Umbral',            m: ['El paso de ceniza', 'La aldea de Últimaluz', 'El campamento del estandarte negro'] },
     ] },
+  // El segundo reino: un dios mucho más fuerte (lvl0: cuánto más duro empieza) y zonas con su propio guardián sobre los paisajes de siempre (world)
+  { id: 'torrealba', name: 'Torrealba', title: 'El reino de Torrealba', godTitle: 'el dios del juicio', lvl0: 12,
+    lore: 'En Torrealba se juzga a los vivos. El Juez Sin Rostro ha condenado al reino entero, y sus alguaciles cumplen la sentencia aldea a aldea.',
+    god: 'k2_judge', zones: [
+      { name: 'Los Salares',               world: 2, boss: 'k2_salt',    m: ['Las galerías de sal', 'La aldea de Salobral', 'El campamento de los salineros'] },
+      { name: 'La Ciénaga Negra',          world: 1, boss: 'k2_hang',    m: ['El cañaveral de los ahorcados', 'La aldea de Juncal', 'El campamento de los verdugos'] },
+      { name: 'Las Catacumbas del Juicio', world: 0, boss: 'k2_bailiff', m: ['La sala de las sentencias', 'La aldea de Campodolor', 'El campamento de los alguaciles'] },
+      { name: 'El Tribunal de Ceniza',     world: 3, boss: 'k2_exec',    m: ['La escalinata quemada', 'La aldea de Cenizal', 'El campamento del cadalso'] },
+    ] },
 ];
+// Cada zona usa el paisaje y los enemigos de uno de los cuatro mundos (WORLDS) y tiene su guardián; en Valdehierro, los de siempre
+const zoneWorld = (K, z) => (K.zones[z].world != null ? K.zones[z].world : z);
+const zoneBoss = (K, z) => K.zones[z].boss || WORLDS[zoneWorld(K, z)].boss;
+// Marcas del guardado que van por reino (haber hablado con el rey, haber visto una escena): en Valdehierro, con su nombre de siempre
+const kflag = base => kingdomNow().id === 'valdehierro' ? base : base + '_' + kingdomNow().id;
+// El reino en el que estás (M.kingdom); se cambia de reino desde el salón del trono cuando el anterior es libre
+const kingdomOpen = i => i === 0 || !!(M.done || {})[KINGDOMS[i - 1].id + ':g'];
 const MKINDS = ['doors', 'defend', 'assault'];
-const kingdomNow = () => KINGDOMS[0];
+const kingdomNow = () => KINGDOMS[(typeof M !== 'undefined' && M && M.kingdom) || 0] || KINGDOMS[0];
 function missionOf(id) {
   const [k, z, i] = id.split(':'), K = KINGDOMS.find(x => x.id === k);
   if (z === 'g') return { id, k, z: 3, type: 'god', name: TYPES[K.god].name, zone: K.title };
   const Z = K.zones[+z];
-  if (i === 'b') return { id, k, z: +z, type: 'boss', name: TYPES[WORLDS[+z].boss].name, zone: Z.name };
+  if (i === 'b') return { id, k, z: +z, type: 'boss', name: TYPES[zoneBoss(K, +z)].name, zone: Z.name };
   return { id, k, z: +z, type: MKINDS[+i], name: Z.m[+i], zone: Z.name };
 }
 const isDone = id => !!(M.done || {})[id];
