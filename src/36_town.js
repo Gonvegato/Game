@@ -119,8 +119,19 @@ function roomHtml() {
 // Cada línea: quién habla y qué dice. Se escribe letra a letra; A (o Espacio) acaba la línea o pasa a la siguiente,
 // B (o Shift) se salta la conversación. Al final puede haber opciones para elegir con arriba y abajo.
 function talk(lines, choices, onEnd) { S.dialog = { lines, i: 0, ch: 0, choices: choices || null, sel: 0, t: 0, onEnd: onEnd || null }; sfx('tick', 0.25,1.1); }
+// En la ciudad, quien habla se mira: Alec se gira hacia el vecino que le habla (o hacia el último que le habló, si habla él)
+// y el vecino se gira hacia Alec. En la cinemática lo deciden las escenas.
+const townNpc = who => S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
+function talkFace(d) {
+  if (S.intro || !S.town) return;
+  const L = d.lines[d.i], w = L && L.who !== 'alec' ? L.who : d.other || (d.lines.find(q => q.who !== 'alec') || {}).who, n = w && townNpc(w);
+  if (!n) return;
+  d.other = w; const nx = n.x * CELL, ny = n.y * CELL;
+  S.p.face = Math.atan2(ny - S.p.y, nx - S.p.x); n.flip = nx > S.p.x;
+}
 function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
+  talkFace(d);
   if (L) d.ch = Math.min(L.text.length, d.ch + dt * 55);
   d.t += dt;
   if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }

@@ -111,6 +111,12 @@ function shot(e, dmg, ux, uy, big, col) {
       else S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
   }
   if (G('m_heavy') && active(e) && !e.boss) { e.kx += ux * 150; e.ky += uy * 150; }               // Gema de plomo: empuja
+  if (G('m_link') && !S._linking) {                                                            // Gema eslabonada: los de al lado reciben parte del golpe
+    const near = others(e, 70, 4);
+    if (near.length) { S._linking = true;
+      for (const o of near) { const d = dist(e, o) || 1; S.fx.push({ k: 'chain', segs: [{ x1: e.x, y1: e.y, x2: o.x, y2: o.y }], t: 0, life: chainLife(1), col, flip: 1 }); hit(o, dmg * 0.4, (o.x - e.x) / d, (o.y - e.y) / d, false, col); }
+      S._linking = false; }
+  }
 }
 
 // Un disparo: dedos y gema deciden cuánto y cómo; la palma decide a quién le da.
@@ -286,6 +292,10 @@ function barrelFire(target, m, big, col, reach) {
     const pool = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort(() => Math.random() - 0.5).slice(0, 3); while (pool.length < 3) pool.push(target);
     if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6, true); }   // resonancia Montería
     pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
+  } else if (B === 'b_cluster' || B === 'b_hydra') {   // Palma de racimo (tres) y de hidra (todos, hasta seis): varias cadenas a la vez
+    const inR = S.enemies.filter(e => e !== target && active(e) && dist(p, e) - e.r <= reach && (overWalls() || !blocked(p, e))).sort((a, b) => dist(p, a) - dist(p, b));
+    const tgts = [target].concat(inR.slice(0, B === 'b_cluster' ? 2 : 5)), k = B === 'b_cluster' ? 0.6 : 0.35;
+    tgts.forEach((e, i) => { const d = dist(p, e) || 1; S.fx.push(S._chain = { k: 'chain', segs: [{ x1: hx, y1: hy, x2: e.x, y2: e.y }], t: 0, life: chainLife(1), col, flip: i % 2 ? 1 : -1 }); if (i) S.stat.themed++; shot(e, p.dmg * m * k, (e.x - p.x) / d, (e.y - p.y) / d, big, col); S._chain = null; });
   } else if (B === 'b_fork') {           // tres bocas: centro al objetivo, dos a los lados a lo primero que pillen
     for (const off of [0, -0.34, 0.34]) {
       const a = ang + off, rx = Math.cos(a), ry = Math.sin(a); let bestE = off === 0 ? target : null, ba = off === 0 ? dist(p, target) : rayClip(p.x, p.y, rx, ry, reach + 20);
