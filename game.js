@@ -2857,6 +2857,11 @@ function talkFace(d) {
   d.other = w; const k = S.calm ? 1 : CELL, nx = n.x * k, ny = n.y * k;   // en la ciudad, en casillas; en la calma, en píxeles
   S.p.face = Math.atan2(ny - S.p.y, nx - S.p.x); n.flip = nx > S.p.x;
 }
+// Elegir una respuesta (con el mando aquí, o tocándola en la pantalla de abajo en las consolas de dos pantallas)
+function talkPick(i) {
+  const d = S.dialog; if (!d || !d.choices || d.i < d.lines.length || d.t <= 0.2 || !d.choices[i]) return;
+  const c = d.choices[i]; S.dialog = null; modeT = 0; sfx('ok', 0.3); c.fn();
+}
 function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
   talkFace(d);
@@ -2865,7 +2870,7 @@ function talkUpdate(dt) {
   if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
   if (d.i >= d.lines.length && d.choices) {
     if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; sfx('tick', 0.25); }
-    if (I.atkP && d.t > 0.2) { const c = d.choices[d.sel]; S.dialog = null; modeT = 0; c.fn(); }
+    if (I.atkP && d.t > 0.2) talkPick(d.sel);
     return;
   }
   if (I.atkP && d.t > 0.15) {
@@ -2925,6 +2930,11 @@ function drawDialog(k) {
     if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.fillText('▸', bx + w - pad - fs * 0.6, by + h - pad - fs * 0.9); }
     g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)'; g.textAlign = 'center';
     if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);   // la cinemática pone su propia ayuda
+  } else if (d.choices && DUAL.on) {   // con dos pantallas, las respuestas se eligen abajo: aquí solo el aviso, bajo Alec
+    g.font = `500 ${fs}px ${FONT}`; const t = '↓ Elige qué responder abajo';
+    const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k, w = g.measureText(t).width + pad * 2, h = lh + pad * 2;
+    const bx = clamp(sx - w / 2, 8 * dp, cv.width - w - 8 * dp), by = Math.min(cv.height - h - 70 * dp, sy + 52 * k);
+    box(bx, by, w, h, null); g.fillStyle = '#f2c14e'; g.fillText(t, bx + pad, by + pad);
   } else if (d.choices) {   // opciones de respuesta de Alec
     g.font = `500 ${fs}px ${FONT}`;
     const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;
@@ -8112,7 +8122,7 @@ newGame(); renderOverlay(); requestAnimationFrame(frame);
 // Tras «Nueva partida» la página se recarga con la partida borrada y entra directa a la historia
 try { if (sessionStorage.getItem('kiteo.fresh')) { sessionStorage.removeItem('kiteo.fresh'); playIntro(); } } catch (e) { /* sin almacenamiento */ }
 // Acceso para pruebas
-window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, zone: z => playZone(z), travel: i => travelTo(i), get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, villageCalm, assaultCalm, enterCamp, openDoors, bossDoor, campDoor, dropCoins, placeChests, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
+window.__kiteo = { hush, cam: () => cam, view: () => view, audio: () => ({ sfx: Object.keys(SFX).length, mus: musNow, playing: !!(musNow && MUS[musNow] && !MUS[musNow].paused), t: musNow && MUS[musNow] ? MUS[musNow].currentTime : 0, plays: Object.keys(SFXT) }), place: openPlace, town: openTown, intro: playIntro, ending: playEnding, zone: z => playZone(z), travel: i => travelTo(i), get state() { return S; }, get meta() { return M; }, enter: nextWave, dbg: { talkQueen, talkKing, talkPick, get roomBg() { return ROOM_BG; }, get nav() { return NAV; }, villageCalm, assaultCalm, enterCamp, openDoors, bossDoor, campDoor, dropCoins, placeChests, spawn, godsOpen,godsOpenN, lootGod, pieceOptions, pieceCands, pieceCard, techOk, techNeeds, mechsOf, pideOf, NEEDS, NEEDS_MORE, MECH, SOLO, roomCleared, missionWin, tip, tipTick, startRun, missionOf, get tipNow() { return tipNow; }, get tipQ() { return tipQ.slice(); }, get lastDev() { return lastDev; }, set lastDev(v) { lastDev = v; }, GOD_UNLOCK, kill, shop: openShop, book: openBook, doorScreen, critChance, petN, doomK, temperMax, th, shot, barrelFire, chargePayoff, addDoom, freeze, hit, sleep, light }, gunName, SPR, ENSEMBLES, LEGENDS, ROOM_KINDS, NAV, set forceRoom(k) { ROOM_FORCE = k; }, T, PIECES, DUOS, PLANS, TECHS, GODS, PARTS, RESO, TYPES, WORLDS, RPW };
 // ───────────────────────── Dos pantallas (AYN Thor y otras como una DS) ─────────────────────────
 // Si la app de Android ha abierto una segunda pantalla (puente KiteoDual), el juego se queda arriba y abajo va todo lo demás:
 // los menús, las cartas, la tienda, la forja, el tablón y el recetario (su HTML tal cual, que panel.html pinta con los mismos
@@ -8133,11 +8143,22 @@ window.dualRecv = function (s) {
   const m = JSON.parse(s);
   if (m.type === 'size') { document.documentElement.style.setProperty('--pw', m.w + 'px'); document.documentElement.style.setProperty('--ph', m.h + 'px'); DUAL.sent = ''; dualSync(); }
   else if (m.type === 'ready') { if (!DUAL.on) dualOn(); DUAL.sent = ''; DUAL.hud = ''; DUAL.canv = ''; dualSync(); }
+  else if (m.type === 'choice') talkPick(m.i);
   else if (m.type === 'click') { const el = ovBody.querySelectorAll('*')[m.i]; if (el) { audioInit(); el.click(); } }
 };
 // Manda el menú (si hay) cuando cambia; los lienzos (el mapa del tablón) como imagen
 function dualSync() {
   if (!DUAL.on) return;
+  // Una conversación esperando respuesta: abajo, lo último que te han dicho y las respuestas como botones
+  const d = S.dialog;
+  if (d && d.choices && d.i >= d.lines.length) {
+    const L = d.lines[d.lines.length - 1], who = L && L.who && typeof L.who === 'string' && L.who !== 'alec' ? L.who : '';
+    const html = `<div class="dchoice">${L ? `<p class="said">${L.text}</p>` : ''}<p class="eyebrow">Alec responde</p>` +
+      d.choices.map((c, i) => `<button class="opt${i === d.sel ? ' sel' : ''}" data-ch="${i}">${c.label}</button>`).join('') + '</div>';
+    dualTop.hidden = true;
+    const key = 'dlg|' + html; if (key !== DUAL.sent) { DUAL.sent = key; dualSend({ type: 'ov', show: true, html, cls: 'dlg', canv: [] }); }
+    return;
+  }
   const ovEl = $('overlay'), show = !ovEl.hidden && S.mode !== 'play' && S.mode !== 'town' && S.mode !== 'intro';
   dualTop.hidden = !show;
   if (show) dualTop.innerHTML = S.mode === 'title' ? '<p class="logo">Alec, el sin dios</p><p class="fine">Elige en la pantalla de abajo</p>' : '<p class="fine">↓ En la pantalla de abajo</p>';
@@ -8166,7 +8187,8 @@ function dualHud() {
 }
 new MutationObserver(() => { if (DUAL.on) requestAnimationFrame(dualSync); }).observe(ovBody, { subtree: true, childList: true, attributes: true, characterData: true });
 new MutationObserver(() => { if (DUAL.on) requestAnimationFrame(dualSync); }).observe($('overlay'), { attributes: true, attributeFilter: ['hidden'] });
-setInterval(() => { if (DUAL.on) { dualHud(); dualSync(); } }, 300);   // la vida y el oro cambian sin que cambie ningún menú
+setInterval(() => { if (DUAL.on) { dualHud(); dualSync(); } }, 300);
+setInterval(() => { if (DUAL.on && S.dialog && S.dialog.choices) dualSync(); }, 80);   // la respuesta señalada con el mando, al momento   // la vida y el oro cambian sin que cambie ningún menú
 window.dualOn = dualOn; window.dualOff = dualOff;   // la app los llama al aparecer o desaparecer la segunda pantalla
 dualOn();
 // Fin del bloque que envuelve todo el juego (se abre en 00_tuning.js)

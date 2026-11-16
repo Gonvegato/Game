@@ -130,6 +130,11 @@ function talkFace(d) {
   d.other = w; const k = S.calm ? 1 : CELL, nx = n.x * k, ny = n.y * k;   // en la ciudad, en casillas; en la calma, en píxeles
   S.p.face = Math.atan2(ny - S.p.y, nx - S.p.x); n.flip = nx > S.p.x;
 }
+// Elegir una respuesta (con el mando aquí, o tocándola en la pantalla de abajo en las consolas de dos pantallas)
+function talkPick(i) {
+  const d = S.dialog; if (!d || !d.choices || d.i < d.lines.length || d.t <= 0.2 || !d.choices[i]) return;
+  const c = d.choices[i]; S.dialog = null; modeT = 0; sfx('ok', 0.3); c.fn();
+}
 function talkUpdate(dt) {
   const d = S.dialog, L = d.lines[d.i];
   talkFace(d);
@@ -138,7 +143,7 @@ function talkUpdate(dt) {
   if (I.backP && !(d.choices && d.i >= d.lines.length)) { d.i = d.lines.length; d.ch = 0; if (!d.choices) { S.dialog = null; modeT = 0; if (d.onEnd) d.onEnd(); } return; }
   if (d.i >= d.lines.length && d.choices) {
     if (I.navY) { d.sel = (d.sel + (I.navY > 0 ? 1 : d.choices.length - 1)) % d.choices.length; sfx('tick', 0.25); }
-    if (I.atkP && d.t > 0.2) { const c = d.choices[d.sel]; S.dialog = null; modeT = 0; c.fn(); }
+    if (I.atkP && d.t > 0.2) talkPick(d.sel);
     return;
   }
   if (I.atkP && d.t > 0.15) {
@@ -198,6 +203,11 @@ function drawDialog(k) {
     if (d.ch >= L.text.length && Math.floor(S.t * 3) % 2 === 0) { g.fillStyle = sp[1]; g.fillText('▸', bx + w - pad - fs * 0.6, by + h - pad - fs * 0.9); }
     g.font = `500 ${Math.round(fs * 0.7)}px ${FONT}`; g.fillStyle = 'rgba(239,230,200,0.7)'; g.textAlign = 'center';
     if (!S.intro) g.fillText(lastDev === 'pad' ? 'A: seguir · B: saltar' : 'Espacio: seguir · Shift: saltar', cv.width / 2, cv.height - 58 * dp);   // la cinemática pone su propia ayuda
+  } else if (d.choices && DUAL.on) {   // con dos pantallas, las respuestas se eligen abajo: aquí solo el aviso, bajo Alec
+    g.font = `500 ${fs}px ${FONT}`; const t = '↓ Elige qué responder abajo';
+    const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k, w = g.measureText(t).width + pad * 2, h = lh + pad * 2;
+    const bx = clamp(sx - w / 2, 8 * dp, cv.width - w - 8 * dp), by = Math.min(cv.height - h - 70 * dp, sy + 52 * k);
+    box(bx, by, w, h, null); g.fillStyle = '#f2c14e'; g.fillText(t, bx + pad, by + pad);
   } else if (d.choices) {   // opciones de respuesta de Alec
     g.font = `500 ${fs}px ${FONT}`;
     const at = speakerPos('alec'), sx = (at.x - cam.x) * k, sy = (at.y - cam.y) * k;

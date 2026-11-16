@@ -18,11 +18,22 @@ window.dualRecv = function (s) {
   const m = JSON.parse(s);
   if (m.type === 'size') { document.documentElement.style.setProperty('--pw', m.w + 'px'); document.documentElement.style.setProperty('--ph', m.h + 'px'); DUAL.sent = ''; dualSync(); }
   else if (m.type === 'ready') { if (!DUAL.on) dualOn(); DUAL.sent = ''; DUAL.hud = ''; DUAL.canv = ''; dualSync(); }
+  else if (m.type === 'choice') talkPick(m.i);
   else if (m.type === 'click') { const el = ovBody.querySelectorAll('*')[m.i]; if (el) { audioInit(); el.click(); } }
 };
 // Manda el menú (si hay) cuando cambia; los lienzos (el mapa del tablón) como imagen
 function dualSync() {
   if (!DUAL.on) return;
+  // Una conversación esperando respuesta: abajo, lo último que te han dicho y las respuestas como botones
+  const d = S.dialog;
+  if (d && d.choices && d.i >= d.lines.length) {
+    const L = d.lines[d.lines.length - 1], who = L && L.who && typeof L.who === 'string' && L.who !== 'alec' ? L.who : '';
+    const html = `<div class="dchoice">${L ? `<p class="said">${L.text}</p>` : ''}<p class="eyebrow">Alec responde</p>` +
+      d.choices.map((c, i) => `<button class="opt${i === d.sel ? ' sel' : ''}" data-ch="${i}">${c.label}</button>`).join('') + '</div>';
+    dualTop.hidden = true;
+    const key = 'dlg|' + html; if (key !== DUAL.sent) { DUAL.sent = key; dualSend({ type: 'ov', show: true, html, cls: 'dlg', canv: [] }); }
+    return;
+  }
   const ovEl = $('overlay'), show = !ovEl.hidden && S.mode !== 'play' && S.mode !== 'town' && S.mode !== 'intro';
   dualTop.hidden = !show;
   if (show) dualTop.innerHTML = S.mode === 'title' ? '<p class="logo">Alec, el sin dios</p><p class="fine">Elige en la pantalla de abajo</p>' : '<p class="fine">↓ En la pantalla de abajo</p>';
@@ -51,6 +62,7 @@ function dualHud() {
 }
 new MutationObserver(() => { if (DUAL.on) requestAnimationFrame(dualSync); }).observe(ovBody, { subtree: true, childList: true, attributes: true, characterData: true });
 new MutationObserver(() => { if (DUAL.on) requestAnimationFrame(dualSync); }).observe($('overlay'), { attributes: true, attributeFilter: ['hidden'] });
-setInterval(() => { if (DUAL.on) { dualHud(); dualSync(); } }, 300);   // la vida y el oro cambian sin que cambie ningún menú
+setInterval(() => { if (DUAL.on) { dualHud(); dualSync(); } }, 300);
+setInterval(() => { if (DUAL.on && S.dialog && S.dialog.choices) dualSync(); }, 80);   // la respuesta señalada con el mando, al momento   // la vida y el oro cambian sin que cambie ningún menú
 window.dualOn = dualOn; window.dualOff = dualOff;   // la app los llama al aparecer o desaparecer la segunda pantalla
 dualOn();

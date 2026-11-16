@@ -32,6 +32,7 @@
   // Un toque: lo más concreto que se ha tocado dentro del menú, por su posición entre todos sus elementos
   body.addEventListener('click', e => {
     e.preventDefault(); e.stopPropagation();
+    const ch = e.target.closest && e.target.closest('[data-ch]'); if (ch) { send({ type: 'choice', i: +ch.dataset.ch }); return; }   // una respuesta de conversación
     const all = body.querySelectorAll('*'); let el = e.target;
     while (el && el !== body) { const i = Array.prototype.indexOf.call(all, el); if (i >= 0) { send({ type: 'click', i }); return; } el = el.parentElement; }
   }, true);
