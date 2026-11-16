@@ -78,7 +78,7 @@ function renderWorld() {
   const p = S.p, R = T.room;
   // La cámara sigue al jugador con decimales. El mundo se pinta en el píxel entero (cam.x, cam.y) y lo que sobra (fx, fy) se
   // aplica al ampliar la imagen a la pantalla: el desplazamiento avanza de píxel de pantalla en píxel de pantalla, sin tirones.
-  const cfx = view.w >= R.w + 64 ? (R.w - view.w) / 2 : clamp(p.x - view.w / 2, -32, R.w - view.w + 32), cfy = view.h >= R.h + 64 ? (R.h - view.h) / 2 : clamp(p.y - view.h / 2, -32, R.h - view.h + 32);
+  const cfx = view.w >= R.w + 64 ? (R.w - view.w) / 2 : clamp(p.x - view.w / 2, -32, R.w - view.w + 32), top = S.calm && S.calm.spots.some(s => s.kind === 'door') ? 100 : 32, cfy = view.h >= R.h + 64 ? (R.h - view.h) / 2 : clamp(p.y - view.h / 2, -top, R.h - view.h + 32);   // con puertas en el muro del fondo, la cámara sube hasta verlas enteras
   cam.x = Math.floor(cfx); cam.y = Math.floor(cfy); cam.fx = cfx - cam.x; cam.fy = cfy - cam.y; cam.pl = false;
   const shx = Math.round((Math.random() - 0.5) * S.shake), shy = Math.round((Math.random() - 0.5) * S.shake); cam.shx = shx; cam.shy = shy;
 

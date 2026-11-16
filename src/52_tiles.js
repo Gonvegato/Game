@@ -6,7 +6,7 @@ const WPAL = [
   { f: ['#252b3a', '#2a3142', '#212634'], j: '#171b27', cap: '#37435c', capHi: '#52628a', capLo: '#232b3d', br: ['#3f4a63', '#4a5772'], brHi: '#62719a', mo: '#191e2b', deco: 'shards' },     // Las Minas: pizarra azul
   { f: ['#33232b', '#3a2831', '#2c1f26'], j: '#1f151a', cap: '#4a2f3e', capHi: '#6e4558', capLo: '#2f1e28', br: ['#523645', '#5f3f50'], brHi: '#7a5468', mo: '#1d1218', deco: 'runes' },      // El Umbral: piedra sangrienta
 ];
-const BG_M = 3;   // casillas de margen alrededor de la sala
+const BG_M = 7;   // casillas de margen alrededor de la sala (cabe el muro del fondo con sus puertas)
 let ROOM_BG = null;
 function roomBg() {
   if (S.out && S.out.interior) { const h = S.out.interior === 'throne' ? roomBgHall() : roomBgInterior(); if (h) return h; }

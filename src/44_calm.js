@@ -69,14 +69,14 @@ function doorSpots(n) {
   const seen = new Uint8Array(c * r), q = [[Math.floor(S.p.x / CELL), Math.floor(S.p.y / CELL)]];   // hasta dónde se llega andando
   if (!W(q[0][0], q[0][1])) seen[q[0][1] * c + q[0][0]] = 1;
   while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= c || ny >= r || seen[ny * c + nx] || W(nx, ny)) continue; seen[ny * c + nx] = 1; q.push([nx, ny]); } }
-  const cand = [];   // la puerta va en un muro grueso (tres casillas de ancho y de fondo): no en un pilar suelto
+  const cand = [];   // la puerta va en un muro grueso (tres casillas de ancho y de fondo, como el arco): no en un pilar suelto
   for (let y = 0; y < r - 1; y++) for (let x = 2; x < c - 2; x++)   // también la fila de arriba del todo: su muro es el borde de la sala
-    if (seen[y * c + x] && seen[y * c + x - 1] && seen[y * c + x + 1] && W(x, y - 1) && W(x - 1, y - 1) && W(x + 1, y - 1) && W(x, y - 2) && W(x, y - 3) && !W(x, y + 1)) cand.push({ x: (x + 0.5) * CELL, y: y * CELL });
+    if (seen[y * c + x] && seen[y * c + x - 1] && seen[y * c + x + 1] && W(x, y - 1) && W(x - 1, y - 1) && W(x + 1, y - 1) && W(x, y - 2) && W(x, y - 3) && W(x, y - 4) && W(x - 1, y - 2) && W(x + 1, y - 2) && !W(x, y + 1) && !W(x - 1, y + 1) && !W(x + 1, y + 1)) cand.push({ x: (x + 0.5) * CELL, y: y * CELL });
   // repartidas: cada una lo más lejos posible de las demás (al menos 64 px), mejor en los muros de arriba y no encima de ti
-  const out = [], score = k => Math.min(150, ...out.map(o => Math.hypot(o.x - k.x, o.y - k.y))) - k.y / T.room.h * 60 - (Math.hypot(S.p.x - k.x, S.p.y - k.y) < 40 ? 80 : 0);
+  const out = [], score = k => (out.length ? Math.min(...out.map(o => Math.abs(o.x - k.x) + 0.5 * Math.abs(o.y - k.y))) : Math.abs(k.x - T.room.w / 2)) - k.y / T.room.h * 90 - (Math.hypot(S.p.x - k.x, S.p.y - k.y) < 40 ? 80 : 0);   // separadas a lo ancho: esquinas y centro del fondo
   while (out.length < n && cand.length) {
     let best = null, bd = -1e9;
-    for (const k of cand) { if (out.some(o => Math.hypot(o.x - k.x, o.y - k.y) < 64)) continue; const d = score(k); if (d > bd) { bd = d; best = k; } }
+    for (const k of cand) { if (out.some(o => Math.hypot(o.x - k.x, o.y - k.y) < (n > 2 ? 110 : 150))) continue; const d = score(k); if (d > bd) { bd = d; best = k; } }
     if (!best) break;
     out.push(best); cand.splice(cand.indexOf(best), 1);
   }
@@ -87,8 +87,10 @@ function doorSpots(n) {
 function openDoors(scr, extra) {
   const opts = (scr ? scr.opts : []).concat(extra || []), at = doorSpots(opts.length);
   S.calm = S.calm || { kind: 'doors', npcs: [], spots: [], near: null };
-  opts.forEach((o, i) => S.calm.spots.push({ kind: 'door', x: at[i].x, y: at[i].y + 9, dy: at[i].y, opt: o, label: o.name }));
+  opts.forEach((o, i) => S.calm.spots.push({ kind: 'door', x: at[i].x, y: at[i].y + 10, dy: at[i].y, opt: o, label: o.name }));
   S.calm.title = scr ? scr.eyebrow : '';
+  // las antorchas del muro que caerían dentro de un arco, fuera (la puerta ya trae las suyas)
+  if (ROOM_BG && ROOM_BG.torches) ROOM_BG.torches = ROOM_BG.torches.filter(t => !S.calm.spots.some(d => d.kind === 'door' && Math.abs(t.x - d.x) < 30 && t.y > d.dy - 70 && t.y < d.dy + 6));
   tip('doors');
 }
 // Antes del jefe: una sola puerta, la suya
@@ -203,18 +205,30 @@ function drawCalm() {
   }
   if (C2.near && !S.dialog) wtext(lastDev === 'pad' ? 'A: ' + (C2.near.kind === 'door' ? 'cruzar' : 'hablar') : lastDev === 'touch' ? 'Disparar: ' + (C2.near.kind === 'door' ? 'cruzar' : 'hablar') : 'Espacio: ' + (C2.near.kind === 'door' ? 'cruzar' : 'hablar'), p.x, p.y + 22, 6, C.ink, 0.95);
 }
-// Una puerta en el muro: arco de piedra, el hueco a oscuras con la luz de lo que hay detrás, y el icono encima. Cerca, qué es.
+// Una puerta en el muro: el arco de piedra del paquete (tools/pack_doors.py), más alto que Alec; dentro, oscuridad y la luz de lo que
+// hay detrás subiendo desde el suelo; una antorcha a cada lado y el icono encima. Al acercarte dice qué es.
+loadImg('doors', 'assets/doors.png');
 function drawDoor(s, on) {
-  const x = Math.round(s.x), y = Math.round(s.dy), o = s.opt, col = o.color || C.ink, pulse = 0.5 + 0.5 * Math.sin(S.t * 3 + x);
-  const R = (c, a, b, w, h) => { ctx.fillStyle = c; ctx.fillRect(x + a, y + b, w, h); };
-  R('#1a1820', -9, -24, 18, 24); R('#6e6a80', -8, -23, 16, 23); R('#8c88a0', -8, -23, 16, 2);   // marco de piedra
-  R('#0b0a10', -6, -20, 12, 20); R('#0b0a10', -5, -21, 10, 1); R('#0b0a10', -4, -22, 8, 1);       // el hueco
-  ctx.globalAlpha = 0.25 + 0.35 * pulse + (on ? 0.25 : 0); R(col, -5, -19, 10, 19); ctx.globalAlpha = 1;   // la luz de lo que hay detrás
-  R('#3a3646', -9, 0, 18, 2);
-  if (IMG.items && o.ico) ctx.drawImage(IMG.items, ICO[o.ico[0]] * 32, (o.ico[1] || 0) * 32, 32, 32, x - 8, y - 44 + Math.round(Math.sin(S.t * 4 + x) * 1.5), 16, 16);
+  const o = s.opt, col = o.color || C.ink, A = DOOR_ART.arch, Hh = DOOR_ART.hole, x0 = Math.round(s.x - A[2] / 2), y0 = Math.round(s.dy - A[3]), pulse = 0.5 + 0.5 * Math.sin(S.t * 3 + s.x);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x0 + 2, s.dy, A[2] - 4, 3);                                  // sombra en el suelo
+  ctx.fillStyle = '#07060b'; ctx.fillRect(x0 + Hh[0], y0 + Hh[1], Hh[2], Hh[3]);                               // el hueco
+  for (let k = 0; k < 10; k++) { ctx.globalAlpha = (0.05 + 0.06 * pulse + (on ? 0.05 : 0)) * (1 - k / 10) * 2.2; ctx.fillStyle = col; ctx.fillRect(x0 + Hh[0], y0 + Hh[1] + Hh[3] - (k + 1) * 4, Hh[2], 4); }   // la luz de la sala de detrás
+  ctx.globalAlpha = 1;
+  if (IMG.doors) ctx.drawImage(IMG.doors, A[0], A[1], A[2], A[3], x0, y0, A[2], A[3]);
+  for (const sx of [-1, 1]) {   // antorchas en el muro, a los lados
+    const tx = Math.round(s.x + sx * (A[2] / 2 + 6)), ty = y0 + 14;
+    ctx.fillStyle = '#2a1a12'; ctx.fillRect(tx - 1, ty, 3, 8); ctx.fillStyle = '#6e4a2a'; ctx.fillRect(tx - 2, ty, 5, 2);
+    drawFx('flame', ((S.t * 1.6 + sx * 0.3) % 1 + 1) % 1, tx, ty - 3, col, 12);
+  }
+  if (IMG.items && o.ico) {   // el icono, en una placa sobre el arco
+    const iy = y0 - 20 + Math.round(Math.sin(S.t * 3 + s.x) * 1.2);
+    ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(s.x) - 10, iy - 2, 20, 20); ctx.fillStyle = col; ctx.globalAlpha = 0.85; ctx.fillRect(Math.round(s.x) - 9, iy - 1, 18, 18); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#16101a'; ctx.fillRect(Math.round(s.x) - 8, iy, 16, 16);
+    ctx.drawImage(IMG.items, ICO[o.ico[0]] * 32, (o.ico[1] || 0) * 32, 32, 32, Math.round(s.x) - 8, iy, 16, 16);
+  }
   if (on && !S.dialog) {   // solo la puerta a la que te acercas dice qué es (si no, los nombres se pisan)
-    wtext(o.tag, x, y - 58, 6, '#efe6c8', 0.85); wtext(o.name, x, y - 50, 7, col, 1);
-    (o.desc.match(/.{1,46}(\s|$)/g) || []).slice(0, 3).forEach((l, i) => wtext(l.trim(), x, y + 10 + i * 8, 6, '#efe6c8', 0.9));
+    wtext(o.tag, s.x, y0 - 34, 6, '#efe6c8', 0.85); wtext(o.name, s.x, y0 - 26, 7, col, 1);
+    (o.desc.match(/.{1,46}(\s|$)/g) || []).slice(0, 3).forEach((l, i) => wtext(l.trim(), s.x, s.dy + 12 + i * 8, 6, '#efe6c8', 0.9));
   }
 }
 // Flechas en el borde de la pantalla hacia las puertas que no se ven (con el icono de lo que hay detrás); al verlas, desaparecen
@@ -223,7 +237,7 @@ function calmPointers() {
   const R = 10, L = cam.x + 16, Rt = cam.x + view.w - 16, T = cam.y + Math.max(30, view.h * 0.22), B = cam.y + view.h * 0.74, ox = cam.x + view.w / 2, oy = cam.y + view.h / 2, placed = [];
   for (const s of C2.spots) {
     if (s.kind !== 'door') continue;
-    const x = s.x, y = s.dy - 12;
+    const x = s.x, y = s.dy - 30;
     if (x > cam.x + 4 && x < cam.x + view.w - 4 && y > cam.y + 4 && y < cam.y + view.h - 4) continue;
     const dx = x - ox, dy = y - oy, k = Math.min(dx > 0 ? (Rt - ox) / dx : dx < 0 ? (L - ox) / dx : 1e9, dy > 0 ? (B - oy) / dy : dy < 0 ? (T - oy) / dy : 1e9);
     let px = ox + dx * k, py = oy + dy * k;
