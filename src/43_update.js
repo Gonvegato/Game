@@ -2,6 +2,7 @@
 function update(dt) {
   const p = S.p, P = T.player;
   S.t += dt;
+  if (S.dialog) { talkUpdate(dt); return; }   // hablando con alguien (el buhonero, los aldeanos): todo espera
   S.shake = Math.max(0, S.shake - dt * 22);
   S.hurtFx = Math.max(0, S.hurtFx - dt);
   S.noTarget = Math.max(0, S.noTarget - dt);
@@ -20,7 +21,8 @@ function update(dt) {
   while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
   if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
   if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
-  if (!S.queue.length && !S.enemies.length) {
+  coinsUpdate(dt); chestsUpdate(dt); if (S.calm) calmUpdate(dt);
+  if (!S.queue.length && !S.enemies.length && !S.calm) {
     S.waveClear += dt;
     if (S.waveClear > (S.bossRoom ? GODFALL_T + 0.4 : 0.7)) { S.waveClear = 0; S.shots.length = 0; S.zones.length = 0; S.timers.length = 0; S.hazards.length = 0; S.lasers.length = 0; roomCleared(); return; }
   }

@@ -122,12 +122,12 @@ function roomHtml() {
 function talk(lines, choices, onEnd) { S.dialog = { lines, i: 0, ch: 0, choices: choices || null, sel: 0, t: 0, onEnd: onEnd || null }; sfx('tick', 0.25,1.1); }
 // En la ciudad, quien habla se mira: Alec se gira hacia el vecino que le habla (o hacia el último que le habló, si habla él)
 // y el vecino se gira hacia Alec. En la cinemática lo deciden las escenas.
-const townNpc = who => S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
+const townNpc = who => S.calm ? S.calm.npcs.find(q => q.id === who) : S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
 function talkFace(d) {
-  if (S.intro || !S.town) return;
+  if (S.intro || !(S.town || S.calm)) return;
   const L = d.lines[d.i], w = L && L.who !== 'alec' ? L.who : d.other || (d.lines.find(q => q.who !== 'alec') || {}).who, n = w && townNpc(w);
   if (!n) return;
-  d.other = w; const nx = n.x * CELL, ny = n.y * CELL;
+  d.other = w; const k = S.calm ? 1 : CELL, nx = n.x * k, ny = n.y * k;   // en la ciudad, en casillas; en la calma, en píxeles
   S.p.face = Math.atan2(ny - S.p.y, nx - S.p.x); n.flip = nx > S.p.x;
 }
 function talkUpdate(dt) {
@@ -149,6 +149,7 @@ function talkUpdate(dt) {
 function speakerPos(who) {
   if (S.intro) return introSpeakerPos(who);   // en la cinemática hablan sus actores
   if (who === 'alec') return { x: S.p.x, y: S.p.y - 26 };
+  if (S.calm) { const c = S.calm.npcs.find(q => q.id === who); if (c) return { x: c.x, y: c.y - 30 }; }
   const n = S.town && (S.town.npcs.find(q => q.id === who) || S.town.npcs.find(q => q.key === who));
   return n ? { x: n.x * CELL, y: n.y * CELL - 30 } : { x: S.p.x, y: S.p.y - 26 };
 }

@@ -98,6 +98,56 @@ const ROOM_GEN = {
     for (let j = my; j < my + 5; j++) { g[j][x0] = g[j][x0 + 1] = g[j][x0 + w - 2] = g[j][x0 + w - 1] = 0; }
     return [c >> 1, r >> 1];
   },
+  // ── Formas de sala: círculo, L, cuadrada, octógono, rombo, U y anillo (las paredes son las casillas que quedan fuera de la forma) ──
+  // Círculo (o elipse): a veces con un pilar en medio
+  circulo(g, c, r) {
+    const cx = (c - 1) / 2, cy = (r - 1) / 2, rx = c / 2 - 2, ry = r / 2 - 2;
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1) g[y][x] = 1;
+    if (Math.random() < 0.5) fillRect(g, (c >> 1) - 1, (r >> 1) - 1, 3, 3);
+    return [c >> 1, r - 5];
+  },
+  // En L: una esquina entera tapiada
+  ele(g, c, r) {
+    const w = Math.floor(c * ri(42, 55) / 100), h = Math.floor(r * ri(42, 55) / 100), corner = ri(0, 3);
+    fillRect(g, corner % 2 ? c - w : 0, corner < 2 ? 0 : r - h, w, h);
+    return corner < 2 ? [corner % 2 ? Math.floor(c * 0.25) : Math.floor(c * 0.75), r - 5] : [corner % 2 ? Math.floor(c * 0.25) : Math.floor(c * 0.75), 4];
+  },
+  // Cuadrada: un cuadrado en medio de la sala, con un pilar en cada esquina
+  cuadrado(g, c, r) {
+    const s = Math.min(c, r) - 4, x0 = (c - s) >> 1, y0 = (r - s) >> 1;
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) if (x < x0 || x >= x0 + s || y < y0 || y >= y0 + s) g[y][x] = 1;
+    for (const [px, py] of [[x0 + 4, y0 + 4], [x0 + s - 6, y0 + 4], [x0 + 4, y0 + s - 6], [x0 + s - 6, y0 + s - 6]]) fillRect(g, px, py, 2, 2);
+    return [c >> 1, y0 + s - 4];
+  },
+  // Octógono: las cuatro esquinas cortadas en diagonal
+  octogono(g, c, r) {
+    const k = Math.floor(Math.min(c, r) * 0.32);
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) { const dx = Math.min(x, c - 1 - x), dy = Math.min(y, r - 1 - y); if (dx + dy < k) g[y][x] = 1; }
+    return [c >> 1, r - 5];
+  },
+  // Rombo: solo queda el rombo del centro, con un poco de margen en las puntas
+  rombo(g, c, r) {
+    const cx = (c - 1) / 2, cy = (r - 1) / 2, rx = c / 2 + 2, ry = r / 2 + 1;
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) if (Math.abs(x - cx) / rx + Math.abs(y - cy) / ry > 0.98) g[y][x] = 1;
+    return [c >> 1, r - 6];
+  },
+  // En U: un bloque que baja desde el muro de arriba y parte la sala en dos brazos
+  ucodo(g, c, r) {
+    const w = Math.floor(c * 0.3), h = Math.floor(r * 0.58);
+    fillRect(g, (c - w) >> 1, 0, w, h);
+    return [c >> 1, r - 4];
+  },
+  // Anillo: un patio redondo alrededor de un bloque redondo
+  anillo(g, c, r) {
+    const cx = (c - 1) / 2, cy = (r - 1) / 2, rx = c / 2 - 2, ry = r / 2 - 2;
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) { const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2; if (d > 1 || d < 0.16) g[y][x] = 1; }
+    return [c >> 1, r - 5];
+  },
+  // El campamento del buhonero: una sala pequeña y tranquila (la hoguera y el buhonero los pone 44_calm.js)
+  campamento(g, c, r) {
+    for (const [px, py] of [[4, 4], [c - 6, 4], [4, r - 6], [c - 6, r - 6]]) fillRect(g, px, py, 2, 2);
+    return [c >> 1, r - 5];
+  },
   // Aldea: cuatro casas de piedra alrededor de una plaza con la campana en medio
   aldea(g, c, r) {
     for (const [fx, fy] of [[0.2, 0.22], [0.8, 0.22], [0.2, 0.78], [0.8, 0.78]]) fillRect(g, Math.floor(c * fx) - 2, Math.floor(r * fy) - 1, 5, 3);
@@ -313,7 +363,7 @@ function cityGen(g, c, r, kid) {
   return [cx, 14];
 }
 let ROOM_FORCE = null;   // solo para pruebas
-const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall', 'forgeroom', 'innroom'].includes(k));
+const ROOM_KINDS = Object.keys(ROOM_GEN).filter(k => !['arena', 'aldea', 'pradera', 'aldea_ext', 'plaza', 'hall', 'forgeroom', 'innroom', 'campamento'].includes(k));
 
 // Monta una sala. Devuelve { w, h, walls, start, kind }.
 function buildRoom(boss, kindF, sizeF) {

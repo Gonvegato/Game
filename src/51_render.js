@@ -393,6 +393,7 @@ function renderWorld() {
   }
 
   if (S.town) drawTown();
+  if (S.chests.length) drawChests(); if (S.coins.length) drawCoins(); if (S.calm) drawCalm();   // 44_calm.js
   // Jugador: en su propia capa, centrado en ella; render() la coloca luego en su sitio exacto de la pantalla
   ctx = plCtx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, PL, PL);
   ctx.setTransform(1, 0, 0, 1, PL / 2 - Math.round(p.x), PL / 2 - Math.round(p.y)); cam.pl = true;
@@ -482,7 +483,8 @@ function renderWorld() {
   lights();
   // Flechas en el borde de la pantalla hacia lo que importa y no se ve: estandartes, la campana, el arma caída
   ctx.setTransform(1, 0, 0, 1, -cam.x, -cam.y);
-  if (S.town && !S.dialog) townPointers();   // en la ciudad: la forja, la posada, el patio, el tablón y el castillo
+  if (S.town && !S.dialog) townPointers();
+  if (S.calm && !S.dialog) calmPointers();   // y hacia las puertas de la sala (44_calm.js)   // en la ciudad: la forja, la posada, el patio, el tablón y el castillo
   const pointer = (x, y, col) => {
     if (x > cam.x + 6 && x < cam.x + view.w - 6 && y > cam.y + 6 && y < cam.y + view.h - 6) return;
     const px = Math.round(clamp(x, cam.x + 12, cam.x + view.w - 12)), py = Math.round(clamp(y, cam.y + 34, cam.y + view.h - 16)), a = Math.atan2(y - py, x - px), b = Math.floor(S.t * 4) % 2;

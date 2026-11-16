@@ -67,6 +67,7 @@ CAST.update({
   'alec_u': ('!up', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18), 'atkR': ('atk:0:4', 4, 18), 'atkL': ('atk:4:8', 4, 18)}),   # atkR: puño derecho (fotogramas 0-3), atkL: izquierdo (4-7)
   'alec_d': ('!down', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18), 'atkR': ('atk:0:4', 4, 18), 'atkL': ('atk:4:8', 4, 18)}),   # atkR: puño derecho (fotogramas 0-3), atkL: izquierdo (4-7)
   'keeper': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_A", {'idle': ('Idle_Hold/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Hold/Walk_Side-Sheet.png', 6, 9)}),   # la posadera, con su bandeja
+  'merchant': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Rogue", {'idle': ('Idle/Idle-Sheet.png', 4, 5), 'move': ('Run/Run-Sheet.png', 6, 10)}),   # el buhonero, encapuchado
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
 def pcmob(key, d, sub):

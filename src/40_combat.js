@@ -82,6 +82,7 @@ function kill(e) {
   const p = S.p;
   sfx(e.boss ? 'bossdie' : e.champ ? 'relic' : 'kill', e.boss ? 0.8 : e.champ ? 0.6 : 0.3, 0.9 + Math.random() * 0.25);
   S.kills += 1;
+  if (!S.calm) dropCoins(e.x, e.y, coinsOf(e));   // el oro se suelta en monedas y se recoge (44_calm.js)
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
   if (S.pets.length) S.build.caza = caza() + (e.boss || e.champ ? 5 : 1);                         // Bestias: la Caza de la manada

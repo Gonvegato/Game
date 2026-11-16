@@ -21,7 +21,7 @@ function roomCleared() {
   const p = S.p, n = S.lvl, W = S.world, ms = S.mission, N = roomsOf(ms), last = S.room >= N;
   if (S.bossRoom) { bossDown(); return; }
   p.hp = Math.min(p.maxHp, p.hp + pct(5 + 4 * tk('mend')));
-  const gold = Math.round(8 + 2 * n); addGold(gold);
+  const gold = Math.round(3 + n); addGold(gold);   // lo demás del oro lo sueltan los enemigos y los cofres
   pickQueue = []; S.rerolls = tk('reroll');
   const unit = ms.type === 'defend' ? 'oleada' : ms.type === 'assault' ? 'campamento' : 'sala', here = ms.name + ' · ' + unit + ' ' + S.room + ' de ' + N;
   let got = '';
@@ -44,10 +44,15 @@ function roomCleared() {
   else if (S.roomType === 'anvil') pickQueue.push(statScreen);
   S.cleared = here + (got ? ' · ' + got : '') + ' · +' + gold + ' de oro';
   if (got) { sayRaw('[' + got.replace('+', 'Consigues ') + ']', (ROOMS[S.roomType] || { color: C.ink }).color); sfx('ok', 0.4); }
-  const onward = ms.type === 'defend' || ms.type === 'assault' || S.room + 1 >= N && hasBoss(ms) ? null : doorScreen;   // en defensa y asalto no hay puertas; antes del jefe tampoco
+  // Después de las recompensas, la calma (44_calm.js): en las incursiones salen las puertas en la sala (y, donde tocaba tienda,
+  // también la del campamento del buhonero); antes del jefe, solo la suya; en las defensas, donde tocaba tienda, los aldeanos
+  // salen a hablar contigo; en los asaltos, el buhonero.
+  const shop = shopAfter(ms, S.room);
   if (last) afterPicks = missionWin;
-  else if (shopAfter(ms, S.room)) afterPicks = openShop;     // la tienda decide después por dónde sigues
-  else if (onward) pickQueue.push(onward);
+  else if (ms.type === 'defend') { if (shop) afterPicks = villageCalm; }
+  else if (ms.type === 'assault') { if (shop) afterPicks = assaultCalm; }
+  else if (S.room + 1 >= N && hasBoss(ms)) afterPicks = () => { resumePlay(); bossDoor(); };
+  else afterPicks = () => { resumePlay(); openDoors(doorScreen(), shop ? [campDoor()] : []); };
   advancePick();
 }
 function bossDown() { sayRaw('[Has vencido a ' + (S.enemies.find(e => e.boss) || { type: { name: S.mission.name } }).type.name + ']', C.ink); missionWin(); }

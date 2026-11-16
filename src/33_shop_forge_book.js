@@ -15,26 +15,35 @@ function openShop() {
   }
   listSel = -1; setMode('shop'); ov.scrollTop = 0;
 }
-// La tendera: una buhonera enana que sigue a los mercenarios de campamento en campamento
-function keeperHtml() { const m = ATLAS.keeper; if (!m) return ''; const f = m.a.idle.f[0]; return `<div class="keeper"><i style="width:${m.w}px;height:${m.h}px;background-position:-${f[0]}px -${f[1]}px"></i><span>«Mira sin prisa, mercenario. Lo que no compres hoy, mañana lo llevará otro.»</span></div>`; }
+// El buhonero: va de campamento en campamento detrás de los que pelean. Habla al abrir la tienda y al venderte algo
+const SHOP_LINES = { open: ['Mira sin prisa. Lo que no compres hoy, mañana lo llevará otro.', 'Todo de primera. Casi todo. Lo que no, a mitad de precio… si regateas bien.', 'El guiso es de hoy. Lo demás, mejor no preguntes de qué día es.'],
+  buy: { heal: 'Cómetelo caliente. Frío no hay quien se lo coma.', tech: 'Esa reliquia la saqué de un altar. El dios no la echará de menos.', up: 'Listo. Ahora corta el doble. O eso dice el que me lo vendió.', anvil: 'Siéntate en el yunque. No, en ese no, en el otro.', heart: 'No preguntes de quién era. Funciona, que es lo que importa.', part: 'Pieza de armero de verdad. Bueno, de un armero muerto, pero de verdad.', plan: 'Ese plano vale más que todo lo demás junto. Tú sabrás.' },
+  poor: 'Con ese oro, ni el guiso. Vuelve cuando hayas matado a unos cuantos más.' };
+function keeperHtml() {
+  const m = ATLAS.merchant || ATLAS.keeper; if (!m) return ''; const f = m.a.idle.f[0];
+  const line = S.shop.say || SHOP_LINES.open[S.wave % SHOP_LINES.open.length];
+  return `<div class="keeper"><i style="width:${m.w}px;height:${m.h}px;background-position:-${f[0]}px -${f[1]}px"></i><span><b style="color:#d9b26a">${S.keep ? 'La tendera de la aldea' : 'El buhonero'}:</b> «${line}»</span></div>`;
+}
 function shopHtml() {
   const p = S.p, ms = S.mission, toBoss = hasBoss(ms) && S.room + 1 >= roomsOf(ms), boss = toBoss ? (ms.type === 'god' ? TYPES[KINGDOMS.find(x => x.id === ms.k).god].name : TYPES[WORLDS[S.world - 1].boss].name) : '';
   const icoOf = it => ico({ heal: 'mug', tech: 'sword', up: 'scroll', anvil: 'axe', heart: 'potion', part: 'chest', plan: 'book' }[it.id] || 'gem', it.id === 'tech' ? 1 : 0);
   return `<p class="eyebrow">Tienda · ${S.mission.zone}</p><div class="fhead"><h1>${toBoss ? 'Antes de ' + boss : 'Un alto en el camino'}</h1><p class="purse"><b class="coin">${Math.floor(p.gold)}</b> de oro<span>·</span><b class="life">${Math.ceil(p.hp)}</b> / ${p.maxHp} de vida</p></div>${keeperHtml()}${tipBox(S.shop.tip)}
     <div class="shopwrap"><div><div class="stalls">` +
     S.shop.items.map((it, i) => `<button class="fi stall${it.sold ? ' on sold' : p.gold >= it.price ? '' : ' off'}" data-act="buy:${i}"><em class="tile">${icoOf(it)}</em><b>${it.name}</b><span>${it.desc}</span>${gloss(it.desc, 3)}<i>${it.sold ? 'Vendido' : `<u class="coin">${it.price}</u>`}</i></button>`).join('') +
-    `</div><p class="fine">El oro solo sirve en este encargo: lo que no gastes aquí se pierde al terminar.</p><button class="fi primary" data-act="boss">${toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button></div>
+    `</div><p class="fine">El oro solo sirve en este encargo: lo que no gastes aquí se pierde al terminar.</p><button class="fi primary" data-act="boss">${S.calm ? 'Volver' : toBoss ? 'Cruzar la puerta de ' + boss : 'Seguir adelante'}</button></div>
     <aside class="carry"><h2>Lo que llevas</h2><ul class="build full">${buildHtml(true)}</ul></aside></div>`;
 }
 function shopAct(act) {
   const [k, i] = act.split(':'), p = S.p;
+  if (k === 'boss' && S.calm) { S.shop.say = null; resumePlay(); return; }   // la tienda de la calma (44_calm.js): se vuelve a la sala
   if (k === 'boss') {   // salir de la tienda: al jefe, a la siguiente oleada o campamento, o a elegir puerta
     const ms = S.mission, direct = ms.type === 'defend' || ms.type === 'assault' || (hasBoss(ms) && S.room + 1 >= roomsOf(ms));
     if (direct) { S.mode = 'play'; modeT = 0; nextWave(); renderOverlay(); } else { pickQueue = [doorScreen]; advancePick(); }
     return;
   }
   const it = S.shop.items[+i];
-  if (it.sold || p.gold < it.price) { sfx('no', 0.4); return; }
+  if (it.sold || p.gold < it.price) { sfx('no', 0.4); if (!it.sold) { S.shop.say = SHOP_LINES.poor; renderOverlay(); } return; }
+  S.shop.say = SHOP_LINES.buy[it.id] || null;
   if (it.id === 'up') { const own = SLOT_KEYS.map(s => S.build[s]).filter(c => c && c.lvl < 5); if (!own.length) { sfx('no', 0.4); return; } const c = own[Math.floor(Math.random() * own.length)]; c.lvl += 1; sayRaw('[' + curName(c) + ' sube a nivel ' + ROMAN[c.lvl] + ']', C.ink); }
   p.gold -= it.price; it.sold = true; sfx('ok', 0.45);
   if (it.id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.35));

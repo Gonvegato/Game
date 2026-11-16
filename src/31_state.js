@@ -14,7 +14,7 @@ function newGame() {
       charging: false, charge: 0, chargeCd: 0, chargeCdMax: T.charge.cd, chargeDir: 0, drawing: false, draw: 0, drawPow: 0,
       fury: 0, furyT: 0, reserve: 0, resT: 0, gold: 0, revive: 0, heat: 0, heatT: 0, over: 0, gat: 0, shells: 2, trig: 0, still: 0, feastShot: false,
     },
-    enemies: [], shots: [], fx: [], queue: [], lock: null, target: null,
+    enemies: [], shots: [], fx: [], queue: [], lock: null, target: null, coins: [], chests: [], calm: null,
     build: { basic: null, charge: null, dodge: null, passive: null }, techs: new Set(), plans: new Set(), drop: null,
     mirrors: [], pets: [], wells: [], mines: [], traps: [], stat: { horn: 0, ends: 0, net: 0, over: 0, awl: 0, timed: 0, wind: 0, blink: 0, quake: 0, choir: 0, themed: 0, quickb: 0, grave: 0, boom: 0, nail: 0, arc: 0, far: 0, swarm: 0, spring: 0, kick: 0, rider: 0, traced: 0, splash: 0, split: 0, meteor: 0, cchain: 0, balm: 0, cbounce: 0, volley: 0, mirror: 0, mcharge: 0, bite: 0, pounce: 0, temper: 0, share: 0, sleep: 0, well: 0, frozen: 0, shatter: 0, doom: 0, bleed: 0, fork: 0, hook: 0, flame: 0, rear: 0, flail: 0, first: 0, freeze: 0, frag: 0, last: 0, hop: 0, spk: 0, block: 0, orb: 0, mine: 0, onetwo: 0, spike: 0, sprout: 0, crit: 0, heads: 0, tails: 0, dice: 0, finish: 0, quick: 0, tempo: 0, bounce: 0, bombs: 0, bombHits: 0, chain: 0, blessed: 0, slam: 0, butt: 0 }, zones: [], timers: [], walls: titleWalls, roomKind: '', turrets: [], crystals: [], shades: [], fields: [], hazards: [], lasers: [],
   };
@@ -65,6 +65,8 @@ function nextWave() {
   const room = ms.type === 'defend' ? buildRoom(false, 'aldea_ext', 'big') : ms.type === 'assault' ? buildRoom(false, 'pradera', 'huge') : buildRoom(S.bossRoom);   // la aldea y los campamentos están al aire libre   // forma, tamaño y muros nuevos en cada sala
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.town = null; S.solidProps = room.solids || []; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' || S.lvl < 3 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
+  S.coins = []; S.chests = []; S.calm = null;
+  if (!S.bossRoom && (ms.type === 'doors' || ms.type === 'boss' || ms.type === 'god')) placeChests();   // a veces, un cofre suelto (44_calm.js)
   for (const s of S.shades) { s.x = S.p.x + rnd(-20, 20); s.y = S.p.y + rnd(-20, 20); }
   if (r === 1) note(S.p.x, S.p.y - 30, ms.name, C.ink, true);
   if (S.bossRoom) note(S.p.x, S.p.y - 30, TYPES[bossKey].name, C.blood, true);
