@@ -496,6 +496,161 @@ def frame(view, anim, i):
     return img, hands
 
 
+
+# ================= Combo de puñetazos alternos (atk): derecha 0-3, izquierda 4-7 =================
+# Brazos articulados: hombro -> codo (manga) -> muñeca (guantelete) -> puño.
+def limb(L, a, b, w, ramp):
+    """Segmento grueso de a a b con luz desde arriba a la izquierda. ramp = (luz, base, sombra)."""
+    (ax, ay), (bx, by) = a, b
+    dx, dy = bx - ax, by - ay; ln = math.hypot(dx, dy) or 1.0
+    nx, ny = -dy / ln, dx / ln
+    lit = 1 if (nx * -1 + ny * -1) > 0 else -1
+    r = w / 2
+    for y in range(int(min(ay, by) - r - 1), int(max(ay, by) + r + 2)):
+        for x in range(int(min(ax, bx) - r - 1), int(max(ax, bx) + r + 2)):
+            px, py = x + 0.5 - ax, y + 0.5 - ay
+            t = max(0.0, min(1.0, (px * dx + py * dy) / (ln * ln)))
+            qx, qy = px - dx * t, py - dy * t
+            if qx * qx + qy * qy > r * r: continue
+            v = qx * nx + qy * ny
+            c = ramp[1] if abs(v) < 0.5 else (ramp[0] if v * lit > 0 else ramp[2])
+            L.put(x, y, c)
+
+
+def arm(sh, el, wr, fist='side', big=False):
+    """Brazo entero. fist: 'side' (puño de perfil), 'front' (viene hacia la cámara), 'up' (se aleja)."""
+    L = Layer()
+    limb(L, sh, el, 3.2, ('U', 'T', 't'))
+    dx, dy = wr[0] - el[0], wr[1] - el[1]; ln = math.hypot(dx, dy) or 1.0; ux, uy = dx / ln, dy / ln
+    limb(L, el, wr, 2.6 if fist == 'front' else 3.0, ('N', 'M', 'm'))               # antebrazo de metal
+    limb(L, (el[0] + ux * 0.5, el[1] + uy * 0.5), (el[0] + ux * 1.6, el[1] + uy * 1.6), 4.4, ('N', 'N', 'm'))   # borde del guantelete
+    if fist == 'front':
+        t = FIST_BIG if big else FIST_SMALL
+        L.stamp(t, int(round(wr[0] - len(t[0]) / 2)), int(round(wr[1] - len(t) / 2)))
+        return L, (int(round(wr[0])), int(round(wr[1] - len(t) / 2)))
+    f = (wr[0] + ux * 1.6, wr[1] + uy * 1.6)
+    limb(L, wr, f, 3.8, ('N', 'M', 'm'))
+    L.put(int(round(f[0] + ux * 0.6)), int(round(f[1] + uy * 0.6)), 'n')            # nudillos
+    return L, (int(round(f[0])), int(round(f[1])))
+
+
+def P(base, pt, mirror=False):
+    x, y = pt
+    return (base[0] + (15 - x if mirror else x), base[1] + y)
+
+
+# poses del brazo derecho de la pantalla (vista de frente); el izquierdo es el espejo
+FRONT = {
+    'guard':  ((12, 2), (14, 8), (12, 4), 'front', False),
+    'wind':   ((12, 1), (15, 5), (15, 2), 'front', False),
+    'strike': ((11, 2), (10, 5), (9, 8), 'front', True),
+    'hold':   ((11, 2), (11, 5), (10, 8), 'front', False),
+    'chamber': ((12, 2), (14, 7), (13, 9), 'side', False),
+}
+BACK = {
+    'guard':  ((12, 2), (14, 7), (12, 5), 'side', False),
+    'wind':   ((12, 2), (15, 6), (14, 9), 'side', False),
+    'strike': ((12, 1), (13, -4), (13, -9), 'up', False),
+    'hold':   ((12, 1), (13, -3), (13, -7), 'up', False),
+    'chamber': ((12, 2), (14, 7), (13, 10), 'side', False),
+}
+SIDE_NEAR = {
+    'guard':  ((8, 2), (8, 8), (12, 6)),
+    'wind':   ((7, 2), (5, 7), (8, 7)),
+    'strike': ((9, 2), (13, 2), (17, 2)),
+    'hold':   ((9, 2), (12, 3), (16, 3)),
+    'chamber': ((7, 2), (5, 7), (8, 8)),
+}
+SIDE_FAR = {
+    'guard':  ((6, 2), (7, 8), (11, 5)),
+    'wind':   ((5, 2), (4, 7), (7, 6)),
+    'strike': ((7, 1), (11, 1), (16, 1)),
+    'hold':   ((7, 1), (10, 2), (15, 2)),
+    'chamber': ((5, 2), (4, 7), (7, 7)),
+}
+# fotograma -> (pose brazo derecho/cercano, pose brazo izquierdo/lejano, giro del cuerpo)
+COMBO = [('wind', 'guard', 1), ('strike', 'chamber', -1), ('hold', 'chamber', -1), ('guard', 'guard', 0),
+         ('guard', 'wind', -1), ('chamber', 'strike', 1), ('chamber', 'hold', 1), ('guard', 'guard', 0)]
+LANZA = {1: 1, 5: 0}     # fotograma en que sale la cadena -> índice del puño en «hands» (0 izquierdo/lejano, 1 derecho/cercano)
+
+
+def frame_combo(view, i):
+    img = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
+    pr, pl, tw = COMBO[i]
+    striking = pr in ('strike', 'hold') or pl in ('strike', 'hold')
+    bob = 0 if striking else (1 if 'wind' in (pr, pl) else 0)
+    ty = TORSO_Y + bob
+    hands = [None, None]
+    if view in 'SN':
+        x = X0 + (tw if view == 'S' else -tw)
+        # paso: adelanta la pierna contraria al brazo que golpea
+        ly, ry = (1, -1) if pr in ('strike', 'hold') else ((-1, 1) if pl in ('strike', 'hold') else (0, 0))
+        if view == 'N': ly, ry = -ly, -ry
+        lL = leg_layer(LEG, X0 + 4, LEG_Y + max(0, ly) - max(0, -ly) // 2, back=ly < 0)
+        lR = leg_layer(LEG, X0 + 9, LEG_Y + max(0, ry) - max(0, -ry) // 2, back=ry < 0)
+        body = body_layer(view, x, ty)
+        head = head_layer(view, x, HEAD_Y + bob, 'atk', bob, lag_x=(-tw if striking else 0) if view == 'S' else 0)
+        T = FRONT if view == 'S' else BACK
+        def mk(pose, mirror):
+            sh, el, wr, ft, big = T[pose]
+            base = (x, ty)
+            L, h = arm(P(base, sh, mirror), P(base, el, mirror), P(base, wr, mirror), ft, big)
+            if pose == 'chamber' and view == 'S': L.recolor(DARKER)
+            return L, h
+        def mk_front(pose, side):
+            # vista de frente: los brazos que no golpean se leen mejor rectos (como al correr); el que golpea
+            # cruza el pecho desde el hombro y el puño viene hacia la cámara
+            flip = side == 'R'
+            ax = x + 12 if flip else x + 1
+            sg = -1 if flip else 1
+            if pose == 'guard':   return arm_front(ax, ty, flip=flip, sleeve=4, length=3, slant=2)
+            if pose == 'wind':    return arm_front(ax - sg, ty - 1, flip=flip, sleeve=4, length=3)
+            if pose == 'chamber':
+                L, h = arm_front(ax - sg, ty - 1, flip=flip, sleeve=3, length=2); L.recolor(DARKER); return L, h
+            big = pose == 'strike'
+            L = Layer()
+            sh = (x + (12.5 if flip else 2.5), ty + 2.5)
+            fx_ = x + (9 if flip else 6) + (0 if big else (1 if flip else -1))
+            fy_ = ty + (9 if big else 8)
+            limb(L, sh, (fx_ + (1.5 if flip else -1.5) * 0, fy_ - 3), 3.2, ('U', 'T', 't'))
+            cuff, fist, h = fist_front(fx_, fy_, big=big)
+            return cuff.merged(L, fist), h
+        if view == 'S':
+            aR, hR = mk_front(pr, 'R'); aL, hL = mk_front(pl, 'L')
+        else:
+            aR, hR = mk(pr, False); aL, hL = mk(pl, True)
+        hands = [hL, hR]
+        if view == 'S':
+            draw(img, lL.merged(lR, body)); draw(img, head)
+            order = sorted([(aR, pr), (aL, pl)], key=lambda a: {'chamber': 0, 'guard': 1, 'wind': 1, 'hold': 2, 'strike': 3}[a[1]])
+            for L, _ in order: draw(img, L)
+        else:
+            behind = [L for L, p in ((aR, pr), (aL, pl)) if p == 'guard']
+            front = [L for L, p in ((aR, pr), (aL, pl)) if p in ('wind', 'chamber')]
+            up = [L for L, p in ((aR, pr), (aL, pl)) if p in ('strike', 'hold')]
+            for L in behind: draw(img, L)
+            draw(img, lL.merged(lR, body)); draw(img, head)
+            for L in front + up: draw(img, L)
+    else:
+        lean = 1 if striking else (-1 if 'wind' in (pr, pl) else 0)
+        bx = X0 + lean
+        near, far = ((2, 0), (-3, 0)) if striking else (((0, 0), (-1, 0)) if lean < 0 else ((1, 0), (-1, 0)))
+        def mk(T, pose, dark=False):
+            sh, el, wr = T[pose]
+            L, h = arm(P((bx, ty), sh), P((bx, ty), el), P((bx, ty), wr), 'side')
+            if dark: L.recolor(DARKER)
+            return L, h
+        aF, hF = mk(SIDE_FAR, pl, True); aN, hN = mk(SIDE_NEAR, pr)
+        hands = [hF, hN]
+        draw(img, aF)                                                     # brazo lejano, detrás del cuerpo
+        draw(img, leg_layer(LEG_SIDE, bx + 5 + far[0], LEG_Y + far[1], back=True))
+        body = body_layer(view, bx, ty)
+        draw(img, leg_layer(LEG_SIDE, bx + 7 + near[0], LEG_Y + near[1]).merged(body))
+        draw(img, head_layer(view, bx, HEAD_Y + bob, 'atk', bob, lag_x=-1 if striking else 0))
+        draw(img, aN)
+    return img, hands
+
+
 VIEWS = {'down': 'S', 'up': 'N', 'side': 'E'}
 NFR = {'idle': 4, 'move': 6, 'atk': 8}
 
@@ -510,10 +665,11 @@ if __name__ == '__main__':
             strip = Image.new('RGBA', (FW * n, FH), (0, 0, 0, 0))
             hs = []
             for i in range(n):
-                f, h = frame(v, anim, i)
+                f, h = frame_combo(v, i) if anim == 'atk' else frame(v, anim, i)
                 strip.alpha_composite(f, (FW * i, 0))
                 hs.append([list(p) for p in h])
             strip.save(os.path.join(out, f'{vname}_{anim}.png'))
             manos['hands'][f'{vname}_{anim}'] = hs
+    manos['lanza'] = {f'{vn}_atk': {str(k): v for k, v in LANZA.items()} for vn in VIEWS}
     json.dump(manos, open(os.path.join(out, 'manos.json'), 'w'))
     print('ok')

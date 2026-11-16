@@ -319,6 +319,7 @@ const NEEDS = {
   a_glass:   { da: 'eco' },
   a_dice:    { da: 'criticos' },
   a_nana:    { da: 'dormido' },
+  a_shackle: { da: 'frenado' },                               // el encadenado va frenado
   a_burst:   { da: 'frenado' },
   m_charged: { da: 'explosion' },
   m_heavy:   { da: 'choque frenado' },

@@ -63,9 +63,9 @@ CAST.update({
   'adv_dwarf': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Dwarf', {'idle': ('Idle', 1, 1), 'move': ('Move', 8, 12), 'atk': ('Attack', 11, 16)}),
   'adv_knight': ('%RPG_HEROES_and_ENEMIES/00_Humans/00_Humans_Tiny_Knight', {'idle': ('Idle', 1, 1), 'move': ('Run', 8, 12), 'atk': ('Attack', 11, 16)}),
   # Alec, el mago de los guanteletes: el cuerpo base «Body_A» de Pixel Crawler vestido por tools/paint_alec.py (tiras en assets/library/alec/)
-  'alec_s': ('!side', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
-  'alec_u': ('!up', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
-  'alec_d': ('!down', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18)}),
+  'alec_s': ('!side', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18), 'atkR': ('atk:0:4', 4, 18), 'atkL': ('atk:4:8', 4, 18)}),   # atkR: puño derecho (fotogramas 0-3), atkL: izquierdo (4-7)
+  'alec_u': ('!up', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18), 'atkR': ('atk:0:4', 4, 18), 'atkL': ('atk:4:8', 4, 18)}),   # atkR: puño derecho (fotogramas 0-3), atkL: izquierdo (4-7)
+  'alec_d': ('!down', {'idle': ('idle', 4, 2), 'move': ('move', 6, 10), 'dash': ('move', 6, 18), 'atk': ('atk', 8, 18), 'atkR': ('atk:0:4', 4, 18), 'atkL': ('atk:4:8', 4, 18)}),   # atkR: puño derecho (fotogramas 0-3), atkL: izquierdo (4-7)
   'keeper': ("@Pixel_Crawler_-_Free_Pack_Exterior_0.1/Entities/Npc's/Citizen_F/Tavern_A", {'idle': ('Idle_Hold/Idle_Side-Sheet.png', 4, 5), 'move': ('Walk_Hold/Walk_Side-Sheet.png', 6, 9)}),   # la posadera, con su bandeja
 })
 # ── Monstruos de Pixel Crawler: mezclados con los de overboy en cada zona ──
@@ -89,9 +89,11 @@ CAST.update({
 PC = 'assets/library/packs/'
 ALEC = json.load(open('assets/library/alec/manos.json'))   # tamaño del fotograma y dónde cae cada guantelete
 def frames_of(folder, suffix):
-    if folder.startswith('!'):   # tiras propias de Alec: «vista_animación.png», fotogramas de ancho fijo
-        im = Image.open('assets/library/alec/%s_%s.png' % (folder[1:], suffix)).convert('RGBA'); fw = ALEC['w']
-        return [im.crop((i * fw, 0, (i + 1) * fw, im.height)) for i in range(im.width // fw)]
+    if folder.startswith('!'):   # tiras propias de Alec: «vista_animación.png», fotogramas de ancho fijo; «atk:0:4» = solo esos fotogramas
+        name, lo, hi = (suffix.split(':') + [None, None])[:3]
+        im = Image.open('assets/library/alec/%s_%s.png' % (folder[1:], name)).convert('RGBA'); fw = ALEC['w']
+        fs = [im.crop((i * fw, 0, (i + 1) * fw, im.height)) for i in range(im.width // fw)]
+        return fs[int(lo):int(hi)] if lo is not None else fs
     if folder.startswith('%'):   # tiras «Nombre_Nx1.png» del RPG HEROES & ENEMIES de overboy
         import glob as _g
         f = _g.glob(PC + folder[1:] + '_' + suffix + '_*x1.png')[0]; n = int(f.rsplit('_', 1)[1].split('x')[0]); im = Image.open(f).convert('RGBA'); w = im.width // n
@@ -134,7 +136,16 @@ for key, (folder, anims) in CAST.items():
     w, h = bb[2] - bb[0], bb[3] - bb[1]
     meta[key] = {'w': w, 'h': h, 'ax': round((idle_b[0] + idle_b[2]) / 2 - bb[0]), 'gy': ib[3] - bb[1], 'bw': idle_b[2] - idle_b[0], 'bh': idle_b[3] - idle_b[1], 'a': {}}
     if folder.startswith('!'):   # centro de cada guantelete por fotograma, ya en coordenadas del recorte: ahí pinta el juego la llama
-        meta[key]['hands'] = {a: [[[hx - bb[0], hy - bb[1]] for hx, hy in fr] for fr in ALEC['hands'][folder[1:] + '_' + anims[a][0]]] for a in anims}
+        def sl(a):   # fotogramas de la tira que usa cada animación (atk:0:4 → del 0 al 3)
+            name, lo, hi = (anims[a][0].split(':') + [None, None])[:3]
+            n = len(ALEC['hands'][folder[1:] + '_' + name]); return name, int(lo or 0), int(hi or n)
+        meta[key]['hands'] = {}; meta[key]['lanza'] = {}
+        for a in anims:
+            name, lo, hi = sl(a); fr_all = ALEC['hands'][folder[1:] + '_' + name]
+            meta[key]['hands'][a] = [[[hx - bb[0], hy - bb[1]] for hx, hy in fr] for fr in fr_all[lo:hi]]
+            # «lanza» de manos.json: fotograma en que sale el disparo → qué puño (0 izquierda/lejana, 1 derecha/cercana); aquí en índices de la animación
+            L = {int(f) - lo: h for f, h in ALEC.get('lanza', {}).get(folder[1:] + '_' + name, {}).items() if lo <= int(f) < hi}
+            if L: meta[key]['lanza'][a] = L
     for a in loaded:
         meta[key]['a'][a] = {'fps': loaded[a][1], 'f': []}
         for im in loaded[a][0]: items.append((key, a, im.crop(bb)))

@@ -8,7 +8,7 @@ Créditos y licencias del arte de terceros (ver también los Terms.txt y Readme.
 - Effect and Bullet 16x16 — paquete aportado por el dueño del juego; autor y licencia sin comprobar. Solo se usa el proyectil, dentro de assets/fx.png.
 - Free Undead Tileset Top Down — paquete aportado por el dueño del juego; su licencia remite a craftpix.net/file-licenses. Solo están en el repositorio los 25 objetos recortados que usa el juego (assets/library/extra/).
 - Raven Fantasy Icons (versión gratuita) — Clockwork Raven Studios. Los cinco iconos de los sitios de la ciudad están en assets/library/raven_places.png. Paquete aportado por el dueño del juego; no está en el repositorio, solo assets/icons.png, montado con tools/pack_icons.py con los 250 iconos que usa el juego.
-- Alec (assets/library/alec/) — mago de los guanteletes (pelo negro azulado, ojos violeta, gabardina negra) dibujado por código con IA a petición del dueño del juego: tools/make_mage.py genera las tiras (python3 -I tools/make_mage.py assets/library/alec negro; hay también las variantes «rojo» y «blanco»). Estética inspirada en Pixel Crawler. El Alec anterior de PixelLab sigue en assets/library/alec_pixellab/ (tools/import_alec_pixellab.py lo vuelve a poner, sobrescribiendo estas tiras).
+- Alec (assets/library/alec/) — mago de los guanteletes (pelo negro azulado, ojos violeta, gabardina negra) dibujado por código con IA a petición del dueño del juego: tools/make_mage.py genera las tiras (python3 -I tools/make_mage.py assets/library/alec negro; hay también las variantes «rojo» y «blanco»). Ya no se usan tools/make_alec.py ni tools/paint_alec*.py: sobrescribirían las tiras. Estética inspirada en Pixel Crawler. El Alec anterior de PixelLab sigue en assets/library/alec_pixellab/ (tools/import_alec_pixellab.py lo vuelve a poner, sobrescribiendo estas tiras).
 
 Música y sonido (assets/audio/, todo con licencia CC0 según su página de OpenGameArt; no obliga a citar, se cita igualmente):
 - m_title «Medieval: The Bard's Tale», m_town «Medieval: The Old Tower Inn», m_battle «Medieval: Battle», m_win «Medieval: Victory Theme» — RandomMind (opengameart.org).
@@ -20,3 +20,5 @@ Música y sonido (assets/audio/, todo con licencia CC0 según su página de Open
 Los archivos están recortados, igualados de volumen y convertidos a mp3.
 
 - Casas de las ciudades (assets/cityhouses.png) — montadas por tools/pack_city_houses.py con las piezas de edificio del Pixel Crawler Free Pack (Anokolisa); los tejados de colores son tintes de los del paquete.
+
+- La cadena del disparo (src/50a_chain.js) está portada de la maqueta tools/chain.py del dueño del juego; vídeos y piezas de referencia en docs/cadena/.

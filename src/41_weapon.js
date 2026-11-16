@@ -46,6 +46,7 @@ function shot(e, dmg, ux, uy, big, col) {
   if (cc > 0) { if (Math.random() < cc) { crit = true; dmg *= critMult(); big = true; } else if (lv('luck_basic')) p.pity += 0.05; }
   if (G('m_salt') && e.wet > 0) dmg *= 1.15;
   if (G('m_star') && e.lit > 0) dmg *= th('light') ? 1.25 : 1.12;
+  if (e.shackleT > 0) dmg *= 1.25;                                                          // encadenado (Dedos de grillete)
   if (G('s_scope') && !e.scoped) { e.scoped = true; dmg *= ens('marksman') ? 3 : 1.8; big = true; S.stat.first++; }       // Brazal de catalejo: primer tiro
   if (G('m_ice') && active(e)) {                                                               // Gema de escarcha
     if (e.slowT > 0 && e.iceT > 0 && (e.frozeCd || 0) <= S.t) { e.frozeCd = S.t + 3; stun(e, 0.8); if (!e.boss) e.frozen = Math.max(e.frozen || 0, 0.8); S.stat.freeze++;   // cuenta como Congelado de verdad
@@ -105,7 +106,9 @@ function shot(e, dmg, ux, uy, big, col) {
   if (duoOn('warthunder') && furyFull()) { const o = others(e, 120, 1)[0]; bolt(e, o, dmg * 0.6, null); if (o && active(o)) addNeedles(o, lv('storm_passive')); }   // dúo Trueno de guerra: su rayo clava las Agujas de Conductor, que es una de sus dos técnicas
   if (G('m_chain')) {                                                                          // Gema enramada: salta al más cercano
     const o = others(e, 95, 1)[0];
-    if (o) { const d = dist(e, o) || 1; S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
+    if (o) { const d = dist(e, o) || 1, ch = S._chain, last = ch && ch.segs[ch.segs.length - 1];
+      if (last && Math.hypot(last.x2 - e.x, last.y2 - e.y) < 2) { ch.segs.push({ x1: e.x, y1: e.y, x2: o.x, y2: o.y }); ch.life = chainLife(ch.segs.length); }   // la cadena sigue desde el primero
+      else S.fx.push({ k: 'tracer', x1: e.x, y1: e.y, x2: o.x, y2: o.y, t: 0, life: 0.14, col: C.ink, w: 1.6 }); S.fx.push({ k: 'ring', x: o.x, y: o.y, r: 7, t: 0, life: 0.14, col: C.ink }); S.stat.chain++; onHit(o, dmg * 0.5, (o.x - e.x) / d, (o.y - e.y) / d, false, col, 'player'); }
   }
   if (G('m_heavy') && active(e) && !e.boss) { e.kx += ux * 150; e.ky += uy * 150; }               // Gema de plomo: empuja
 }
@@ -119,8 +122,8 @@ function fireBasic(target) {
     if (alt) target = alt; p.rotaT = target;
   }
   if (!target && !draw) { p.cd = 0.12; p.crit = false; return; }   // tensando se puede soltar sin objetivo
-  p.kickT = 0.14;   // Alec enseña el puñetazo un instante al soltar
   p.shotN += 1; p.trig += 1;
+  p.punch = { hand: p.shotN % 2 === 0 ? 'R' : 'L', t: 0 };   // puñetazos alternos: par con la derecha, impar con la izquierda
   let mult = gunDmg();
   if (S.gun.barrel === 'b_short' && p.quick > 0) { p.quick = 0; mult *= 2; p.quickBig = true; S.stat.quick++; note(p.x, p.y - 14, '¡Presta!', C.ember, true); }   // Palma presta
   if (g.action === 'a_pend') { if (p.crit) { p.pend = Math.min(6, p.pend + 1); mult *= (1 + 0.15 * p.pend) / 1.5; } else p.pend = 0; }   // Dedos de péndulo (sustituye el 1,5 del Compás por la racha)
@@ -142,6 +145,10 @@ function fireBasic(target) {
   if (g.action === 'a_glass' && p.trig % (th('time') ? 2 : 3) === 0 && target) { const tg = target, d0 = p.dmg * mult * 0.6, fx0 = Math.cos(p.face), fy0 = Math.sin(p.face), ox = p.x, oy = p.y; S.stat.themed++;
     S.timers.push({ t: echoDelay(1), fn: () => { if (!active(tg)) return; S.fx.push({ k: 'tracer', x1: ox, y1: oy, x2: tg.x, y2: tg.y, t: 0, life: 0.14, col: GODS.time.color, w: 1.2 }); onHit(tg, d0, fx0, fy0, false, GODS.time.color, 'echo'); } }); }   // Dedos de clepsidra
   if (g.action === 'a_nana' && p.trig % (th('dream') ? 4 : 6) === 0 && target) { const tg = target; S.stat.themed++; S.timers.push({ t: 0.05, fn: () => sleep(tg, 2) }); }   // Dedos de nana
+  if (g.action === 'a_shackle' && p.trig % 4 === 0 && target && active(target)) {   // Dedos de grillete: la cadena se queda enganchada
+    target.shackleT = 2; slow(target, 2, 0.7); S.stat.themed++;
+    S.fx = S.fx.filter(f => f.tether !== target); S.fx.push({ k: 'chain', tether: target, segs: [], t: 0, life: 2, col: slotColor('basic') });
+  }
   p.idle = 0;                       // Gema de sangre
   let lastB = false;
   if (g.mag === 'm_last') { p.clip = (p.clip || 0) + 1; if (p.clip >= 6) { lastB = true; mult *= 3; p.clip = 0; if (leg('lastword')) for (const e of S.enemies.slice()) if (active(e) && e.doom) fulfil(e); note(p.x, p.y - 14, '¡La última!', C.ember, true); S.stat.last++; } }   // Última gema
@@ -158,7 +165,7 @@ function fireBasic(target) {
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
   if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro en el puño
-    const { x: mx, y: my } = heroHand(target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face);   // en el guantelete que golpea
+    const { x: mx, y: my } = heroHand(target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, p.punch.hand);   // en el puño que lanza
     S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
     sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
@@ -215,7 +222,7 @@ function barrelFire(target, m, big, col, reach) {
   const p = S.p, B = S.gun.barrel;
   const ang = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, ux = Math.cos(ang), uy = Math.sin(ang);
   p.face = ang;
-  const { x: hx, y: hy } = heroHand(ang);   // lo que se ve del disparo sale del guantelete que golpea (50_sprites.js); los golpes se miden desde Alec
+  const { x: hx, y: hy } = heroHand(ang, p.punch ? p.punch.hand : 'R');   // lo que se ve del disparo sale del guantelete que golpea (50_sprites.js); los golpes se miden desde Alec
   const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
   if (B === 'b_pierce') {                // atraviesa en línea y rebota una vez en los muros
     const total = reach + 30, h = rayHit(p.x, p.y, ux, uy, total); let left = 3;
@@ -324,7 +331,8 @@ function barrelFire(target, m, big, col, reach) {
     if (B === 'b_net') { m *= 0.65; if ((target.netCd || 0) <= S.t) { target.netCd = S.t + 3; S.stat.net++; root(target, 0.9); } }   // Palma de red
     const far = B === 'b_long' && dist(p, target) - target.r > reach * 0.5;
     if (far) S.fx.push({ k: 'ring', x: target.x, y: target.y, r: 9, t: 0, life: 0.15, col: C.ink });
-    tracer(target.x, target.y, far ? 1.8 : 0); shot(target, p.dmg * m * (far ? 1.4 : 1), ux, uy, far || big, col);
+    S.fx.push(S._chain = { k: 'chain', segs: [{ x1: hx, y1: hy, x2: target.x, y2: target.y }], t: 0, life: chainLife(1), col, flip: p.shotN % 2 ? 1 : -1 });   // la cadena sale del puño (50a_chain.js)
+    shot(target, p.dmg * m * (far ? 1.4 : 1), ux, uy, far || big, col); S._chain = null;
     if (active(target)) {                // palmas temáticas: lo suyo, aunque no lleves a esa deidad
       if (B === 'b_blow') { addVenom(target, 1); S.stat.themed++; }
       if (B === 'b_wyrm') { addEmber(target, 1); S.stat.themed++; }

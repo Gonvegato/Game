@@ -569,15 +569,14 @@ const heroKey = () => 'alec_s';
 let HERO_TMP = null, HERO_SIL = null;
 // La vista que toca según hacia dónde mira (la misma regla que drawHero)
 const heroView = face => { const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s'; return { key, flip: key === 'alec_s' && fx < 0 }; };
-// Dónde está, en el mundo, el puño que golpea al soltar (fotograma 6 del lanzamiento, el que se ve al disparar): de ahí salen los disparos.
-// Es el guantelete que más se mueve entre la carga (fotograma 2) y el golpe, según manos.json.
-function heroHand(face) {
-  const p = S.p, { key, flip } = heroView(face), m = ATLAS[key], hs = m && m.hands && m.hands.atk, b = hs && hs[5];
-  if (!b || !b.length) return { x: p.x + Math.cos(face) * 14, y: p.y + Math.sin(face) * 14 };
-  const a = hs[1] || hs[0]; let k = 0, best = -1;
-  b.forEach((h, j) => { const d = a[j] ? Math.hypot(h[0] - a[j][0], h[1] - a[j][1]) : 0; if (d > best) { best = d; k = j; } });
+// Dónde está, en el mundo, el puño que lanza: hand 'R' (derecho, el cercano de lado) o 'L' (izquierdo). Sale del fotograma y del
+// puño que marca «lanza» en manos.json (tools/make_mage.py); de ahí parten la cadena y el destello.
+function heroHand(face, hand) {
+  const p = S.p, { key, flip } = heroView(face), m = ATLAS[key], an = 'atk' + (hand || 'R'), L = m && m.lanza && m.lanza[an];
+  const fr = L && Object.keys(L)[0], h = fr != null && m.hands && m.hands[an] && m.hands[an][fr] && m.hands[an][fr][L[fr]];
+  if (!h) return { x: p.x + Math.cos(face) * 14, y: p.y + Math.sin(face) * 14 };
   const yFeet = (p.dodgeT > 0 && p.fly ? p.y - 5 : p.y) + p.r + 2;
-  return { x: flip ? p.x + m.ax - b[k][0] : p.x - m.ax + b[k][0], y: yFeet - m.gy + b[k][1] - 2 };
+  return { x: flip ? p.x + m.ax - h[0] : p.x - m.ax + h[0], y: yFeet - m.gy + h[1] - 2 };
 }
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
@@ -611,7 +610,7 @@ function drawHero(anim, time, x, yFeet, face, flash) {
   // La llama de los guanteletes: del color de la deidad que más lleva, más grande cuanto más poder y cuando lanza
   const hands = m.hands && (m.hands[anim] || m.hands.move)[i];
   if (hands && IMG.fx) {
-    const row = fxRow(col), fw = (anim === 'atk' ? 5 : 3) + Math.floor(tier / 2), fh = Math.round(fw * 1.5), ff = FXA.flame;
+    const row = fxRow(col), fw = (anim.startsWith('atk') ? 5 : 3) + Math.floor(tier / 2), fh = Math.round(fw * 1.5), ff = FXA.flame;
     for (let h = 0; h < hands.length; h++) {
       const hx = flip ? x + m.ax - hands[h][0] : x - m.ax + hands[h][0], hy = yFeet - m.gy + hands[h][1], ft = S.t * 14 + h * 5, fr = Math.floor(ft) % ff.n, mix = ft - Math.floor(ft);
       ctx.drawImage(IMG.fx, fr * ff.w, ff.y + row * ff.h, ff.w, ff.h, Math.round(hx - fw / 2), Math.round(hy - fh + 2), fw, fh);

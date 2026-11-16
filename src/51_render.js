@@ -402,10 +402,15 @@ function renderWorld() {
   if (!blink) {
     const fx = Math.cos(p.face), fy = Math.sin(p.face), glow = p.windup > 0 || p.charging || (p.drawing && p.draw >= 1);
     if (!flying) { ctx.fillStyle = '#000000'; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r, p.r * 0.95, p.r * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    const behind = Math.sin(p.face) < -0.7, kick0 = p.windup <= 0 && p.kickT > 0 ? Math.round(3 * clamp(p.kickT / 0.09, 0, 1)) : 0;
-    // Al lanzar echa los puños hacia delante: recoge mientras prepara y estira justo después del disparo
-    const casting = p.dodgeT <= 0 && (glow || kick0 > 0), castT = casting ? ((kick0 > 0 ? 5 : 1) + 0.02) / 18 : S.t;   // brazo atrás mientras prepara (fotograma 2), puño delante al soltar (fotograma 6)
-    const packHero = drawHero(p.dodgeT > 0 ? 'dash' : casting ? 'atk' : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', castT, p.x, py + p.r + 2, p.face, false);
+    const behind = Math.sin(p.face) < -0.7;
+    // Puñetazos alternos (atkR / atkL, 4 fotogramas cada uno): el 0 mientras carga, el 1 justo al soltar (sale el disparo) y el 2 y 3 al
+    // recoger. Medio puñetazo cabe siempre en el periodo de disparo: si se dispara más rápido, va más deprisa («pum, pum, pum»).
+    const per = periodOf(), pfps = Math.max(14, 3 / Math.max(0.04, per * 0.7)), next = (p.shotN + 1) % 2 === 0 ? 'R' : 'L';
+    let castAnim = null, castT = S.t;
+    if (p.dodgeT <= 0 && glow) { castAnim = 'atk' + next; castT = 0.02 / 18; }
+    else if (p.dodgeT <= 0 && p.punch && p.punch.t < 3 / pfps) { castAnim = 'atk' + p.punch.hand; castT = Math.min(3, 1 + p.punch.t * pfps) / 18; }
+    const casting = !!castAnim;
+    const packHero = drawHero(p.dodgeT > 0 ? 'dash' : casting ? castAnim : Math.hypot(I.mx, I.my) > 0.2 ? 'move' : 'idle', castT, p.x, py + p.r + 2, p.face, false);
     if (!packHero) drawSprite(SPR.player, p.x, py + p.r + 1, fx < 0, false, Math.hypot(I.mx, I.my) > 0.2 && Math.floor(S.t * 9) % 2 === 1);
     const kick = p.cd > 0 && p.windup <= 0 ? Math.round(3 * clamp((p.cd - periodOf() + 0.09) / 0.09, 0, 1)) : 0;   // culatazo del retroceso
     if (!packHero) drawGun(p.x, py + 1, p.face, kick);
@@ -443,7 +448,8 @@ function renderWorld() {
   // Efectos sobre todo
   for (const f of S.fx) {
     const k = 1 - f.t / f.life;
-    if (f.k === 'tracer') {   // un dardo de luz que viaja del origen al blanco con una cola corta, y un destello al llegar. No pinta la línea entera
+    if (f.k === 'chain') drawChainFx(f);   // la cadena (50a_chain.js)
+    else if (f.k === 'tracer') {   // un dardo de luz que viaja del origen al blanco con una cola corta, y un destello al llegar. No pinta la línea entera
       const u = 1 - k, col = f.col || C.energy, w = Math.min(1.7, f.w || 1), dx = f.x2 - f.x1, dy = f.y2 - f.y1, len = Math.hypot(dx, dy) || 1, T = 0.62, v = Math.min(1, u / T);
       if (v < 1) {
         const a = Math.max(0, v - Math.min(0.5, 30 / len)), at = q => [f.x1 + dx * q, f.y1 + dy * q], h = at(v);
