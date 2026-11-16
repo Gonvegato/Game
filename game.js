@@ -4275,8 +4275,8 @@ function fireBasic(target) {
   const big = p.crit || imb || p.quickBig || onetwo || lastB || heavyAlt || kick || overB || (draw && p.drawPow >= 1), col = imb ? '#ffffff' : slotColor('basic');
   const reach = rangeOf() * (draw ? 0.6 + 0.4 * p.drawPow : 1);
   p.crit = false; p.quickBig = false;
-  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro delante de los puños
-    const mx = p.x + Math.cos(p.face) * 12, my = p.y + 1 + Math.sin(p.face) * 12;
+  if (g.barrel !== 'b_spike' && g.action !== 'a_draw') {   // destello del conjuro en el puño
+    const { x: mx, y: my } = heroHand(target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face);   // en el guantelete que golpea
     S.fx.push({ k: 'flash', x: mx, y: my, t: 0, life: 0.22, col });
     sfx('cast', big ? 0.5 : 0.32, (big ? 0.8 : 1) + Math.random() * 0.12, 0.04);
   }
@@ -4333,7 +4333,8 @@ function barrelFire(target, m, big, col, reach) {
   const p = S.p, B = S.gun.barrel;
   const ang = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.face, ux = Math.cos(ang), uy = Math.sin(ang);
   p.face = ang;
-  const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: p.x + ux * 14, y1: p.y + uy * 14, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
+  const { x: hx, y: hy } = heroHand(ang);   // lo que se ve del disparo sale del guantelete que golpea (50_sprites.js); los golpes se miden desde Alec
+  const tracer = (x2, y2, w) => S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2, y2, t: 0, life: big ? 0.16 : 0.09, col, w: w || (big ? 2 : 1) });
   if (B === 'b_pierce') {                // atraviesa en línea y rebota una vez en los muros
     const total = reach + 30, h = rayHit(p.x, p.y, ux, uy, total); let left = 3;
     tracer(p.x + ux * h.len, p.y + uy * h.len, big ? 3 : 1.6);
@@ -4355,7 +4356,7 @@ function barrelFire(target, m, big, col, reach) {
   else if (B === 'b_twin') {             // dos enemigos distintos a la vez
     const second = S.enemies.filter(e => e !== target && active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort((a, b) => dist(p, a) - dist(p, b))[0] || target;
     tracer(target.x, target.y); shot(target, p.dmg * m * 0.55, ux, uy, big, col);
-    S.timers.push({ t: 0.05, fn: () => { const t2 = active(second) ? second : active(target) ? target : null; if (!t2) return; const d = dist(p, t2) || 1; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: t2.x, y2: t2.y, t: 0, life: 0.09, col }); shot(t2, p.dmg * m * 0.55, (t2.x - p.x) / d, (t2.y - p.y) / d, big, col); } });
+    S.timers.push({ t: 0.05, fn: () => { const t2 = active(second) ? second : active(target) ? target : null; if (!t2) return; const d = dist(p, t2) || 1; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: t2.x, y2: t2.y, t: 0, life: 0.09, col }); shot(t2, p.dmg * m * 0.55, (t2.x - p.x) / d, (t2.y - p.y) / d, big, col); } });
   } else if (B === 'b_scatter') {        // seis perdigones en abanico, con empujón
     const burnt = new Set();
     for (const off of [-0.36, -0.22, -0.07, 0.07, 0.22, 0.36]) {
@@ -4365,7 +4366,7 @@ function barrelFire(target, m, big, col, reach) {
         const ex = e.x - p.x, ey = e.y - p.y, al = ex * rx + ey * ry;
         if (al >= 0 && al - e.r < ba && Math.abs(ex * ry - ey * rx) <= e.r + 3) { ba = Math.max(0, al - e.r); bestE = e; }
       }
-      S.fx.push({ k: 'tracer', x1: p.x + rx * 12, y1: p.y + ry * 12, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col });
+      S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col });
       if (bestE) { shot(bestE, p.dmg * m * 0.36, rx, ry, false, col); if (leg('dragon') && !burnt.has(bestE)) { burnt.add(bestE); addEmber(bestE, 2); } if (active(bestE) && !bestE.boss) { bestE.kx += rx * 110; bestE.ky += ry * 110; } }
     }
     S.shake = Math.max(S.shake, 4);
@@ -4376,17 +4377,17 @@ function barrelFire(target, m, big, col, reach) {
     for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(p, e); if (d - e.r > reach + 10 || Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), ang)) > 0.65 || blocked(p, e)) continue; S.stat.horn++; shot(e, p.dmg * m * 0.4, (e.x - p.x) / (d || 1), (e.y - p.y) / (d || 1), big, col); if (active(e)) stun(e, 0.35); }
   } else if (B === 'b_ends') {           // el más cercano y el más lejano a la vez
     const inR = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort((a, b) => dist(p, a) - dist(p, b)), near = inR[0] || target, farE = inR.length > 1 ? inR[inR.length - 1] : null;
-    for (const e of [near, farE]) { if (!e || !active(e)) continue; const d = dist(p, e) || 1; if (e === farE) S.stat.ends++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col, w: big ? 2 : 1 }); shot(e, p.dmg * m * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, big, col); }
+    for (const e of [near, farE]) { if (!e || !active(e)) continue; const d = dist(p, e) || 1; if (e === farE) S.stat.ends++; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: e.x, y2: e.y, t: 0, life: 0.1, col, w: big ? 2 : 1 }); shot(e, p.dmg * m * 0.8, (e.x - p.x) / d, (e.y - p.y) / d, big, col); }
   } else if (B === 'b_boom') {           // hoz que va y vuelve
     const d0 = dist(p, target), len = Math.min(rayClip(p.x, p.y, ux, uy, reach + 20), d0 + 40), ex = p.x + ux * len, ey = p.y + uy * len;
     const pass = () => { for (const e of S.enemies.slice()) { if (!active(e)) continue; const ax = e.x - p.x, ay = e.y - p.y, al = ax * ux + ay * uy; if (al >= 0 && al <= len + e.r && Math.abs(ax * uy - ay * ux) <= 8 + e.r) { S.stat.boom++; shot(e, p.dmg * m * 0.7, ux, uy, big, col); } } };
-    S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: ex, y2: ey, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass();
+    S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: ex, y2: ey, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass();
     S.timers.push({ t: 0.28, fn: () => { S.fx.push({ k: 'tracer', x1: ex, y1: ey, x2: S.p.x, y2: S.p.y, t: 0, life: 0.18, col: PAL.i, w: 2.4 }); pass(); } });
   } else if (B === 'b_nail') {           // espinas: a la cuarta en el mismo enemigo, revientan
     tracer(target.x, target.y); shot(target, p.dmg * m * 0.75, ux, uy, big, col);
     if (active(target)) { target.nails = (target.nails || 0) + 1; if (target.nails >= 4) { target.nails = 0; S.stat.nail++; if (ens('rivet')) for (const o of others(target, 60, 6)) hit(o, p.dmg * m * 3, ux, uy, true, col); note(target.x, target.y - target.r - 10, '¡Revienta!', C.ember); S.fx.push({ k: 'ring', x: target.x, y: target.y, r: target.r + 10, t: 0, life: 0.18, col: C.ember }); hit(target, p.dmg * m * 3, ux, uy, true, col); } }
   } else if (B === 'b_arc') {            // salta entre cuatro
-    let from = p, cur = target, k = 1; const seen = new Set();
+    let from = { x: hx, y: hy }, cur = target, k = 1; const seen = new Set();
     for (let i = 0; i < 4 && cur; i++) { const d = dist(from, cur) || 1; seen.add(cur); if (i) S.stat.arc++;
       S.fx.push({ k: 'tracer', x1: from.x, y1: from.y, x2: cur.x, y2: cur.y, t: 0, life: 0.12, col, w: 1.5 }); shot(cur, p.dmg * m * k, (cur.x - from.x) / d, (cur.y - from.y) / d, big && !i, col);
       from = cur; k *= 0.8; cur = S.enemies.filter(e => active(e) && !seen.has(e) && dist(from, e) < 100).sort((a, b) => dist(from, a) - dist(from, b))[0]; }
@@ -4397,31 +4398,31 @@ function barrelFire(target, m, big, col, reach) {
   } else if (B === 'b_swarm') {          // tres centellas a tres enemigos al azar
     const pool = S.enemies.filter(e => active(e) && dist(p, e) - e.r <= reach && !blocked(p, e)).sort(() => Math.random() - 0.5).slice(0, 3); while (pool.length < 3) pool.push(target);
     if (res('packhunt') && S.pets.length && pool[0] && active(pool[0])) { const pt = S.pets[0]; pt.x = pool[0].x + 6; pt.y = pool[0].y + 4; bite(pt, pool[0], 0.6, true); }   // resonancia Montería
-    pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: S.p.x, y1: S.p.y, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
+    pool.forEach((e, i) => S.timers.push({ t: 0.06 * i, fn: () => { if (!active(e)) return; const d = dist(S.p, e) || 1; S.stat.swarm++; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: e.x, y2: e.y, t: 0, life: 0.1, col }); shot(e, p.dmg * m * 0.45, (e.x - S.p.x) / d, (e.y - S.p.y) / d, false, col); } }));
   } else if (B === 'b_fork') {           // tres bocas: centro al objetivo, dos a los lados a lo primero que pillen
     for (const off of [0, -0.34, 0.34]) {
       const a = ang + off, rx = Math.cos(a), ry = Math.sin(a); let bestE = off === 0 ? target : null, ba = off === 0 ? dist(p, target) : rayClip(p.x, p.y, rx, ry, reach + 20);
       if (off !== 0) for (const e of S.enemies) { if (!active(e) || e === target) continue; const ex = e.x - p.x, ey = e.y - p.y, al = ex * rx + ey * ry; if (al >= 0 && al - e.r < ba && Math.abs(ex * ry - ey * rx) <= e.r + 9) { ba = Math.max(0, al - e.r); bestE = e; } }
-      S.fx.push({ k: 'tracer', x1: p.x + rx * 12, y1: p.y + ry * 12, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col, w: big ? 2 : 1 });
+      S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: p.x + rx * ba, y2: p.y + ry * ba, t: 0, life: 0.1, col, w: big ? 2 : 1 });
       if (bestE && active(bestE)) { if (off !== 0) S.stat.fork++; shot(bestE, p.dmg * m * 0.6, rx, ry, big, col); }
     }
   } else if (B === 'b_harpoon') {        // arpón: engancha y arrastra hacia ti
     tracer(target.x, target.y, 1.6); shot(target, p.dmg * m, ux, uy, big, col);
     if (res('tidalhook') && active(target)) { soak(target, 5); stun(target, 0.6); }   // resonancia Resaca
-    if (active(target) && !target.boss) { const d = dist(p, target); if (d > 46) { target.kx = -ux * Math.min(420, d * 3.2); target.ky = -uy * Math.min(420, d * 3.2); target.slamCd = 0.5; S.stat.hook++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.3, col: PAL.b, w: 1 }); } }
+    if (active(target) && !target.boss) { const d = dist(p, target); if (d > 46) { target.kx = -ux * Math.min(420, d * 3.2); target.ky = -uy * Math.min(420, d * 3.2); target.slamCd = 0.5; S.stat.hook++; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: target.x, y2: target.y, t: 0, life: 0.3, col: PAL.b, w: 1 }); } }
   } else if (B === 'b_flame') {          // chorro en cono: todos los de delante
     S.fx.push({ k: 'cone', x: p.x, y: p.y, a: ang, r: reach + 8, half: 0.5, t: 0, life: 0.16, col: GODS.dragon.color });
     for (const e of S.enemies.slice()) { if (!active(e)) continue; const d = dist(p, e); if (d - e.r > reach + 8 || Math.abs(angDiff(Math.atan2(e.y - p.y, e.x - p.x), ang)) > 0.55 || blocked(p, e)) continue; S.stat.flame++; shot(e, p.dmg * m * 0.5, (e.x - p.x) / (d || 1), (e.y - p.y) / (d || 1), big, GODS.dragon.color); addEmber(e, 1); }
   } else if (B === 'b_back') {           // dos bocas: delante y detrás
     tracer(target.x, target.y); shot(target, p.dmg * m, ux, uy, big, col);
     const rear = S.enemies.filter(e => e !== target && active(e) && dist(p, e) - e.r <= reach && !blocked(p, e) && (e.x - p.x) * ux + (e.y - p.y) * uy < 0).sort((a, b) => dist(p, a) - dist(p, b))[0];
-    if (rear) { const d = dist(p, rear) || 1; S.stat.rear++; S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: rear.x, y2: rear.y, t: 0, life: 0.1, col }); shot(rear, p.dmg * m, (rear.x - p.x) / d, (rear.y - p.y) / d, big, col); }
+    if (rear) { const d = dist(p, rear) || 1; S.stat.rear++; S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: rear.x, y2: rear.y, t: 0, life: 0.1, col }); shot(rear, p.dmg * m, (rear.x - p.x) / d, (rear.y - p.y) / d, big, col); }
   } else if (B === 'b_flail') {          // mangual: lanzas la bola y tarda en volver
-    S.fx.push({ k: 'tracer', x1: p.x, y1: p.y, x2: target.x, y2: target.y, t: 0, life: 0.25, col: PAL.I, w: 2 }); p.orbAway = 1; S.stat.flail++;
+    S.fx.push({ k: 'tracer', x1: hx, y1: hy, x2: target.x, y2: target.y, t: 0, life: 0.25, col: PAL.I, w: 2 }); p.orbAway = 1; S.stat.flail++;
     shot(target, p.dmg * m * 1.5, ux, uy, true, col);
   } else if (B === 'b_bomb') {           // orbe por lo alto: pasa por encima de los muros y revienta en área
     const tx = target.x, ty = target.y, fl = 0.2 + dist(p, target) / 520, dm = p.dmg * m * 0.8;
-    S.fx.push({ k: 'lob', x1: p.x + ux * 10, y1: p.y + uy * 10, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
+    S.fx.push({ k: 'lob', x1: hx, y1: hy, x2: tx, y2: ty, t: 0, life: fl, col: '#3a3440' });
     S.fx.push({ k: 'ring', x: tx, y: ty, r: 16, t: 0, life: fl, col: C.ember });
     S.timers.push({ t: fl, fn: () => {
       S.fx.push({ k: 'ring', x: tx, y: ty, r: leg('monsmeg') ? 68 : 44, t: 0, life: 0.28, col: C.ember }); S.shake = Math.max(S.shake, big ? 5 : 3); sfx('boom', 0.45,0.9);
@@ -5936,12 +5937,24 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
 const heroKey = () => 'alec_s';
-// Alec es el mago de los guanteletes (tools/make_alec.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
+// Alec es el mago de los guanteletes (tools/make_mage.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
+// La vista que toca según hacia dónde mira (la misma regla que drawHero)
+const heroView = face => { const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s'; return { key, flip: key === 'alec_s' && fx < 0 }; };
+// Dónde está, en el mundo, el puño que golpea al soltar (fotograma 6 del lanzamiento, el que se ve al disparar): de ahí salen los disparos.
+// Es el guantelete que más se mueve entre la carga (fotograma 2) y el golpe, según manos.json.
+function heroHand(face) {
+  const p = S.p, { key, flip } = heroView(face), m = ATLAS[key], hs = m && m.hands && m.hands.atk, b = hs && hs[5];
+  if (!b || !b.length) return { x: p.x + Math.cos(face) * 14, y: p.y + Math.sin(face) * 14 };
+  const a = hs[1] || hs[0]; let k = 0, best = -1;
+  b.forEach((h, j) => { const d = a[j] ? Math.hypot(h[0] - a[j][0], h[1] - a[j][1]) : 0; if (d > best) { best = d; k = j; } });
+  const yFeet = (p.dodgeT > 0 && p.fly ? p.y - 5 : p.y) + p.r + 2;
+  return { x: flip ? p.x + m.ax - b[k][0] : p.x - m.ax + b[k][0], y: yFeet - m.gy + b[k][1] - 2 };
+}
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
-  const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s', flip = key === 'alec_s' && fx < 0;
+  const { key, flip } = heroView(face);
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
   const tier = S.p.tier || 1, col = heroGodColor();
   if (tier >= 2) {   // aura en el suelo, que late

@@ -564,12 +564,24 @@ function drawChar(key, anim, time, x, yFeet, flip, flash) {
 }
 // El aspecto de Alec crece con su poder en la misión: cuatro niveles
 const heroKey = () => 'alec_s';
-// Alec es el mago de los guanteletes (tools/make_alec.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
+// Alec es el mago de los guanteletes (tools/make_mage.py): mira hacia donde apunta (lado, arriba o abajo). Su poder en la misión no le cambia
 // el cuerpo: le da un aura cada vez más fuerte y le tiñe la ropa del color de la deidad que más lleva.
 let HERO_TMP = null, HERO_SIL = null;
+// La vista que toca según hacia dónde mira (la misma regla que drawHero)
+const heroView = face => { const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s'; return { key, flip: key === 'alec_s' && fx < 0 }; };
+// Dónde está, en el mundo, el puño que golpea al soltar (fotograma 6 del lanzamiento, el que se ve al disparar): de ahí salen los disparos.
+// Es el guantelete que más se mueve entre la carga (fotograma 2) y el golpe, según manos.json.
+function heroHand(face) {
+  const p = S.p, { key, flip } = heroView(face), m = ATLAS[key], hs = m && m.hands && m.hands.atk, b = hs && hs[5];
+  if (!b || !b.length) return { x: p.x + Math.cos(face) * 14, y: p.y + Math.sin(face) * 14 };
+  const a = hs[1] || hs[0]; let k = 0, best = -1;
+  b.forEach((h, j) => { const d = a[j] ? Math.hypot(h[0] - a[j][0], h[1] - a[j][1]) : 0; if (d > best) { best = d; k = j; } });
+  const yFeet = (p.dodgeT > 0 && p.fly ? p.y - 5 : p.y) + p.r + 2;
+  return { x: flip ? p.x + m.ax - b[k][0] : p.x - m.ax + b[k][0], y: yFeet - m.gy + b[k][1] - 2 };
+}
 function heroGodColor() { const g = heroGod(); return g ? GODS[g].color : C.ember; }
 function drawHero(anim, time, x, yFeet, face, flash) {
-  const fx = Math.cos(face), fy = Math.sin(face), key = Math.abs(fy) > Math.abs(fx) * 1.3 ? (fy < 0 ? 'alec_u' : 'alec_d') : 'alec_s', flip = key === 'alec_s' && fx < 0;
+  const { key, flip } = heroView(face);
   const m = ATLAS[key]; if (!m || !IMG.chars) return false;
   const tier = S.p.tier || 1, col = heroGodColor();
   if (tier >= 2) {   // aura en el suelo, que late
