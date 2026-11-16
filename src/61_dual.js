@@ -95,7 +95,7 @@ function dualHud() {
   let h = '';
   if (S.mode === 'play' && S.mission) {
     const p = S.p, ms = S.mission;
-    h = `<p class="where">${ms.zone} · ${ms.name}</p><div class="dh"><b class="life">${Math.ceil(p.hp)} / ${p.maxHp} de vida</b><b class="coin">${Math.floor(p.gold)} de oro</b><span>${S.soulsRun || 0} almas · ${S.ironRun || 0} de Hierro</span></div>
+    h = `<p class="where">${ms.zone} · ${ms.name}</p><div class="dh"><b class="life">${Math.ceil(p.hp)} / ${p.maxHp} de vida</b><b class="coin">${Math.floor(p.gold)} de oro</b><span>${S.soulsRun || 0} almas · ${S.ironRun || 0} de Hierro</span>${ms.type === 'assault' ? `<span>Nivel ${S.xpLvl + 1} · ${S.xp}/${xpNeed(S.xpLvl)} de experiencia</span>` : ''}</div>
       <h2>${gunName(S.gun)}</h2>${dualBuild()}`;
   } else if (S.mode === 'town' || S.mode === 'play') {
     const K = kingdomNow();

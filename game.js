@@ -1525,7 +1525,7 @@ function newGame() {
   { const room = buildRoom(false); T.room.w = room.w; T.room.h = room.h; var titleWalls = room.walls; }   // una sala de fondo para el título
   S = {
     mode: 'title', wave: 0, world: 1, room: 0, roomType: 'god', god: null, bossRoom: false, next: { type: 'god', god: null },
-    gun: Object.assign({}, BASE_GUN), resSeen: new Set(), soulsRun: 0, ironRun: 0, matsRun: zeroMats(), rerolls: 0, kills: 0, shop: null, banquet: 0,
+    gun: Object.assign({}, BASE_GUN), resSeen: new Set(), soulsRun: 0, ironRun: 0, matsRun: zeroMats(), rerolls: 0, kills: 0, xp: 0, xpLvl: 0, pendingXp: 0, shop: null, banquet: 0,
     t: 0, shake: 0, hitstop: 0, lastStop: -1, hurtFx: 0, noTarget: 0, waveT: 0, waveClear: 0,
     p: {
       x: T.room.w / 2, y: T.room.h / 2, r: P.r, hp: P.hp, maxHp: P.hp, dmg: P.dmg, as: P.as, range: P.range, speed: P.speed, shotN: 0, crysN: 0,
@@ -1582,7 +1582,7 @@ function nextWave() {
   S.windUsed = false; S.debtUsed = false; S.drop = null; S.waveT = 0; S.waveClear = 0; S.firstKill = false;
   S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3 }));
   S.wells = []; S.yawn = 3; S.mines = []; S.turrets = []; S.zones = []; S.crystals = []; S.shades = S.shades.filter(s => !s.temp); S.fields = []; S.hazards = []; S.lasers = []; S.shots = [];
-  const room = ms.type === 'defend' ? buildRoom(false, 'aldea_ext', 'big') : ms.type === 'assault' ? buildRoom(false, 'pradera', 'huge') : buildRoom(S.bossRoom);   // la aldea y los campamentos están al aire libre   // forma, tamaño y muros nuevos en cada sala
+  const room = ms.type === 'defend' ? buildRoom(false, 'aldea_ext', 'big') : ms.type === 'assault' ? buildRoom(false, 'pradera', 'vast') : buildRoom(S.bossRoom);   // la aldea y los campamentos están al aire libre   // forma, tamaño y muros nuevos en cada sala
   T.room.w = room.w; T.room.h = room.h; S.walls = room.walls; S.pools = room.pools; S.solids = room.walls.concat(room.pools); S.out = room.out; S.town = null; S.solidProps = room.solids || []; S.roomKind = room.kind; S.roomT = S.t; S.lastHitT = S.t; S.traps = first || ms.type === 'defend' || S.lvl < 3 ? [] : room.traps;
   S.p.x = room.start.x; S.p.y = room.start.y;
   S.coins = []; S.chests = []; S.calm = null;
@@ -1643,6 +1643,7 @@ function spawn(typeKey, q) {
   e.skin = skinOf(typeKey, e);
   { const m = ATLAS[e.skin]; if (m) e.r = clamp(Math.round((m.bw + m.bh) / 4), 5, ty.boss ? 34 : 18); }   // la zona de golpe sigue al cuerpo del modelo
   if (q.raid) e.raid = true;
+  if (q.camp) { e.camp = q.camp; const a = Math.random() * 6.283, r = 26 + Math.random() * 40; e.hx = Math.cos(a) * r; e.hy = Math.sin(a) * r; }   // su sitio en el campamento
   if (has('z_yawn') && S.yawn > 0 && !ty.boss && !ty.post) { S.yawn--; e.sleep = 4.6; e.sleepHits = 0; }   // Bostezo
   if (ty.post) { e.px = x; e.py = y; e.aiCd = 3; e.elite = null; }
   S.enemies.push(e); collide(e, e.r);
@@ -2113,7 +2114,7 @@ function ensHtml(g) {
 const MTYPES = {
   doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas. Al acabar cada una eliges puerta. Hay dos tiendas.' },
   defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Protege la campana de la aldea durante doce oleadas. Si cae, pierdes.' },
-  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos. Derriba sus estandartes: mientras sigan en pie, llegan refuerzos.' },
+  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos. Derriba sus estandartes: mientras sigan en pie, llegan refuerzos. Cada campamento guarda lo suyo y cada baja da experiencia.' },
   boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas y, al final, el guardián de la zona. Hay dos tiendas.' },
   god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas y, al final, el dios. Hay dos tiendas.' },
 };
@@ -2192,16 +2193,27 @@ function fillDefWave() {
   if (w === 1) sayRaw('[Uno de cada cuatro va a por la campana: no la dejes sola.]', C.blood);
 }
 // ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
+// Cada estandarte guarda a los suyos: se quedan en su campamento hasta que te acercas (CAMP_AGGRO) o les das; si te alejas
+// (CAMP_LEASH) vuelven a su sitio. Solo llama refuerzos el campamento que está en alerta. Si cae el estandarte, los suyos van a por ti.
+const CAMP_AGGRO = 210, CAMP_LEASH = 330;
+// La experiencia del asalto: cada baja suma; al subir de nivel eliges un ajuste de los guanteletes. Niveles a las 8, 22, 42, 68... bajas
+const xpNeed = l => 8 + 6 * l;
+function gainXp(n) {
+  S.xp += n;
+  while (S.xp >= xpNeed(S.xpLvl)) { S.xp -= xpNeed(S.xpLvl); S.xpLvl++; S.pendingXp = (S.pendingXp || 0) + 1; note(S.p.x, S.p.y - 34, '¡Nivel ' + (S.xpLvl + 1) + '!', C.energy, true); sfx('fanfare', 0.35); }
+}
+const xpScreen = () => Object.assign(statScreen(), { eyebrow: 'Experiencia · nivel ' + (S.xpLvl + 1 - (S.pendingXp || 0)), title: 'Subes de nivel: afina los guanteletes' });
 function setupAssault() {
   const p = S.p, spots = [];
   S.postsAll = S.room >= 4 ? 4 : 3;
   const camps = ((S.out && S.out.camps) || []).slice().sort(() => Math.random() - 0.5);   // los campamentos que dibujó el generador
   for (const k of camps) if (spots.length < S.postsAll) spots.push({ x: (k.x + 0.5) * CELL, y: (k.y + 0.5) * CELL });
-  for (let i = spots.length, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
+  for (let i = spots.length, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > CAMP_GAP * CELL) && dist(c, p) > CAMP_START * CELL && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
+  const posts = S.enemies.filter(e => e.type.post);
   let budget = 5 + S.lvl * 2.1; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 18) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
-  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
+  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: posts[i % Math.max(1, posts.length)], camp: posts[i % Math.max(1, posts.length)] }));
   S.postsDown = 0;
   S.postsAll = spots.length;
   if (S.room === 1) sayRaw('[Los estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
@@ -2212,7 +2224,8 @@ function setupAssault() {
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
+const CAMP_GAP = 24, CAMP_START = 20;
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], vast: [92, 62], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -2370,9 +2383,10 @@ const ROOM_GEN = {
     OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], decor: [], fires: [], camps: [] };
     outBorder(g, c, r);
     const sx = c >> 1, sy = r - 6, keep = [[sx, sy, 5]], far = (x, y) => keep.every(([kx, ky, kr]) => Math.hypot(x - kx, y - ky) >= kr);
-    for (let i = 0, t = 0; i < 5 && t < 500; t++) {   // campamentos
+    // campamentos: separados de sobra para que, al atacar uno, no te vean desde el de al lado (CAMP_GAP casillas entre ellos)
+    for (let i = 0, t = 0; i < 5 && t < 900; t++) {
       const x = ri(9, c - 10), y = ri(8, r - 9);
-      if (Math.hypot(x - sx, y - sy) < 15 || OUT.camps.some(k => Math.hypot(k.x - x, k.y - y) < 13) || !areaFree(g, x - 6, y - 5, 13, 11)) continue;
+      if (Math.hypot(x - sx, y - sy) < CAMP_START || OUT.camps.some(k => Math.hypot(k.x - x, k.y - y) < CAMP_GAP) || !areaFree(g, x - 6, y - 5, 13, 11)) continue;
       OUT.camps.push({ x, y }); keep.push([x, y, 6.5]);
       ob(g, x + 3, y + 1, 2, 2, 'ref', { r: 'firering' }); OUT.fires.push({ x: x + 4, y: y + 2.5 });
       ob(g, x - 4, y - 3, 2, 1, 'ref', { r: 'skullflag' }); ob(g, x + 3, y - 3, 2, 1, 'ref', { r: i % 2 ? 'barrels' : 'shelf' }); ob(g, x - 4, y + 2, 1, 1, 'ref', { r: 'cask' });
@@ -4233,7 +4247,7 @@ const TIPS = {
   status:  () => `Los iconos sobre un enemigo indican qué estados lleva encima (Ascuas, Escarcha, Veneno…). Qué hace cada uno lo dice el Glosario: Pausa → Recetario → Glosario.`,
   shop:    () => `Aquí se gasta el oro que has ido recogiendo; hay dos tiendas por encargo. La <b>Reliquia de contrabando</b> te da a elegir una técnica sin tener que matar a un elegido.`,
   defend:  () => `Protege la <b>campana</b> del centro de la aldea: su vida es la barra de abajo y, si llega a cero, pierdes el encargo.`,
-  assault: () => `Busca los <b>estandartes</b> del campamento y derríbalos a disparos. Cuando caigan todos y no quede nadie, pasas al siguiente campamento.`,
+  assault: () => `Busca los <b>estandartes</b> del campamento y derríbalos a disparos. Cada estandarte guarda a los suyos: no salen a por ti hasta que te acercas o les das. Cada baja da <b>experiencia</b>: al subir de nivel eliges un ajuste. Cuando caigan todos y no quede nadie, pasas al siguiente campamento.`,
   boss:    () => `Este es el <b>guardián</b> de la zona; su vida es la barra de abajo. Fíjate en sus ataques y esquívalos. Si caes, conservas lo ganado y puedes volver a intentarlo.`,
   souls:   () => { const min = Math.min(...TREE_NODES.map(n => n.cost[tr(n.id)]).filter(c => c > 0)); return `Traes <b>${M.souls} almas</b>. Se gastan en el <b>patio de armas</b>, en mejoras que valen para todos los encargos${M.souls >= min ? ': ya te llega para alguna' : ''}.`; },
   iron:    () => `Traes <b>Hierro Místico</b>. En la <b>forja</b>, cada pieza de guantelete que has encontrado dice lo que cuesta forjarla; una vez forjada, puedes montarla siempre.`,
@@ -4343,6 +4357,7 @@ function kill(e) {
   const p = S.p;
   sfx(e.boss ? 'bossdie' : e.champ ? 'relic' : 'kill', e.boss ? 0.8 : e.champ ? 0.6 : 0.3, 0.9 + Math.random() * 0.25);
   S.kills += 1;
+  if (S.mission && S.mission.type === 'assault' && !e.type.post) gainXp(e.boss ? 10 : e.champ ? 5 : e.elite ? 3 : 1);
   if (!S.calm) dropCoins(e.x, e.y, coinsOf(e));   // el oro se suelta en monedas y se recoge (44_calm.js)
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
@@ -4400,6 +4415,7 @@ function kill(e) {
 
 function hit(e, dmg, ux, uy, big, col) {
   if (!active(e)) return;
+  if (e.type.post) e.alert = true; else if (e.camp) e.camp.alert = true;   // asaltos: si le das a uno, su campamento se entera
   const p = S.p, ob = lv('orc_basic'), tl = lv('dragon_passive'), gl = lv('feast_passive'), sl = lv('shade_passive'), ti = lv('time_passive');
   if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                                                  // Tambor de guerra
   if (tl) dmg *= 1 + Math.min((30 + 10 * tl) / 100, 0.01 * tl * Math.floor(p.gold / 10));     // Tesoro
@@ -5478,13 +5494,14 @@ function update(dt) {
   // Red de seguridad: si nadie recibe daño en 25 s y no queda nadie por llegar, los que quedan reaparecen a la vista
   if (S.enemies.length && !S.queue.length && S.t - (S.lastHitT || 0) > 25 && S.t - (S.roomT || 0) > 25) {
     S.lastHitT = S.t;
-    for (const e of S.enemies) { if (e.boss || e.type.post) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
+    for (const e of S.enemies) { if (e.boss || e.type.post || (e.camp && e.camp.hp > 0)) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
   }
 
   // Oleadas
   S.waveT += dt;
   while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
   if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
+  if (!S.pendingLoot && S.pendingXp > 0) { S.pendingXp--; pickQueue = [xpScreen]; S.rerolls = 0; afterPicks = resumePlay; advancePick(); return; }
   if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   coinsUpdate(dt); chestsUpdate(dt); if (S.calm) calmUpdate(dt);
   if (!S.queue.length && !S.enemies.length && !S.calm) {
@@ -5813,11 +5830,17 @@ function update(dt) {
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
       e.x = e.px; e.y = e.py; e.kx = e.ky = 0; e.stun = 0; e.aiCd -= dt;
-      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); sfx('roar', 0.3,1.5); } }
+      { const dp = dist(p, e); if (dp < CAMP_AGGRO) e.alert = true; else if (dp > CAMP_LEASH) e.alert = false; }
+      if (e.alert && e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e, camp: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); sfx('roar', 0.3,1.5); } }
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
     if (e.sleep > 0) { e.sleep -= dt; if (e.sleep <= 0) wake(e); continue; }   // dormido: ni se mueve ni ataca
+    if (e.camp && e.camp.hp > 0 && !e.camp.alert) {   // guarda de un campamento tranquilo: vuelve a su sitio y espera
+      const gx = e.camp.x + e.hx - e.x, gy = e.camp.y + e.hy - e.y, gd = Math.hypot(gx, gy);
+      if (gd > 6) { const s2 = e.speed * 0.6; e.x += gx / gd * s2 * dt; e.y += gy / gd * s2 * dt; e.dir = Math.atan2(gy, gx); }
+      continue;
+    }
     const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
     if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
       const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);
@@ -8064,7 +8087,7 @@ function renderHud() {
   const dev = padBlocked ? 'Mando bloqueado en esta vista' : padName ? 'Mando conectado' : lastDev === 'touch' ? 'Táctil' : lastDev === 'kb' ? 'Teclado' : 'Mando no detectado';
   const left = S.enemies.length + S.queue.length, bo = S.enemies.find(e => e.boss && e.spawn <= 0), inRun = S.wave > 0;
   const key = [Math.ceil(p.hp), p.maxHp, Math.round(p.reserve), S.wave, left, dev, lastDev, periodOf().toFixed(3), Math.round(p.dmg), Math.round(rangeOf()), S.mode, JSON.stringify(S.build), JSON.stringify(S.gun), S.techs.size, S.plans.size,
-    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown].join('|');
+    Math.round(p.fury / 4), Math.floor(p.gold), S.shades.length, S.soulsRun, S.ironRun, bo ? Math.ceil(bo.hp / 8) : -1, S.keep ? Math.ceil(S.keep.hp / 4) : -1, S.defWave, S.postsDown, S.xp, S.xpLvl].join('|');
   if (key === hudKey) return; hudKey = key;
   $('hpFill').style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
   $('hpTxt').textContent = Math.ceil(p.hp) + ' / ' + p.maxHp + (p.reserve >= 1 ? '  +' + Math.round(pct(p.reserve)) : '');
@@ -8073,7 +8096,7 @@ function renderHud() {
   if (!inRun || !ms) { $('wave').innerHTML = ''; $('pips').innerHTML = ''; }
   else {
     const tot = roomsOf(ms), unit = ms.type === 'defend' ? 'Oleada' : ms.type === 'assault' ? 'Campamento' : 'Sala';
-    const sub = S.bossRoom ? 'Jefe' : unit + ' ' + S.room + ' de ' + tot + (ms.type === 'assault' ? ' · estandartes ' + (S.postsDown || 0) + '/' + (S.postsAll || 3) : ' · quedan ' + left);
+    const sub = S.bossRoom ? 'Jefe' : unit + ' ' + S.room + ' de ' + tot + (ms.type === 'assault' ? ' · estandartes ' + (S.postsDown || 0) + '/' + (S.postsAll || 3) + ' · nivel ' + (S.xpLvl + 1) + ' (' + S.xp + '/' + xpNeed(S.xpLvl) + ')' : ' · quedan ' + left);
     $('wave').innerHTML = `<b>${ms.name}</b><span>${MTYPES[ms.type].name} · ${sub}</span>`;
     let h = ''; for (let i = 1; i <= tot; i++) h += `<i class="${i < S.room ? 'done' : i === S.room ? 'now' : ''}${hasBoss(ms) && i === tot ? ' boss' : ''}"></i>` + (i < tot && shopAfter(ms, i) ? '<i class="shop"></i>' : '');
     $('pips').innerHTML = h;
@@ -8220,7 +8243,7 @@ function dualHud() {
   let h = '';
   if (S.mode === 'play' && S.mission) {
     const p = S.p, ms = S.mission;
-    h = `<p class="where">${ms.zone} · ${ms.name}</p><div class="dh"><b class="life">${Math.ceil(p.hp)} / ${p.maxHp} de vida</b><b class="coin">${Math.floor(p.gold)} de oro</b><span>${S.soulsRun || 0} almas · ${S.ironRun || 0} de Hierro</span></div>
+    h = `<p class="where">${ms.zone} · ${ms.name}</p><div class="dh"><b class="life">${Math.ceil(p.hp)} / ${p.maxHp} de vida</b><b class="coin">${Math.floor(p.gold)} de oro</b><span>${S.soulsRun || 0} almas · ${S.ironRun || 0} de Hierro</span>${ms.type === 'assault' ? `<span>Nivel ${S.xpLvl + 1} · ${S.xp}/${xpNeed(S.xpLvl)} de experiencia</span>` : ''}</div>
       <h2>${gunName(S.gun)}</h2>${dualBuild()}`;
   } else if (S.mode === 'town' || S.mode === 'play') {
     const K = kingdomNow();

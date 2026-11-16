@@ -15,7 +15,7 @@ const TIPS = {
   status:  () => `Los iconos sobre un enemigo indican qué estados lleva encima (Ascuas, Escarcha, Veneno…). Qué hace cada uno lo dice el Glosario: Pausa → Recetario → Glosario.`,
   shop:    () => `Aquí se gasta el oro que has ido recogiendo; hay dos tiendas por encargo. La <b>Reliquia de contrabando</b> te da a elegir una técnica sin tener que matar a un elegido.`,
   defend:  () => `Protege la <b>campana</b> del centro de la aldea: su vida es la barra de abajo y, si llega a cero, pierdes el encargo.`,
-  assault: () => `Busca los <b>estandartes</b> del campamento y derríbalos a disparos. Cuando caigan todos y no quede nadie, pasas al siguiente campamento.`,
+  assault: () => `Busca los <b>estandartes</b> del campamento y derríbalos a disparos. Cada estandarte guarda a los suyos: no salen a por ti hasta que te acercas o les das. Cada baja da <b>experiencia</b>: al subir de nivel eliges un ajuste. Cuando caigan todos y no quede nadie, pasas al siguiente campamento.`,
   boss:    () => `Este es el <b>guardián</b> de la zona; su vida es la barra de abajo. Fíjate en sus ataques y esquívalos. Si caes, conservas lo ganado y puedes volver a intentarlo.`,
   souls:   () => { const min = Math.min(...TREE_NODES.map(n => n.cost[tr(n.id)]).filter(c => c > 0)); return `Traes <b>${M.souls} almas</b>. Se gastan en el <b>patio de armas</b>, en mejoras que valen para todos los encargos${M.souls >= min ? ': ya te llega para alguna' : ''}.`; },
   iron:    () => `Traes <b>Hierro Místico</b>. En la <b>forja</b>, cada pieza de guantelete que has encontrado dice lo que cuesta forjarla; una vez forjada, puedes montarla siempre.`,

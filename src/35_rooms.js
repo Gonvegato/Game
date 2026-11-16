@@ -3,7 +3,8 @@
 // después se comprueba que todo el suelo sea alcanzable y se funden las casillas de muro en rectángulos.
 // Los enemigos que no ven al jugador siguen un campo de distancias calculado desde su casilla.
 const CELL = 16;
-const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
+const CAMP_GAP = 24, CAMP_START = 20;
+const ROOM_SIZES = { small: [40, 26], mid: [46, 30], big: [52, 34], boss: [50, 34], huge: [66, 44], vast: [92, 62], plaza: [104, 76], hall: [24, 22], shop: [22, 16] };
 const NAV = { cols: 0, rows: 0, wall: new Uint8Array(0), dist: new Int16Array(0), t: 0, pc: -1 };
 
 // Generadores: reciben una rejilla vacía (g[y][x] = 0) y devuelven la casilla donde empieza el jugador.
@@ -161,9 +162,10 @@ const ROOM_GEN = {
     OUT = { biome: T.biome, theme: tid, obs: [], spots: [], npcs: [], paths: [], bridges: [], decor: [], fires: [], camps: [] };
     outBorder(g, c, r);
     const sx = c >> 1, sy = r - 6, keep = [[sx, sy, 5]], far = (x, y) => keep.every(([kx, ky, kr]) => Math.hypot(x - kx, y - ky) >= kr);
-    for (let i = 0, t = 0; i < 5 && t < 500; t++) {   // campamentos
+    // campamentos: separados de sobra para que, al atacar uno, no te vean desde el de al lado (CAMP_GAP casillas entre ellos)
+    for (let i = 0, t = 0; i < 5 && t < 900; t++) {
       const x = ri(9, c - 10), y = ri(8, r - 9);
-      if (Math.hypot(x - sx, y - sy) < 15 || OUT.camps.some(k => Math.hypot(k.x - x, k.y - y) < 13) || !areaFree(g, x - 6, y - 5, 13, 11)) continue;
+      if (Math.hypot(x - sx, y - sy) < CAMP_START || OUT.camps.some(k => Math.hypot(k.x - x, k.y - y) < CAMP_GAP) || !areaFree(g, x - 6, y - 5, 13, 11)) continue;
       OUT.camps.push({ x, y }); keep.push([x, y, 6.5]);
       ob(g, x + 3, y + 1, 2, 2, 'ref', { r: 'firering' }); OUT.fires.push({ x: x + 4, y: y + 2.5 });
       ob(g, x - 4, y - 3, 2, 1, 'ref', { r: 'skullflag' }); ob(g, x + 3, y - 3, 2, 1, 'ref', { r: i % 2 ? 'barrels' : 'shelf' }); ob(g, x - 4, y + 2, 1, 1, 'ref', { r: 'cask' });

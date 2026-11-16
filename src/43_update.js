@@ -13,13 +13,14 @@ function update(dt) {
   // Red de seguridad: si nadie recibe daño en 25 s y no queda nadie por llegar, los que quedan reaparecen a la vista
   if (S.enemies.length && !S.queue.length && S.t - (S.lastHitT || 0) > 25 && S.t - (S.roomT || 0) > 25) {
     S.lastHitT = S.t;
-    for (const e of S.enemies) { if (e.boss || e.type.post) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
+    for (const e of S.enemies) { if (e.boss || e.type.post || (e.camp && e.camp.hp > 0)) continue; let at = null; for (let i = 0; i < 12; i++) { const c = freeSpot(p, 70); if (dist(c, p) < 190 && !blocked(c, p)) { at = c; break; } } if (at) { e.x = at.x; e.y = at.y; e.spawn = 0.65; e.kx = e.ky = 0; e.leapT = 0; e.fling = 0; } }
   }
 
   // Oleadas
   S.waveT += dt;
   while (S.queue.length && S.queue[0].at <= S.waveT) { const q = S.queue.shift(); spawn(q.type, q); }
   if (S.keep) S.keep.flash = Math.max(0, S.keep.flash - dt);
+  if (!S.pendingLoot && S.pendingXp > 0) { S.pendingXp--; pickQueue = [xpScreen]; S.rerolls = 0; afterPicks = resumePlay; advancePick(); return; }
   if (S.pendingLoot) { S.pendingLoot = false; pickQueue = [pieceScreen(lootGod(), 'Estandarte derribado · bajo él había una reliquia')]; S.rerolls = tk('reroll'); afterPicks = resumePlay; advancePick(); return; }
   coinsUpdate(dt); chestsUpdate(dt); if (S.calm) calmUpdate(dt);
   if (!S.queue.length && !S.enemies.length && !S.calm) {
@@ -348,11 +349,17 @@ function update(dt) {
     }
     if (e.type.post) {                  // estandarte: no se mueve y llama refuerzos
       e.x = e.px; e.y = e.py; e.kx = e.ky = 0; e.stun = 0; e.aiCd -= dt;
-      if (e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); sfx('roar', 0.3,1.5); } }
+      { const dp = dist(p, e); if (dp < CAMP_AGGRO) e.alert = true; else if (dp > CAMP_LEASH) e.alert = false; }
+      if (e.alert && e.aiCd <= 0) { e.aiCd = 6; if (S.enemies.length + S.queue.length < 19) { const pool = WORLDS[S.world - 1].pool.filter(k => TYPES[k].cost <= 2.5); for (let i = 0; i < 2; i++) S.queue.push({ type: pool[Math.floor(Math.random() * pool.length)], at: S.waveT + 0.2 * i, near: e, camp: e }); S.fx.push({ k: 'ring', x: e.x, y: e.y, r: 30, t: 0, life: 0.4, col: C.blood }); sfx('roar', 0.3,1.5); } }
       continue;
     }
     if (e.stun > 0) { e.stun -= dt; continue; }
     if (e.sleep > 0) { e.sleep -= dt; if (e.sleep <= 0) wake(e); continue; }   // dormido: ni se mueve ni ataca
+    if (e.camp && e.camp.hp > 0 && !e.camp.alert) {   // guarda de un campamento tranquilo: vuelve a su sitio y espera
+      const gx = e.camp.x + e.hx - e.x, gy = e.camp.y + e.hy - e.y, gd = Math.hypot(gx, gy);
+      if (gd > 6) { const s2 = e.speed * 0.6; e.x += gx / gd * s2 * dt; e.y += gy / gd * s2 * dt; e.dir = Math.atan2(gy, gx); }
+      continue;
+    }
     const sp = e.speed * (e.slowT > 0 ? e.slowF : 1);
     if (e.raid && S.keep) {             // asaltante: va a por la campana de la aldea y la golpea
       const k = S.keep, kx = k.x - e.x, ky = k.y - e.y, kd = Math.hypot(kx, ky) || 1; e.dir = Math.atan2(ky, kx);

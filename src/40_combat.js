@@ -82,6 +82,7 @@ function kill(e) {
   const p = S.p;
   sfx(e.boss ? 'bossdie' : e.champ ? 'relic' : 'kill', e.boss ? 0.8 : e.champ ? 0.6 : 0.3, 0.9 + Math.random() * 0.25);
   S.kills += 1;
+  if (S.mission && S.mission.type === 'assault' && !e.type.post) gainXp(e.boss ? 10 : e.champ ? 5 : e.elite ? 3 : 1);
   if (!S.calm) dropCoins(e.x, e.y, coinsOf(e));   // el oro se suelta en monedas y se recoge (44_calm.js)
   for (let i = 0; i < 10; i++) S.fx.push({ k: 'spark', x: e.x, y: e.y, vx: rnd(-110, 110), vy: rnd(-110, 110), t: 0, life: rnd(0.25, 0.5), col: e.color });
   if (S.lock === e) S.lock = null;
@@ -139,6 +140,7 @@ function kill(e) {
 
 function hit(e, dmg, ux, uy, big, col) {
   if (!active(e)) return;
+  if (e.type.post) e.alert = true; else if (e.camp) e.camp.alert = true;   // asaltos: si le das a uno, su campamento se entera
   const p = S.p, ob = lv('orc_basic'), tl = lv('dragon_passive'), gl = lv('feast_passive'), sl = lv('shade_passive'), ti = lv('time_passive');
   if (ob) dmg *= 1 + 0.4 * ob * p.fury / 100;                                                  // Tambor de guerra
   if (tl) dmg *= 1 + Math.min((30 + 10 * tl) / 100, 0.01 * tl * Math.floor(p.gold / 10));     // Tesoro

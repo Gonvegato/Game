@@ -6,7 +6,7 @@
 const MTYPES = {
   doors:   { name: 'Incursión', rooms: 15, shops: [5, 10], desc: 'Quince salas seguidas. Al acabar cada una eliges puerta. Hay dos tiendas.' },
   defend:  { name: 'Defensa',   rooms: 12, shops: [4, 8],  desc: 'Protege la campana de la aldea durante doce oleadas. Si cae, pierdes.' },
-  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos. Derriba sus estandartes: mientras sigan en pie, llegan refuerzos.' },
+  assault: { name: 'Asalto',    rooms: 5,  shops: [2, 4],  desc: 'Cinco campamentos. Derriba sus estandartes: mientras sigan en pie, llegan refuerzos. Cada campamento guarda lo suyo y cada baja da experiencia.' },
   boss:    { name: 'Guardián',  rooms: 9,  shops: [4, 8],  desc: 'Ocho salas y, al final, el guardián de la zona. Hay dos tiendas.' },
   god:     { name: 'Dios',      rooms: 11, shops: [5, 10], desc: 'Diez salas y, al final, el dios. Hay dos tiendas.' },
 };
@@ -85,16 +85,27 @@ function fillDefWave() {
   if (w === 1) sayRaw('[Uno de cada cuatro va a por la campana: no la dejes sola.]', C.blood);
 }
 // ── Asalto a un campamento: tres estandartes que llaman refuerzos hasta que caen ──
+// Cada estandarte guarda a los suyos: se quedan en su campamento hasta que te acercas (CAMP_AGGRO) o les das; si te alejas
+// (CAMP_LEASH) vuelven a su sitio. Solo llama refuerzos el campamento que está en alerta. Si cae el estandarte, los suyos van a por ti.
+const CAMP_AGGRO = 210, CAMP_LEASH = 330;
+// La experiencia del asalto: cada baja suma; al subir de nivel eliges un ajuste de los guanteletes. Niveles a las 8, 22, 42, 68... bajas
+const xpNeed = l => 8 + 6 * l;
+function gainXp(n) {
+  S.xp += n;
+  while (S.xp >= xpNeed(S.xpLvl)) { S.xp -= xpNeed(S.xpLvl); S.xpLvl++; S.pendingXp = (S.pendingXp || 0) + 1; note(S.p.x, S.p.y - 34, '¡Nivel ' + (S.xpLvl + 1) + '!', C.energy, true); sfx('fanfare', 0.35); }
+}
+const xpScreen = () => Object.assign(statScreen(), { eyebrow: 'Experiencia · nivel ' + (S.xpLvl + 1 - (S.pendingXp || 0)), title: 'Subes de nivel: afina los guanteletes' });
 function setupAssault() {
   const p = S.p, spots = [];
   S.postsAll = S.room >= 4 ? 4 : 3;
   const camps = ((S.out && S.out.camps) || []).slice().sort(() => Math.random() - 0.5);   // los campamentos que dibujó el generador
   for (const k of camps) if (spots.length < S.postsAll) spots.push({ x: (k.x + 0.5) * CELL, y: (k.y + 0.5) * CELL });
-  for (let i = spots.length, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > 170) && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
+  for (let i = spots.length, tries = 0; i < S.postsAll && tries < 300; tries++) { const c = freeSpot(p, 230); if (spots.every(s => dist(s, c) > CAMP_GAP * CELL) && dist(c, p) > CAMP_START * CELL && !isBlockedAt(c.x, c.y)) { spots.push(c); i++; } }
   for (const c of spots) spawn('post', { pos: c });
+  const posts = S.enemies.filter(e => e.type.post);
   let budget = 5 + S.lvl * 2.1; const pool = WORLDS[S.world - 1].pool, list = [];
   while (budget > 0.5 && list.length < 18) { const cand = pool.filter(k => TYPES[k].cost <= budget + 0.5); if (!cand.length) break; const k = cand[Math.floor(Math.random() * cand.length)]; list.push(k); budget -= TYPES[k].cost; }
-  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: spots[i % Math.max(1, spots.length)] }));
+  S.queue = list.map((type, i) => ({ type, at: 0.6 + i * 0.3, near: posts[i % Math.max(1, posts.length)], camp: posts[i % Math.max(1, posts.length)] }));
   S.postsDown = 0;
   S.postsAll = spots.length;
   if (S.room === 1) sayRaw('[Los estandartes llaman refuerzos sin parar. Hasta que no caigan, seguirán llegando.]', C.blood);
