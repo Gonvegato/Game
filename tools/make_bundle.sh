@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 V=$(git rev-list --count HEAD)
 rm -rf dist/www && mkdir -p dist/www/assets/audio
 cp index.html dist/www/
+python3 -I tools/make_panel.py >/dev/null && cp panel.html panel.js dist/www/   # la pantalla de abajo de las consolas de dos pantallas
 sed "s/__GAME_V__/$V/" game.js > dist/www/game.js   # la versión va solo en la copia que se distribuye
 for f in $(grep -o "assets/[a-z_]*\.png" game.js index.html | sed 's/^[^:]*://' | sort -u); do cp "$f" dist/www/assets/; done
 cp assets/pc_*.png dist/www/assets/

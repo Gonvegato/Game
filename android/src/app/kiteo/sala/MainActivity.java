@@ -2,6 +2,11 @@ package app.kiteo.sala;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Presentation;
+import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.view.Display;
+import android.webkit.JavascriptInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -42,14 +47,20 @@ import java.util.zip.ZipInputStream;
  * El juego va dentro del APK (assets/www). Al abrirse, la app mira una carpeta pública de kDrive: si hay una versión del
  * juego más nueva, la descarga, comprueba su huella, la guarda en el almacenamiento interno y a partir de entonces la sirve
  * desde ahí. No hace falta reinstalar nada. Solo cuando cambia la propia app (este archivo) avisa de que hay un APK nuevo.
+ *
+ * Dos pantallas (AYN Thor y parecidas): si Android ve una segunda pantalla de presentación, la app abre en ella otra vista
+ * (panel.html) con los menús, la tienda, las cartas y, mientras juegas, la build. El juego sigue en la de arriba; las dos
+ * se hablan por el puente KiteoDual (juego → panel) y KiteoPanel (panel → juego). En un móvil normal no cambia nada.
  */
 public class MainActivity extends Activity {
-    static final int SHELL = 1;                               // versión de esta app; súbela cuando cambie el APK
+    static final int SHELL = 2;                               // versión de esta app; súbela cuando cambie el APK
     static final String HOST = "kiteo.app";                   // origen ficticio: todo lo que pida el juego se sirve en local
     static final String SHARE = "https://kdrive.infomaniak.com/%d/app/4481105/share/4d01df71-eb45-4e5b-bd47-b86d1e8d395a";
     static final int DIR = 1060;
 
     WebView web;
+    Panel panel;          // la pantalla de abajo, si la hay
+    DisplayManager dm;
     SharedPreferences prefs;
     File www;
     long started;
@@ -73,7 +84,11 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new Client(this));
         setContentView(web);
         web.setFocusable(true); web.setFocusableInTouchMode(true); web.requestFocus();   // con el foco puesto le llegan el mando y el teclado
+        web.addJavascriptInterface(new DualBridge(this), "KiteoDual");
         immersive();
+        dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+        openPanel();
+        dm.registerDisplayListener(new Watch(this), null);   // si la segunda pantalla aparece o desaparece con la app abierta
         web.loadUrl("https://" + HOST + "/index.html");
         new Thread(this::checkUpdate, "kiteo-update").start();
     }
@@ -86,7 +101,54 @@ public class MainActivity extends Activity {
     @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) immersive(); }
     @Override protected void onPause() { super.onPause(); js("window.__kiteo&&window.__kiteo.hush(true)"); web.onPause(); }      // al salir de la app, el juego se calla
     @Override protected void onResume() { super.onResume(); web.onResume(); js("window.__kiteo&&window.__kiteo.hush(false)"); immersive(); }
-    @Override protected void onDestroy() { web.destroy(); super.onDestroy(); }
+    @Override protected void onDestroy() { if (panel != null) { try { panel.dismiss(); } catch (Exception e) { } } web.destroy(); super.onDestroy(); }
+
+    // ── La pantalla de abajo ──
+    void openPanel() {
+        if (panel != null || dm == null) return;
+        for (Display d : dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)) {
+            if (d.getDisplayId() == Display.DEFAULT_DISPLAY) continue;
+            try { panel = new Panel(this, d); panel.show(); js("window.dualOn&&window.dualOn()"); } catch (Exception e) { panel = null; }
+            return;
+        }
+    }
+    void panelJs(String code) { if (panel != null && panel.view != null) panel.view.evaluateJavascript(code, null); }
+    // Una vista web en la segunda pantalla. No coge el foco: los botones siguen yendo al juego; los toques, sí le llegan.
+    static class Panel extends Presentation {
+        final MainActivity act; WebView view;
+        Panel(MainActivity act, Display d) { super(act, d); this.act = act; }
+        @Override protected void onCreate(Bundle b) {
+            super.onCreate(b);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            view = new WebView(getContext());
+            view.setBackgroundColor(0xFF0B080D);
+            WebSettings s = view.getSettings();
+            s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true); s.setAllowFileAccess(false); s.setAllowContentAccess(false); s.setSupportZoom(false); s.setTextZoom(100);
+            view.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            view.setWebViewClient(new Client(act));
+            view.addJavascriptInterface(new PanelBridge(act), "KiteoPanel");
+            setContentView(view);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            view.loadUrl("https://" + HOST + "/panel.html");
+        }
+    }
+    static class Watch implements DisplayManager.DisplayListener {
+        final MainActivity act; Watch(MainActivity a) { act = a; }
+        @Override public void onDisplayAdded(int id) { act.openPanel(); }
+        @Override public void onDisplayRemoved(int id) { if (act.panel != null && act.panel.getDisplay().getDisplayId() == id) { act.panel = null; act.js("window.dualOff&&window.dualOff()"); } }
+        @Override public void onDisplayChanged(int id) { }
+    }
+    // El juego le habla al panel (lo que hay que pintar abajo) y el panel al juego (lo que se ha tocado). Llegan en otro hilo: se pasan al de la pantalla.
+    static class DualBridge {
+        final MainActivity act; DualBridge(MainActivity a) { act = a; }
+        @JavascriptInterface public boolean has() { return act.panel != null; }
+        @JavascriptInterface public void toPanel(String msg) { final String q = JSONObject.quote(msg); act.runOnUiThread(() -> act.panelJs("window.panelRecv&&window.panelRecv(" + q + ")")); }
+    }
+    static class PanelBridge {
+        final MainActivity act; PanelBridge(MainActivity a) { act = a; }
+        @JavascriptInterface public void toGame(String msg) { final String q = JSONObject.quote(msg); act.runOnUiThread(() -> act.js("window.dualRecv&&window.dualRecv(" + q + ")")); }
+    }
 
     // ── Mando: Android convierte el botón B en «atrás» si nadie lo recoge. Aquí todo lo del mando va al juego y no sale de él ──
     @Override public boolean dispatchKeyEvent(KeyEvent e) {

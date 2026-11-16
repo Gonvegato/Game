@@ -311,6 +311,14 @@ small.gloss{display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:
 @media (max-width:640px){.cards.rows .card{flex-wrap:wrap;gap:8px}.cards.rows .ch,.cards.rows .cb{flex:1 1 100%}.cards.rows small.gloss{flex:1 1 100%;border-left:0;border-top:1px solid var(--line);padding:6px 0 0}}
 @media (max-height:420px){#ovBody:has(.cards.rows){gap:7px;padding:10px 14px}#ovBody:has(.cards.rows) h1{font-size:24px;padding-bottom:5px}.cards.rows{gap:5px}.cards.rows .card{padding:6px 12px}.cards.rows .card span{font-size:12px;line-height:1.25}.cards.rows .card strong{font-size:15px}}
 @media (max-height:420px){#ovBody{padding:14px;gap:9px}.keys{gap:4px}#hint{display:none}}
+/* Dos pantallas (AYN Thor): el menú de arriba se queda invisible y del tamaño de la pantalla de abajo (allí se ve y se toca, 61_dual.js);
+   las técnicas de la esquina pasan abajo; con un menú abierto, arriba solo queda un aviso */
+body.dual #overlay{opacity:0!important;pointer-events:none!important;inset:auto!important;left:0!important;top:0!important;width:var(--pw,360px)!important;height:var(--ph,410px)!important;padding:6px!important}
+body.dual #overlay #ovBody{width:100%!important;max-width:none!important}
+body.dual #build{display:none}
+body.dual .kworld{min-width:0}
+#dualTop{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;background:rgba(11,8,13,.55);color:var(--ink);font-family:'Pixelify Sans',sans-serif;text-align:center}
+#dualTop .logo{font-family:'Jacquard 12',serif;font-size:clamp(46px,10vw,84px);color:var(--ember);margin:0;text-shadow:0 4px 0 #7a3b12,0 7px 0 #0b080d}
 </style>
 <!--/PAGE-->
 </head>
